@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - deploy
+      - main
 
 env:
   REGISTRY: ghcr.io
@@ -30,6 +31,15 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Determine environment
+        id: env
+        run: |
+          if [[ "${{ github.ref }}" == "refs/heads/deploy" ]]; then
+            echo "environment=production" >> $GITHUB_OUTPUT
+          else
+            echo "environment=staging" >> $GITHUB_OUTPUT
+          fi
+
       - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v5
@@ -37,8 +47,9 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=ref,event=branch
-            type=sha,prefix=deploy-
-            type=raw,value=latest
+            type=sha,prefix=${{ steps.env.outputs.environment }}-
+            type=raw,value=latest,enable=${{ steps.env.outputs.environment == 'production' }}
+            type=raw,value=staging,enable=${{ steps.env.outputs.environment == 'staging' }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
@@ -55,6 +66,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Determine environment
+        id: env
+        run: |
+          if [[ "${{ github.ref }}" == "refs/heads/deploy" ]]; then
+            echo "environment=production" >> $GITHUB_OUTPUT
+            echo "path=/opt/projects/kitchen-manager" >> $GITHUB_OUTPUT
+          else
+            echo "environment=staging" >> $GITHUB_OUTPUT
+            echo "path=/opt/projects/kitchen-manager-staging" >> $GITHUB_OUTPUT
+          fi
+
       - name: Deploy to server
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -62,7 +84,7 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd /opt/projects/kitchen-manager
+            cd ${{ steps.env.outputs.path }}
 
             # Pull latest image
             docker compose pull
