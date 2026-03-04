@@ -3,7 +3,6 @@ name: Build & Deploy
 on:
   push:
     branches:
-      - deploy
       - main
   workflow_dispatch:
     inputs:
@@ -46,10 +45,8 @@ jobs:
         run: |
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             echo "environment=${{ inputs.environment }}" >> $GITHUB_OUTPUT
-          elif [[ "${{ github.ref }}" == "refs/heads/deploy" ]]; then
-            echo "environment=production" >> $GITHUB_OUTPUT
           else
-            echo "environment=staging" >> $GITHUB_OUTPUT
+            echo "environment=production" >> $GITHUB_OUTPUT
           fi
 
       - name: Extract metadata
@@ -81,12 +78,12 @@ jobs:
       - name: Determine environment
         id: env
         run: |
-          if [[ "${{ github.ref }}" == "refs/heads/deploy" ]]; then
-            echo "environment=production" >> $GITHUB_OUTPUT
-            echo "path=/opt/projects/kitchen-manager" >> $GITHUB_OUTPUT
-          else
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ inputs.environment }}" == "staging" ]]; then
             echo "environment=staging" >> $GITHUB_OUTPUT
             echo "path=/opt/projects/kitchen-manager-staging" >> $GITHUB_OUTPUT
+          else
+            echo "environment=production" >> $GITHUB_OUTPUT
+            echo "path=/opt/projects/kitchen-manager" >> $GITHUB_OUTPUT
           fi
 
       - name: Deploy to server
