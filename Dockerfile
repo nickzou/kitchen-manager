@@ -1,0 +1,23 @@
+# Stage 1: Build
+FROM node:22-alpine AS build
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm ci
+
+COPY . .
+RUN npm run build
+
+# Stage 2: Runtime
+FROM node:22-alpine AS runtime
+WORKDIR /app
+
+COPY --from=build /app/.output .output
+COPY --from=build /app/node_modules node_modules
+COPY --from=build /app/package.json package.json
+COPY --from=build /app/drizzle drizzle
+COPY --from=build /app/drizzle.config.ts drizzle.config.ts
+
+EXPOSE 3000
+
+CMD ["node", ".output/server/index.mjs"]
