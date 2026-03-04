@@ -1,30 +1,40 @@
 services:
   app:
-    build: .
+    image: ghcr.io/${GITHUB_USERNAME:-nickzou}/kitchen-manager:latest
+    container_name: kitchen-manager-app
+    restart: unless-stopped
     ports:
-      - "${PORT:-3000}:3000"
-    depends_on:
-      db:
-        condition: service_healthy
+      - "127.0.0.1:3010:3000"
     environment:
       - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-kitchen_manager}
       - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
-    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - kitchen-manager
 
   db:
-    image: postgres:17
-    volumes:
-      - pgdata:/var/lib/postgresql/data
+    image: postgres:17-alpine
+    container_name: kitchen-manager-db
+    restart: unless-stopped
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB:-kitchen_manager}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - kitchen-manager
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
+      interval: 10s
       timeout: 5s
       retries: 5
-    restart: unless-stopped
 
 volumes:
   pgdata:
+
+networks:
+  kitchen-manager:
+    driver: bridge
