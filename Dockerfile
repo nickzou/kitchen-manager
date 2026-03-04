@@ -15,8 +15,8 @@ WORKDIR /app
 COPY --from=build /app/.output .output
 COPY --from=build /app/node_modules node_modules
 COPY --from=build /app/package.json package.json
-COPY --from=build /app/drizzle drizzle
 COPY --from=build /app/drizzle.config.ts drizzle.config.ts
+COPY --from=build /app/src/db src/db
 
 EXPOSE 3000
 
