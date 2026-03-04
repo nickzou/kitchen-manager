@@ -15,9 +15,10 @@ WORKDIR /app
 COPY --from=build /app/dist dist
 COPY --from=build /app/node_modules node_modules
 COPY --from=build /app/package.json package.json
+COPY --from=build /app/server.mjs server.mjs
 COPY --from=build /app/drizzle.config.ts drizzle.config.ts
 COPY --from=build /app/src/db src/db
 
 EXPOSE 3000
 
-CMD ["node", "dist/server/server.js"]
+CMD ["node", "server.mjs"]
