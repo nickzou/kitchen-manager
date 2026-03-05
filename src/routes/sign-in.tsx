@@ -1,87 +1,87 @@
-import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
-import { useState } from 'react'
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
 
-import { authClient } from '#/lib/auth-client'
+import { authClient } from "#/lib/auth-client";
 
-export const Route = createFileRoute('/sign-in')({ component: SignIn })
+export const Route = createFileRoute("/sign-in")({ component: SignIn });
 
 function SignIn() {
-  const navigate = useNavigate()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
+	const navigate = useNavigate();
+	const [email, setEmail] = useState("");
+	const [password, setPassword] = useState("");
+	const [error, setError] = useState("");
+	const [loading, setLoading] = useState(false);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setError('')
-    setLoading(true)
+	async function handleSubmit(e: React.FormEvent) {
+		e.preventDefault();
+		setError("");
+		setLoading(true);
 
-    const { error: signInError } = await authClient.signIn.email({
-      email,
-      password,
-    })
+		const { error: signInError } = await authClient.signIn.email({
+			email,
+			password,
+		});
 
-    if (signInError) {
-      setError(signInError.message ?? 'Sign in failed')
-      setLoading(false)
-      return
-    }
+		if (signInError) {
+			setError(signInError.message ?? "Sign in failed");
+			setLoading(false);
+			return;
+		}
 
-    navigate({ to: '/' })
-  }
+		navigate({ to: "/" });
+	}
 
-  return (
-    <main className="page-wrap px-4 py-12">
-      <section className="island-shell rise-in mx-auto max-w-md rounded-2xl p-6 sm:p-8">
-        <p className="island-kicker mb-2">Welcome back</p>
-        <h1 className="display-title mb-6 text-3xl font-bold text-[var(--sea-ink)]">
-          Sign in
-        </h1>
+	return (
+		<main className="page-wrap px-4 py-12">
+			<section className="island-shell rise-in mx-auto max-w-md rounded-2xl p-6 sm:p-8">
+				<p className="island-kicker mb-2">Welcome back</p>
+				<h1 className="display-title mb-6 text-3xl font-bold text-[var(--sea-ink)]">
+					Sign in
+				</h1>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <label className="flex flex-col gap-1.5 text-sm font-medium text-[var(--sea-ink)]">
-            Email
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="h-10 rounded-lg border border-[var(--line)] bg-[var(--surface)] px-3 text-sm text-[var(--sea-ink)] outline-none focus:border-[var(--lagoon)]"
-            />
-          </label>
+				<form onSubmit={handleSubmit} className="flex flex-col gap-4">
+					<label className="flex flex-col gap-1.5 text-sm font-medium text-[var(--sea-ink)]">
+						Email
+						<input
+							type="email"
+							required
+							value={email}
+							onChange={(e) => setEmail(e.target.value)}
+							className="h-10 rounded-lg border border-[var(--line)] bg-[var(--surface)] px-3 text-sm text-[var(--sea-ink)] outline-none focus:border-[var(--lagoon)]"
+						/>
+					</label>
 
-          <label className="flex flex-col gap-1.5 text-sm font-medium text-[var(--sea-ink)]">
-            Password
-            <input
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="h-10 rounded-lg border border-[var(--line)] bg-[var(--surface)] px-3 text-sm text-[var(--sea-ink)] outline-none focus:border-[var(--lagoon)]"
-            />
-          </label>
+					<label className="flex flex-col gap-1.5 text-sm font-medium text-[var(--sea-ink)]">
+						Password
+						<input
+							type="password"
+							required
+							value={password}
+							onChange={(e) => setPassword(e.target.value)}
+							className="h-10 rounded-lg border border-[var(--line)] bg-[var(--surface)] px-3 text-sm text-[var(--sea-ink)] outline-none focus:border-[var(--lagoon)]"
+						/>
+					</label>
 
-          {error && (
-            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-          )}
+					{error && (
+						<p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+					)}
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="mt-2 h-10 rounded-full bg-[var(--lagoon-deep)] text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
-          >
-            {loading ? 'Signing in\u2026' : 'Sign in'}
-          </button>
-        </form>
+					<button
+						type="submit"
+						disabled={loading}
+						className="mt-2 h-10 rounded-full bg-[var(--lagoon-deep)] text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
+					>
+						{loading ? "Signing in\u2026" : "Sign in"}
+					</button>
+				</form>
 
-        <p className="mt-6 text-center text-sm text-[var(--sea-ink-soft)]">
-          Don&apos;t have an account?{' '}
-          <Link to="/sign-up" className="font-medium text-[var(--lagoon-deep)]">
-            Sign up
-          </Link>
-        </p>
-      </section>
-    </main>
-  )
+				<p className="mt-6 text-center text-sm text-[var(--sea-ink-soft)]">
+					Don&apos;t have an account?{" "}
+					<Link to="/sign-up" className="font-medium text-[var(--lagoon-deep)]">
+						Sign up
+					</Link>
+				</p>
+			</section>
+		</main>
+	);
 }
