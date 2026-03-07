@@ -38,7 +38,7 @@ function CategoryDetail() {
 	if (isLoading) {
 		return (
 			<main className="page-wrap px-4 pb-8 pt-14">
-				<p className="text-sm text-[var(--sea-ink-soft)]">Loading…</p>
+				<p className="text-sm text-(--sea-ink-soft)">Loading…</p>
 			</main>
 		);
 	}
@@ -47,12 +47,12 @@ function CategoryDetail() {
 		return (
 			<main className="page-wrap px-4 pb-8 pt-14">
 				<section className="island-shell rise-in rounded-2xl p-6 sm:p-8">
-					<h1 className="display-title mb-4 text-3xl font-bold text-[var(--sea-ink)]">
+					<h1 className="display-title mb-4 text-3xl font-bold text-(--sea-ink)">
 						Category not found
 					</h1>
 					<Link
 						to="/categories"
-						className="text-sm font-medium text-[var(--lagoon-deep)]"
+						className="text-sm font-medium text-(--lagoon-deep)"
 					>
 						&larr; Back to categories
 					</Link>
@@ -85,7 +85,7 @@ function CategoryDetail() {
 	}
 
 	const inputClass =
-		"h-10 w-full rounded-lg border border-[var(--line)] bg-[var(--surface)] px-3 text-sm text-[var(--sea-ink)] outline-none focus:border-[var(--lagoon)]";
+		"h-10 w-full rounded-lg border border-(--line) bg-(--surface) px-3 text-sm text-(--sea-ink) outline-none focus:border-(--lagoon)";
 
 	function formatDate(dateStr: string | null) {
 		if (!dateStr) return "—";
@@ -96,7 +96,7 @@ function CategoryDetail() {
 		<main className="page-wrap px-4 pb-8 pt-14">
 			<Link
 				to="/categories"
-				className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-[var(--lagoon-deep)] no-underline hover:underline"
+				className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-(--lagoon-deep) no-underline hover:underline"
 			>
 				<ArrowLeft size={14} />
 				Back to categories
@@ -106,19 +106,19 @@ function CategoryDetail() {
 				{editing ? (
 					<form onSubmit={handleSave} className="flex flex-col gap-4">
 						<div className="flex items-center justify-between">
-							<h1 className="display-title text-2xl font-bold text-[var(--sea-ink)]">
+							<h1 className="display-title text-2xl font-bold text-(--sea-ink)">
 								Edit category
 							</h1>
 							<button
 								type="button"
 								onClick={() => setEditing(false)}
-								className="rounded-lg p-2 text-[var(--sea-ink-soft)] transition hover:bg-[var(--surface)]"
+								className="rounded-lg p-2 text-(--sea-ink-soft) transition hover:bg-(--surface)"
 							>
 								<X size={18} />
 							</button>
 						</div>
 
-						<label className="flex flex-col gap-1.5 text-sm font-medium text-[var(--sea-ink)]">
+						<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
 							Name
 							<input
 								type="text"
@@ -129,7 +129,7 @@ function CategoryDetail() {
 							/>
 						</label>
 
-						<label className="flex flex-col gap-1.5 text-sm font-medium text-[var(--sea-ink)]">
+						<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
 							Description
 							<textarea
 								value={form.description}
@@ -144,7 +144,7 @@ function CategoryDetail() {
 						<button
 							type="submit"
 							disabled={updateCategory.isPending}
-							className="mt-2 h-10 rounded-full bg-[var(--lagoon-deep)] text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
+							className="mt-2 h-10 rounded-full bg-(--lagoon-deep) text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
 						>
 							{updateCategory.isPending ? "Saving…" : "Save changes"}
 						</button>
@@ -153,7 +153,7 @@ function CategoryDetail() {
 					<>
 						<div className="mb-6 flex items-start justify-between gap-4">
 							<div>
-								<h1 className="display-title text-2xl font-bold text-[var(--sea-ink)]">
+								<h1 className="display-title text-2xl font-bold text-(--sea-ink)">
 									{category.name}
 								</h1>
 							</div>
@@ -161,7 +161,7 @@ function CategoryDetail() {
 								<button
 									type="button"
 									onClick={startEditing}
-									className="rounded-lg p-2 text-[var(--sea-ink-soft)] transition hover:bg-[var(--surface)] hover:text-[var(--sea-ink)]"
+									className="rounded-lg p-2 text-(--sea-ink-soft) transition hover:bg-(--surface) hover:text-(--sea-ink)"
 									title="Edit"
 								>
 									<Pencil size={18} />
@@ -169,7 +169,7 @@ function CategoryDetail() {
 								<button
 									type="button"
 									onClick={() => setConfirmDelete(true)}
-									className="rounded-lg p-2 text-[var(--sea-ink-soft)] transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950"
+									className="rounded-lg p-2 text-(--sea-ink-soft) transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950"
 									title="Delete"
 								>
 									<Trash2 size={18} />
@@ -178,25 +178,21 @@ function CategoryDetail() {
 						</div>
 
 						{category.description && (
-							<p className="mb-4 text-sm text-[var(--sea-ink-soft)]">
+							<p className="mb-4 text-sm text-(--sea-ink-soft)">
 								{category.description}
 							</p>
 						)}
 
 						<dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
 							<div>
-								<dt className="font-medium text-[var(--sea-ink-soft)]">
-									Created
-								</dt>
-								<dd className="mt-0.5 text-[var(--sea-ink)]">
+								<dt className="font-medium text-(--sea-ink-soft)">Created</dt>
+								<dd className="mt-0.5 text-(--sea-ink)">
 									{formatDate(category.createdAt)}
 								</dd>
 							</div>
 							<div>
-								<dt className="font-medium text-[var(--sea-ink-soft)]">
-									Updated
-								</dt>
-								<dd className="mt-0.5 text-[var(--sea-ink)]">
+								<dt className="font-medium text-(--sea-ink-soft)">Updated</dt>
+								<dd className="mt-0.5 text-(--sea-ink)">
 									{formatDate(category.updatedAt)}
 								</dd>
 							</div>
@@ -210,7 +206,7 @@ function CategoryDetail() {
 								<button
 									type="button"
 									onClick={() => setConfirmDelete(false)}
-									className="rounded-lg px-3 py-1.5 text-sm font-medium text-[var(--sea-ink-soft)] transition hover:bg-[var(--surface)]"
+									className="rounded-lg px-3 py-1.5 text-sm font-medium text-(--sea-ink-soft) transition hover:bg-(--surface)"
 								>
 									Cancel
 								</button>

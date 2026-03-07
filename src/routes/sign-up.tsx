@@ -37,41 +37,41 @@ function SignUp() {
 		<main className="page-wrap px-4 py-12">
 			<section className="island-shell rise-in mx-auto max-w-md rounded-2xl p-6 sm:p-8">
 				<p className="island-kicker mb-2">Get started</p>
-				<h1 className="display-title mb-6 text-3xl font-bold text-[var(--sea-ink)]">
+				<h1 className="display-title mb-6 text-3xl font-bold text-(--sea-ink)">
 					Create an account
 				</h1>
 
 				<form onSubmit={handleSubmit} className="flex flex-col gap-4">
-					<label className="flex flex-col gap-1.5 text-sm font-medium text-[var(--sea-ink)]">
+					<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
 						Name
 						<input
 							type="text"
 							required
 							value={name}
 							onChange={(e) => setName(e.target.value)}
-							className="h-10 rounded-lg border border-[var(--line)] bg-[var(--surface)] px-3 text-sm text-[var(--sea-ink)] outline-none focus:border-[var(--lagoon)]"
+							className="h-10 rounded-lg border border-(--line) bg-(--surface) px-3 text-sm text-(--sea-ink) outline-none focus:border-(--lagoon)"
 						/>
 					</label>
 
-					<label className="flex flex-col gap-1.5 text-sm font-medium text-[var(--sea-ink)]">
+					<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
 						Email
 						<input
 							type="email"
 							required
 							value={email}
 							onChange={(e) => setEmail(e.target.value)}
-							className="h-10 rounded-lg border border-[var(--line)] bg-[var(--surface)] px-3 text-sm text-[var(--sea-ink)] outline-none focus:border-[var(--lagoon)]"
+							className="h-10 rounded-lg border border-(--line) bg-(--surface) px-3 text-sm text-(--sea-ink) outline-none focus:border-(--lagoon)"
 						/>
 					</label>
 
-					<label className="flex flex-col gap-1.5 text-sm font-medium text-[var(--sea-ink)]">
+					<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
 						Password
 						<input
 							type="password"
 							required
 							value={password}
 							onChange={(e) => setPassword(e.target.value)}
-							className="h-10 rounded-lg border border-[var(--line)] bg-[var(--surface)] px-3 text-sm text-[var(--sea-ink)] outline-none focus:border-[var(--lagoon)]"
+							className="h-10 rounded-lg border border-(--line) bg-(--surface) px-3 text-sm text-(--sea-ink) outline-none focus:border-(--lagoon)"
 						/>
 					</label>
 
@@ -82,15 +82,15 @@ function SignUp() {
 					<button
 						type="submit"
 						disabled={loading}
-						className="mt-2 h-10 rounded-full bg-[var(--lagoon-deep)] text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
+						className="mt-2 h-10 rounded-full bg-(--lagoon-deep) text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
 					>
 						{loading ? "Creating account\u2026" : "Sign up"}
 					</button>
 				</form>
 
-				<p className="mt-6 text-center text-sm text-[var(--sea-ink-soft)]">
+				<p className="mt-6 text-center text-sm text-(--sea-ink-soft)">
 					Already have an account?{" "}
-					<Link to="/sign-in" className="font-medium text-[var(--lagoon-deep)]">
+					<Link to="/sign-in" className="font-medium text-(--lagoon-deep)">
 						Sign in
 					</Link>
 				</p>
