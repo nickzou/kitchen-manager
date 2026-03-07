@@ -16,7 +16,9 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProductsIndexRouteImport } from './routes/products/index'
 import { Route as ProductsIdRouteImport } from './routes/products/$id'
 import { Route as ApiProductsIndexRouteImport } from './routes/api/products/index'
+import { Route as ApiCategoriesIndexRouteImport } from './routes/api/categories/index'
 import { Route as ApiProductsIdRouteImport } from './routes/api/products/$id'
+import { Route as ApiCategoriesIdRouteImport } from './routes/api/categories/$id'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
 const SignUpRoute = SignUpRouteImport.update({
@@ -54,9 +56,19 @@ const ApiProductsIndexRoute = ApiProductsIndexRouteImport.update({
   path: '/api/products/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiCategoriesIndexRoute = ApiCategoriesIndexRouteImport.update({
+  id: '/api/categories/',
+  path: '/api/categories/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiProductsIdRoute = ApiProductsIdRouteImport.update({
   id: '/api/products/$id',
   path: '/api/products/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCategoriesIdRoute = ApiCategoriesIdRouteImport.update({
+  id: '/api/categories/$id',
+  path: '/api/categories/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
@@ -73,7 +85,9 @@ export interface FileRoutesByFullPath {
   '/products/$id': typeof ProductsIdRoute
   '/products/': typeof ProductsIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/categories/$id': typeof ApiCategoriesIdRoute
   '/api/products/$id': typeof ApiProductsIdRoute
+  '/api/categories/': typeof ApiCategoriesIndexRoute
   '/api/products/': typeof ApiProductsIndexRoute
 }
 export interface FileRoutesByTo {
@@ -84,7 +98,9 @@ export interface FileRoutesByTo {
   '/products/$id': typeof ProductsIdRoute
   '/products': typeof ProductsIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/categories/$id': typeof ApiCategoriesIdRoute
   '/api/products/$id': typeof ApiProductsIdRoute
+  '/api/categories': typeof ApiCategoriesIndexRoute
   '/api/products': typeof ApiProductsIndexRoute
 }
 export interface FileRoutesById {
@@ -96,7 +112,9 @@ export interface FileRoutesById {
   '/products/$id': typeof ProductsIdRoute
   '/products/': typeof ProductsIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/categories/$id': typeof ApiCategoriesIdRoute
   '/api/products/$id': typeof ApiProductsIdRoute
+  '/api/categories/': typeof ApiCategoriesIndexRoute
   '/api/products/': typeof ApiProductsIndexRoute
 }
 export interface FileRouteTypes {
@@ -109,7 +127,9 @@ export interface FileRouteTypes {
     | '/products/$id'
     | '/products/'
     | '/api/auth/$'
+    | '/api/categories/$id'
     | '/api/products/$id'
+    | '/api/categories/'
     | '/api/products/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -120,7 +140,9 @@ export interface FileRouteTypes {
     | '/products/$id'
     | '/products'
     | '/api/auth/$'
+    | '/api/categories/$id'
     | '/api/products/$id'
+    | '/api/categories'
     | '/api/products'
   id:
     | '__root__'
@@ -131,7 +153,9 @@ export interface FileRouteTypes {
     | '/products/$id'
     | '/products/'
     | '/api/auth/$'
+    | '/api/categories/$id'
     | '/api/products/$id'
+    | '/api/categories/'
     | '/api/products/'
   fileRoutesById: FileRoutesById
 }
@@ -143,7 +167,9 @@ export interface RootRouteChildren {
   ProductsIdRoute: typeof ProductsIdRoute
   ProductsIndexRoute: typeof ProductsIndexRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  ApiCategoriesIdRoute: typeof ApiCategoriesIdRoute
   ApiProductsIdRoute: typeof ApiProductsIdRoute
+  ApiCategoriesIndexRoute: typeof ApiCategoriesIndexRoute
   ApiProductsIndexRoute: typeof ApiProductsIndexRoute
 }
 
@@ -198,11 +224,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiProductsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/categories/': {
+      id: '/api/categories/'
+      path: '/api/categories'
+      fullPath: '/api/categories/'
+      preLoaderRoute: typeof ApiCategoriesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/products/$id': {
       id: '/api/products/$id'
       path: '/api/products/$id'
       fullPath: '/api/products/$id'
       preLoaderRoute: typeof ApiProductsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/categories/$id': {
+      id: '/api/categories/$id'
+      path: '/api/categories/$id'
+      fullPath: '/api/categories/$id'
+      preLoaderRoute: typeof ApiCategoriesIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/auth/$': {
@@ -223,7 +263,9 @@ const rootRouteChildren: RootRouteChildren = {
   ProductsIdRoute: ProductsIdRoute,
   ProductsIndexRoute: ProductsIndexRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
+  ApiCategoriesIdRoute: ApiCategoriesIdRoute,
   ApiProductsIdRoute: ApiProductsIdRoute,
+  ApiCategoriesIndexRoute: ApiCategoriesIndexRoute,
   ApiProductsIndexRoute: ApiProductsIndexRoute,
 }
 export const routeTree = rootRouteImport
