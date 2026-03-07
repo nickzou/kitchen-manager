@@ -66,6 +66,13 @@ export default function Header() {
 						Products
 					</Link>
 					<Link
+						to="/categories"
+						className="nav-link"
+						activeProps={{ className: "nav-link is-active" }}
+					>
+						Categories
+					</Link>
+					<Link
 						to="/about"
 						className="nav-link"
 						activeProps={{ className: "nav-link is-active" }}

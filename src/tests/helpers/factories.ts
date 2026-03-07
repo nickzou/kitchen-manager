@@ -29,6 +29,18 @@ export function makeSession(overrides?: Record<string, unknown>) {
 	};
 }
 
+export function makeCategory(overrides?: Record<string, unknown>) {
+	return {
+		id: "category-1",
+		name: "Dairy",
+		description: "Dairy products",
+		userId: "user-1",
+		createdAt: new Date("2025-01-01"),
+		updatedAt: new Date("2025-01-01"),
+		...overrides,
+	};
+}
+
 export function makeProduct(overrides?: Record<string, unknown>) {
 	return {
 		id: "product-1",
