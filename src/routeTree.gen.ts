@@ -14,7 +14,9 @@ import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProductsIndexRouteImport } from './routes/products/index'
+import { Route as CategoriesIndexRouteImport } from './routes/categories/index'
 import { Route as ProductsIdRouteImport } from './routes/products/$id'
+import { Route as CategoriesIdRouteImport } from './routes/categories/$id'
 import { Route as ApiProductsIndexRouteImport } from './routes/api/products/index'
 import { Route as ApiCategoriesIndexRouteImport } from './routes/api/categories/index'
 import { Route as ApiProductsIdRouteImport } from './routes/api/products/$id'
@@ -46,9 +48,19 @@ const ProductsIndexRoute = ProductsIndexRouteImport.update({
   path: '/products/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CategoriesIndexRoute = CategoriesIndexRouteImport.update({
+  id: '/categories/',
+  path: '/categories/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProductsIdRoute = ProductsIdRouteImport.update({
   id: '/products/$id',
   path: '/products/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CategoriesIdRoute = CategoriesIdRouteImport.update({
+  id: '/categories/$id',
+  path: '/categories/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiProductsIndexRoute = ApiProductsIndexRouteImport.update({
@@ -82,7 +94,9 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
+  '/categories/$id': typeof CategoriesIdRoute
   '/products/$id': typeof ProductsIdRoute
+  '/categories/': typeof CategoriesIndexRoute
   '/products/': typeof ProductsIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/categories/$id': typeof ApiCategoriesIdRoute
@@ -95,7 +109,9 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
+  '/categories/$id': typeof CategoriesIdRoute
   '/products/$id': typeof ProductsIdRoute
+  '/categories': typeof CategoriesIndexRoute
   '/products': typeof ProductsIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/categories/$id': typeof ApiCategoriesIdRoute
@@ -109,7 +125,9 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
+  '/categories/$id': typeof CategoriesIdRoute
   '/products/$id': typeof ProductsIdRoute
+  '/categories/': typeof CategoriesIndexRoute
   '/products/': typeof ProductsIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/categories/$id': typeof ApiCategoriesIdRoute
@@ -124,7 +142,9 @@ export interface FileRouteTypes {
     | '/about'
     | '/sign-in'
     | '/sign-up'
+    | '/categories/$id'
     | '/products/$id'
+    | '/categories/'
     | '/products/'
     | '/api/auth/$'
     | '/api/categories/$id'
@@ -137,7 +157,9 @@ export interface FileRouteTypes {
     | '/about'
     | '/sign-in'
     | '/sign-up'
+    | '/categories/$id'
     | '/products/$id'
+    | '/categories'
     | '/products'
     | '/api/auth/$'
     | '/api/categories/$id'
@@ -150,7 +172,9 @@ export interface FileRouteTypes {
     | '/about'
     | '/sign-in'
     | '/sign-up'
+    | '/categories/$id'
     | '/products/$id'
+    | '/categories/'
     | '/products/'
     | '/api/auth/$'
     | '/api/categories/$id'
@@ -164,7 +188,9 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   SignInRoute: typeof SignInRoute
   SignUpRoute: typeof SignUpRoute
+  CategoriesIdRoute: typeof CategoriesIdRoute
   ProductsIdRoute: typeof ProductsIdRoute
+  CategoriesIndexRoute: typeof CategoriesIndexRoute
   ProductsIndexRoute: typeof ProductsIndexRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiCategoriesIdRoute: typeof ApiCategoriesIdRoute
@@ -210,11 +236,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProductsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/categories/': {
+      id: '/categories/'
+      path: '/categories'
+      fullPath: '/categories/'
+      preLoaderRoute: typeof CategoriesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/products/$id': {
       id: '/products/$id'
       path: '/products/$id'
       fullPath: '/products/$id'
       preLoaderRoute: typeof ProductsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/categories/$id': {
+      id: '/categories/$id'
+      path: '/categories/$id'
+      fullPath: '/categories/$id'
+      preLoaderRoute: typeof CategoriesIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/products/': {
@@ -260,7 +300,9 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   SignInRoute: SignInRoute,
   SignUpRoute: SignUpRoute,
+  CategoriesIdRoute: CategoriesIdRoute,
   ProductsIdRoute: ProductsIdRoute,
+  CategoriesIndexRoute: CategoriesIndexRoute,
   ProductsIndexRoute: ProductsIndexRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiCategoriesIdRoute: ApiCategoriesIdRoute,
