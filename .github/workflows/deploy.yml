@@ -102,7 +102,7 @@ jobs:
             docker compose up -d
 
             # Run migrations
-            docker compose exec -T app npx drizzle-kit push || true
+            docker compose exec -T app npx drizzle-kit migrate
 
             # Clean up old images
             docker image prune -af --filter "until=24h"
