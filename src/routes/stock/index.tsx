@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ChevronDown, ChevronRight, Minus, Plus } from "lucide-react";
 import { useState } from "react";
+import { Combobox } from "#/components/Combobox";
 import { DatePicker } from "#/components/DatePicker";
 import { authClient } from "#/lib/auth-client";
 import { useCategories } from "#/lib/hooks/use-categories";
@@ -128,19 +129,17 @@ function StockPage() {
 					onSubmit={handleAddStock}
 					className="mb-6 flex flex-wrap gap-3 border-b border-(--line) pb-6"
 				>
-					<select
+					<Combobox
 						value={productId}
-						onChange={(e) => setProductId(e.target.value)}
+						onChange={setProductId}
+						options={(products ?? []).map((p) => ({
+							value: p.id,
+							label: p.name,
+						}))}
+						placeholder="Select product *"
 						required
-						className={cn(inputClass, "flex-1 min-w-[160px]")}
-					>
-						<option value="">Select product *</option>
-						{(products ?? []).map((p) => (
-							<option key={p.id} value={p.id}>
-								{p.name}
-							</option>
-						))}
-					</select>
+						className="flex-1 min-w-[160px]"
+					/>
 					<input
 						type="number"
 						placeholder="Quantity *"
