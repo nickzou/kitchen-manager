@@ -45,19 +45,19 @@ function ProductsPage() {
 	}
 
 	const inputClass =
-		"h-10 rounded-lg border border-[var(--line)] bg-[var(--surface)] px-3 text-sm text-[var(--sea-ink)] outline-none focus:border-[var(--lagoon)]";
+		"h-10 rounded-lg border border-(--line) bg-(--surface) px-3 text-sm text-(--sea-ink) outline-none focus:border-(--lagoon)";
 
 	return (
 		<main className="page-wrap px-4 pb-8 pt-14">
 			<section className="island-shell rise-in rounded-2xl p-6 sm:p-8">
 				<p className="island-kicker mb-2">Inventory</p>
-				<h1 className="display-title mb-6 text-3xl font-bold text-[var(--sea-ink)]">
+				<h1 className="display-title mb-6 text-3xl font-bold text-(--sea-ink)">
 					Products
 				</h1>
 
 				<form
 					onSubmit={handleSubmit}
-					className="mb-6 flex flex-wrap gap-3 border-b border-[var(--line)] pb-6"
+					className="mb-6 flex flex-wrap gap-3 border-b border-(--line) pb-6"
 				>
 					<input
 						type="text"
@@ -83,7 +83,7 @@ function ProductsPage() {
 					<button
 						type="submit"
 						disabled={createProduct.isPending}
-						className="flex h-10 items-center gap-1.5 rounded-full bg-[var(--lagoon-deep)] px-4 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
+						className="flex h-10 items-center gap-1.5 rounded-full bg-(--lagoon-deep) px-4 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
 					>
 						<Plus size={16} />
 						Add
@@ -105,8 +105,8 @@ function ProductsPage() {
 							className={cn(
 								"rounded-lg p-2 transition",
 								view === mode
-									? "bg-[var(--lagoon)] text-white"
-									: "text-[var(--sea-ink-soft)] hover:bg-[var(--surface)]",
+									? "bg-(--lagoon) text-white"
+									: "text-(--sea-ink-soft) hover:bg-(--surface)",
 							)}
 							title={`${mode} view`}
 						>
@@ -116,9 +116,9 @@ function ProductsPage() {
 				</div>
 
 				{isLoading ? (
-					<p className="text-sm text-[var(--sea-ink-soft)]">Loading…</p>
+					<p className="text-sm text-(--sea-ink-soft)">Loading…</p>
 				) : !products?.length ? (
-					<p className="text-sm text-[var(--sea-ink-soft)]">
+					<p className="text-sm text-(--sea-ink-soft)">
 						No products yet. Add one above!
 					</p>
 				) : view === "grid" ? (
@@ -148,15 +148,15 @@ function GridView({ products }: { products: Product[] }) {
 					params={{ id: p.id }}
 					className="island-shell block rounded-xl p-4 no-underline transition hover:-translate-y-0.5"
 				>
-					<h3 className="mb-1 text-sm font-semibold text-[var(--sea-ink)]">
+					<h3 className="mb-1 text-sm font-semibold text-(--sea-ink)">
 						{p.name}
 					</h3>
 					{p.category && (
-						<span className="mb-2 inline-block rounded-full bg-[rgba(79,184,178,0.14)] px-2 py-0.5 text-xs font-medium text-[var(--lagoon-deep)]">
+						<span className="mb-2 inline-block rounded-full bg-[rgba(79,184,178,0.14)] px-2 py-0.5 text-xs font-medium text-(--lagoon-deep)">
 							{p.category}
 						</span>
 					)}
-					<p className="m-0 text-xs text-[var(--sea-ink-soft)]">
+					<p className="m-0 text-xs text-(--sea-ink-soft)">
 						Expires: {formatDate(p.expirationDate)}
 					</p>
 				</Link>
@@ -170,7 +170,7 @@ function TableView({ products }: { products: Product[] }) {
 		<div className="overflow-x-auto">
 			<table className="w-full text-left text-sm">
 				<thead>
-					<tr className="border-b border-[var(--line)] text-xs font-semibold uppercase tracking-wide text-[var(--sea-ink-soft)]">
+					<tr className="border-b border-(--line) text-xs font-semibold uppercase tracking-wide text-(--sea-ink-soft)">
 						<th className="pb-2 pr-4">Name</th>
 						<th className="pb-2 pr-4">Category</th>
 						<th className="pb-2 pr-4">Expiration</th>
@@ -179,26 +179,23 @@ function TableView({ products }: { products: Product[] }) {
 				</thead>
 				<tbody>
 					{products.map((p) => (
-						<tr
-							key={p.id}
-							className="border-b border-[var(--line)] last:border-0"
-						>
+						<tr key={p.id} className="border-b border-(--line) last:border-0">
 							<td className="py-2.5 pr-4">
 								<Link
 									to="/products/$id"
 									params={{ id: p.id }}
-									className="font-medium text-[var(--lagoon-deep)] no-underline hover:underline"
+									className="font-medium text-(--lagoon-deep) no-underline hover:underline"
 								>
 									{p.name}
 								</Link>
 							</td>
-							<td className="py-2.5 pr-4 text-[var(--sea-ink-soft)]">
+							<td className="py-2.5 pr-4 text-(--sea-ink-soft)">
 								{p.category || "—"}
 							</td>
-							<td className="py-2.5 pr-4 text-[var(--sea-ink-soft)]">
+							<td className="py-2.5 pr-4 text-(--sea-ink-soft)">
 								{formatDate(p.expirationDate)}
 							</td>
-							<td className="py-2.5 text-[var(--sea-ink-soft)]">
+							<td className="py-2.5 text-(--sea-ink-soft)">
 								{formatDate(p.createdAt)}
 							</td>
 						</tr>
@@ -217,12 +214,10 @@ function CompactView({ products }: { products: Product[] }) {
 					key={p.id}
 					to="/products/$id"
 					params={{ id: p.id }}
-					className="flex items-center justify-between rounded-lg px-3 py-2 no-underline transition hover:bg-[var(--surface)]"
+					className="flex items-center justify-between rounded-lg px-3 py-2 no-underline transition hover:bg-(--surface)"
 				>
-					<span className="text-sm font-medium text-[var(--sea-ink)]">
-						{p.name}
-					</span>
-					<span className="text-xs text-[var(--sea-ink-soft)]">
+					<span className="text-sm font-medium text-(--sea-ink)">{p.name}</span>
+					<span className="text-xs text-(--sea-ink-soft)">
 						{p.category || "—"}
 					</span>
 				</Link>
