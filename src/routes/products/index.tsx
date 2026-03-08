@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Grid3x3, List, Plus, Rows3 } from "lucide-react";
 import { useState } from "react";
+import InventorySubNav from "#/components/InventorySubNav";
 import { authClient } from "#/lib/auth-client";
 import { useCategories } from "#/lib/hooks/use-categories";
 import {
@@ -58,6 +59,8 @@ function ProductsPage() {
 				<h1 className="display-title mb-6 text-3xl font-bold text-(--sea-ink)">
 					Products
 				</h1>
+
+				<InventorySubNav />
 
 				<form
 					onSubmit={handleSubmit}
