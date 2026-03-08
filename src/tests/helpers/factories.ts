@@ -45,10 +45,53 @@ export function makeProduct(overrides?: Record<string, unknown>) {
 	return {
 		id: "product-1",
 		name: "Milk",
-		category: "Dairy",
 		description: "Whole milk",
 		image: null,
-		expirationDate: new Date("2025-06-01"),
+		categoryId: null,
+		quantityUnitId: null,
+		minStockAmount: "0",
+		defaultExpirationDays: null,
+		userId: "user-1",
+		createdAt: new Date("2025-01-01"),
+		updatedAt: new Date("2025-01-01"),
+		...overrides,
+	};
+}
+
+export function makeQuantityUnit(overrides?: Record<string, unknown>) {
+	return {
+		id: "unit-1",
+		name: "Pieces",
+		abbreviation: "pcs",
+		userId: "user-1",
+		createdAt: new Date("2025-01-01"),
+		updatedAt: new Date("2025-01-01"),
+		...overrides,
+	};
+}
+
+export function makeStockEntry(overrides?: Record<string, unknown>) {
+	return {
+		id: "stock-entry-1",
+		productId: "product-1",
+		quantity: "10",
+		expirationDate: null,
+		purchaseDate: null,
+		price: null,
+		userId: "user-1",
+		createdAt: new Date("2025-01-01"),
+		updatedAt: new Date("2025-01-01"),
+		...overrides,
+	};
+}
+
+export function makeStockLog(overrides?: Record<string, unknown>) {
+	return {
+		id: "stock-log-1",
+		stockEntryId: "stock-entry-1",
+		productId: "product-1",
+		transactionType: "add",
+		quantity: "10",
 		userId: "user-1",
 		createdAt: new Date("2025-01-01"),
 		updatedAt: new Date("2025-01-01"),

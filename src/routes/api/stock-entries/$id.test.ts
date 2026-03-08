@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { makeProduct, makeSession } from "#/tests/helpers/factories";
+import { makeSession, makeStockEntry } from "#/tests/helpers/factories";
 import {
 	makeDeleteRequest,
 	makeGetRequest,
@@ -11,12 +11,15 @@ vi.mock("#/lib/auth-session", () => ({
 }));
 
 vi.mock("#/db/schema", () => ({
-	product: {},
+	stockEntry: {},
+	stockLog: {},
 }));
 
 const mockSelectWhere = vi.fn();
 const mockUpdateReturning = vi.fn();
-const mockDeleteReturning = vi.fn();
+const mockTxSelectWhere = vi.fn();
+const mockTxDeleteReturning = vi.fn();
+const mockTxInsertValues = vi.fn(() => ({}));
 
 vi.mock("#/db", () => ({
 	db: {
@@ -32,32 +35,45 @@ vi.mock("#/db", () => ({
 				})),
 			})),
 		})),
-		delete: vi.fn(() => ({
-			where: vi.fn(() => ({
-				returning: mockDeleteReturning,
-			})),
-		})),
+		transaction: vi.fn(async (fn: (tx: unknown) => Promise<unknown>) => {
+			const tx = {
+				select: vi.fn(() => ({
+					from: vi.fn(() => ({
+						where: mockTxSelectWhere,
+					})),
+				})),
+				insert: vi.fn(() => ({
+					values: mockTxInsertValues,
+				})),
+				delete: vi.fn(() => ({
+					where: vi.fn(() => ({
+						returning: mockTxDeleteReturning,
+					})),
+				})),
+			};
+			return fn(tx);
+		}),
 	},
 }));
 
 const { getAuthSession } = await import("#/lib/auth-session");
-const { Route } = await import("#/routes/api/products/$id");
+const { Route } = await import("#/routes/api/stock-entries/$id");
 
 type Handler = (ctx: never) => Promise<Response>;
 
 // biome-ignore lint/style/noNonNullAssertion: test file — handlers are guaranteed to exist
 const h = Route.options.server!.handlers! as Record<string, Handler>;
 const { GET, PUT, DELETE: DELETE_HANDLER } = h;
-const params = { id: "product-1" };
+const params = { id: "stock-entry-1" };
 
-describe("GET /api/products/:id", () => {
+describe("GET /api/stock-entries/:id", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 	});
 
 	it("returns 401 when not authenticated", async () => {
 		vi.mocked(getAuthSession).mockResolvedValue(null);
-		const request = makeGetRequest("/api/products/product-1");
+		const request = makeGetRequest("/api/stock-entries/stock-entry-1");
 
 		const response = await GET({ request, params } as never);
 
@@ -65,10 +81,10 @@ describe("GET /api/products/:id", () => {
 		expect(await response.json()).toEqual({ error: "Unauthorized" });
 	});
 
-	it("returns 404 when product not found", async () => {
+	it("returns 404 when not found", async () => {
 		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
 		mockSelectWhere.mockResolvedValue([]);
-		const request = makeGetRequest("/api/products/product-1");
+		const request = makeGetRequest("/api/stock-entries/stock-entry-1");
 
 		const response = await GET({ request, params } as never);
 
@@ -76,29 +92,29 @@ describe("GET /api/products/:id", () => {
 		expect(await response.json()).toEqual({ error: "Not found" });
 	});
 
-	it("returns 200 with the product", async () => {
+	it("returns 200 with stock entry", async () => {
 		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
-		const found = makeProduct();
+		const found = makeStockEntry();
 		mockSelectWhere.mockResolvedValue([found]);
-		const request = makeGetRequest("/api/products/product-1");
+		const request = makeGetRequest("/api/stock-entries/stock-entry-1");
 
 		const response = await GET({ request, params } as never);
 
 		expect(response.status).toBe(200);
 		const data = await response.json();
-		expect(data.name).toBe("Milk");
+		expect(data.quantity).toBe("10");
 	});
 });
 
-describe("PUT /api/products/:id", () => {
+describe("PUT /api/stock-entries/:id", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 	});
 
 	it("returns 401 when not authenticated", async () => {
 		vi.mocked(getAuthSession).mockResolvedValue(null);
-		const request = makePutRequest("/api/products/product-1", {
-			name: "Oat Milk",
+		const request = makePutRequest("/api/stock-entries/stock-entry-1", {
+			quantity: "20",
 		});
 
 		const response = await PUT({ request, params } as never);
@@ -107,11 +123,11 @@ describe("PUT /api/products/:id", () => {
 		expect(await response.json()).toEqual({ error: "Unauthorized" });
 	});
 
-	it("returns 404 when product not found", async () => {
+	it("returns 404 when not found", async () => {
 		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
 		mockUpdateReturning.mockResolvedValue([]);
-		const request = makePutRequest("/api/products/product-1", {
-			name: "Oat Milk",
+		const request = makePutRequest("/api/stock-entries/stock-entry-1", {
+			quantity: "20",
 		});
 
 		const response = await PUT({ request, params } as never);
@@ -120,72 +136,30 @@ describe("PUT /api/products/:id", () => {
 		expect(await response.json()).toEqual({ error: "Not found" });
 	});
 
-	it("returns 200 with the updated product", async () => {
+	it("returns 200 with updated stock entry", async () => {
 		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
-		const updated = makeProduct({ name: "Oat Milk" });
+		const updated = makeStockEntry({ quantity: "20" });
 		mockUpdateReturning.mockResolvedValue([updated]);
-		const request = makePutRequest("/api/products/product-1", {
-			name: "Oat Milk",
+		const request = makePutRequest("/api/stock-entries/stock-entry-1", {
+			quantity: "20",
 		});
 
 		const response = await PUT({ request, params } as never);
 
 		expect(response.status).toBe(200);
 		const data = await response.json();
-		expect(data.name).toBe("Oat Milk");
-	});
-
-	it("only updates fields present in request body", async () => {
-		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
-		const updated = makeProduct({ name: "Oat Milk" });
-		mockUpdateReturning.mockResolvedValue([updated]);
-		const request = makePutRequest("/api/products/product-1", {
-			name: "Oat Milk",
-		});
-
-		const response = await PUT({ request, params } as never);
-
-		expect(response.status).toBe(200);
-		const data = await response.json();
-		expect(data.name).toBe("Oat Milk");
-		expect(data.categoryId).toBeNull();
-	});
-
-	it("updates new stock-related fields", async () => {
-		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
-		const updated = makeProduct({
-			categoryId: "category-1",
-			quantityUnitId: "unit-1",
-			minStockAmount: "5",
-			defaultExpirationDays: 14,
-		});
-		mockUpdateReturning.mockResolvedValue([updated]);
-		const request = makePutRequest("/api/products/product-1", {
-			categoryId: "category-1",
-			quantityUnitId: "unit-1",
-			minStockAmount: "5",
-			defaultExpirationDays: 14,
-		});
-
-		const response = await PUT({ request, params } as never);
-
-		expect(response.status).toBe(200);
-		const data = await response.json();
-		expect(data.categoryId).toBe("category-1");
-		expect(data.quantityUnitId).toBe("unit-1");
-		expect(data.minStockAmount).toBe("5");
-		expect(data.defaultExpirationDays).toBe(14);
+		expect(data.quantity).toBe("20");
 	});
 });
 
-describe("DELETE /api/products/:id", () => {
+describe("DELETE /api/stock-entries/:id", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 	});
 
 	it("returns 401 when not authenticated", async () => {
 		vi.mocked(getAuthSession).mockResolvedValue(null);
-		const request = makeDeleteRequest("/api/products/product-1");
+		const request = makeDeleteRequest("/api/stock-entries/stock-entry-1");
 
 		const response = await DELETE_HANDLER({ request, params } as never);
 
@@ -193,10 +167,10 @@ describe("DELETE /api/products/:id", () => {
 		expect(await response.json()).toEqual({ error: "Unauthorized" });
 	});
 
-	it("returns 404 when product not found", async () => {
+	it("returns 404 when not found", async () => {
 		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
-		mockDeleteReturning.mockResolvedValue([]);
-		const request = makeDeleteRequest("/api/products/product-1");
+		mockTxSelectWhere.mockResolvedValue([]);
+		const request = makeDeleteRequest("/api/stock-entries/stock-entry-1");
 
 		const response = await DELETE_HANDLER({ request, params } as never);
 
@@ -204,16 +178,17 @@ describe("DELETE /api/products/:id", () => {
 		expect(await response.json()).toEqual({ error: "Not found" });
 	});
 
-	it("returns 200 with the deleted product", async () => {
+	it("returns 200 and creates remove log for remaining quantity", async () => {
 		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
-		const deleted = makeProduct();
-		mockDeleteReturning.mockResolvedValue([deleted]);
-		const request = makeDeleteRequest("/api/products/product-1");
+		const entry = makeStockEntry({ quantity: "5" });
+		mockTxSelectWhere.mockResolvedValue([entry]);
+		mockTxDeleteReturning.mockResolvedValue([entry]);
+		const request = makeDeleteRequest("/api/stock-entries/stock-entry-1");
 
 		const response = await DELETE_HANDLER({ request, params } as never);
 
 		expect(response.status).toBe(200);
 		const data = await response.json();
-		expect(data.name).toBe("Milk");
+		expect(data.quantity).toBe("5");
 	});
 });
