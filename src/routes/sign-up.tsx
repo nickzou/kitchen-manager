@@ -1,6 +1,6 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-
+import { Link } from "#/components/Link";
 import { authClient } from "#/lib/auth-client";
 
 export const Route = createFileRoute("/sign-up")({ component: SignUp });
@@ -90,7 +90,7 @@ function SignUp() {
 
 				<p className="mt-6 text-center text-sm text-(--sea-ink-soft)">
 					Already have an account?{" "}
-					<Link to="/sign-in" className="font-medium text-(--lagoon-deep)">
+					<Link to="/sign-in" className="font-medium">
 						Sign in
 					</Link>
 				</p>
