@@ -44,6 +44,10 @@ vi.mock("#/lib/utils", () => ({
 	cn: (...args: string[]) => args.filter(Boolean).join(" "),
 }));
 
+vi.mock("#/components/InventorySubNav", () => ({
+	default: () => <nav data-testid="inventory-sub-nav" />,
+}));
+
 import { Route } from "./index";
 
 const mockProduct: Product = {

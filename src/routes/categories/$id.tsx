@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Pencil, Trash2, X } from "lucide-react";
 import { useState } from "react";
+import InventorySubNav from "#/components/InventorySubNav";
 import { authClient } from "#/lib/auth-client";
 import {
 	useCategory,
@@ -101,6 +102,8 @@ function CategoryDetail() {
 				<ArrowLeft size={14} />
 				Back to categories
 			</Link>
+
+			<InventorySubNav />
 
 			<section className="island-shell rise-in rounded-2xl p-6 sm:p-8">
 				{editing ? (

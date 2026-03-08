@@ -41,13 +41,6 @@ export default function Header() {
 					>
 						Stock
 					</Link>
-					<Link
-						to="/categories"
-						className="nav-link"
-						activeProps={{ className: "nav-link is-active" }}
-					>
-						Categories
-					</Link>
 				</div>
 
 				<div className="ml-auto hidden items-center gap-2 sm:flex">
@@ -78,9 +71,6 @@ export default function Header() {
 						</MobileNavLink>
 						<MobileNavLink to="/stock" onClick={() => setMenuOpen(false)}>
 							Stock
-						</MobileNavLink>
-						<MobileNavLink to="/categories" onClick={() => setMenuOpen(false)}>
-							Categories
 						</MobileNavLink>
 						<div className="flex items-center gap-2 border-t border-(--line) px-3 pt-3">
 							<ThemeToggle />
