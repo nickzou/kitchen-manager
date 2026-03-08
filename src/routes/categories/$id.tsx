@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Pencil, Trash2, X } from "lucide-react";
 import { useState } from "react";
 import InventorySubNav from "#/components/InventorySubNav";
+import { Page } from "#/components/Page";
 import { authClient } from "#/lib/auth-client";
 import {
 	useCategory,
@@ -38,15 +39,15 @@ function CategoryDetail() {
 
 	if (isLoading) {
 		return (
-			<main className="page-wrap px-4 pb-8 pt-14">
+			<Page as="main" className="px-4 pb-8 pt-14">
 				<p className="text-sm text-(--sea-ink-soft)">Loading…</p>
-			</main>
+			</Page>
 		);
 	}
 
 	if (error || !category) {
 		return (
-			<main className="page-wrap px-4 pb-8 pt-14">
+			<Page as="main" className="px-4 pb-8 pt-14">
 				<section className="island-shell rise-in rounded-2xl p-6 sm:p-8">
 					<h1 className="display-title mb-4 text-3xl font-bold text-(--sea-ink)">
 						Category not found
@@ -58,7 +59,7 @@ function CategoryDetail() {
 						&larr; Back to categories
 					</Link>
 				</section>
-			</main>
+			</Page>
 		);
 	}
 
@@ -94,7 +95,7 @@ function CategoryDetail() {
 	}
 
 	return (
-		<main className="page-wrap px-4 pb-8 pt-14">
+		<Page as="main" className="px-4 pb-8 pt-14">
 			<Link
 				to="/categories"
 				className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-(--lagoon-deep) no-underline hover:underline"
@@ -226,6 +227,6 @@ function CategoryDetail() {
 					</>
 				)}
 			</section>
-		</main>
+		</Page>
 	);
 }

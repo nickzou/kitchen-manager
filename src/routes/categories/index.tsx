@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Grid3x3, List, Plus, Rows3 } from "lucide-react";
 import { useState } from "react";
 import InventorySubNav from "#/components/InventorySubNav";
+import { Page } from "#/components/Page";
 import { authClient } from "#/lib/auth-client";
 import {
 	type Category,
@@ -48,7 +49,7 @@ function CategoriesPage() {
 		"h-10 rounded-lg border border-(--line) bg-(--surface) px-3 text-sm text-(--sea-ink) outline-none focus:border-(--lagoon)";
 
 	return (
-		<main className="page-wrap px-4 pb-8 pt-14">
+		<Page as="main" className="px-4 pb-8 pt-14">
 			<section className="island-shell rise-in rounded-2xl p-6 sm:p-8">
 				<p className="island-kicker mb-2">Organization</p>
 				<h1 className="display-title mb-6 text-3xl font-bold text-(--sea-ink)">
@@ -125,7 +126,7 @@ function CategoriesPage() {
 					<CompactView categories={categories} />
 				)}
 			</section>
-		</main>
+		</Page>
 	);
 }
 

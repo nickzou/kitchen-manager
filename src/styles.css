@@ -229,11 +229,6 @@ pre code {
   color: #e8efff;
 }
 
-.page-wrap {
-  width: min(1080px, calc(100% - 2rem));
-  margin-inline: auto;
-}
-
 .display-title {
   font-family: 'Fraunces', Georgia, serif;
 }

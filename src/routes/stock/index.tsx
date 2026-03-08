@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Combobox } from "#/components/Combobox";
 import { DatePicker } from "#/components/DatePicker";
 import { NumberInput } from "#/components/NumberInput";
+import { Page } from "#/components/Page";
 import { authClient } from "#/lib/auth-client";
 import { useCategories } from "#/lib/hooks/use-categories";
 import { useProducts } from "#/lib/hooks/use-products";
@@ -115,7 +116,7 @@ function StockPage() {
 	};
 
 	return (
-		<main className="page-wrap px-4 pb-8 pt-14">
+		<Page as="main" className="px-4 pb-8 pt-14">
 			<section className="island-shell rise-in rounded-2xl p-6 sm:p-8">
 				<p className="island-kicker mb-2">Inventory</p>
 				<h1 className="display-title mb-6 text-3xl font-bold text-(--sea-ink)">
@@ -348,6 +349,6 @@ function StockPage() {
 					</div>
 				)}
 			</section>
-		</main>
+		</Page>
 	);
 }

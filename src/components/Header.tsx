@@ -3,6 +3,7 @@ import { Menu, X } from "lucide-react";
 import { useState } from "react";
 import BetterAuthHeader from "../integrations/better-auth/header-user.tsx";
 import MobileNavLink from "./MobileNavLink";
+import { Page } from "./Page";
 import ThemeToggle from "./ThemeToggle";
 
 export default function Header() {
@@ -10,7 +11,10 @@ export default function Header() {
 
 	return (
 		<header className="sticky top-0 z-50 border-b border-(--line) bg-(--header-bg) px-4 backdrop-blur-lg">
-			<nav className="page-wrap flex flex-wrap items-center gap-x-4 py-3 sm:py-4">
+			<Page
+				as="nav"
+				className="flex flex-wrap items-center gap-x-4 py-3 sm:py-4"
+			>
 				<Link
 					to="/"
 					className="text-base font-bold tracking-tight text-(--sea-ink) no-underline"
@@ -78,7 +82,7 @@ export default function Header() {
 						</div>
 					</div>
 				)}
-			</nav>
+			</Page>
 		</header>
 	);
 }

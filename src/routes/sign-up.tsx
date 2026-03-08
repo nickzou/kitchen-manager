@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Link } from "#/components/Link";
+import { Page } from "#/components/Page";
 import { authClient } from "#/lib/auth-client";
 
 export const Route = createFileRoute("/sign-up")({ component: SignUp });
@@ -34,7 +35,7 @@ function SignUp() {
 	}
 
 	return (
-		<main className="page-wrap px-4 py-12">
+		<Page as="main" className="px-4 py-12">
 			<section className="island-shell rise-in mx-auto max-w-md rounded-2xl p-6 sm:p-8">
 				<p className="island-kicker mb-2">Get started</p>
 				<h1 className="display-title mb-6 text-3xl font-bold text-(--sea-ink)">
@@ -95,6 +96,6 @@ function SignUp() {
 					</Link>
 				</p>
 			</section>
-		</main>
+		</Page>
 	);
 }
