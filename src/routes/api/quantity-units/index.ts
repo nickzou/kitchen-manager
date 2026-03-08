@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { eq } from "drizzle-orm";
 import { db } from "#/db";
-import { product } from "#/db/schema";
+import { quantityUnit } from "#/db/schema";
 import { getAuthSession } from "#/lib/auth-session";
 
 function json(data: unknown, init?: { status?: number }) {
@@ -11,7 +11,7 @@ function json(data: unknown, init?: { status?: number }) {
 	});
 }
 
-export const Route = createFileRoute("/api/products/")({
+export const Route = createFileRoute("/api/quantity-units/")({
 	server: {
 		handlers: {
 			GET: async ({ request }) => {
@@ -20,12 +20,12 @@ export const Route = createFileRoute("/api/products/")({
 					return json({ error: "Unauthorized" }, { status: 401 });
 				}
 
-				const products = await db
+				const units = await db
 					.select()
-					.from(product)
-					.where(eq(product.userId, session.user.id));
+					.from(quantityUnit)
+					.where(eq(quantityUnit.userId, session.user.id));
 
-				return json(products);
+				return json(units);
 			},
 			POST: async ({ request }) => {
 				const session = await getAuthSession(request);
@@ -36,15 +36,10 @@ export const Route = createFileRoute("/api/products/")({
 				const body = await request.json();
 
 				const [created] = await db
-					.insert(product)
+					.insert(quantityUnit)
 					.values({
 						name: body.name,
-						description: body.description,
-						image: body.image,
-						categoryId: body.categoryId ?? null,
-						quantityUnitId: body.quantityUnitId ?? null,
-						minStockAmount: body.minStockAmount ?? "0",
-						defaultExpirationDays: body.defaultExpirationDays ?? null,
+						abbreviation: body.abbreviation ?? null,
 						userId: session.user.id,
 					})
 					.returning();

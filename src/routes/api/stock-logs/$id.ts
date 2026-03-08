@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { and, eq } from "drizzle-orm";
 import { db } from "#/db";
-import { product } from "#/db/schema";
+import { stockLog } from "#/db/schema";
 import { getAuthSession } from "#/lib/auth-session";
 
 function json(data: unknown, init?: { status?: number }) {
@@ -11,7 +11,7 @@ function json(data: unknown, init?: { status?: number }) {
 	});
 }
 
-export const Route = createFileRoute("/api/products/$id")({
+export const Route = createFileRoute("/api/stock-logs/$id")({
 	server: {
 		handlers: {
 			GET: async ({ request, params }) => {
@@ -22,9 +22,12 @@ export const Route = createFileRoute("/api/products/$id")({
 
 				const [found] = await db
 					.select()
-					.from(product)
+					.from(stockLog)
 					.where(
-						and(eq(product.id, params.id), eq(product.userId, session.user.id)),
+						and(
+							eq(stockLog.id, params.id),
+							eq(stockLog.userId, session.user.id),
+						),
 					);
 
 				if (!found) {
@@ -42,23 +45,18 @@ export const Route = createFileRoute("/api/products/$id")({
 				const body = await request.json();
 				const updates: Record<string, unknown> = {};
 
-				if (body.name !== undefined) updates.name = body.name;
-				if (body.description !== undefined)
-					updates.description = body.description;
-				if (body.image !== undefined) updates.image = body.image;
-				if (body.categoryId !== undefined) updates.categoryId = body.categoryId;
-				if (body.quantityUnitId !== undefined)
-					updates.quantityUnitId = body.quantityUnitId;
-				if (body.minStockAmount !== undefined)
-					updates.minStockAmount = body.minStockAmount;
-				if (body.defaultExpirationDays !== undefined)
-					updates.defaultExpirationDays = body.defaultExpirationDays;
+				if (body.quantity !== undefined) updates.quantity = body.quantity;
+				if (body.transactionType !== undefined)
+					updates.transactionType = body.transactionType;
 
 				const [updated] = await db
-					.update(product)
+					.update(stockLog)
 					.set(updates)
 					.where(
-						and(eq(product.id, params.id), eq(product.userId, session.user.id)),
+						and(
+							eq(stockLog.id, params.id),
+							eq(stockLog.userId, session.user.id),
+						),
 					)
 					.returning();
 
@@ -75,9 +73,12 @@ export const Route = createFileRoute("/api/products/$id")({
 				}
 
 				const [deleted] = await db
-					.delete(product)
+					.delete(stockLog)
 					.where(
-						and(eq(product.id, params.id), eq(product.userId, session.user.id)),
+						and(
+							eq(stockLog.id, params.id),
+							eq(stockLog.userId, session.user.id),
+						),
 					)
 					.returning();
 

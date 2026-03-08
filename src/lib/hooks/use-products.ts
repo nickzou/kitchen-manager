@@ -3,10 +3,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 export interface Product {
 	id: string;
 	name: string;
-	category: string | null;
+	categoryId: string | null;
 	description: string | null;
 	image: string | null;
-	expirationDate: string | null;
+	quantityUnitId: string | null;
+	minStockAmount: string;
+	defaultExpirationDays: number | null;
 	userId: string;
 	createdAt: string;
 	updatedAt: string;
@@ -14,10 +16,12 @@ export interface Product {
 
 export type CreateProductInput = {
 	name: string;
-	category?: string;
+	categoryId?: string;
 	description?: string;
 	image?: string;
-	expirationDate?: string;
+	quantityUnitId?: string;
+	minStockAmount?: string;
+	defaultExpirationDays?: number;
 };
 
 export type UpdateProductInput = Partial<CreateProductInput>;

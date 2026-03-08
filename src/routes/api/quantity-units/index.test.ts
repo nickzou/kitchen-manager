@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { makeProduct, makeSession } from "#/tests/helpers/factories";
+import { makeQuantityUnit, makeSession } from "#/tests/helpers/factories";
 import {
 	makeGetRequest,
 	makePostRequest,
@@ -10,7 +10,7 @@ vi.mock("#/lib/auth-session", () => ({
 }));
 
 vi.mock("#/db/schema", () => ({
-	product: {},
+	quantityUnit: {},
 }));
 
 const mockWhere = vi.fn();
@@ -31,9 +31,8 @@ vi.mock("#/db", () => ({
 	},
 }));
 
-// Import after mocks are set up
 const { getAuthSession } = await import("#/lib/auth-session");
-const { Route } = await import("#/routes/api/products/index");
+const { Route } = await import("#/routes/api/quantity-units/index");
 
 type Handler = (ctx: never) => Promise<Response>;
 
@@ -43,14 +42,14 @@ const { GET, POST } = Route.options.server!.handlers! as Record<
 	Handler
 >;
 
-describe("GET /api/products/", () => {
+describe("GET /api/quantity-units/", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 	});
 
 	it("returns 401 when not authenticated", async () => {
 		vi.mocked(getAuthSession).mockResolvedValue(null);
-		const request = makeGetRequest();
+		const request = makeGetRequest("/api/quantity-units");
 
 		const response = await GET({ request } as never);
 
@@ -58,10 +57,10 @@ describe("GET /api/products/", () => {
 		expect(await response.json()).toEqual({ error: "Unauthorized" });
 	});
 
-	it("returns 200 with empty array when user has no products", async () => {
+	it("returns 200 with empty array when user has no units", async () => {
 		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
 		mockWhere.mockResolvedValue([]);
-		const request = makeGetRequest();
+		const request = makeGetRequest("/api/quantity-units");
 
 		const response = await GET({ request } as never);
 
@@ -69,33 +68,35 @@ describe("GET /api/products/", () => {
 		expect(await response.json()).toEqual([]);
 	});
 
-	it("returns 200 with the user's products", async () => {
+	it("returns 200 with the user's quantity units", async () => {
 		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
-		const products = [
-			makeProduct(),
-			makeProduct({ id: "product-2", name: "Eggs" }),
+		const units = [
+			makeQuantityUnit(),
+			makeQuantityUnit({ id: "unit-2", name: "Grams", abbreviation: "g" }),
 		];
-		mockWhere.mockResolvedValue(products);
-		const request = makeGetRequest();
+		mockWhere.mockResolvedValue(units);
+		const request = makeGetRequest("/api/quantity-units");
 
 		const response = await GET({ request } as never);
 
 		expect(response.status).toBe(200);
 		const data = await response.json();
 		expect(data).toHaveLength(2);
-		expect(data[0].name).toBe("Milk");
-		expect(data[1].name).toBe("Eggs");
+		expect(data[0].name).toBe("Pieces");
+		expect(data[1].name).toBe("Grams");
 	});
 });
 
-describe("POST /api/products/", () => {
+describe("POST /api/quantity-units/", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 	});
 
 	it("returns 401 when not authenticated", async () => {
 		vi.mocked(getAuthSession).mockResolvedValue(null);
-		const request = makePostRequest("/api/products", { name: "Milk" });
+		const request = makePostRequest("/api/quantity-units", {
+			name: "Pieces",
+		});
 
 		const response = await POST({ request } as never);
 
@@ -103,30 +104,30 @@ describe("POST /api/products/", () => {
 		expect(await response.json()).toEqual({ error: "Unauthorized" });
 	});
 
-	it("returns 201 with the created product", async () => {
+	it("returns 201 with the created quantity unit", async () => {
 		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
-		const created = makeProduct({ categoryId: "category-1" });
+		const created = makeQuantityUnit();
 		mockReturning.mockResolvedValue([created]);
-		const request = makePostRequest("/api/products", {
-			name: "Milk",
-			categoryId: "category-1",
+		const request = makePostRequest("/api/quantity-units", {
+			name: "Pieces",
+			abbreviation: "pcs",
 		});
 
 		const response = await POST({ request } as never);
 
 		expect(response.status).toBe(201);
 		const data = await response.json();
-		expect(data.name).toBe("Milk");
-		expect(data.categoryId).toBe("category-1");
+		expect(data.name).toBe("Pieces");
+		expect(data.abbreviation).toBe("pcs");
 	});
 
-	it("sets userId from session, not from request body", async () => {
+	it("sets userId from session", async () => {
 		const session = makeSession();
 		vi.mocked(getAuthSession).mockResolvedValue(session as never);
-		const created = makeProduct({ userId: session.user.id });
+		const created = makeQuantityUnit({ userId: session.user.id });
 		mockReturning.mockResolvedValue([created]);
-		const request = makePostRequest("/api/products", {
-			name: "Milk",
+		const request = makePostRequest("/api/quantity-units", {
+			name: "Pieces",
 			userId: "attacker-id",
 		});
 
@@ -135,48 +136,5 @@ describe("POST /api/products/", () => {
 		expect(response.status).toBe(201);
 		const data = await response.json();
 		expect(data.userId).toBe(session.user.id);
-		expect(data.userId).not.toBe("attacker-id");
-	});
-
-	it("defaults minStockAmount to '0'", async () => {
-		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
-		const created = makeProduct();
-		mockReturning.mockResolvedValue([created]);
-		const request = makePostRequest("/api/products", {
-			name: "Milk",
-		});
-
-		const response = await POST({ request } as never);
-
-		expect(response.status).toBe(201);
-		const data = await response.json();
-		expect(data.minStockAmount).toBe("0");
-	});
-
-	it("accepts optional new fields", async () => {
-		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
-		const created = makeProduct({
-			categoryId: "category-1",
-			quantityUnitId: "unit-1",
-			minStockAmount: "5",
-			defaultExpirationDays: 7,
-		});
-		mockReturning.mockResolvedValue([created]);
-		const request = makePostRequest("/api/products", {
-			name: "Milk",
-			categoryId: "category-1",
-			quantityUnitId: "unit-1",
-			minStockAmount: "5",
-			defaultExpirationDays: 7,
-		});
-
-		const response = await POST({ request } as never);
-
-		expect(response.status).toBe(201);
-		const data = await response.json();
-		expect(data.categoryId).toBe("category-1");
-		expect(data.quantityUnitId).toBe("unit-1");
-		expect(data.minStockAmount).toBe("5");
-		expect(data.defaultExpirationDays).toBe(7);
 	});
 });

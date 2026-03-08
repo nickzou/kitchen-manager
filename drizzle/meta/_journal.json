@@ -15,6 +15,13 @@
       "when": 1772908708407,
       "tag": "0001_woozy_ultimates",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1772941933322,
+      "tag": "0002_stock-model",
+      "breakpoints": true
     }
   ]
 }
