@@ -38,6 +38,16 @@ vi.mock("#/lib/hooks/use-products", () => ({
 	useDeleteProduct: (...args: unknown[]) => mockUseDeleteProduct(...args),
 }));
 
+const mockUseCategories = vi.fn();
+vi.mock("#/lib/hooks/use-categories", () => ({
+	useCategories: (...args: unknown[]) => mockUseCategories(...args),
+}));
+
+const mockUseQuantityUnits = vi.fn();
+vi.mock("#/lib/hooks/use-quantity-units", () => ({
+	useQuantityUnits: (...args: unknown[]) => mockUseQuantityUnits(...args),
+}));
+
 vi.mock("#/lib/utils", () => ({
 	cn: (...args: string[]) => args.filter(Boolean).join(" "),
 }));
@@ -47,10 +57,12 @@ import { Route } from "./$id";
 const mockProduct: Product = {
 	id: "1",
 	name: "Tomatoes",
-	category: "Vegetables",
+	categoryId: "c1",
 	description: "Fresh red tomatoes",
 	image: null,
-	expirationDate: "2026-04-01",
+	quantityUnitId: null,
+	minStockAmount: "0",
+	defaultExpirationDays: null,
 	userId: "u1",
 	createdAt: "2026-03-01T00:00:00Z",
 	updatedAt: "2026-03-02T00:00:00Z",
@@ -78,6 +90,12 @@ beforeEach(() => {
 	mockUseDeleteProduct.mockReturnValue({
 		mutateAsync: mockDeleteMutateAsync,
 		isPending: false,
+	});
+	mockUseCategories.mockReturnValue({
+		data: [{ id: "c1", name: "Vegetables" }],
+	});
+	mockUseQuantityUnits.mockReturnValue({
+		data: [{ id: "qu1", name: "Kilograms", abbreviation: "kg" }],
 	});
 });
 
@@ -143,9 +161,11 @@ describe("ProductDetail", () => {
 			await waitFor(() => {
 				expect(mockUpdateMutateAsync).toHaveBeenCalledWith({
 					name: "Cherry Tomatoes",
-					category: "Vegetables",
 					description: "Fresh red tomatoes",
-					expirationDate: "2026-04-01",
+					categoryId: "c1",
+					quantityUnitId: undefined,
+					minStockAmount: undefined,
+					defaultExpirationDays: undefined,
 				});
 			});
 		});

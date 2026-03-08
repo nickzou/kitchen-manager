@@ -35,6 +35,13 @@ export default function Header() {
 						Products
 					</Link>
 					<Link
+						to="/stock"
+						className="nav-link"
+						activeProps={{ className: "nav-link is-active" }}
+					>
+						Stock
+					</Link>
+					<Link
 						to="/categories"
 						className="nav-link"
 						activeProps={{ className: "nav-link is-active" }}
@@ -68,6 +75,9 @@ export default function Header() {
 						</MobileNavLink>
 						<MobileNavLink to="/products" onClick={() => setMenuOpen(false)}>
 							Products
+						</MobileNavLink>
+						<MobileNavLink to="/stock" onClick={() => setMenuOpen(false)}>
+							Stock
 						</MobileNavLink>
 						<MobileNavLink to="/categories" onClick={() => setMenuOpen(false)}>
 							Categories

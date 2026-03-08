@@ -35,6 +35,11 @@ vi.mock("#/lib/hooks/use-products", () => ({
 	useCreateProduct: (...args: unknown[]) => mockUseCreateProduct(...args),
 }));
 
+const mockUseCategories = vi.fn();
+vi.mock("#/lib/hooks/use-categories", () => ({
+	useCategories: (...args: unknown[]) => mockUseCategories(...args),
+}));
+
 vi.mock("#/lib/utils", () => ({
 	cn: (...args: string[]) => args.filter(Boolean).join(" "),
 }));
@@ -44,10 +49,12 @@ import { Route } from "./index";
 const mockProduct: Product = {
 	id: "1",
 	name: "Tomatoes",
-	category: "Vegetables",
+	categoryId: "c1",
 	description: null,
 	image: null,
-	expirationDate: "2026-04-01",
+	quantityUnitId: null,
+	minStockAmount: "0",
+	defaultExpirationDays: null,
 	userId: "u1",
 	createdAt: "2026-03-01T00:00:00Z",
 	updatedAt: "2026-03-01T00:00:00Z",
@@ -69,6 +76,9 @@ beforeEach(() => {
 	mockUseCreateProduct.mockReturnValue({
 		mutateAsync: mockMutateAsync,
 		isPending: false,
+	});
+	mockUseCategories.mockReturnValue({
+		data: [{ id: "c1", name: "Vegetables" }],
 	});
 });
 
@@ -131,7 +141,7 @@ describe("ProductsPage", () => {
 			renderPage();
 
 			expect(screen.getByText("Tomatoes")).toBeDefined();
-			expect(screen.getByText("Vegetables")).toBeDefined();
+			expect(screen.getAllByText("Vegetables").length).toBeGreaterThan(0);
 		});
 
 		it("switches to table view", () => {
@@ -149,7 +159,7 @@ describe("ProductsPage", () => {
 			fireEvent.click(screen.getByTitle("compact view"));
 
 			expect(screen.getByText("Tomatoes")).toBeDefined();
-			expect(screen.getByText("Vegetables")).toBeDefined();
+			expect(screen.getAllByText("Vegetables").length).toBeGreaterThan(0);
 		});
 	});
 
@@ -160,16 +170,15 @@ describe("ProductsPage", () => {
 			fireEvent.change(screen.getByPlaceholderText("Product name *"), {
 				target: { value: "Carrots" },
 			});
-			fireEvent.change(screen.getByPlaceholderText("Category"), {
-				target: { value: "Vegetables" },
+			fireEvent.change(screen.getByRole("combobox"), {
+				target: { value: "c1" },
 			});
 			fireEvent.click(screen.getByText("Add"));
 
 			await waitFor(() => {
 				expect(mockMutateAsync).toHaveBeenCalledWith({
 					name: "Carrots",
-					category: "Vegetables",
-					expirationDate: undefined,
+					categoryId: "c1",
 				});
 			});
 		});

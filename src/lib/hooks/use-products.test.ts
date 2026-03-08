@@ -13,10 +13,12 @@ const mockProducts = [
 	{
 		id: "1",
 		name: "Tomatoes",
-		category: "Vegetables",
+		categoryId: "c1",
 		description: null,
 		image: null,
-		expirationDate: "2026-04-01",
+		quantityUnitId: null,
+		minStockAmount: "0",
+		defaultExpirationDays: null,
 		userId: "u1",
 		createdAt: "2026-03-01T00:00:00Z",
 		updatedAt: "2026-03-01T00:00:00Z",
@@ -84,13 +86,13 @@ describe("useCreateProduct", () => {
 		});
 
 		await waitFor(() =>
-			result.current.mutateAsync({ name: "Carrots", category: "Vegetables" }),
+			result.current.mutateAsync({ name: "Carrots", categoryId: "c1" }),
 		);
 
 		expect(fetch).toHaveBeenCalledWith("/api/products", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ name: "Carrots", category: "Vegetables" }),
+			body: JSON.stringify({ name: "Carrots", categoryId: "c1" }),
 		});
 	});
 });

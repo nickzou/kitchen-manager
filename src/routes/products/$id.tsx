@@ -2,11 +2,13 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Pencil, Trash2, X } from "lucide-react";
 import { useState } from "react";
 import { authClient } from "#/lib/auth-client";
+import { useCategories } from "#/lib/hooks/use-categories";
 import {
 	useDeleteProduct,
 	useProduct,
 	useUpdateProduct,
 } from "#/lib/hooks/use-products";
+import { useQuantityUnits } from "#/lib/hooks/use-quantity-units";
 import { cn } from "#/lib/utils";
 
 export const Route = createFileRoute("/products/$id")({
@@ -19,6 +21,8 @@ function ProductDetail() {
 	const { data: session, isPending: sessionLoading } = authClient.useSession();
 
 	const { data: product, isLoading, error } = useProduct(id);
+	const { data: categories } = useCategories();
+	const { data: quantityUnits } = useQuantityUnits();
 	const updateProduct = useUpdateProduct(id);
 	const deleteProduct = useDeleteProduct();
 
@@ -26,9 +30,11 @@ function ProductDetail() {
 	const [confirmDelete, setConfirmDelete] = useState(false);
 	const [form, setForm] = useState({
 		name: "",
-		category: "",
+		categoryId: "",
 		description: "",
-		expirationDate: "",
+		quantityUnitId: "",
+		minStockAmount: "",
+		defaultExpirationDays: "",
 	});
 
 	if (sessionLoading) return null;
@@ -63,15 +69,32 @@ function ProductDetail() {
 		);
 	}
 
+	function getCategoryName(catId: string | null) {
+		if (!catId) return null;
+		return categories?.find((c) => c.id === catId)?.name ?? null;
+	}
+
+	function getUnitName(unitId: string | null) {
+		if (!unitId) return null;
+		const unit = quantityUnits?.find((u) => u.id === unitId);
+		return unit ? (unit.abbreviation ?? unit.name) : null;
+	}
+
 	function startEditing() {
 		if (!product) return;
 		setForm({
 			name: product.name,
-			category: product.category || "",
+			categoryId: product.categoryId || "",
 			description: product.description || "",
-			expirationDate: product.expirationDate
-				? product.expirationDate.slice(0, 10)
-				: "",
+			quantityUnitId: product.quantityUnitId || "",
+			minStockAmount:
+				Number.parseFloat(product.minStockAmount) > 0
+					? product.minStockAmount
+					: "",
+			defaultExpirationDays:
+				product.defaultExpirationDays != null
+					? String(product.defaultExpirationDays)
+					: "",
 		});
 		setEditing(true);
 	}
@@ -80,9 +103,13 @@ function ProductDetail() {
 		e.preventDefault();
 		await updateProduct.mutateAsync({
 			name: form.name,
-			category: form.category || undefined,
+			categoryId: form.categoryId || undefined,
 			description: form.description || undefined,
-			expirationDate: form.expirationDate || undefined,
+			quantityUnitId: form.quantityUnitId || undefined,
+			minStockAmount: form.minStockAmount || undefined,
+			defaultExpirationDays: form.defaultExpirationDays
+				? Number.parseInt(form.defaultExpirationDays, 10)
+				: undefined,
 		});
 		setEditing(false);
 	}
@@ -99,6 +126,9 @@ function ProductDetail() {
 		if (!dateStr) return "—";
 		return new Date(dateStr).toLocaleDateString();
 	}
+
+	const categoryName = getCategoryName(product.categoryId);
+	const unitName = getUnitName(product.quantityUnitId);
 
 	return (
 		<main className="page-wrap px-4 pb-8 pt-14">
@@ -139,12 +169,20 @@ function ProductDetail() {
 
 						<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
 							Category
-							<input
-								type="text"
-								value={form.category}
-								onChange={(e) => setForm({ ...form, category: e.target.value })}
+							<select
+								value={form.categoryId}
+								onChange={(e) =>
+									setForm({ ...form, categoryId: e.target.value })
+								}
 								className={inputClass}
-							/>
+							>
+								<option value="">None</option>
+								{(categories ?? []).map((c) => (
+									<option key={c.id} value={c.id}>
+										{c.name}
+									</option>
+								))}
+							</select>
 						</label>
 
 						<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
@@ -160,12 +198,46 @@ function ProductDetail() {
 						</label>
 
 						<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
-							Expiration date
-							<input
-								type="date"
-								value={form.expirationDate}
+							Quantity Unit
+							<select
+								value={form.quantityUnitId}
 								onChange={(e) =>
-									setForm({ ...form, expirationDate: e.target.value })
+									setForm({ ...form, quantityUnitId: e.target.value })
+								}
+								className={inputClass}
+							>
+								<option value="">None</option>
+								{(quantityUnits ?? []).map((u) => (
+									<option key={u.id} value={u.id}>
+										{u.name}
+										{u.abbreviation ? ` (${u.abbreviation})` : ""}
+									</option>
+								))}
+							</select>
+						</label>
+
+						<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
+							Min Stock Amount
+							<input
+								type="number"
+								step="any"
+								min="0"
+								value={form.minStockAmount}
+								onChange={(e) =>
+									setForm({ ...form, minStockAmount: e.target.value })
+								}
+								className={inputClass}
+							/>
+						</label>
+
+						<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
+							Default Expiration Days
+							<input
+								type="number"
+								min="1"
+								value={form.defaultExpirationDays}
+								onChange={(e) =>
+									setForm({ ...form, defaultExpirationDays: e.target.value })
 								}
 								className={inputClass}
 							/>
@@ -186,9 +258,9 @@ function ProductDetail() {
 								<h1 className="display-title text-2xl font-bold text-(--sea-ink)">
 									{product.name}
 								</h1>
-								{product.category && (
+								{categoryName && (
 									<span className="mt-2 inline-block rounded-full bg-[rgba(79,184,178,0.14)] px-2.5 py-0.5 text-xs font-medium text-(--lagoon-deep)">
-										{product.category}
+										{categoryName}
 									</span>
 								)}
 							</div>
@@ -219,12 +291,26 @@ function ProductDetail() {
 						)}
 
 						<dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-3">
+							{unitName && (
+								<div>
+									<dt className="font-medium text-(--sea-ink-soft)">Unit</dt>
+									<dd className="mt-0.5 text-(--sea-ink)">{unitName}</dd>
+								</div>
+							)}
+							<div>
+								<dt className="font-medium text-(--sea-ink-soft)">Min Stock</dt>
+								<dd className="mt-0.5 text-(--sea-ink)">
+									{Number.parseFloat(product.minStockAmount) > 0
+										? product.minStockAmount
+										: "—"}
+								</dd>
+							</div>
 							<div>
 								<dt className="font-medium text-(--sea-ink-soft)">
-									Expiration
+									Default Exp. Days
 								</dt>
 								<dd className="mt-0.5 text-(--sea-ink)">
-									{formatDate(product.expirationDate)}
+									{product.defaultExpirationDays ?? "—"}
 								</dd>
 							</div>
 							<div>

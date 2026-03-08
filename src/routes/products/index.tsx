@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Grid3x3, List, Plus, Rows3 } from "lucide-react";
 import { useState } from "react";
 import { authClient } from "#/lib/auth-client";
+import { useCategories } from "#/lib/hooks/use-categories";
 import {
 	type Product,
 	useCreateProduct,
@@ -18,12 +19,12 @@ function ProductsPage() {
 	const navigate = useNavigate();
 
 	const { data: products, isLoading } = useProducts();
+	const { data: categories } = useCategories();
 	const createProduct = useCreateProduct();
 
 	const [view, setView] = useState<ViewMode>("grid");
 	const [name, setName] = useState("");
-	const [category, setCategory] = useState("");
-	const [expirationDate, setExpirationDate] = useState("");
+	const [categoryId, setCategoryId] = useState("");
 
 	if (sessionLoading) return null;
 	if (!session) {
@@ -36,12 +37,15 @@ function ProductsPage() {
 		if (!name.trim()) return;
 		await createProduct.mutateAsync({
 			name: name.trim(),
-			category: category.trim() || undefined,
-			expirationDate: expirationDate || undefined,
+			categoryId: categoryId || undefined,
 		});
 		setName("");
-		setCategory("");
-		setExpirationDate("");
+		setCategoryId("");
+	}
+
+	function getCategoryName(catId: string | null) {
+		if (!catId) return null;
+		return categories?.find((c) => c.id === catId)?.name ?? null;
 	}
 
 	const inputClass =
@@ -67,19 +71,18 @@ function ProductsPage() {
 						onChange={(e) => setName(e.target.value)}
 						className={cn(inputClass, "flex-1 min-w-[160px]")}
 					/>
-					<input
-						type="text"
-						placeholder="Category"
-						value={category}
-						onChange={(e) => setCategory(e.target.value)}
+					<select
+						value={categoryId}
+						onChange={(e) => setCategoryId(e.target.value)}
 						className={cn(inputClass, "w-40")}
-					/>
-					<input
-						type="date"
-						value={expirationDate}
-						onChange={(e) => setExpirationDate(e.target.value)}
-						className={cn(inputClass, "w-40")}
-					/>
+					>
+						<option value="">Category</option>
+						{(categories ?? []).map((c) => (
+							<option key={c.id} value={c.id}>
+								{c.name}
+							</option>
+						))}
+					</select>
 					<button
 						type="submit"
 						disabled={createProduct.isPending}
@@ -122,11 +125,11 @@ function ProductsPage() {
 						No products yet. Add one above!
 					</p>
 				) : view === "grid" ? (
-					<GridView products={products} />
+					<GridView products={products} getCategoryName={getCategoryName} />
 				) : view === "table" ? (
-					<TableView products={products} />
+					<TableView products={products} getCategoryName={getCategoryName} />
 				) : (
-					<CompactView products={products} />
+					<CompactView products={products} getCategoryName={getCategoryName} />
 				)}
 			</section>
 		</main>
@@ -138,34 +141,44 @@ function formatDate(dateStr: string | null) {
 	return new Date(dateStr).toLocaleDateString();
 }
 
-function GridView({ products }: { products: Product[] }) {
+type ViewProps = {
+	products: Product[];
+	getCategoryName: (id: string | null) => string | null;
+};
+
+function GridView({ products, getCategoryName }: ViewProps) {
 	return (
 		<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-			{products.map((p) => (
-				<Link
-					key={p.id}
-					to="/products/$id"
-					params={{ id: p.id }}
-					className="island-shell block rounded-xl p-4 no-underline transition hover:-translate-y-0.5"
-				>
-					<h3 className="mb-1 text-sm font-semibold text-(--sea-ink)">
-						{p.name}
-					</h3>
-					{p.category && (
-						<span className="mb-2 inline-block rounded-full bg-[rgba(79,184,178,0.14)] px-2 py-0.5 text-xs font-medium text-(--lagoon-deep)">
-							{p.category}
-						</span>
-					)}
-					<p className="m-0 text-xs text-(--sea-ink-soft)">
-						Expires: {formatDate(p.expirationDate)}
-					</p>
-				</Link>
-			))}
+			{products.map((p) => {
+				const catName = getCategoryName(p.categoryId);
+				return (
+					<Link
+						key={p.id}
+						to="/products/$id"
+						params={{ id: p.id }}
+						className="island-shell block rounded-xl p-4 no-underline transition hover:-translate-y-0.5"
+					>
+						<h3 className="mb-1 text-sm font-semibold text-(--sea-ink)">
+							{p.name}
+						</h3>
+						{catName && (
+							<span className="mb-2 inline-block rounded-full bg-[rgba(79,184,178,0.14)] px-2 py-0.5 text-xs font-medium text-(--lagoon-deep)">
+								{catName}
+							</span>
+						)}
+						{Number.parseFloat(p.minStockAmount) > 0 && (
+							<p className="m-0 text-xs text-(--sea-ink-soft)">
+								Min stock: {p.minStockAmount}
+							</p>
+						)}
+					</Link>
+				);
+			})}
 		</div>
 	);
 }
 
-function TableView({ products }: { products: Product[] }) {
+function TableView({ products, getCategoryName }: ViewProps) {
 	return (
 		<div className="overflow-x-auto">
 			<table className="w-full text-left text-sm">
@@ -173,7 +186,7 @@ function TableView({ products }: { products: Product[] }) {
 					<tr className="border-b border-(--line) text-xs font-semibold uppercase tracking-wide text-(--sea-ink-soft)">
 						<th className="pb-2 pr-4">Name</th>
 						<th className="pb-2 pr-4">Category</th>
-						<th className="pb-2 pr-4">Expiration</th>
+						<th className="pb-2 pr-4">Min Stock</th>
 						<th className="pb-2">Created</th>
 					</tr>
 				</thead>
@@ -190,10 +203,12 @@ function TableView({ products }: { products: Product[] }) {
 								</Link>
 							</td>
 							<td className="py-2.5 pr-4 text-(--sea-ink-soft)">
-								{p.category || "—"}
+								{getCategoryName(p.categoryId) || "—"}
 							</td>
 							<td className="py-2.5 pr-4 text-(--sea-ink-soft)">
-								{formatDate(p.expirationDate)}
+								{Number.parseFloat(p.minStockAmount) > 0
+									? p.minStockAmount
+									: "—"}
 							</td>
 							<td className="py-2.5 text-(--sea-ink-soft)">
 								{formatDate(p.createdAt)}
@@ -206,7 +221,7 @@ function TableView({ products }: { products: Product[] }) {
 	);
 }
 
-function CompactView({ products }: { products: Product[] }) {
+function CompactView({ products, getCategoryName }: ViewProps) {
 	return (
 		<div className="flex flex-col gap-1">
 			{products.map((p) => (
@@ -218,7 +233,7 @@ function CompactView({ products }: { products: Product[] }) {
 				>
 					<span className="text-sm font-medium text-(--sea-ink)">{p.name}</span>
 					<span className="text-xs text-(--sea-ink-soft)">
-						{p.category || "—"}
+						{getCategoryName(p.categoryId) || "—"}
 					</span>
 				</Link>
 			))}
