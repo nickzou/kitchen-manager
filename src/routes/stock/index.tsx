@@ -58,7 +58,7 @@ function StockPage() {
 	}
 
 	async function handleConsume(stockEntryId: string) {
-		const amount = consumeAmounts[stockEntryId];
+		const amount = consumeAmounts[stockEntryId] ?? "1";
 		if (!amount) return;
 		await consumeStock.mutateAsync({ stockEntryId, quantity: amount });
 		setConsumeAmounts((prev) => ({ ...prev, [stockEntryId]: "" }));
@@ -270,7 +270,7 @@ function StockPage() {
 															step="any"
 															min="0.01"
 															max={entry.quantity}
-															value={consumeAmounts[entry.id] ?? ""}
+															value={consumeAmounts[entry.id] ?? "1"}
 															onChange={(e) =>
 																setConsumeAmounts((prev) => ({
 																	...prev,
@@ -282,7 +282,10 @@ function StockPage() {
 														<button
 															type="button"
 															onClick={() => handleConsume(entry.id)}
-															disabled={consumeStock.isPending}
+															disabled={
+																consumeStock.isPending ||
+																!(consumeAmounts[entry.id] ?? "1")
+															}
 															className="flex h-7 items-center gap-1 rounded-full bg-amber-600 px-2.5 text-xs font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
 														>
 															<Minus size={12} />
