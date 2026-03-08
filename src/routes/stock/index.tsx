@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ChevronDown, ChevronRight, Minus, Plus } from "lucide-react";
 import { useState } from "react";
+import { DatePicker } from "#/components/DatePicker";
 import { authClient } from "#/lib/auth-client";
 import { useCategories } from "#/lib/hooks/use-categories";
 import { useProducts } from "#/lib/hooks/use-products";
@@ -150,12 +151,11 @@ function StockPage() {
 						onChange={(e) => setQuantity(e.target.value)}
 						className={cn(inputClass, "w-28")}
 					/>
-					<input
-						type="date"
-						placeholder="Expiration"
+					<DatePicker
 						value={expirationDate}
-						onChange={(e) => setExpirationDate(e.target.value)}
-						className={cn(inputClass, "w-40")}
+						onChange={setExpirationDate}
+						placeholder="Expiration"
+						className="w-40"
 					/>
 					<input
 						type="number"

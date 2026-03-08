@@ -60,6 +60,26 @@ vi.mock("#/lib/utils", () => ({
 	cn: (...args: string[]) => args.filter(Boolean).join(" "),
 }));
 
+vi.mock("#/components/DatePicker", () => ({
+	DatePicker: ({
+		value,
+		onChange,
+		placeholder,
+	}: {
+		value?: string;
+		onChange: (v: string) => void;
+		placeholder?: string;
+	}) => (
+		<input
+			type="text"
+			placeholder={placeholder}
+			value={value ?? ""}
+			onChange={(e) => onChange(e.target.value)}
+			data-testid="date-picker"
+		/>
+	),
+}));
+
 import { Route } from "./index";
 
 const mockProduct = {
