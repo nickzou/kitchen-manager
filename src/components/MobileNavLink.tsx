@@ -10,7 +10,7 @@ export default function MobileNavLink({
 			className="rounded-lg px-3 py-2 text-(--sea-ink-soft) no-underline transition hover:bg-(--surface)"
 			activeProps={{
 				className:
-					"rounded-lg px-3 py-2 text-(--lagoon-deep) font-bold no-underline",
+					"rounded-lg bg-(--surface) px-3 py-2 font-bold text-white no-underline dark:text-white",
 			}}
 			onClick={onClick}
 			{...props}

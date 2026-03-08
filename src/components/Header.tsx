@@ -22,6 +22,7 @@ export default function Header() {
 					<Link
 						to="/"
 						className="nav-link"
+						activeOptions={{ exact: true }}
 						activeProps={{ className: "nav-link is-active" }}
 					>
 						Home
@@ -58,7 +59,11 @@ export default function Header() {
 
 				{menuOpen && (
 					<div className="flex w-full flex-col gap-1 pt-2 text-sm font-semibold sm:hidden">
-						<MobileNavLink to="/" onClick={() => setMenuOpen(false)}>
+						<MobileNavLink
+							to="/"
+							activeOptions={{ exact: true }}
+							onClick={() => setMenuOpen(false)}
+						>
 							Home
 						</MobileNavLink>
 						<MobileNavLink to="/products" onClick={() => setMenuOpen(false)}>
