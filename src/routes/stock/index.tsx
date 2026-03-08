@@ -1,6 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ChevronDown, ChevronRight, Minus, Plus } from "lucide-react";
 import { useState } from "react";
+import { Combobox } from "#/components/Combobox";
+import { DatePicker } from "#/components/DatePicker";
+import { NumberInput } from "#/components/NumberInput";
 import { authClient } from "#/lib/auth-client";
 import { useCategories } from "#/lib/hooks/use-categories";
 import { useProducts } from "#/lib/hooks/use-products";
@@ -104,9 +107,6 @@ function StockPage() {
 		)
 		.slice(0, 20);
 
-	const inputClass =
-		"h-10 rounded-lg border border-(--line) bg-(--surface) px-3 text-sm text-(--sea-ink) outline-none focus:border-(--lagoon)";
-
 	const transactionBadgeClass: Record<string, string> = {
 		add: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
 		consume:
@@ -127,44 +127,39 @@ function StockPage() {
 					onSubmit={handleAddStock}
 					className="mb-6 flex flex-wrap gap-3 border-b border-(--line) pb-6"
 				>
-					<select
+					<Combobox
 						value={productId}
-						onChange={(e) => setProductId(e.target.value)}
+						onChange={setProductId}
+						options={(products ?? []).map((p) => ({
+							value: p.id,
+							label: p.name,
+						}))}
+						placeholder="Select product *"
 						required
-						className={cn(inputClass, "flex-1 min-w-[160px]")}
-					>
-						<option value="">Select product *</option>
-						{(products ?? []).map((p) => (
-							<option key={p.id} value={p.id}>
-								{p.name}
-							</option>
-						))}
-					</select>
-					<input
-						type="number"
+						className="flex-1 min-w-[160px]"
+					/>
+					<NumberInput
 						placeholder="Quantity *"
 						required
 						step="any"
 						min="0.01"
 						value={quantity}
 						onChange={(e) => setQuantity(e.target.value)}
-						className={cn(inputClass, "w-28")}
+						className="w-28"
 					/>
-					<input
-						type="date"
-						placeholder="Expiration"
+					<DatePicker
 						value={expirationDate}
-						onChange={(e) => setExpirationDate(e.target.value)}
-						className={cn(inputClass, "w-40")}
+						onChange={setExpirationDate}
+						placeholder="Expiration"
+						className="w-40"
 					/>
-					<input
-						type="number"
+					<NumberInput
 						placeholder="Price"
 						step="0.01"
 						min="0"
 						value={price}
 						onChange={(e) => setPrice(e.target.value)}
-						className={cn(inputClass, "w-28")}
+						className="w-28"
 					/>
 					<button
 						type="submit"
@@ -264,8 +259,7 @@ function StockPage() {
 													)}
 													{entry.price && <span>${entry.price}</span>}
 													<div className="ml-auto flex items-center gap-1.5">
-														<input
-															type="number"
+														<NumberInput
 															placeholder="Qty"
 															step="any"
 															min="0.01"
@@ -277,7 +271,7 @@ function StockPage() {
 																	[entry.id]: e.target.value,
 																}))
 															}
-															className="h-7 w-20 rounded border border-(--line) bg-white px-2 text-xs outline-none focus:border-(--lagoon) dark:bg-(--surface)"
+															className="h-7 w-20 rounded border bg-white px-2 text-xs dark:bg-(--surface)"
 														/>
 														<button
 															type="button"

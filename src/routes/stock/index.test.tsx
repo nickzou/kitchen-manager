@@ -60,6 +60,56 @@ vi.mock("#/lib/utils", () => ({
 	cn: (...args: string[]) => args.filter(Boolean).join(" "),
 }));
 
+vi.mock("#/components/Combobox", () => ({
+	Combobox: ({
+		value,
+		onChange,
+		options,
+		placeholder,
+		required,
+	}: {
+		value: string;
+		onChange: (v: string) => void;
+		options: { value: string; label: string }[];
+		placeholder?: string;
+		required?: boolean;
+	}) => (
+		<select
+			value={value}
+			onChange={(e) => onChange(e.target.value)}
+			required={required}
+			aria-label={placeholder}
+		>
+			<option value="">{placeholder}</option>
+			{options.map((o) => (
+				<option key={o.value} value={o.value}>
+					{o.label}
+				</option>
+			))}
+		</select>
+	),
+}));
+
+vi.mock("#/components/DatePicker", () => ({
+	DatePicker: ({
+		value,
+		onChange,
+		placeholder,
+	}: {
+		value?: string;
+		onChange: (v: string) => void;
+		placeholder?: string;
+	}) => (
+		<input
+			type="text"
+			placeholder={placeholder}
+			value={value ?? ""}
+			onChange={(e) => onChange(e.target.value)}
+			data-testid="date-picker"
+		/>
+	),
+}));
+
 import { Route } from "./index";
 
 const mockProduct = {
