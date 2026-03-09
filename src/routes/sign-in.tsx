@@ -34,7 +34,7 @@ function SignIn() {
 	}
 
 	return (
-		<Page as="main" className="px-4 py-12">
+		<Page as="main" className="py-12">
 			<Island
 				as="section"
 				className="animate-rise-in mx-auto max-w-md rounded-2xl p-6 sm:p-8"

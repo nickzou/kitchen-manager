@@ -50,7 +50,7 @@ function CategoriesPage() {
 		"h-10 rounded-lg border border-(--line) bg-(--surface) px-3 text-sm text-(--sea-ink) outline-none focus:border-(--lagoon)";
 
 	return (
-		<Page as="main" className="px-4 pb-8 pt-14">
+		<Page as="main" className="pb-8 pt-14">
 			<Island as="section" className="animate-rise-in rounded-2xl p-6 sm:p-8">
 				<p className="mb-2 text-[0.69rem] font-bold uppercase tracking-[0.16em] text-(--kicker)">
 					Organization

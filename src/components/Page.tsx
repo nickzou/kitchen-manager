@@ -13,9 +13,6 @@ export function Page<T extends React.ElementType = "div">({
 }: PageProps<T>) {
 	const Comp = as || "div";
 	return (
-		<Comp
-			className={cn("mx-auto w-[min(1080px,calc(100%-2rem))]", className)}
-			{...props}
-		/>
+		<Comp className={cn("container mx-auto px-4", className)} {...props} />
 	);
 }

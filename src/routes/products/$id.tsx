@@ -48,7 +48,7 @@ function ProductDetail() {
 
 	if (isLoading) {
 		return (
-			<Page as="main" className="px-4 pb-8 pt-14">
+			<Page as="main" className="pb-8 pt-14">
 				<p className="text-sm text-(--sea-ink-soft)">Loading…</p>
 			</Page>
 		);
@@ -56,7 +56,7 @@ function ProductDetail() {
 
 	if (error || !product) {
 		return (
-			<Page as="main" className="px-4 pb-8 pt-14">
+			<Page as="main" className="pb-8 pt-14">
 				<Island as="section" className="animate-rise-in rounded-2xl p-6 sm:p-8">
 					<h1 className="font-display mb-4 text-3xl font-bold text-(--sea-ink)">
 						Product not found
@@ -134,7 +134,7 @@ function ProductDetail() {
 	const unitName = getUnitName(product.quantityUnitId);
 
 	return (
-		<Page as="main" className="px-4 pb-8 pt-14">
+		<Page as="main" className="pb-8 pt-14">
 			<Link
 				to="/products"
 				className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-(--lagoon-deep) no-underline hover:underline"

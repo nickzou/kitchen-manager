@@ -8,7 +8,7 @@ export const Route = createFileRoute("/about")({
 
 function About() {
 	return (
-		<Page as="main" className="px-4 py-12">
+		<Page as="main" className="py-12">
 			<Island as="section" className="rounded-2xl p-6 sm:p-8">
 				<p className="mb-2 text-[0.69rem] font-bold uppercase tracking-[0.16em] text-(--kicker)">
 					About

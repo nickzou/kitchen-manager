@@ -11,7 +11,7 @@ export default function Header() {
 	const [menuOpen, setMenuOpen] = useState(false);
 
 	return (
-		<header className="sticky top-0 z-50 border-b border-(--line) bg-(--header-bg) px-4 backdrop-blur-lg">
+		<header className="sticky top-0 z-50 border-b border-(--line) bg-(--header-bg) backdrop-blur-lg">
 			<Page
 				as="nav"
 				className="flex flex-wrap items-center gap-x-4 py-3 sm:py-4"

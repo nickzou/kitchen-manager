@@ -7,7 +7,7 @@ export const Route = createFileRoute("/")({ component: App });
 
 function App() {
 	return (
-		<Page as="main" className="px-4 pb-8 pt-14">
+		<Page as="main" className="pb-8 pt-14">
 			<Island
 				as="section"
 				className="animate-rise-in relative overflow-hidden rounded-[2rem] px-6 py-10 sm:px-10 sm:py-14"
