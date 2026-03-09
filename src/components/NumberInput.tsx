@@ -1,9 +1,7 @@
+import type { InputHTMLAttributes } from "react";
 import { cn } from "#/lib/utils";
 
-type NumberInputProps = Omit<
-	React.InputHTMLAttributes<HTMLInputElement>,
-	"type"
->;
+type NumberInputProps = Omit<InputHTMLAttributes<HTMLInputElement>, "type">;
 
 export function NumberInput({ className, ...props }: NumberInputProps) {
 	return (

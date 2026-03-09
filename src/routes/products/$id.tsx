@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Pencil, Trash2, X } from "lucide-react";
-import { useState } from "react";
+import { type FormEvent, useState } from "react";
 import InventorySubNav from "#/components/InventorySubNav";
 import { Island } from "#/components/Island";
 import { Page } from "#/components/Page";
@@ -102,7 +102,7 @@ function ProductDetail() {
 		setEditing(true);
 	}
 
-	async function handleSave(e: React.FormEvent) {
+	async function handleSave(e: FormEvent) {
 		e.preventDefault();
 		await updateProduct.mutateAsync({
 			name: form.name,

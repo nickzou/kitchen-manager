@@ -1,12 +1,13 @@
+import type { ComponentPropsWithoutRef, ElementType, ReactNode } from "react";
 import { cn } from "#/lib/utils";
 
-type PageProps<T extends React.ElementType = "div"> = {
+type PageProps<T extends ElementType = "div"> = {
 	as?: T;
 	className?: string;
-	children?: React.ReactNode;
-} & Omit<React.ComponentPropsWithoutRef<T>, "as" | "className" | "children">;
+	children?: ReactNode;
+} & Omit<ComponentPropsWithoutRef<T>, "as" | "className" | "children">;
 
-export function Page<T extends React.ElementType = "div">({
+export function Page<T extends ElementType = "div">({
 	as,
 	className,
 	...props

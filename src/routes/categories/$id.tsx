@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Pencil, Trash2, X } from "lucide-react";
-import { useState } from "react";
+import { type FormEvent, useState } from "react";
 import InventorySubNav from "#/components/InventorySubNav";
 import { Island } from "#/components/Island";
 import { Page } from "#/components/Page";
@@ -73,7 +73,7 @@ function CategoryDetail() {
 		setEditing(true);
 	}
 
-	async function handleSave(e: React.FormEvent) {
+	async function handleSave(e: FormEvent) {
 		e.preventDefault();
 		await updateCategory.mutateAsync({
 			name: form.name,

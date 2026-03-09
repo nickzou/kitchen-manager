@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { type FormEvent, useState } from "react";
 import { Island } from "#/components/Island";
 import { MobileLink } from "#/components/MobileLink";
 import { Page } from "#/components/Page";
@@ -14,7 +14,7 @@ function SignIn() {
 	const [error, setError] = useState("");
 	const [loading, setLoading] = useState(false);
 
-	async function handleSubmit(e: React.FormEvent) {
+	async function handleSubmit(e: FormEvent) {
 		e.preventDefault();
 		setError("");
 		setLoading(true);

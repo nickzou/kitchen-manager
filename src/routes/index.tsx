@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import logoSvg from "#/assets/logo.svg";
 import { Island } from "#/components/Island";
 import { Page } from "#/components/Page";
 
@@ -14,11 +13,6 @@ function App() {
 			>
 				<div className="pointer-events-none absolute -left-20 -top-24 h-56 w-56 rounded-full bg-[radial-gradient(circle,rgba(79,184,178,0.32),transparent_66%)]" />
 				<div className="pointer-events-none absolute -bottom-20 -right-20 h-56 w-56 rounded-full bg-[radial-gradient(circle,rgba(47,106,74,0.18),transparent_66%)]" />
-				<img
-					src={logoSvg}
-					alt="Kitchen Manager logo"
-					className="mb-6 h-20 w-20"
-				/>
 				<p className="mb-3 text-[0.69rem] font-bold uppercase tracking-[0.16em] text-(--kicker)">
 					TanStack Start Base Template
 				</p>

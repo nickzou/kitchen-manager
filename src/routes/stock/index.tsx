@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ChevronDown, ChevronRight, Minus, Plus } from "lucide-react";
-import { useState } from "react";
+import { type FormEvent, useState } from "react";
 import { Combobox } from "#/components/Combobox";
 import { DatePicker } from "#/components/DatePicker";
 import { Island } from "#/components/Island";
@@ -48,7 +48,7 @@ function StockPage() {
 		return null;
 	}
 
-	async function handleAddStock(e: React.FormEvent) {
+	async function handleAddStock(e: FormEvent) {
 		e.preventDefault();
 		if (!productId || !quantity) return;
 		await createStockEntry.mutateAsync({
