@@ -4,13 +4,21 @@ import {
 } from "@tanstack/react-router";
 import { cn } from "#/lib/utils";
 
-export function Link({ className, ...props }: LinkComponentProps) {
+const baseClass =
+	"relative no-underline text-(--sea-ink-soft) after:content-[''] after:absolute after:left-0 after:-bottom-2 after:h-0.5 after:w-full after:origin-left after:scale-x-0 after:bg-[linear-gradient(90deg,var(--lagoon),#7ed3bf)] after:transition-transform after:duration-[170ms] hover:text-(--sea-ink) hover:after:scale-x-100";
+
+const activeClass = "text-(--sea-ink) after:scale-x-100";
+
+export function Link({ className, activeProps, ...props }: LinkComponentProps) {
+	const resolvedActiveProps =
+		typeof activeProps === "function" ? activeProps() : activeProps;
 	return (
 		<RouterLink
-			className={cn(
-				"text-(--lagoon-deep) decoration-[rgba(50,143,151,0.4)] decoration-1 underline-offset-2 hover:text-[#246f76]",
-				className,
-			)}
+			className={cn(baseClass, className)}
+			activeProps={{
+				...resolvedActiveProps,
+				className: cn(activeClass, resolvedActiveProps?.className),
+			}}
 			{...props}
 		/>
 	);

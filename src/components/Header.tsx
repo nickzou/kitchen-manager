@@ -1,7 +1,8 @@
-import { Link } from "@tanstack/react-router";
+import { Link as RouterLink } from "@tanstack/react-router";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
 import BetterAuthHeader from "../integrations/better-auth/header-user.tsx";
+import { Link } from "./Link";
 import MobileNavLink from "./MobileNavLink";
 import { Page } from "./Page";
 import ThemeToggle from "./ThemeToggle";
@@ -15,36 +16,19 @@ export default function Header() {
 				as="nav"
 				className="flex flex-wrap items-center gap-x-4 py-3 sm:py-4"
 			>
-				<Link
+				<RouterLink
 					to="/"
 					className="text-base font-bold tracking-tight text-(--sea-ink) no-underline"
 				>
 					Kitchen Manager
-				</Link>
+				</RouterLink>
 
 				<div className="hidden items-center gap-x-4 text-sm font-semibold sm:flex">
-					<Link
-						to="/"
-						className="nav-link"
-						activeOptions={{ exact: true }}
-						activeProps={{ className: "nav-link is-active" }}
-					>
+					<Link to="/" activeOptions={{ exact: true }}>
 						Home
 					</Link>
-					<Link
-						to="/products"
-						className="nav-link"
-						activeProps={{ className: "nav-link is-active" }}
-					>
-						Products
-					</Link>
-					<Link
-						to="/stock"
-						className="nav-link"
-						activeProps={{ className: "nav-link is-active" }}
-					>
-						Stock
-					</Link>
+					<Link to="/products">Products</Link>
+					<Link to="/stock">Stock</Link>
 				</div>
 
 				<div className="ml-auto hidden items-center gap-2 sm:flex">

@@ -3,6 +3,7 @@ import { ChevronDown, ChevronRight, Minus, Plus } from "lucide-react";
 import { useState } from "react";
 import { Combobox } from "#/components/Combobox";
 import { DatePicker } from "#/components/DatePicker";
+import { Island } from "#/components/Island";
 import { NumberInput } from "#/components/NumberInput";
 import { Page } from "#/components/Page";
 import { authClient } from "#/lib/auth-client";
@@ -117,8 +118,10 @@ function StockPage() {
 
 	return (
 		<Page as="main" className="px-4 pb-8 pt-14">
-			<section className="island-shell rise-in rounded-2xl p-6 sm:p-8">
-				<p className="island-kicker mb-2">Inventory</p>
+			<Island as="section" className="animate-rise-in rounded-2xl p-6 sm:p-8">
+				<p className="mb-2 text-[0.69rem] font-bold uppercase tracking-[0.16em] text-(--kicker)">
+					Inventory
+				</p>
 				<h1 className="font-display mb-6 text-3xl font-bold text-(--sea-ink)">
 					Stock
 				</h1>
@@ -348,7 +351,7 @@ function StockPage() {
 						</div>
 					</div>
 				)}
-			</section>
+			</Island>
 		</Page>
 	);
 }

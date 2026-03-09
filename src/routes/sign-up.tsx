@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { Link } from "#/components/Link";
+import { Island } from "#/components/Island";
+import { MobileLink } from "#/components/MobileLink";
 import { Page } from "#/components/Page";
 import { authClient } from "#/lib/auth-client";
 
@@ -36,8 +37,13 @@ function SignUp() {
 
 	return (
 		<Page as="main" className="px-4 py-12">
-			<section className="island-shell rise-in mx-auto max-w-md rounded-2xl p-6 sm:p-8">
-				<p className="island-kicker mb-2">Get started</p>
+			<Island
+				as="section"
+				className="animate-rise-in mx-auto max-w-md rounded-2xl p-6 sm:p-8"
+			>
+				<p className="mb-2 text-[0.69rem] font-bold uppercase tracking-[0.16em] text-(--kicker)">
+					Get started
+				</p>
 				<h1 className="font-display mb-6 text-3xl font-bold text-(--sea-ink)">
 					Create an account
 				</h1>
@@ -91,11 +97,11 @@ function SignUp() {
 
 				<p className="mt-6 text-center text-sm text-(--sea-ink-soft)">
 					Already have an account?{" "}
-					<Link to="/sign-in" className="font-medium">
+					<MobileLink to="/sign-in" className="font-medium">
 						Sign in
-					</Link>
+					</MobileLink>
 				</p>
-			</section>
+			</Island>
 		</Page>
 	);
 }

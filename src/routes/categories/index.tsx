@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Grid3x3, List, Plus, Rows3 } from "lucide-react";
 import { useState } from "react";
 import InventorySubNav from "#/components/InventorySubNav";
+import { Island } from "#/components/Island";
 import { Page } from "#/components/Page";
 import { authClient } from "#/lib/auth-client";
 import {
@@ -50,8 +51,10 @@ function CategoriesPage() {
 
 	return (
 		<Page as="main" className="px-4 pb-8 pt-14">
-			<section className="island-shell rise-in rounded-2xl p-6 sm:p-8">
-				<p className="island-kicker mb-2">Organization</p>
+			<Island as="section" className="animate-rise-in rounded-2xl p-6 sm:p-8">
+				<p className="mb-2 text-[0.69rem] font-bold uppercase tracking-[0.16em] text-(--kicker)">
+					Organization
+				</p>
 				<h1 className="font-display mb-6 text-3xl font-bold text-(--sea-ink)">
 					Categories
 				</h1>
@@ -125,7 +128,7 @@ function CategoriesPage() {
 				) : (
 					<CompactView categories={categories} />
 				)}
-			</section>
+			</Island>
 		</Page>
 	);
 }
@@ -143,7 +146,7 @@ function GridView({ categories }: { categories: Category[] }) {
 					key={c.id}
 					to="/categories/$id"
 					params={{ id: c.id }}
-					className="island-shell block rounded-xl p-4 no-underline transition hover:-translate-y-0.5"
+					className="block rounded-xl border border-(--line) bg-linear-165 from-(--surface-strong) to-(--surface) shadow-[inset_0_1px_0_var(--inset-glint),0_22px_44px_rgba(30,90,72,0.1),0_6px_18px_rgba(23,58,64,0.08)] backdrop-blur-[4px] p-4 no-underline transition hover:-translate-y-0.5"
 				>
 					<h3 className="mb-1 text-sm font-semibold text-(--sea-ink)">
 						{c.name}

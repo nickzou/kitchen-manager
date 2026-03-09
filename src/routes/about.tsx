@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { Island } from "#/components/Island";
 import { Page } from "#/components/Page";
 
 export const Route = createFileRoute("/about")({
@@ -8,8 +9,10 @@ export const Route = createFileRoute("/about")({
 function About() {
 	return (
 		<Page as="main" className="px-4 py-12">
-			<section className="island-shell rounded-2xl p-6 sm:p-8">
-				<p className="island-kicker mb-2">About</p>
+			<Island as="section" className="rounded-2xl p-6 sm:p-8">
+				<p className="mb-2 text-[0.69rem] font-bold uppercase tracking-[0.16em] text-(--kicker)">
+					About
+				</p>
 				<h1 className="font-display mb-3 text-4xl font-bold text-(--sea-ink) sm:text-5xl">
 					A small starter with room to grow.
 				</h1>
@@ -18,7 +21,7 @@ function About() {
 					modern SSR defaults. Use this as a clean foundation, then layer in
 					your own routes, styling, and add-ons.
 				</p>
-			</section>
+			</Island>
 		</Page>
 	);
 }

@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Pencil, Trash2, X } from "lucide-react";
 import { useState } from "react";
 import InventorySubNav from "#/components/InventorySubNav";
+import { Island } from "#/components/Island";
 import { Page } from "#/components/Page";
 import { authClient } from "#/lib/auth-client";
 import {
@@ -48,7 +49,7 @@ function CategoryDetail() {
 	if (error || !category) {
 		return (
 			<Page as="main" className="px-4 pb-8 pt-14">
-				<section className="island-shell rise-in rounded-2xl p-6 sm:p-8">
+				<Island as="section" className="animate-rise-in rounded-2xl p-6 sm:p-8">
 					<h1 className="font-display mb-4 text-3xl font-bold text-(--sea-ink)">
 						Category not found
 					</h1>
@@ -58,7 +59,7 @@ function CategoryDetail() {
 					>
 						&larr; Back to categories
 					</Link>
-				</section>
+				</Island>
 			</Page>
 		);
 	}
@@ -106,7 +107,7 @@ function CategoryDetail() {
 
 			<InventorySubNav />
 
-			<section className="island-shell rise-in rounded-2xl p-6 sm:p-8">
+			<Island as="section" className="animate-rise-in rounded-2xl p-6 sm:p-8">
 				{editing ? (
 					<form onSubmit={handleSave} className="flex flex-col gap-4">
 						<div className="flex items-center justify-between">
@@ -226,7 +227,7 @@ function CategoryDetail() {
 						)}
 					</>
 				)}
-			</section>
+			</Island>
 		</Page>
 	);
 }
