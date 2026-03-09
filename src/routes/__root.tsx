@@ -30,13 +30,40 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 				content: "width=device-width, initial-scale=1",
 			},
 			{
-				title: "TanStack Start Starter",
+				title: "Kitchen Manager",
+			},
+			{
+				name: "theme-color",
+				content: "#e7f3ec",
+			},
+			{
+				name: "description",
+				content: "Track your kitchen inventory, stock, and categories",
 			},
 		],
 		links: [
 			{
 				rel: "stylesheet",
 				href: appCss,
+			},
+			{
+				rel: "icon",
+				href: "/favicon.ico",
+				sizes: "48x48",
+			},
+			{
+				rel: "icon",
+				type: "image/png",
+				href: "/logo192.png",
+				sizes: "192x192",
+			},
+			{
+				rel: "apple-touch-icon",
+				href: "/apple-touch-icon.png",
+			},
+			{
+				rel: "manifest",
+				href: "/manifest.json",
 			},
 		],
 	}),
