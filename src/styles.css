@@ -119,6 +119,7 @@
 
 @theme inline {
   --font-sans: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Fraunces', Georgia, serif;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -229,9 +230,6 @@ pre code {
   color: #e8efff;
 }
 
-.display-title {
-  font-family: 'Fraunces', Georgia, serif;
-}
 
 .island-shell {
   border: 1px solid var(--line);

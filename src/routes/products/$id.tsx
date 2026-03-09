@@ -57,7 +57,7 @@ function ProductDetail() {
 		return (
 			<Page as="main" className="px-4 pb-8 pt-14">
 				<section className="island-shell rise-in rounded-2xl p-6 sm:p-8">
-					<h1 className="display-title mb-4 text-3xl font-bold text-(--sea-ink)">
+					<h1 className="font-display mb-4 text-3xl font-bold text-(--sea-ink)">
 						Product not found
 					</h1>
 					<Link
@@ -148,7 +148,7 @@ function ProductDetail() {
 				{editing ? (
 					<form onSubmit={handleSave} className="flex flex-col gap-4">
 						<div className="flex items-center justify-between">
-							<h1 className="display-title text-2xl font-bold text-(--sea-ink)">
+							<h1 className="font-display text-2xl font-bold text-(--sea-ink)">
 								Edit product
 							</h1>
 							<button
@@ -259,7 +259,7 @@ function ProductDetail() {
 					<>
 						<div className="mb-6 flex items-start justify-between gap-4">
 							<div>
-								<h1 className="display-title text-2xl font-bold text-(--sea-ink)">
+								<h1 className="font-display text-2xl font-bold text-(--sea-ink)">
 									{product.name}
 								</h1>
 								{categoryName && (
