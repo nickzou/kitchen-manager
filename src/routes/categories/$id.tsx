@@ -1,7 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Pencil, Trash2, X } from "lucide-react";
-import { useState } from "react";
+import { type FormEvent, useState } from "react";
 import InventorySubNav from "#/components/InventorySubNav";
+import { Island } from "#/components/Island";
+import { Page } from "#/components/Page";
 import { authClient } from "#/lib/auth-client";
 import {
 	useCategory,
@@ -38,17 +40,17 @@ function CategoryDetail() {
 
 	if (isLoading) {
 		return (
-			<main className="page-wrap px-4 pb-8 pt-14">
+			<Page as="main" className="pb-8 pt-14">
 				<p className="text-sm text-(--sea-ink-soft)">Loading…</p>
-			</main>
+			</Page>
 		);
 	}
 
 	if (error || !category) {
 		return (
-			<main className="page-wrap px-4 pb-8 pt-14">
-				<section className="island-shell rise-in rounded-2xl p-6 sm:p-8">
-					<h1 className="display-title mb-4 text-3xl font-bold text-(--sea-ink)">
+			<Page as="main" className="pb-8 pt-14">
+				<Island as="section" className="animate-rise-in rounded-2xl p-6 sm:p-8">
+					<h1 className="font-display mb-4 text-3xl font-bold text-(--sea-ink)">
 						Category not found
 					</h1>
 					<Link
@@ -57,8 +59,8 @@ function CategoryDetail() {
 					>
 						&larr; Back to categories
 					</Link>
-				</section>
-			</main>
+				</Island>
+			</Page>
 		);
 	}
 
@@ -71,7 +73,7 @@ function CategoryDetail() {
 		setEditing(true);
 	}
 
-	async function handleSave(e: React.FormEvent) {
+	async function handleSave(e: FormEvent) {
 		e.preventDefault();
 		await updateCategory.mutateAsync({
 			name: form.name,
@@ -94,7 +96,7 @@ function CategoryDetail() {
 	}
 
 	return (
-		<main className="page-wrap px-4 pb-8 pt-14">
+		<Page as="main" className="pb-8 pt-14">
 			<Link
 				to="/categories"
 				className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-(--lagoon-deep) no-underline hover:underline"
@@ -105,11 +107,11 @@ function CategoryDetail() {
 
 			<InventorySubNav />
 
-			<section className="island-shell rise-in rounded-2xl p-6 sm:p-8">
+			<Island as="section" className="animate-rise-in rounded-2xl p-6 sm:p-8">
 				{editing ? (
 					<form onSubmit={handleSave} className="flex flex-col gap-4">
 						<div className="flex items-center justify-between">
-							<h1 className="display-title text-2xl font-bold text-(--sea-ink)">
+							<h1 className="font-display text-2xl font-bold text-(--sea-ink)">
 								Edit category
 							</h1>
 							<button
@@ -156,7 +158,7 @@ function CategoryDetail() {
 					<>
 						<div className="mb-6 flex items-start justify-between gap-4">
 							<div>
-								<h1 className="display-title text-2xl font-bold text-(--sea-ink)">
+								<h1 className="font-display text-2xl font-bold text-(--sea-ink)">
 									{category.name}
 								</h1>
 							</div>
@@ -225,7 +227,7 @@ function CategoryDetail() {
 						)}
 					</>
 				)}
-			</section>
-		</main>
+			</Island>
+		</Page>
 	);
 }

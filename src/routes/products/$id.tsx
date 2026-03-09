@@ -1,7 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Pencil, Trash2, X } from "lucide-react";
-import { useState } from "react";
+import { type FormEvent, useState } from "react";
 import InventorySubNav from "#/components/InventorySubNav";
+import { Island } from "#/components/Island";
+import { Page } from "#/components/Page";
 import { authClient } from "#/lib/auth-client";
 import { useCategories } from "#/lib/hooks/use-categories";
 import {
@@ -46,17 +48,17 @@ function ProductDetail() {
 
 	if (isLoading) {
 		return (
-			<main className="page-wrap px-4 pb-8 pt-14">
+			<Page as="main" className="pb-8 pt-14">
 				<p className="text-sm text-(--sea-ink-soft)">Loading…</p>
-			</main>
+			</Page>
 		);
 	}
 
 	if (error || !product) {
 		return (
-			<main className="page-wrap px-4 pb-8 pt-14">
-				<section className="island-shell rise-in rounded-2xl p-6 sm:p-8">
-					<h1 className="display-title mb-4 text-3xl font-bold text-(--sea-ink)">
+			<Page as="main" className="pb-8 pt-14">
+				<Island as="section" className="animate-rise-in rounded-2xl p-6 sm:p-8">
+					<h1 className="font-display mb-4 text-3xl font-bold text-(--sea-ink)">
 						Product not found
 					</h1>
 					<Link
@@ -65,8 +67,8 @@ function ProductDetail() {
 					>
 						&larr; Back to products
 					</Link>
-				</section>
-			</main>
+				</Island>
+			</Page>
 		);
 	}
 
@@ -100,7 +102,7 @@ function ProductDetail() {
 		setEditing(true);
 	}
 
-	async function handleSave(e: React.FormEvent) {
+	async function handleSave(e: FormEvent) {
 		e.preventDefault();
 		await updateProduct.mutateAsync({
 			name: form.name,
@@ -132,7 +134,7 @@ function ProductDetail() {
 	const unitName = getUnitName(product.quantityUnitId);
 
 	return (
-		<main className="page-wrap px-4 pb-8 pt-14">
+		<Page as="main" className="pb-8 pt-14">
 			<Link
 				to="/products"
 				className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-(--lagoon-deep) no-underline hover:underline"
@@ -143,11 +145,11 @@ function ProductDetail() {
 
 			<InventorySubNav />
 
-			<section className="island-shell rise-in rounded-2xl p-6 sm:p-8">
+			<Island as="section" className="animate-rise-in rounded-2xl p-6 sm:p-8">
 				{editing ? (
 					<form onSubmit={handleSave} className="flex flex-col gap-4">
 						<div className="flex items-center justify-between">
-							<h1 className="display-title text-2xl font-bold text-(--sea-ink)">
+							<h1 className="font-display text-2xl font-bold text-(--sea-ink)">
 								Edit product
 							</h1>
 							<button
@@ -258,7 +260,7 @@ function ProductDetail() {
 					<>
 						<div className="mb-6 flex items-start justify-between gap-4">
 							<div>
-								<h1 className="display-title text-2xl font-bold text-(--sea-ink)">
+								<h1 className="font-display text-2xl font-bold text-(--sea-ink)">
 									{product.name}
 								</h1>
 								{categoryName && (
@@ -354,7 +356,7 @@ function ProductDetail() {
 						)}
 					</>
 				)}
-			</section>
-		</main>
+			</Island>
+		</Page>
 	);
 }

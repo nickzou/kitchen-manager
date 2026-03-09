@@ -1,9 +1,11 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ChevronDown, ChevronRight, Minus, Plus } from "lucide-react";
-import { useState } from "react";
+import { type FormEvent, useState } from "react";
 import { Combobox } from "#/components/Combobox";
 import { DatePicker } from "#/components/DatePicker";
+import { Island } from "#/components/Island";
 import { NumberInput } from "#/components/NumberInput";
+import { Page } from "#/components/Page";
 import { authClient } from "#/lib/auth-client";
 import { useCategories } from "#/lib/hooks/use-categories";
 import { useProducts } from "#/lib/hooks/use-products";
@@ -46,7 +48,7 @@ function StockPage() {
 		return null;
 	}
 
-	async function handleAddStock(e: React.FormEvent) {
+	async function handleAddStock(e: FormEvent) {
 		e.preventDefault();
 		if (!productId || !quantity) return;
 		await createStockEntry.mutateAsync({
@@ -115,10 +117,12 @@ function StockPage() {
 	};
 
 	return (
-		<main className="page-wrap px-4 pb-8 pt-14">
-			<section className="island-shell rise-in rounded-2xl p-6 sm:p-8">
-				<p className="island-kicker mb-2">Inventory</p>
-				<h1 className="display-title mb-6 text-3xl font-bold text-(--sea-ink)">
+		<Page as="main" className="pb-8 pt-14">
+			<Island as="section" className="animate-rise-in rounded-2xl p-6 sm:p-8">
+				<p className="mb-2 text-[0.69rem] font-bold uppercase tracking-[0.16em] text-(--kicker)">
+					Inventory
+				</p>
+				<h1 className="font-display mb-6 text-3xl font-bold text-(--sea-ink)">
 					Stock
 				</h1>
 
@@ -347,7 +351,7 @@ function StockPage() {
 						</div>
 					</div>
 				)}
-			</section>
-		</main>
+			</Island>
+		</Page>
 	);
 }

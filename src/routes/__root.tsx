@@ -6,6 +6,7 @@ import {
 	Scripts,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
+import type { ReactNode } from "react";
 import Footer from "../components/Footer";
 import Header from "../components/Header";
 
@@ -30,7 +31,15 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 				content: "width=device-width, initial-scale=1",
 			},
 			{
-				title: "TanStack Start Starter",
+				title: "Kitchen Manager",
+			},
+			{
+				name: "theme-color",
+				content: "#e7f3ec",
+			},
+			{
+				name: "description",
+				content: "Track your kitchen inventory, stock, and categories",
 			},
 		],
 		links: [
@@ -38,12 +47,31 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 				rel: "stylesheet",
 				href: appCss,
 			},
+			{
+				rel: "icon",
+				href: "/favicon.ico",
+				sizes: "48x48",
+			},
+			{
+				rel: "icon",
+				type: "image/png",
+				href: "/logo192.png",
+				sizes: "192x192",
+			},
+			{
+				rel: "apple-touch-icon",
+				href: "/apple-touch-icon.png",
+			},
+			{
+				rel: "manifest",
+				href: "/manifest.json",
+			},
 		],
 	}),
 	shellComponent: RootDocument,
 });
 
-function RootDocument({ children }: { children: React.ReactNode }) {
+function RootDocument({ children }: { children: ReactNode }) {
 	return (
 		<html lang="en" suppressHydrationWarning>
 			<head>

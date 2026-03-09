@@ -1,6 +1,8 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
-
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { type FormEvent, useState } from "react";
+import { Island } from "#/components/Island";
+import { MobileLink } from "#/components/MobileLink";
+import { Page } from "#/components/Page";
 import { authClient } from "#/lib/auth-client";
 
 export const Route = createFileRoute("/sign-up")({ component: SignUp });
@@ -13,7 +15,7 @@ function SignUp() {
 	const [error, setError] = useState("");
 	const [loading, setLoading] = useState(false);
 
-	async function handleSubmit(e: React.FormEvent) {
+	async function handleSubmit(e: FormEvent) {
 		e.preventDefault();
 		setError("");
 		setLoading(true);
@@ -34,10 +36,15 @@ function SignUp() {
 	}
 
 	return (
-		<main className="page-wrap px-4 py-12">
-			<section className="island-shell rise-in mx-auto max-w-md rounded-2xl p-6 sm:p-8">
-				<p className="island-kicker mb-2">Get started</p>
-				<h1 className="display-title mb-6 text-3xl font-bold text-(--sea-ink)">
+		<Page as="main" className="py-12">
+			<Island
+				as="section"
+				className="animate-rise-in mx-auto max-w-md rounded-2xl p-6 sm:p-8"
+			>
+				<p className="mb-2 text-[0.69rem] font-bold uppercase tracking-[0.16em] text-(--kicker)">
+					Get started
+				</p>
+				<h1 className="font-display mb-6 text-3xl font-bold text-(--sea-ink)">
 					Create an account
 				</h1>
 
@@ -90,11 +97,11 @@ function SignUp() {
 
 				<p className="mt-6 text-center text-sm text-(--sea-ink-soft)">
 					Already have an account?{" "}
-					<Link to="/sign-in" className="font-medium text-(--lagoon-deep)">
+					<MobileLink to="/sign-in" className="font-medium">
 						Sign in
-					</Link>
+					</MobileLink>
 				</p>
-			</section>
-		</main>
+			</Island>
+		</Page>
 	);
 }

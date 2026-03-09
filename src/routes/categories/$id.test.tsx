@@ -5,6 +5,7 @@ import {
 	screen,
 	waitFor,
 } from "@testing-library/react";
+import type { ComponentType, ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Category } from "#/lib/hooks/use-categories";
 import { createTestWrapper } from "#/tests/helpers/test-wrapper";
@@ -16,14 +17,14 @@ const mockUseUpdateCategory = vi.fn();
 const mockUseDeleteCategory = vi.fn();
 
 vi.mock("@tanstack/react-router", () => ({
-	createFileRoute: () => (opts: { component: React.ComponentType }) => ({
+	createFileRoute: () => (opts: { component: ComponentType }) => ({
 		component: opts.component,
 		useParams: () => ({ id: "1" }),
 	}),
 	useNavigate: () => mockNavigate,
 	Link: ({ children, to, ...props }: Record<string, unknown>) => (
 		<a href={to as string} {...props}>
-			{children as React.ReactNode}
+			{children as ReactNode}
 		</a>
 	),
 }));
@@ -87,7 +88,7 @@ afterEach(() => {
 });
 
 function renderPage() {
-	const Component = (Route as unknown as { component: React.ComponentType })
+	const Component = (Route as unknown as { component: ComponentType })
 		.component;
 	const Wrapper = createTestWrapper();
 	return render(<Component />, { wrapper: Wrapper });
