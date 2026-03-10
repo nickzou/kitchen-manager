@@ -183,11 +183,13 @@ function StockPage() {
 					</button>
 				</form>
 
-				<SearchInput
-					placeholder="Search..."
-					value={search}
-					onChange={(e) => setSearch(e.target.value)}
-				/>
+				<div className="mb-4">
+					<SearchInput
+						placeholder="Search..."
+						value={search}
+						onChange={(e) => setSearch(e.target.value)}
+					/>
+				</div>
 
 				{/* Product stock list */}
 				{entriesLoading ? (
