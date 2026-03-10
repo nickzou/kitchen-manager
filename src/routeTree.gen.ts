@@ -14,9 +14,11 @@ import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as StockIndexRouteImport } from './routes/stock/index'
+import { Route as RecipesIndexRouteImport } from './routes/recipes/index'
 import { Route as QuantityUnitsIndexRouteImport } from './routes/quantity-units/index'
 import { Route as ProductsIndexRouteImport } from './routes/products/index'
 import { Route as CategoriesIndexRouteImport } from './routes/categories/index'
+import { Route as RecipesIdRouteImport } from './routes/recipes/$id'
 import { Route as QuantityUnitsIdRouteImport } from './routes/quantity-units/$id'
 import { Route as ProductsIdRouteImport } from './routes/products/$id'
 import { Route as CategoriesIdRouteImport } from './routes/categories/$id'
@@ -64,6 +66,11 @@ const StockIndexRoute = StockIndexRouteImport.update({
   path: '/stock/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RecipesIndexRoute = RecipesIndexRouteImport.update({
+  id: '/recipes/',
+  path: '/recipes/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const QuantityUnitsIndexRoute = QuantityUnitsIndexRouteImport.update({
   id: '/quantity-units/',
   path: '/quantity-units/',
@@ -77,6 +84,11 @@ const ProductsIndexRoute = ProductsIndexRouteImport.update({
 const CategoriesIndexRoute = CategoriesIndexRouteImport.update({
   id: '/categories/',
   path: '/categories/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RecipesIdRoute = RecipesIdRouteImport.update({
+  id: '/recipes/$id',
+  path: '/recipes/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const QuantityUnitsIdRoute = QuantityUnitsIdRouteImport.update({
@@ -195,9 +207,11 @@ export interface FileRoutesByFullPath {
   '/categories/$id': typeof CategoriesIdRoute
   '/products/$id': typeof ProductsIdRoute
   '/quantity-units/$id': typeof QuantityUnitsIdRoute
+  '/recipes/$id': typeof RecipesIdRoute
   '/categories/': typeof CategoriesIndexRoute
   '/products/': typeof ProductsIndexRoute
   '/quantity-units/': typeof QuantityUnitsIndexRoute
+  '/recipes/': typeof RecipesIndexRoute
   '/stock/': typeof StockIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/categories/$id': typeof ApiCategoriesIdRoute
@@ -226,9 +240,11 @@ export interface FileRoutesByTo {
   '/categories/$id': typeof CategoriesIdRoute
   '/products/$id': typeof ProductsIdRoute
   '/quantity-units/$id': typeof QuantityUnitsIdRoute
+  '/recipes/$id': typeof RecipesIdRoute
   '/categories': typeof CategoriesIndexRoute
   '/products': typeof ProductsIndexRoute
   '/quantity-units': typeof QuantityUnitsIndexRoute
+  '/recipes': typeof RecipesIndexRoute
   '/stock': typeof StockIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/categories/$id': typeof ApiCategoriesIdRoute
@@ -258,9 +274,11 @@ export interface FileRoutesById {
   '/categories/$id': typeof CategoriesIdRoute
   '/products/$id': typeof ProductsIdRoute
   '/quantity-units/$id': typeof QuantityUnitsIdRoute
+  '/recipes/$id': typeof RecipesIdRoute
   '/categories/': typeof CategoriesIndexRoute
   '/products/': typeof ProductsIndexRoute
   '/quantity-units/': typeof QuantityUnitsIndexRoute
+  '/recipes/': typeof RecipesIndexRoute
   '/stock/': typeof StockIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/categories/$id': typeof ApiCategoriesIdRoute
@@ -291,9 +309,11 @@ export interface FileRouteTypes {
     | '/categories/$id'
     | '/products/$id'
     | '/quantity-units/$id'
+    | '/recipes/$id'
     | '/categories/'
     | '/products/'
     | '/quantity-units/'
+    | '/recipes/'
     | '/stock/'
     | '/api/auth/$'
     | '/api/categories/$id'
@@ -322,9 +342,11 @@ export interface FileRouteTypes {
     | '/categories/$id'
     | '/products/$id'
     | '/quantity-units/$id'
+    | '/recipes/$id'
     | '/categories'
     | '/products'
     | '/quantity-units'
+    | '/recipes'
     | '/stock'
     | '/api/auth/$'
     | '/api/categories/$id'
@@ -353,9 +375,11 @@ export interface FileRouteTypes {
     | '/categories/$id'
     | '/products/$id'
     | '/quantity-units/$id'
+    | '/recipes/$id'
     | '/categories/'
     | '/products/'
     | '/quantity-units/'
+    | '/recipes/'
     | '/stock/'
     | '/api/auth/$'
     | '/api/categories/$id'
@@ -385,9 +409,11 @@ export interface RootRouteChildren {
   CategoriesIdRoute: typeof CategoriesIdRoute
   ProductsIdRoute: typeof ProductsIdRoute
   QuantityUnitsIdRoute: typeof QuantityUnitsIdRoute
+  RecipesIdRoute: typeof RecipesIdRoute
   CategoriesIndexRoute: typeof CategoriesIndexRoute
   ProductsIndexRoute: typeof ProductsIndexRoute
   QuantityUnitsIndexRoute: typeof QuantityUnitsIndexRoute
+  RecipesIndexRoute: typeof RecipesIndexRoute
   StockIndexRoute: typeof StockIndexRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiCategoriesIdRoute: typeof ApiCategoriesIdRoute
@@ -444,6 +470,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StockIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/recipes/': {
+      id: '/recipes/'
+      path: '/recipes'
+      fullPath: '/recipes/'
+      preLoaderRoute: typeof RecipesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/quantity-units/': {
       id: '/quantity-units/'
       path: '/quantity-units'
@@ -463,6 +496,13 @@ declare module '@tanstack/react-router' {
       path: '/categories'
       fullPath: '/categories/'
       preLoaderRoute: typeof CategoriesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/recipes/$id': {
+      id: '/recipes/$id'
+      path: '/recipes/$id'
+      fullPath: '/recipes/$id'
+      preLoaderRoute: typeof RecipesIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/quantity-units/$id': {
@@ -638,9 +678,11 @@ const rootRouteChildren: RootRouteChildren = {
   CategoriesIdRoute: CategoriesIdRoute,
   ProductsIdRoute: ProductsIdRoute,
   QuantityUnitsIdRoute: QuantityUnitsIdRoute,
+  RecipesIdRoute: RecipesIdRoute,
   CategoriesIndexRoute: CategoriesIndexRoute,
   ProductsIndexRoute: ProductsIndexRoute,
   QuantityUnitsIndexRoute: QuantityUnitsIndexRoute,
+  RecipesIndexRoute: RecipesIndexRoute,
   StockIndexRoute: StockIndexRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiCategoriesIdRoute: ApiCategoriesIdRoute,
