@@ -111,3 +111,36 @@ export function makeStockLog(overrides?: Record<string, unknown>) {
 		...overrides,
 	};
 }
+
+export function makeRecipe(overrides?: Record<string, unknown>) {
+	return {
+		id: "recipe-1",
+		name: "Pancakes",
+		description: "Fluffy pancakes",
+		servings: 4,
+		prepTime: 10,
+		cookTime: 15,
+		instructions: "Mix and cook",
+		categoryId: null,
+		userId: "user-1",
+		createdAt: new Date("2025-01-01"),
+		updatedAt: new Date("2025-01-01"),
+		...overrides,
+	};
+}
+
+export function makeRecipeIngredient(overrides?: Record<string, unknown>) {
+	return {
+		id: "recipe-ingredient-1",
+		recipeId: "recipe-1",
+		productId: "product-1",
+		quantity: "2",
+		quantityUnitId: null,
+		notes: null,
+		sortOrder: 0,
+		userId: "user-1",
+		createdAt: new Date("2025-01-01"),
+		updatedAt: new Date("2025-01-01"),
+		...overrides,
+	};
+}

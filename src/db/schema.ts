@@ -244,3 +244,97 @@ export const stockLogRelations = relations(stockLog, ({ one }) => ({
 		references: [stockEntry.id],
 	}),
 }));
+
+export const recipe = pgTable(
+	"recipe",
+	{
+		id: text("id")
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		name: text("name").notNull(),
+		description: text("description"),
+		servings: integer("servings"),
+		prepTime: integer("prep_time"),
+		cookTime: integer("cook_time"),
+		instructions: text("instructions"),
+		categoryId: text("category_id").references(() => category.id, {
+			onDelete: "set null",
+		}),
+		userId: text("user_id")
+			.notNull()
+			.references(() => user.id, { onDelete: "cascade" }),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+		updatedAt: timestamp("updated_at")
+			.defaultNow()
+			.$onUpdate(() => new Date())
+			.notNull(),
+	},
+	(table) => [index("recipe_userId_idx").on(table.userId)],
+);
+
+export const recipeRelations = relations(recipe, ({ one, many }) => ({
+	user: one(user, {
+		fields: [recipe.userId],
+		references: [user.id],
+	}),
+	category: one(category, {
+		fields: [recipe.categoryId],
+		references: [category.id],
+	}),
+	ingredients: many(recipeIngredient),
+}));
+
+export const recipeIngredient = pgTable(
+	"recipe_ingredient",
+	{
+		id: text("id")
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		recipeId: text("recipe_id")
+			.notNull()
+			.references(() => recipe.id, { onDelete: "cascade" }),
+		productId: text("product_id").references(() => product.id, {
+			onDelete: "set null",
+		}),
+		quantity: numeric("quantity").notNull(),
+		quantityUnitId: text("quantity_unit_id").references(() => quantityUnit.id, {
+			onDelete: "set null",
+		}),
+		notes: text("notes"),
+		sortOrder: integer("sort_order").default(0).notNull(),
+		userId: text("user_id")
+			.notNull()
+			.references(() => user.id, { onDelete: "cascade" }),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+		updatedAt: timestamp("updated_at")
+			.defaultNow()
+			.$onUpdate(() => new Date())
+			.notNull(),
+	},
+	(table) => [
+		index("recipeIngredient_userId_idx").on(table.userId),
+		index("recipeIngredient_recipeId_idx").on(table.recipeId),
+	],
+);
+
+export const recipeIngredientRelations = relations(
+	recipeIngredient,
+	({ one }) => ({
+		user: one(user, {
+			fields: [recipeIngredient.userId],
+			references: [user.id],
+		}),
+		recipe: one(recipe, {
+			fields: [recipeIngredient.recipeId],
+			references: [recipe.id],
+		}),
+		product: one(product, {
+			fields: [recipeIngredient.productId],
+			references: [product.id],
+		}),
+		quantityUnit: one(quantityUnit, {
+			fields: [recipeIngredient.quantityUnitId],
+			references: [quantityUnit.id],
+		}),
+	}),
+);
