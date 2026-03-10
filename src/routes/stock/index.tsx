@@ -6,6 +6,7 @@ import { DatePicker } from "#src/components/DatePicker";
 import { Island } from "#src/components/Island";
 import { NumberInput } from "#src/components/NumberInput";
 import { Page } from "#src/components/Page";
+import { SearchInput } from "#src/components/SearchInput";
 import { authClient } from "#src/lib/auth-client";
 import { useCategories } from "#src/lib/hooks/use-categories";
 import { useProducts } from "#src/lib/hooks/use-products";
@@ -38,6 +39,7 @@ function StockPage() {
 	const [expirationDate, setExpirationDate] = useState("");
 	const [price, setPrice] = useState("");
 	const [expandedProduct, setExpandedProduct] = useState<string | null>(null);
+	const [search, setSearch] = useState("");
 	const [consumeAmounts, setConsumeAmounts] = useState<Record<string, string>>(
 		{},
 	);
@@ -101,6 +103,12 @@ function StockPage() {
 		);
 		return { product: p, entries, totalStock };
 	});
+
+	const filteredProductStockList = search.trim()
+		? productStockList.filter((item) =>
+				item.product.name.toLowerCase().includes(search.toLowerCase()),
+			)
+		: productStockList;
 
 	const recentLogs = [...(stockLogs ?? [])]
 		.sort(
@@ -175,6 +183,14 @@ function StockPage() {
 					</button>
 				</form>
 
+				<div className="mb-4">
+					<SearchInput
+						placeholder="Search..."
+						value={search}
+						onChange={(e) => setSearch(e.target.value)}
+					/>
+				</div>
+
 				{/* Product stock list */}
 				{entriesLoading ? (
 					<p className="text-sm text-(--sea-ink-soft)">Loading…</p>
@@ -182,132 +198,138 @@ function StockPage() {
 					<p className="text-sm text-(--sea-ink-soft)">
 						No products yet. Add stock above!
 					</p>
+				) : !filteredProductStockList.length ? (
+					<p className="text-sm text-(--sea-ink-soft)">
+						No products match your search.
+					</p>
 				) : (
 					<div className="mb-8 flex flex-col gap-1">
-						{productStockList.map(({ product, entries, totalStock }) => {
-							const unit = getUnitAbbr(product.quantityUnitId);
-							const isLow =
-								Number.parseFloat(product.minStockAmount) > 0 &&
-								totalStock < Number.parseFloat(product.minStockAmount);
-							const isExpanded = expandedProduct === product.id;
-							const categoryName = getCategoryName(product.categoryId);
+						{filteredProductStockList.map(
+							({ product, entries, totalStock }) => {
+								const unit = getUnitAbbr(product.quantityUnitId);
+								const isLow =
+									Number.parseFloat(product.minStockAmount) > 0 &&
+									totalStock < Number.parseFloat(product.minStockAmount);
+								const isExpanded = expandedProduct === product.id;
+								const categoryName = getCategoryName(product.categoryId);
 
-							return (
-								<div key={product.id}>
-									<button
-										type="button"
-										onClick={() =>
-											setExpandedProduct(isExpanded ? null : product.id)
-										}
-										className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition hover:bg-(--surface)"
-									>
-										{isExpanded ? (
-											<ChevronDown
-												size={16}
-												className="text-(--sea-ink-soft)"
-											/>
-										) : (
-											<ChevronRight
-												size={16}
-												className="text-(--sea-ink-soft)"
-											/>
-										)}
-										<span className="flex-1 text-sm font-medium text-(--sea-ink)">
-											{product.name}
-											{categoryName && (
-												<span className="ml-2 rounded-full bg-[rgba(79,184,178,0.14)] px-2 py-0.5 text-xs font-medium text-(--lagoon-deep)">
-													{categoryName}
-												</span>
-											)}
-										</span>
-										<span
-											className={cn(
-												"text-sm font-semibold",
-												isLow
-													? "text-red-600 dark:text-red-400"
-													: "text-(--sea-ink)",
-											)}
+								return (
+									<div key={product.id}>
+										<button
+											type="button"
+											onClick={() =>
+												setExpandedProduct(isExpanded ? null : product.id)
+											}
+											className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition hover:bg-(--surface)"
 										>
-											{totalStock}
-											{unit ? ` ${unit}` : ""}
-											{isLow && " ⚠"}
-										</span>
-									</button>
-
-									{isExpanded && entries.length > 0 && (
-										<div className="ml-8 mb-2 flex flex-col gap-1">
-											{entries.map((entry) => (
-												<div
-													key={entry.id}
-													className="flex flex-wrap items-center gap-3 rounded-lg bg-(--surface) px-3 py-2 text-xs text-(--sea-ink-soft)"
-												>
-													<span className="font-medium text-(--sea-ink)">
-														{entry.quantity}
-														{unit ? ` ${unit}` : ""}
-													</span>
-													{entry.expirationDate && (
-														<span>
-															Exp:{" "}
-															{new Date(
-																entry.expirationDate,
-															).toLocaleDateString()}
-														</span>
-													)}
-													{entry.purchaseDate && (
-														<span>
-															Purchased:{" "}
-															{new Date(
-																entry.purchaseDate,
-															).toLocaleDateString()}
-														</span>
-													)}
-													{entry.price && <span>${entry.price}</span>}
-													<div className="ml-auto flex items-center gap-1.5">
-														<NumberInput
-															placeholder="Qty"
-															step="any"
-															min="0.01"
-															max={entry.quantity}
-															value={consumeAmounts[entry.id] ?? "1"}
-															onChange={(e) =>
-																setConsumeAmounts((prev) => ({
-																	...prev,
-																	[entry.id]: e.target.value,
-																}))
-															}
-															className="h-7 w-20 rounded border bg-white px-2 text-xs dark:bg-(--surface)"
-														/>
-														<button
-															type="button"
-															onClick={() => handleConsume(entry.id)}
-															disabled={
-																consumeStock.isPending ||
-																!(consumeAmounts[entry.id] ?? "1")
-															}
-															className="flex h-7 items-center gap-1 rounded-full bg-amber-600 px-2.5 text-xs font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
-														>
-															<Minus size={12} />
-															Use
-														</button>
-													</div>
-												</div>
-											))}
-											{entries.length === 0 && (
-												<p className="px-3 py-2 text-xs text-(--sea-ink-soft)">
-													No stock entries
-												</p>
+											{isExpanded ? (
+												<ChevronDown
+													size={16}
+													className="text-(--sea-ink-soft)"
+												/>
+											) : (
+												<ChevronRight
+													size={16}
+													className="text-(--sea-ink-soft)"
+												/>
 											)}
-										</div>
-									)}
+											<span className="flex-1 text-sm font-medium text-(--sea-ink)">
+												{product.name}
+												{categoryName && (
+													<span className="ml-2 rounded-full bg-[rgba(79,184,178,0.14)] px-2 py-0.5 text-xs font-medium text-(--lagoon-deep)">
+														{categoryName}
+													</span>
+												)}
+											</span>
+											<span
+												className={cn(
+													"text-sm font-semibold",
+													isLow
+														? "text-red-600 dark:text-red-400"
+														: "text-(--sea-ink)",
+												)}
+											>
+												{totalStock}
+												{unit ? ` ${unit}` : ""}
+												{isLow && " ⚠"}
+											</span>
+										</button>
 
-									{isExpanded && entries.length === 0 && (
-										<p className="ml-8 mb-2 px-3 py-2 text-xs text-(--sea-ink-soft)">
-											No stock entries
-										</p>
-									)}
-								</div>
-							);
-						})}
+										{isExpanded && entries.length > 0 && (
+											<div className="ml-8 mb-2 flex flex-col gap-1">
+												{entries.map((entry) => (
+													<div
+														key={entry.id}
+														className="flex flex-wrap items-center gap-3 rounded-lg bg-(--surface) px-3 py-2 text-xs text-(--sea-ink-soft)"
+													>
+														<span className="font-medium text-(--sea-ink)">
+															{entry.quantity}
+															{unit ? ` ${unit}` : ""}
+														</span>
+														{entry.expirationDate && (
+															<span>
+																Exp:{" "}
+																{new Date(
+																	entry.expirationDate,
+																).toLocaleDateString()}
+															</span>
+														)}
+														{entry.purchaseDate && (
+															<span>
+																Purchased:{" "}
+																{new Date(
+																	entry.purchaseDate,
+																).toLocaleDateString()}
+															</span>
+														)}
+														{entry.price && <span>${entry.price}</span>}
+														<div className="ml-auto flex items-center gap-1.5">
+															<NumberInput
+																placeholder="Qty"
+																step="any"
+																min="0.01"
+																max={entry.quantity}
+																value={consumeAmounts[entry.id] ?? "1"}
+																onChange={(e) =>
+																	setConsumeAmounts((prev) => ({
+																		...prev,
+																		[entry.id]: e.target.value,
+																	}))
+																}
+																className="h-7 w-20 rounded border bg-white px-2 text-xs dark:bg-(--surface)"
+															/>
+															<button
+																type="button"
+																onClick={() => handleConsume(entry.id)}
+																disabled={
+																	consumeStock.isPending ||
+																	!(consumeAmounts[entry.id] ?? "1")
+																}
+																className="flex h-7 items-center gap-1 rounded-full bg-amber-600 px-2.5 text-xs font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
+															>
+																<Minus size={12} />
+																Use
+															</button>
+														</div>
+													</div>
+												))}
+												{entries.length === 0 && (
+													<p className="px-3 py-2 text-xs text-(--sea-ink-soft)">
+														No stock entries
+													</p>
+												)}
+											</div>
+										)}
+
+										{isExpanded && entries.length === 0 && (
+											<p className="ml-8 mb-2 px-3 py-2 text-xs text-(--sea-ink-soft)">
+												No stock entries
+											</p>
+										)}
+									</div>
+								);
+							},
+						)}
 					</div>
 				)}
 

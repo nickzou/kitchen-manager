@@ -244,6 +244,70 @@ describe("StockPage", () => {
 		});
 	});
 
+	describe("search filter", () => {
+		it("renders search input", () => {
+			renderPage();
+
+			expect(screen.getByPlaceholderText("Search...")).toBeDefined();
+		});
+
+		it("filters products by name", () => {
+			const mockProduct2 = {
+				...mockProduct,
+				id: "p2",
+				name: "Carrots",
+				categoryId: null,
+			};
+			mockUseProducts.mockReturnValue({ data: [mockProduct, mockProduct2] });
+			mockUseStockEntries.mockReturnValue({
+				data: [
+					mockStockEntry,
+					{ ...mockStockEntry, id: "se2", productId: "p2" },
+				],
+				isLoading: false,
+			});
+
+			renderPage();
+
+			// Both products visible in stock list before search
+			const carrotsBefore = screen.getAllByText("Carrots");
+			expect(carrotsBefore.length).toBeGreaterThan(0);
+
+			fireEvent.change(screen.getByPlaceholderText("Search..."), {
+				target: { value: "tom" },
+			});
+
+			// Tomatoes still visible in stock list
+			expect(screen.getAllByText("Tomatoes").length).toBeGreaterThan(0);
+			// Carrots only appears in the combobox dropdown, not in the stock list
+			const carrotsAfter = screen.queryAllByText("Carrots");
+			// Should only be in the select option, not in a button (stock list item)
+			for (const el of carrotsAfter) {
+				expect(el.tagName).toBe("OPTION");
+			}
+		});
+
+		it("shows no results message when search matches nothing", () => {
+			renderPage();
+
+			fireEvent.change(screen.getByPlaceholderText("Search..."), {
+				target: { value: "xyz" },
+			});
+
+			expect(screen.getByText("No products match your search.")).toBeDefined();
+		});
+
+		it("is case-insensitive", () => {
+			renderPage();
+
+			fireEvent.change(screen.getByPlaceholderText("Search..."), {
+				target: { value: "TOMATOES" },
+			});
+
+			expect(screen.getAllByText("Tomatoes").length).toBeGreaterThan(0);
+		});
+	});
+
 	describe("quick-add form", () => {
 		it("submits stock entry form", async () => {
 			renderPage();

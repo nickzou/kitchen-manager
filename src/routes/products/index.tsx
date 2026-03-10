@@ -1,9 +1,10 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Grid3x3, List, Plus, Rows3 } from "lucide-react";
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useMemo, useState } from "react";
 import InventorySubNav from "#src/components/InventorySubNav";
 import { Island } from "#src/components/Island";
 import { Page } from "#src/components/Page";
+import { SearchInput } from "#src/components/SearchInput";
 import { authClient } from "#src/lib/auth-client";
 import { useCategories } from "#src/lib/hooks/use-categories";
 import {
@@ -28,6 +29,13 @@ function ProductsPage() {
 	const [view, setView] = useState<ViewMode>("grid");
 	const [name, setName] = useState("");
 	const [categoryId, setCategoryId] = useState("");
+	const [search, setSearch] = useState("");
+
+	const filteredProducts = useMemo(() => {
+		if (!products || !search.trim()) return products;
+		const term = search.toLowerCase();
+		return products.filter((p) => p.name.toLowerCase().includes(term));
+	}, [products, search]);
 
 	if (sessionLoading) return null;
 	if (!session) {
@@ -100,29 +108,36 @@ function ProductsPage() {
 					</button>
 				</form>
 
-				<div className="mb-4 flex items-center gap-1">
-					{(
-						[
-							["grid", Grid3x3],
-							["table", List],
-							["compact", Rows3],
-						] as const
-					).map(([mode, Icon]) => (
-						<button
-							key={mode}
-							type="button"
-							onClick={() => setView(mode)}
-							className={cn(
-								"rounded-lg p-2 transition",
-								view === mode
-									? "bg-(--lagoon) text-white"
-									: "text-(--sea-ink-soft) hover:bg-(--surface)",
-							)}
-							title={`${mode} view`}
-						>
-							<Icon size={18} />
-						</button>
-					))}
+				<div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+					<SearchInput
+						placeholder="Search..."
+						value={search}
+						onChange={(e) => setSearch(e.target.value)}
+					/>
+					<div className="flex items-center gap-1 sm:ml-auto">
+						{(
+							[
+								["grid", Grid3x3],
+								["table", List],
+								["compact", Rows3],
+							] as const
+						).map(([mode, Icon]) => (
+							<button
+								key={mode}
+								type="button"
+								onClick={() => setView(mode)}
+								className={cn(
+									"rounded-lg p-2 transition",
+									view === mode
+										? "bg-(--lagoon) text-white"
+										: "text-(--sea-ink-soft) hover:bg-(--surface)",
+								)}
+								title={`${mode} view`}
+							>
+								<Icon size={18} />
+							</button>
+						))}
+					</div>
 				</div>
 
 				{isLoading ? (
@@ -131,12 +146,25 @@ function ProductsPage() {
 					<p className="text-sm text-(--sea-ink-soft)">
 						No products yet. Add one above!
 					</p>
+				) : !filteredProducts?.length ? (
+					<p className="text-sm text-(--sea-ink-soft)">
+						No products match your search.
+					</p>
 				) : view === "grid" ? (
-					<GridView products={products} getCategoryName={getCategoryName} />
+					<GridView
+						products={filteredProducts}
+						getCategoryName={getCategoryName}
+					/>
 				) : view === "table" ? (
-					<TableView products={products} getCategoryName={getCategoryName} />
+					<TableView
+						products={filteredProducts}
+						getCategoryName={getCategoryName}
+					/>
 				) : (
-					<CompactView products={products} getCategoryName={getCategoryName} />
+					<CompactView
+						products={filteredProducts}
+						getCategoryName={getCategoryName}
+					/>
 				)}
 			</Island>
 		</Page>

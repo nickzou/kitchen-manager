@@ -168,6 +168,53 @@ describe("ProductsPage", () => {
 		});
 	});
 
+	describe("search filter", () => {
+		it("renders search input", () => {
+			renderPage();
+
+			expect(screen.getByPlaceholderText("Search...")).toBeDefined();
+		});
+
+		it("filters products by name", () => {
+			mockUseProducts.mockReturnValue({
+				data: [
+					mockProduct,
+					{ ...mockProduct, id: "2", name: "Carrots", categoryId: null },
+				],
+				isLoading: false,
+			});
+
+			renderPage();
+
+			fireEvent.change(screen.getByPlaceholderText("Search..."), {
+				target: { value: "tom" },
+			});
+
+			expect(screen.getByText("Tomatoes")).toBeDefined();
+			expect(screen.queryByText("Carrots")).toBeNull();
+		});
+
+		it("shows no results message when search matches nothing", () => {
+			renderPage();
+
+			fireEvent.change(screen.getByPlaceholderText("Search..."), {
+				target: { value: "xyz" },
+			});
+
+			expect(screen.getByText("No products match your search.")).toBeDefined();
+		});
+
+		it("is case-insensitive", () => {
+			renderPage();
+
+			fireEvent.change(screen.getByPlaceholderText("Search..."), {
+				target: { value: "TOMATOES" },
+			});
+
+			expect(screen.getByText("Tomatoes")).toBeDefined();
+		});
+	});
+
 	describe("quick-add form", () => {
 		it("submits form with name and category", async () => {
 			renderPage();

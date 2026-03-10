@@ -157,6 +157,84 @@ describe("CategoriesPage", () => {
 		});
 	});
 
+	describe("search filter", () => {
+		it("renders search input", () => {
+			renderPage();
+
+			expect(screen.getByPlaceholderText("Search...")).toBeDefined();
+		});
+
+		it("filters categories by name", () => {
+			mockUseCategories.mockReturnValue({
+				data: [
+					mockCategory,
+					{
+						...mockCategory,
+						id: "2",
+						name: "Fruits",
+						description: "Fresh fruits",
+					},
+				],
+				isLoading: false,
+			});
+
+			renderPage();
+
+			fireEvent.change(screen.getByPlaceholderText("Search..."), {
+				target: { value: "veg" },
+			});
+
+			expect(screen.getByText("Vegetables")).toBeDefined();
+			expect(screen.queryByText("Fruits")).toBeNull();
+		});
+
+		it("filters categories by description", () => {
+			mockUseCategories.mockReturnValue({
+				data: [
+					mockCategory,
+					{
+						...mockCategory,
+						id: "2",
+						name: "Fruits",
+						description: "Tropical fruits",
+					},
+				],
+				isLoading: false,
+			});
+
+			renderPage();
+
+			fireEvent.change(screen.getByPlaceholderText("Search..."), {
+				target: { value: "tropical" },
+			});
+
+			expect(screen.getByText("Fruits")).toBeDefined();
+			expect(screen.queryByText("Vegetables")).toBeNull();
+		});
+
+		it("shows no results message when search matches nothing", () => {
+			renderPage();
+
+			fireEvent.change(screen.getByPlaceholderText("Search..."), {
+				target: { value: "xyz" },
+			});
+
+			expect(
+				screen.getByText("No categories match your search."),
+			).toBeDefined();
+		});
+
+		it("is case-insensitive", () => {
+			renderPage();
+
+			fireEvent.change(screen.getByPlaceholderText("Search..."), {
+				target: { value: "VEGETABLES" },
+			});
+
+			expect(screen.getByText("Vegetables")).toBeDefined();
+		});
+	});
+
 	describe("quick-add form", () => {
 		it("submits form with name and description", async () => {
 			renderPage();
