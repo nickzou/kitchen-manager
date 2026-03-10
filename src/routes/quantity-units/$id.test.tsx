@@ -7,9 +7,9 @@ import {
 } from "@testing-library/react";
 import type { ComponentType, ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { QuantityUnit } from "#/lib/hooks/use-quantity-units";
-import type { UnitConversion } from "#/lib/hooks/use-unit-conversions";
-import { createTestWrapper } from "#/tests/helpers/test-wrapper";
+import type { QuantityUnit } from "#src/lib/hooks/use-quantity-units";
+import type { UnitConversion } from "#src/lib/hooks/use-unit-conversions";
+import { createTestWrapper } from "#src/tests/helpers/test-wrapper";
 
 const mockNavigate = vi.fn();
 const mockUseSession = vi.fn();
@@ -35,11 +35,11 @@ vi.mock("@tanstack/react-router", () => ({
 	),
 }));
 
-vi.mock("#/lib/auth-client", () => ({
+vi.mock("#src/lib/auth-client", () => ({
 	authClient: { useSession: (...args: unknown[]) => mockUseSession(...args) },
 }));
 
-vi.mock("#/lib/hooks/use-quantity-units", () => ({
+vi.mock("#src/lib/hooks/use-quantity-units", () => ({
 	useQuantityUnit: (...args: unknown[]) => mockUseQuantityUnit(...args),
 	useQuantityUnits: (...args: unknown[]) => mockUseQuantityUnits(...args),
 	useUpdateQuantityUnit: (...args: unknown[]) =>
@@ -48,7 +48,7 @@ vi.mock("#/lib/hooks/use-quantity-units", () => ({
 		mockUseDeleteQuantityUnit(...args),
 }));
 
-vi.mock("#/lib/hooks/use-unit-conversions", () => ({
+vi.mock("#src/lib/hooks/use-unit-conversions", () => ({
 	useUnitConversions: (...args: unknown[]) => mockUseUnitConversions(...args),
 	useCreateUnitConversion: (...args: unknown[]) =>
 		mockUseCreateUnitConversion(...args),
@@ -58,15 +58,15 @@ vi.mock("#/lib/hooks/use-unit-conversions", () => ({
 		mockUseDeleteUnitConversion(...args),
 }));
 
-vi.mock("#/lib/utils", () => ({
+vi.mock("#src/lib/utils", () => ({
 	cn: (...args: string[]) => args.filter(Boolean).join(" "),
 }));
 
-vi.mock("#/components/InventorySubNav", () => ({
+vi.mock("#src/components/InventorySubNav", () => ({
 	default: () => <nav data-testid="inventory-sub-nav" />,
 }));
 
-vi.mock("#/components/Combobox", () => ({
+vi.mock("#src/components/Combobox", () => ({
 	Combobox: ({
 		value,
 		onChange,

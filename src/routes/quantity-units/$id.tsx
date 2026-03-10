@@ -1,25 +1,25 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Check, Pencil, Plus, Trash2, X } from "lucide-react";
 import { type FormEvent, useState } from "react";
-import { Combobox } from "#/components/Combobox";
-import InventorySubNav from "#/components/InventorySubNav";
-import { Island } from "#/components/Island";
-import { Page } from "#/components/Page";
-import { authClient } from "#/lib/auth-client";
+import { Combobox } from "#src/components/Combobox";
+import InventorySubNav from "#src/components/InventorySubNav";
+import { Island } from "#src/components/Island";
+import { Page } from "#src/components/Page";
+import { authClient } from "#src/lib/auth-client";
 import {
 	useDeleteQuantityUnit,
 	useQuantityUnit,
 	useQuantityUnits,
 	useUpdateQuantityUnit,
-} from "#/lib/hooks/use-quantity-units";
+} from "#src/lib/hooks/use-quantity-units";
 import {
 	type UnitConversion,
 	useCreateUnitConversion,
 	useDeleteUnitConversion,
 	useUnitConversions,
 	useUpdateUnitConversion,
-} from "#/lib/hooks/use-unit-conversions";
-import { cn } from "#/lib/utils";
+} from "#src/lib/hooks/use-unit-conversions";
+import { cn } from "#src/lib/utils";
 
 export const Route = createFileRoute("/quantity-units/$id")({
 	component: QuantityUnitDetail,

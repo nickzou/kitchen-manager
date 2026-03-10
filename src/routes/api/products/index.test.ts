@@ -1,22 +1,22 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { makeProduct, makeSession } from "#/tests/helpers/factories";
+import { makeProduct, makeSession } from "#src/tests/helpers/factories";
 import {
 	makeGetRequest,
 	makePostRequest,
-} from "#/tests/helpers/request-builders";
+} from "#src/tests/helpers/request-builders";
 
-vi.mock("#/lib/auth-session", () => ({
+vi.mock("#src/lib/auth-session", () => ({
 	getAuthSession: vi.fn(),
 }));
 
-vi.mock("#/db/schema", () => ({
+vi.mock("#src/db/schema", () => ({
 	product: {},
 }));
 
 const mockWhere = vi.fn();
 const mockReturning = vi.fn();
 
-vi.mock("#/db", () => ({
+vi.mock("#src/db", () => ({
 	db: {
 		select: vi.fn(() => ({
 			from: vi.fn(() => ({
@@ -32,8 +32,8 @@ vi.mock("#/db", () => ({
 }));
 
 // Import after mocks are set up
-const { getAuthSession } = await import("#/lib/auth-session");
-const { Route } = await import("#/routes/api/products/index");
+const { getAuthSession } = await import("#src/lib/auth-session");
+const { Route } = await import("#src/routes/api/products/index");
 
 type Handler = (ctx: never) => Promise<Response>;
 

@@ -1,9 +1,9 @@
 import "dotenv/config";
 import { eq } from "drizzle-orm";
-import { db } from "#/db";
-import { user } from "#/db/auth-schema";
-import { quantityUnit, unitConversion } from "#/db/schema";
-import { defaultConversions, defaultUnits } from "#/db/seed-data";
+import { db } from "#src/db";
+import { user } from "#src/db/auth-schema";
+import { quantityUnit, unitConversion } from "#src/db/schema";
+import { defaultConversions, defaultUnits } from "#src/db/seed-data";
 
 export async function seedUnitsForUser(userId: string) {
 	const inserted = await db

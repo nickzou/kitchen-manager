@@ -1,6 +1,6 @@
 import { renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { createTestWrapper } from "#/tests/helpers/test-wrapper";
+import { createTestWrapper } from "#src/tests/helpers/test-wrapper";
 import {
 	useConsumeStock,
 	useCreateStockEntry,

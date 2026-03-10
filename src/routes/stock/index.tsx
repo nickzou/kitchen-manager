@@ -1,23 +1,23 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ChevronDown, ChevronRight, Minus, Plus } from "lucide-react";
 import { type FormEvent, useState } from "react";
-import { Combobox } from "#/components/Combobox";
-import { DatePicker } from "#/components/DatePicker";
-import { Island } from "#/components/Island";
-import { NumberInput } from "#/components/NumberInput";
-import { Page } from "#/components/Page";
-import { authClient } from "#/lib/auth-client";
-import { useCategories } from "#/lib/hooks/use-categories";
-import { useProducts } from "#/lib/hooks/use-products";
-import { useQuantityUnits } from "#/lib/hooks/use-quantity-units";
+import { Combobox } from "#src/components/Combobox";
+import { DatePicker } from "#src/components/DatePicker";
+import { Island } from "#src/components/Island";
+import { NumberInput } from "#src/components/NumberInput";
+import { Page } from "#src/components/Page";
+import { authClient } from "#src/lib/auth-client";
+import { useCategories } from "#src/lib/hooks/use-categories";
+import { useProducts } from "#src/lib/hooks/use-products";
+import { useQuantityUnits } from "#src/lib/hooks/use-quantity-units";
 import {
 	type StockEntry,
 	useConsumeStock,
 	useCreateStockEntry,
 	useStockEntries,
-} from "#/lib/hooks/use-stock-entries";
-import { useStockLogs } from "#/lib/hooks/use-stock-logs";
-import { cn } from "#/lib/utils";
+} from "#src/lib/hooks/use-stock-entries";
+import { useStockLogs } from "#src/lib/hooks/use-stock-logs";
+import { cn } from "#src/lib/utils";
 
 export const Route = createFileRoute("/stock/")({ component: StockPage });
 

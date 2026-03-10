@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { and, eq } from "drizzle-orm";
-import { db } from "#/db";
-import { product } from "#/db/schema";
-import { getAuthSession } from "#/lib/auth-session";
+import { db } from "#src/db";
+import { product } from "#src/db/schema";
+import { getAuthSession } from "#src/lib/auth-session";
 
 function json(data: unknown, init?: { status?: number }) {
 	return new Response(JSON.stringify(data), {
