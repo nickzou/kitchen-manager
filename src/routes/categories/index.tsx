@@ -1,16 +1,16 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Grid3x3, List, Plus, Rows3 } from "lucide-react";
 import { type FormEvent, useState } from "react";
-import InventorySubNav from "#/components/InventorySubNav";
-import { Island } from "#/components/Island";
-import { Page } from "#/components/Page";
-import { authClient } from "#/lib/auth-client";
+import InventorySubNav from "#src/components/InventorySubNav";
+import { Island } from "#src/components/Island";
+import { Page } from "#src/components/Page";
+import { authClient } from "#src/lib/auth-client";
 import {
 	type Category,
 	useCategories,
 	useCreateCategory,
-} from "#/lib/hooks/use-categories";
-import { cn } from "#/lib/utils";
+} from "#src/lib/hooks/use-categories";
+import { cn } from "#src/lib/utils";
 
 export const Route = createFileRoute("/categories/")({
 	component: CategoriesPage,

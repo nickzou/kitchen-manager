@@ -7,8 +7,8 @@ import {
 } from "@testing-library/react";
 import type { ComponentType, ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { Category } from "#/lib/hooks/use-categories";
-import { createTestWrapper } from "#/tests/helpers/test-wrapper";
+import type { Category } from "#src/lib/hooks/use-categories";
+import { createTestWrapper } from "#src/tests/helpers/test-wrapper";
 
 const mockNavigate = vi.fn();
 const mockUseSession = vi.fn();
@@ -27,20 +27,20 @@ vi.mock("@tanstack/react-router", () => ({
 	),
 }));
 
-vi.mock("#/lib/auth-client", () => ({
+vi.mock("#src/lib/auth-client", () => ({
 	authClient: { useSession: (...args: unknown[]) => mockUseSession(...args) },
 }));
 
-vi.mock("#/lib/hooks/use-categories", () => ({
+vi.mock("#src/lib/hooks/use-categories", () => ({
 	useCategories: (...args: unknown[]) => mockUseCategories(...args),
 	useCreateCategory: (...args: unknown[]) => mockUseCreateCategory(...args),
 }));
 
-vi.mock("#/lib/utils", () => ({
+vi.mock("#src/lib/utils", () => ({
 	cn: (...args: string[]) => args.filter(Boolean).join(" "),
 }));
 
-vi.mock("#/components/InventorySubNav", () => ({
+vi.mock("#src/components/InventorySubNav", () => ({
 	default: () => <nav data-testid="inventory-sub-nav" />,
 }));
 

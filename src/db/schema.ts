@@ -63,10 +63,57 @@ export const quantityUnit = pgTable(
 	(table) => [index("quantityUnit_userId_idx").on(table.userId)],
 );
 
-export const quantityUnitRelations = relations(quantityUnit, ({ one }) => ({
+export const quantityUnitRelations = relations(
+	quantityUnit,
+	({ one, many }) => ({
+		user: one(user, {
+			fields: [quantityUnit.userId],
+			references: [user.id],
+		}),
+		conversionsFrom: many(unitConversion, { relationName: "fromUnit" }),
+		conversionsTo: many(unitConversion, { relationName: "toUnit" }),
+	}),
+);
+
+export const unitConversion = pgTable(
+	"unit_conversion",
+	{
+		id: text("id")
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		fromUnitId: text("from_unit_id")
+			.notNull()
+			.references(() => quantityUnit.id, { onDelete: "cascade" }),
+		toUnitId: text("to_unit_id")
+			.notNull()
+			.references(() => quantityUnit.id, { onDelete: "cascade" }),
+		factor: numeric("factor").notNull(),
+		userId: text("user_id")
+			.notNull()
+			.references(() => user.id, { onDelete: "cascade" }),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+		updatedAt: timestamp("updated_at")
+			.defaultNow()
+			.$onUpdate(() => new Date())
+			.notNull(),
+	},
+	(table) => [index("unitConversion_userId_idx").on(table.userId)],
+);
+
+export const unitConversionRelations = relations(unitConversion, ({ one }) => ({
 	user: one(user, {
-		fields: [quantityUnit.userId],
+		fields: [unitConversion.userId],
 		references: [user.id],
+	}),
+	fromUnit: one(quantityUnit, {
+		fields: [unitConversion.fromUnitId],
+		references: [quantityUnit.id],
+		relationName: "fromUnit",
+	}),
+	toUnit: one(quantityUnit, {
+		fields: [unitConversion.toUnitId],
+		references: [quantityUnit.id],
+		relationName: "toUnit",
 	}),
 }));
 

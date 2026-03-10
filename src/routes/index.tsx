@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Island } from "#/components/Island";
-import { Page } from "#/components/Page";
+import { Island } from "#src/components/Island";
+import { Page } from "#src/components/Page";
 
 export const Route = createFileRoute("/")({ component: App });
 

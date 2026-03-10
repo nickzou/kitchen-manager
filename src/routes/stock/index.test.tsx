@@ -7,7 +7,7 @@ import {
 } from "@testing-library/react";
 import type { ComponentType, ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { createTestWrapper } from "#/tests/helpers/test-wrapper";
+import { createTestWrapper } from "#src/tests/helpers/test-wrapper";
 
 const mockNavigate = vi.fn();
 const mockUseSession = vi.fn();
@@ -31,37 +31,37 @@ vi.mock("@tanstack/react-router", () => ({
 	),
 }));
 
-vi.mock("#/lib/auth-client", () => ({
+vi.mock("#src/lib/auth-client", () => ({
 	authClient: { useSession: (...args: unknown[]) => mockUseSession(...args) },
 }));
 
-vi.mock("#/lib/hooks/use-products", () => ({
+vi.mock("#src/lib/hooks/use-products", () => ({
 	useProducts: (...args: unknown[]) => mockUseProducts(...args),
 }));
 
-vi.mock("#/lib/hooks/use-categories", () => ({
+vi.mock("#src/lib/hooks/use-categories", () => ({
 	useCategories: (...args: unknown[]) => mockUseCategories(...args),
 }));
 
-vi.mock("#/lib/hooks/use-quantity-units", () => ({
+vi.mock("#src/lib/hooks/use-quantity-units", () => ({
 	useQuantityUnits: (...args: unknown[]) => mockUseQuantityUnits(...args),
 }));
 
-vi.mock("#/lib/hooks/use-stock-entries", () => ({
+vi.mock("#src/lib/hooks/use-stock-entries", () => ({
 	useStockEntries: (...args: unknown[]) => mockUseStockEntries(...args),
 	useCreateStockEntry: (...args: unknown[]) => mockUseCreateStockEntry(...args),
 	useConsumeStock: (...args: unknown[]) => mockUseConsumeStock(...args),
 }));
 
-vi.mock("#/lib/hooks/use-stock-logs", () => ({
+vi.mock("#src/lib/hooks/use-stock-logs", () => ({
 	useStockLogs: (...args: unknown[]) => mockUseStockLogs(...args),
 }));
 
-vi.mock("#/lib/utils", () => ({
+vi.mock("#src/lib/utils", () => ({
 	cn: (...args: string[]) => args.filter(Boolean).join(" "),
 }));
 
-vi.mock("#/components/Combobox", () => ({
+vi.mock("#src/components/Combobox", () => ({
 	Combobox: ({
 		value,
 		onChange,
@@ -91,7 +91,7 @@ vi.mock("#/components/Combobox", () => ({
 	),
 }));
 
-vi.mock("#/components/DatePicker", () => ({
+vi.mock("#src/components/DatePicker", () => ({
 	DatePicker: ({
 		value,
 		onChange,

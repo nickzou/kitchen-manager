@@ -1,9 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { type FormEvent, useState } from "react";
-import { Island } from "#/components/Island";
-import { MobileLink } from "#/components/MobileLink";
-import { Page } from "#/components/Page";
-import { authClient } from "#/lib/auth-client";
+import { Island } from "#src/components/Island";
+import { MobileLink } from "#src/components/MobileLink";
+import { Page } from "#src/components/Page";
+import { authClient } from "#src/lib/auth-client";
 
 export const Route = createFileRoute("/sign-in")({ component: SignIn });
 

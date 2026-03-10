@@ -70,6 +70,19 @@ export function makeQuantityUnit(overrides?: Record<string, unknown>) {
 	};
 }
 
+export function makeUnitConversion(overrides?: Record<string, unknown>) {
+	return {
+		id: "conversion-1",
+		fromUnitId: "unit-1",
+		toUnitId: "unit-2",
+		factor: "1000",
+		userId: "user-1",
+		createdAt: new Date("2025-01-01"),
+		updatedAt: new Date("2025-01-01"),
+		...overrides,
+	};
+}
+
 export function makeStockEntry(overrides?: Record<string, unknown>) {
 	return {
 		id: "stock-entry-1",

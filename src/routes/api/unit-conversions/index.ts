@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { eq } from "drizzle-orm";
 import { db } from "#src/db";
-import { quantityUnit } from "#src/db/schema";
+import { unitConversion } from "#src/db/schema";
 import { getAuthSession } from "#src/lib/auth-session";
 
 function json(data: unknown, init?: { status?: number }) {
@@ -11,7 +11,7 @@ function json(data: unknown, init?: { status?: number }) {
 	});
 }
 
-export const Route = createFileRoute("/api/quantity-units/")({
+export const Route = createFileRoute("/api/unit-conversions/")({
 	server: {
 		handlers: {
 			GET: async ({ request }) => {
@@ -20,12 +20,12 @@ export const Route = createFileRoute("/api/quantity-units/")({
 					return json({ error: "Unauthorized" }, { status: 401 });
 				}
 
-				const units = await db
+				const conversions = await db
 					.select()
-					.from(quantityUnit)
-					.where(eq(quantityUnit.userId, session.user.id));
+					.from(unitConversion)
+					.where(eq(unitConversion.userId, session.user.id));
 
-				return json(units);
+				return json(conversions);
 			},
 			POST: async ({ request }) => {
 				const session = await getAuthSession(request);
@@ -36,10 +36,11 @@ export const Route = createFileRoute("/api/quantity-units/")({
 				const body = await request.json();
 
 				const [created] = await db
-					.insert(quantityUnit)
+					.insert(unitConversion)
 					.values({
-						name: body.name,
-						abbreviation: body.abbreviation ?? null,
+						fromUnitId: body.fromUnitId,
+						toUnitId: body.toUnitId,
+						factor: body.factor,
 						userId: session.user.id,
 					})
 					.returning();

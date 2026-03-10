@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { makeQuantityUnit, makeSession } from "#src/tests/helpers/factories";
+import { makeSession, makeUnitConversion } from "#src/tests/helpers/factories";
 import {
 	makeGetRequest,
 	makePostRequest,
@@ -10,7 +10,7 @@ vi.mock("#src/lib/auth-session", () => ({
 }));
 
 vi.mock("#src/db/schema", () => ({
-	quantityUnit: {},
+	unitConversion: {},
 }));
 
 const mockWhere = vi.fn();
@@ -32,7 +32,7 @@ vi.mock("#src/db", () => ({
 }));
 
 const { getAuthSession } = await import("#src/lib/auth-session");
-const { Route } = await import("#src/routes/api/quantity-units/index");
+const { Route } = await import("#src/routes/api/unit-conversions/index");
 
 type Handler = (ctx: never) => Promise<Response>;
 
@@ -42,14 +42,14 @@ const { GET, POST } = Route.options.server!.handlers! as Record<
 	Handler
 >;
 
-describe("GET /api/quantity-units/", () => {
+describe("GET /api/unit-conversions/", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 	});
 
 	it("returns 401 when not authenticated", async () => {
 		vi.mocked(getAuthSession).mockResolvedValue(null);
-		const request = makeGetRequest("/api/quantity-units");
+		const request = makeGetRequest("/api/unit-conversions");
 
 		const response = await GET({ request } as never);
 
@@ -57,10 +57,10 @@ describe("GET /api/quantity-units/", () => {
 		expect(await response.json()).toEqual({ error: "Unauthorized" });
 	});
 
-	it("returns 200 with empty array when user has no units", async () => {
+	it("returns 200 with empty array when user has no conversions", async () => {
 		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
 		mockWhere.mockResolvedValue([]);
-		const request = makeGetRequest("/api/quantity-units");
+		const request = makeGetRequest("/api/unit-conversions");
 
 		const response = await GET({ request } as never);
 
@@ -68,34 +68,36 @@ describe("GET /api/quantity-units/", () => {
 		expect(await response.json()).toEqual([]);
 	});
 
-	it("returns 200 with the user's quantity units", async () => {
+	it("returns 200 with the user's unit conversions", async () => {
 		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
-		const units = [
-			makeQuantityUnit(),
-			makeQuantityUnit({ id: "unit-2", name: "Grams", abbreviation: "g" }),
+		const conversions = [
+			makeUnitConversion(),
+			makeUnitConversion({ id: "conversion-2", factor: "16" }),
 		];
-		mockWhere.mockResolvedValue(units);
-		const request = makeGetRequest("/api/quantity-units");
+		mockWhere.mockResolvedValue(conversions);
+		const request = makeGetRequest("/api/unit-conversions");
 
 		const response = await GET({ request } as never);
 
 		expect(response.status).toBe(200);
 		const data = await response.json();
 		expect(data).toHaveLength(2);
-		expect(data[0].name).toBe("Pieces");
-		expect(data[1].name).toBe("Grams");
+		expect(data[0].factor).toBe("1000");
+		expect(data[1].factor).toBe("16");
 	});
 });
 
-describe("POST /api/quantity-units/", () => {
+describe("POST /api/unit-conversions/", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 	});
 
 	it("returns 401 when not authenticated", async () => {
 		vi.mocked(getAuthSession).mockResolvedValue(null);
-		const request = makePostRequest("/api/quantity-units", {
-			name: "Pieces",
+		const request = makePostRequest("/api/unit-conversions", {
+			fromUnitId: "unit-1",
+			toUnitId: "unit-2",
+			factor: "1000",
 		});
 
 		const response = await POST({ request } as never);
@@ -104,30 +106,34 @@ describe("POST /api/quantity-units/", () => {
 		expect(await response.json()).toEqual({ error: "Unauthorized" });
 	});
 
-	it("returns 201 with the created quantity unit", async () => {
+	it("returns 201 with the created unit conversion", async () => {
 		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
-		const created = makeQuantityUnit();
+		const created = makeUnitConversion();
 		mockReturning.mockResolvedValue([created]);
-		const request = makePostRequest("/api/quantity-units", {
-			name: "Pieces",
-			abbreviation: "pcs",
+		const request = makePostRequest("/api/unit-conversions", {
+			fromUnitId: "unit-1",
+			toUnitId: "unit-2",
+			factor: "1000",
 		});
 
 		const response = await POST({ request } as never);
 
 		expect(response.status).toBe(201);
 		const data = await response.json();
-		expect(data.name).toBe("Pieces");
-		expect(data.abbreviation).toBe("pcs");
+		expect(data.fromUnitId).toBe("unit-1");
+		expect(data.toUnitId).toBe("unit-2");
+		expect(data.factor).toBe("1000");
 	});
 
 	it("sets userId from session", async () => {
 		const session = makeSession();
 		vi.mocked(getAuthSession).mockResolvedValue(session as never);
-		const created = makeQuantityUnit({ userId: session.user.id });
+		const created = makeUnitConversion({ userId: session.user.id });
 		mockReturning.mockResolvedValue([created]);
-		const request = makePostRequest("/api/quantity-units", {
-			name: "Pieces",
+		const request = makePostRequest("/api/unit-conversions", {
+			fromUnitId: "unit-1",
+			toUnitId: "unit-2",
+			factor: "1000",
 			userId: "attacker-id",
 		});
 

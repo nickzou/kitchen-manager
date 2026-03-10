@@ -1,18 +1,18 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Pencil, Trash2, X } from "lucide-react";
 import { type FormEvent, useState } from "react";
-import InventorySubNav from "#/components/InventorySubNav";
-import { Island } from "#/components/Island";
-import { Page } from "#/components/Page";
-import { authClient } from "#/lib/auth-client";
-import { useCategories } from "#/lib/hooks/use-categories";
+import InventorySubNav from "#src/components/InventorySubNav";
+import { Island } from "#src/components/Island";
+import { Page } from "#src/components/Page";
+import { authClient } from "#src/lib/auth-client";
+import { useCategories } from "#src/lib/hooks/use-categories";
 import {
 	useDeleteProduct,
 	useProduct,
 	useUpdateProduct,
-} from "#/lib/hooks/use-products";
-import { useQuantityUnits } from "#/lib/hooks/use-quantity-units";
-import { cn } from "#/lib/utils";
+} from "#src/lib/hooks/use-products";
+import { useQuantityUnits } from "#src/lib/hooks/use-quantity-units";
+import { cn } from "#src/lib/utils";
 
 export const Route = createFileRoute("/products/$id")({
 	component: ProductDetail,

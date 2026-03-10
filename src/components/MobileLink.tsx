@@ -2,7 +2,7 @@ import {
 	type LinkComponentProps,
 	Link as RouterLink,
 } from "@tanstack/react-router";
-import { cn } from "#/lib/utils";
+import { cn } from "#src/lib/utils";
 
 export function MobileLink({ className, ...props }: LinkComponentProps) {
 	return (

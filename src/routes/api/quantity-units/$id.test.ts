@@ -1,16 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { makeQuantityUnit, makeSession } from "#/tests/helpers/factories";
+import { makeQuantityUnit, makeSession } from "#src/tests/helpers/factories";
 import {
 	makeDeleteRequest,
 	makeGetRequest,
 	makePutRequest,
-} from "#/tests/helpers/request-builders";
+} from "#src/tests/helpers/request-builders";
 
-vi.mock("#/lib/auth-session", () => ({
+vi.mock("#src/lib/auth-session", () => ({
 	getAuthSession: vi.fn(),
 }));
 
-vi.mock("#/db/schema", () => ({
+vi.mock("#src/db/schema", () => ({
 	quantityUnit: {},
 }));
 
@@ -18,7 +18,7 @@ const mockSelectWhere = vi.fn();
 const mockUpdateReturning = vi.fn();
 const mockDeleteReturning = vi.fn();
 
-vi.mock("#/db", () => ({
+vi.mock("#src/db", () => ({
 	db: {
 		select: vi.fn(() => ({
 			from: vi.fn(() => ({
@@ -40,8 +40,8 @@ vi.mock("#/db", () => ({
 	},
 }));
 
-const { getAuthSession } = await import("#/lib/auth-session");
-const { Route } = await import("#/routes/api/quantity-units/$id");
+const { getAuthSession } = await import("#src/lib/auth-session");
+const { Route } = await import("#src/routes/api/quantity-units/$id");
 
 type Handler = (ctx: never) => Promise<Response>;
 
