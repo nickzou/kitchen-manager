@@ -108,7 +108,7 @@ function CategoriesPage() {
 					onChange={(e) => setSearch(e.target.value)}
 				/>
 
-				<div className="mb-4 flex items-center gap-1">
+				<div className="mb-4 flex items-center justify-end gap-1">
 					{(
 						[
 							["grid", Grid3x3],
