@@ -18,7 +18,7 @@ export function AddIngredientForm({
     unitOptions,
     onAdd,
     isPending,
-    newIngredient,
+    newIngredient: { productId, quantity, quantityUnitId, notes },
     setNewIngredient,
 }: {
     productOptions: ComboboxOption[];
@@ -32,6 +32,10 @@ export function AddIngredientForm({
     const inputClass =
         "h-10 w-full rounded-lg border border-(--line) bg-(--surface) px-3 text-sm text-(--sea-ink) outline-none focus:border-(--lagoon)";
 
+    function update(partial: Partial<IngredientFormState>) {
+        setNewIngredient({ productId, quantity, quantityUnitId, notes, ...partial });
+    }
+
     return (
         <div className="border-t border-(--line) pt-4">
             <h3 className="mb-3 text-sm font-semibold text-(--sea-ink)">
@@ -40,10 +44,8 @@ export function AddIngredientForm({
             <div className="flex flex-wrap items-end gap-2">
                 <div className="w-full">
                     <Combobox
-                        value={newIngredient.productId}
-                        onChange={(v) =>
-                            setNewIngredient({ ...newIngredient, productId: v })
-                        }
+                        value={productId}
+                        onChange={(v) => update({ productId: v })}
                         options={productOptions}
                         placeholder="Product"
                     />
@@ -54,21 +56,14 @@ export function AddIngredientForm({
                         step="any"
                         min="0"
                         placeholder="Qty"
-                        value={newIngredient.quantity}
-                        onChange={(e) =>
-                            setNewIngredient({
-                                ...newIngredient,
-                                quantity: e.target.value,
-                            })
-                        }
+                        value={quantity}
+                        onChange={(e) => update({ quantity: e.target.value })}
                     />
                 </div>
                 <div className="flex-1">
                     <Combobox
-                        value={newIngredient.quantityUnitId}
-                        onChange={(v) =>
-                            setNewIngredient({ ...newIngredient, quantityUnitId: v })
-                        }
+                        value={quantityUnitId}
+                        onChange={(v) => update({ quantityUnitId: v })}
                         options={unitOptions}
                         placeholder="Unit"
                     />
@@ -77,16 +72,14 @@ export function AddIngredientForm({
                     <input
                         type="text"
                         placeholder="Notes"
-                        value={newIngredient.notes}
-                        onChange={(e) =>
-                            setNewIngredient({ ...newIngredient, notes: e.target.value })
-                        }
+                        value={notes}
+                        onChange={(e) => update({ notes: e.target.value })}
                         className={cn(inputClass, "flex-1")}
                     />
                     <button
                         type="button"
                         onClick={onAdd}
-                        disabled={isPending || !newIngredient.quantity}
+                        disabled={isPending || !quantity}
                         className="flex h-10 items-center gap-1 rounded-full bg-(--lagoon-deep) px-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
                     >
                         <Plus size={14} />
