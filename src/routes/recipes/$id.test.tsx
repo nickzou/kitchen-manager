@@ -45,8 +45,10 @@ vi.mock("#src/lib/hooks/use-categories", () => ({
 }));
 
 const mockUseProducts = vi.fn();
+const mockUseCreateProduct = vi.fn();
 vi.mock("#src/lib/hooks/use-products", () => ({
 	useProducts: (...args: unknown[]) => mockUseProducts(...args),
+	useCreateProduct: (...args: unknown[]) => mockUseCreateProduct(...args),
 }));
 
 const mockUseQuantityUnits = vi.fn();
@@ -119,6 +121,10 @@ beforeEach(() => {
 	});
 	mockUseProducts.mockReturnValue({
 		data: [{ id: "p1", name: "Spaghetti" }],
+	});
+	mockUseCreateProduct.mockReturnValue({
+		mutateAsync: vi.fn(),
+		isPending: false,
 	});
 	mockUseQuantityUnits.mockReturnValue({
 		data: [{ id: "qu1", name: "Grams", abbreviation: "g" }],
