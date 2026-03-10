@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Pencil, Trash2, X } from "lucide-react";
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useId, useState } from "react";
 import { Combobox } from "#src/components/Combobox";
 import InventorySubNav from "#src/components/InventorySubNav";
 import { Island } from "#src/components/Island";
@@ -33,6 +33,7 @@ function ProductDetail() {
 
 	const [editing, setEditing] = useState(false);
 	const [confirmDelete, setConfirmDelete] = useState(false);
+	const htmlId = useId();
 	const [form, setForm] = useState({
 		name: "",
 		categoryId: "",
@@ -214,9 +215,15 @@ function ProductDetail() {
 							/>
 						</div>
 
-						<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
-							Min Stock Amount
+						<div className="flex flex-col gap-1.5">
+							<label
+								htmlFor={`${htmlId}-minStockAmount`}
+								className="text-sm font-medium text-(--sea-ink)"
+							>
+								Min Stock Amount
+							</label>
 							<NumberInput
+								id={`${htmlId}-minStockAmount`}
 								step="any"
 								min="0"
 								value={form.minStockAmount}
@@ -225,11 +232,17 @@ function ProductDetail() {
 								}
 								className="w-full"
 							/>
-						</label>
+						</div>
 
-						<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
-							Default Expiration Days
+						<div className="flex flex-col gap-1.5">
+							<label
+								htmlFor={`${htmlId}-defaultExpirationDays`}
+								className="text-sm font-medium text-(--sea-ink)"
+							>
+								Default Expiration Days
+							</label>
 							<NumberInput
+								id={`${htmlId}-defaultExpirationDays`}
 								min="1"
 								value={form.defaultExpirationDays}
 								onChange={(e) =>
@@ -237,7 +250,7 @@ function ProductDetail() {
 								}
 								className="w-full"
 							/>
-						</label>
+						</div>
 
 						<button
 							type="submit"
