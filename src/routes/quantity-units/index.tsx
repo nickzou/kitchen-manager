@@ -1,9 +1,10 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ChevronDown, Grid3x3, List, Plus, Rows3 } from "lucide-react";
-import { type FormEvent, Fragment, useState } from "react";
+import { type FormEvent, Fragment, useMemo, useState } from "react";
 import InventorySubNav from "#src/components/InventorySubNav";
 import { Island } from "#src/components/Island";
 import { Page } from "#src/components/Page";
+import { SearchInput } from "#src/components/SearchInput";
 import { authClient } from "#src/lib/auth-client";
 import {
 	type QuantityUnit,
@@ -33,6 +34,17 @@ function QuantityUnitsPage() {
 	const [view, setView] = useState<ViewMode>("grid");
 	const [name, setName] = useState("");
 	const [abbreviation, setAbbreviation] = useState("");
+	const [search, setSearch] = useState("");
+
+	const filteredQuantityUnits = useMemo(() => {
+		if (!quantityUnits || !search.trim()) return quantityUnits;
+		const term = search.toLowerCase();
+		return quantityUnits.filter(
+			(u) =>
+				u.name.toLowerCase().includes(term) ||
+				u.abbreviation?.toLowerCase().includes(term),
+		);
+	}, [quantityUnits, search]);
 
 	if (sessionLoading) return null;
 	if (!session) {
@@ -108,6 +120,12 @@ function QuantityUnitsPage() {
 					</button>
 				</form>
 
+				<SearchInput
+					placeholder="Search..."
+					value={search}
+					onChange={(e) => setSearch(e.target.value)}
+				/>
+
 				<div className="mb-4 flex items-center gap-1">
 					{(
 						[
@@ -139,20 +157,24 @@ function QuantityUnitsPage() {
 					<p className="text-sm text-(--sea-ink-soft)">
 						No quantity units yet. Add one above!
 					</p>
+				) : !filteredQuantityUnits?.length ? (
+					<p className="text-sm text-(--sea-ink-soft)">
+						No quantity units match your search.
+					</p>
 				) : view === "grid" ? (
 					<GridView
-						quantityUnits={quantityUnits}
+						quantityUnits={filteredQuantityUnits}
 						getConversionsForUnit={getConversionsForUnit}
 						unitName={unitName}
 					/>
 				) : view === "table" ? (
 					<TableView
-						quantityUnits={quantityUnits}
+						quantityUnits={filteredQuantityUnits}
 						getConversionsForUnit={getConversionsForUnit}
 						unitName={unitName}
 					/>
 				) : (
-					<CompactView quantityUnits={quantityUnits} />
+					<CompactView quantityUnits={filteredQuantityUnits} />
 				)}
 			</Island>
 		</Page>

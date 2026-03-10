@@ -210,6 +210,58 @@ describe("QuantityUnitsPage", () => {
 		});
 	});
 
+	describe("search filter", () => {
+		it("renders search input", () => {
+			renderPage();
+
+			expect(screen.getByPlaceholderText("Search...")).toBeDefined();
+		});
+
+		it("filters quantity units by name", () => {
+			renderPage();
+
+			fireEvent.change(screen.getByPlaceholderText("Search..."), {
+				target: { value: "kilo" },
+			});
+
+			expect(screen.getByText("Kilogram")).toBeDefined();
+			expect(screen.queryByText("Gram")).toBeNull();
+		});
+
+		it("filters quantity units by abbreviation", () => {
+			renderPage();
+
+			fireEvent.change(screen.getByPlaceholderText("Search..."), {
+				target: { value: "kg" },
+			});
+
+			expect(screen.getByText("Kilogram")).toBeDefined();
+			expect(screen.queryByText("Gram")).toBeNull();
+		});
+
+		it("shows no results message when search matches nothing", () => {
+			renderPage();
+
+			fireEvent.change(screen.getByPlaceholderText("Search..."), {
+				target: { value: "xyz" },
+			});
+
+			expect(
+				screen.getByText("No quantity units match your search."),
+			).toBeDefined();
+		});
+
+		it("is case-insensitive", () => {
+			renderPage();
+
+			fireEvent.change(screen.getByPlaceholderText("Search..."), {
+				target: { value: "KILOGRAM" },
+			});
+
+			expect(screen.getByText("Kilogram")).toBeDefined();
+		});
+	});
+
 	describe("quick-add form", () => {
 		it("submits form with name and abbreviation", async () => {
 			renderPage();

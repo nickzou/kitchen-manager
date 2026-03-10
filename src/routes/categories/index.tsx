@@ -1,9 +1,10 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Grid3x3, List, Plus, Rows3 } from "lucide-react";
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useMemo, useState } from "react";
 import InventorySubNav from "#src/components/InventorySubNav";
 import { Island } from "#src/components/Island";
 import { Page } from "#src/components/Page";
+import { SearchInput } from "#src/components/SearchInput";
 import { authClient } from "#src/lib/auth-client";
 import {
 	type Category,
@@ -28,6 +29,17 @@ function CategoriesPage() {
 	const [view, setView] = useState<ViewMode>("grid");
 	const [name, setName] = useState("");
 	const [description, setDescription] = useState("");
+	const [search, setSearch] = useState("");
+
+	const filteredCategories = useMemo(() => {
+		if (!categories || !search.trim()) return categories;
+		const term = search.toLowerCase();
+		return categories.filter(
+			(c) =>
+				c.name.toLowerCase().includes(term) ||
+				c.description?.toLowerCase().includes(term),
+		);
+	}, [categories, search]);
 
 	if (sessionLoading) return null;
 	if (!session) {
@@ -90,6 +102,12 @@ function CategoriesPage() {
 					</button>
 				</form>
 
+				<SearchInput
+					placeholder="Search..."
+					value={search}
+					onChange={(e) => setSearch(e.target.value)}
+				/>
+
 				<div className="mb-4 flex items-center gap-1">
 					{(
 						[
@@ -121,12 +139,16 @@ function CategoriesPage() {
 					<p className="text-sm text-(--sea-ink-soft)">
 						No categories yet. Add one above!
 					</p>
+				) : !filteredCategories?.length ? (
+					<p className="text-sm text-(--sea-ink-soft)">
+						No categories match your search.
+					</p>
 				) : view === "grid" ? (
-					<GridView categories={categories} />
+					<GridView categories={filteredCategories} />
 				) : view === "table" ? (
-					<TableView categories={categories} />
+					<TableView categories={filteredCategories} />
 				) : (
-					<CompactView categories={categories} />
+					<CompactView categories={filteredCategories} />
 				)}
 			</Island>
 		</Page>
