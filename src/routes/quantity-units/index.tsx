@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Grid3x3, List, Plus, Rows3 } from "lucide-react";
-import { type FormEvent, useState } from "react";
+import { ChevronDown, Grid3x3, List, Plus, Rows3 } from "lucide-react";
+import { type FormEvent, Fragment, useState } from "react";
 import InventorySubNav from "#/components/InventorySubNav";
 import { Island } from "#/components/Island";
 import { Page } from "#/components/Page";
@@ -10,6 +10,10 @@ import {
 	useCreateQuantityUnit,
 	useQuantityUnits,
 } from "#/lib/hooks/use-quantity-units";
+import {
+	type UnitConversion,
+	useUnitConversions,
+} from "#/lib/hooks/use-unit-conversions";
 import { cn } from "#/lib/utils";
 
 export const Route = createFileRoute("/quantity-units/")({
@@ -23,6 +27,7 @@ function QuantityUnitsPage() {
 	const navigate = useNavigate();
 
 	const { data: quantityUnits, isLoading } = useQuantityUnits();
+	const { data: conversions } = useUnitConversions();
 	const createQuantityUnit = useCreateQuantityUnit();
 
 	const [view, setView] = useState<ViewMode>("grid");
@@ -33,6 +38,19 @@ function QuantityUnitsPage() {
 	if (!session) {
 		navigate({ to: "/sign-in" });
 		return null;
+	}
+
+	function unitName(id: string) {
+		const u = quantityUnits?.find((u) => u.id === id);
+		if (!u) return id;
+		return u.abbreviation ? `${u.name} (${u.abbreviation})` : u.name;
+	}
+
+	function getConversionsForUnit(unitId: string) {
+		if (!conversions) return [];
+		return conversions.filter(
+			(c) => c.fromUnitId === unitId || c.toUnitId === unitId,
+		);
 	}
 
 	async function handleSubmit(e: FormEvent) {
@@ -122,9 +140,17 @@ function QuantityUnitsPage() {
 						No quantity units yet. Add one above!
 					</p>
 				) : view === "grid" ? (
-					<GridView quantityUnits={quantityUnits} />
+					<GridView
+						quantityUnits={quantityUnits}
+						getConversionsForUnit={getConversionsForUnit}
+						unitName={unitName}
+					/>
 				) : view === "table" ? (
-					<TableView quantityUnits={quantityUnits} />
+					<TableView
+						quantityUnits={quantityUnits}
+						getConversionsForUnit={getConversionsForUnit}
+						unitName={unitName}
+					/>
 				) : (
 					<CompactView quantityUnits={quantityUnits} />
 				)}
@@ -138,31 +164,90 @@ function formatDate(dateStr: string | null) {
 	return new Date(dateStr).toLocaleDateString();
 }
 
-function GridView({ quantityUnits }: { quantityUnits: QuantityUnit[] }) {
+function formatConversionFactor(
+	conversion: UnitConversion,
+	unitId: string,
+	unitName: (id: string) => string,
+) {
+	if (conversion.fromUnitId === unitId) {
+		return `→ ${unitName(conversion.toUnitId)}: ${conversion.factor}`;
+	}
+	const inverseFactor = 1 / Number(conversion.factor);
+	return `→ ${unitName(conversion.fromUnitId)}: ${inverseFactor % 1 === 0 ? inverseFactor : inverseFactor.toPrecision(6)}`;
+}
+
+interface GridViewProps {
+	quantityUnits: QuantityUnit[];
+	getConversionsForUnit: (id: string) => UnitConversion[];
+	unitName: (id: string) => string;
+}
+
+function GridView({
+	quantityUnits,
+	getConversionsForUnit,
+	unitName,
+}: GridViewProps) {
 	return (
 		<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-			{quantityUnits.map((u) => (
-				<Link
-					key={u.id}
-					to="/quantity-units/$id"
-					params={{ id: u.id }}
-					className="block rounded-xl border border-(--line) bg-linear-165 from-(--surface-strong) to-(--surface) shadow-[inset_0_1px_0_var(--inset-glint),0_22px_44px_rgba(30,90,72,0.1),0_6px_18px_rgba(23,58,64,0.08)] backdrop-blur-[4px] p-4 no-underline transition hover:-translate-y-0.5"
-				>
-					<h3 className="mb-1 text-sm font-semibold text-(--sea-ink)">
-						{u.name}
-					</h3>
-					{u.abbreviation && (
-						<p className="m-0 text-xs text-(--sea-ink-soft)">
-							{u.abbreviation}
-						</p>
-					)}
-				</Link>
-			))}
+			{quantityUnits.map((u) => {
+				const unitConversions = getConversionsForUnit(u.id);
+				return (
+					<Link
+						key={u.id}
+						to="/quantity-units/$id"
+						params={{ id: u.id }}
+						className="block rounded-xl border border-(--line) bg-linear-165 from-(--surface-strong) to-(--surface) shadow-[inset_0_1px_0_var(--inset-glint),0_22px_44px_rgba(30,90,72,0.1),0_6px_18px_rgba(23,58,64,0.08)] backdrop-blur-[4px] p-4 no-underline transition hover:-translate-y-0.5"
+					>
+						<h3 className="mb-1 text-sm font-semibold text-(--sea-ink)">
+							{u.name}
+						</h3>
+						{u.abbreviation && (
+							<p className="m-0 text-xs text-(--sea-ink-soft)">
+								{u.abbreviation}
+							</p>
+						)}
+						{unitConversions.length > 0 && (
+							<div className="mt-2 border-t border-(--line) pt-2">
+								{unitConversions.map((c) => (
+									<p
+										key={c.id}
+										className="m-0 text-xs text-(--sea-ink-soft)"
+										data-testid="conversion-line"
+									>
+										{formatConversionFactor(c, u.id, unitName)}
+									</p>
+								))}
+							</div>
+						)}
+					</Link>
+				);
+			})}
 		</div>
 	);
 }
 
-function TableView({ quantityUnits }: { quantityUnits: QuantityUnit[] }) {
+interface TableViewProps {
+	quantityUnits: QuantityUnit[];
+	getConversionsForUnit: (id: string) => UnitConversion[];
+	unitName: (id: string) => string;
+}
+
+function TableView({
+	quantityUnits,
+	getConversionsForUnit,
+	unitName,
+}: TableViewProps) {
+	const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+
+	function toggleExpand(id: string) {
+		setExpandedIds((prev) => {
+			const next = new Set(prev);
+			if (next.has(id)) next.delete(id);
+			else next.add(id);
+			return next;
+		});
+	}
+
 	return (
 		<div className="overflow-x-auto">
 			<table className="w-full text-left text-sm">
@@ -170,29 +255,72 @@ function TableView({ quantityUnits }: { quantityUnits: QuantityUnit[] }) {
 					<tr className="border-b border-(--line) text-xs font-semibold uppercase tracking-wide text-(--sea-ink-soft)">
 						<th className="pb-2 pr-4">Name</th>
 						<th className="pb-2 pr-4">Abbreviation</th>
-						<th className="pb-2">Created</th>
+						<th className="pb-2 pr-4">Created</th>
+						<th className="pb-2 w-10" />
 					</tr>
 				</thead>
 				<tbody>
-					{quantityUnits.map((u) => (
-						<tr key={u.id} className="border-b border-(--line) last:border-0">
-							<td className="py-2.5 pr-4">
-								<Link
-									to="/quantity-units/$id"
-									params={{ id: u.id }}
-									className="font-medium text-(--lagoon-deep) no-underline hover:underline"
-								>
-									{u.name}
-								</Link>
-							</td>
-							<td className="py-2.5 pr-4 text-(--sea-ink-soft)">
-								{u.abbreviation || "—"}
-							</td>
-							<td className="py-2.5 text-(--sea-ink-soft)">
-								{formatDate(u.createdAt)}
-							</td>
-						</tr>
-					))}
+					{quantityUnits.map((u) => {
+						const unitConversions = getConversionsForUnit(u.id);
+						const isExpanded = expandedIds.has(u.id);
+						return (
+							<Fragment key={u.id}>
+								<tr className="border-b border-(--line) last:border-0">
+									<td className="py-2.5 pr-4">
+										<Link
+											to="/quantity-units/$id"
+											params={{ id: u.id }}
+											className="font-medium text-(--lagoon-deep) no-underline hover:underline"
+										>
+											{u.name}
+										</Link>
+									</td>
+									<td className="py-2.5 pr-4 text-(--sea-ink-soft)">
+										{u.abbreviation || "—"}
+									</td>
+									<td className="py-2.5 pr-4 text-(--sea-ink-soft)">
+										{formatDate(u.createdAt)}
+									</td>
+									<td className="py-2.5">
+										{unitConversions.length > 0 && (
+											<button
+												type="button"
+												onClick={() => toggleExpand(u.id)}
+												className="rounded-lg p-1 text-(--sea-ink-soft) transition hover:bg-(--surface)"
+												title="Toggle conversions"
+											>
+												<ChevronDown
+													size={16}
+													className={cn(
+														"transition-transform",
+														isExpanded && "rotate-180",
+													)}
+												/>
+											</button>
+										)}
+									</td>
+								</tr>
+								{isExpanded && (
+									<tr>
+										<td
+											colSpan={4}
+											className="pb-2 pl-4 pt-0 text-xs text-(--sea-ink-soft)"
+										>
+											{unitConversions.map((c) => (
+												<p
+													key={c.id}
+													className="m-0 py-0.5"
+													data-testid="conversion-line"
+												>
+													{formatConversionFactor(c, u.id, unitName)}
+												</p>
+											))}
+										</td>
+									</tr>
+								)}
+							</Fragment>
+						);
+					})}
 				</tbody>
 			</table>
 		</div>

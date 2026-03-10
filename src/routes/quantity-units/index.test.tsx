@@ -8,12 +8,14 @@ import {
 import type { ComponentType, ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { QuantityUnit } from "#/lib/hooks/use-quantity-units";
+import type { UnitConversion } from "#/lib/hooks/use-unit-conversions";
 import { createTestWrapper } from "#/tests/helpers/test-wrapper";
 
 const mockNavigate = vi.fn();
 const mockUseSession = vi.fn();
 const mockUseQuantityUnits = vi.fn();
 const mockUseCreateQuantityUnit = vi.fn();
+const mockUseUnitConversions = vi.fn();
 
 vi.mock("@tanstack/react-router", () => ({
 	createFileRoute: () => (opts: { component: ComponentType }) => ({
@@ -37,6 +39,10 @@ vi.mock("#/lib/hooks/use-quantity-units", () => ({
 		mockUseCreateQuantityUnit(...args),
 }));
 
+vi.mock("#/lib/hooks/use-unit-conversions", () => ({
+	useUnitConversions: (...args: unknown[]) => mockUseUnitConversions(...args),
+}));
+
 vi.mock("#/lib/utils", () => ({
 	cn: (...args: string[]) => args.filter(Boolean).join(" "),
 }));
@@ -47,10 +53,29 @@ vi.mock("#/components/InventorySubNav", () => ({
 
 import { Route } from "./index";
 
-const mockQuantityUnit: QuantityUnit = {
+const mockKilogram: QuantityUnit = {
 	id: "1",
 	name: "Kilogram",
 	abbreviation: "kg",
+	userId: "u1",
+	createdAt: "2026-03-01T00:00:00Z",
+	updatedAt: "2026-03-01T00:00:00Z",
+};
+
+const mockGram: QuantityUnit = {
+	id: "2",
+	name: "Gram",
+	abbreviation: "g",
+	userId: "u1",
+	createdAt: "2026-03-01T00:00:00Z",
+	updatedAt: "2026-03-01T00:00:00Z",
+};
+
+const mockConversion: UnitConversion = {
+	id: "c1",
+	fromUnitId: "1",
+	toUnitId: "2",
+	factor: "1000",
 	userId: "u1",
 	createdAt: "2026-03-01T00:00:00Z",
 	updatedAt: "2026-03-01T00:00:00Z",
@@ -66,12 +91,15 @@ beforeEach(() => {
 		isPending: false,
 	});
 	mockUseQuantityUnits.mockReturnValue({
-		data: [mockQuantityUnit],
+		data: [mockKilogram, mockGram],
 		isLoading: false,
 	});
 	mockUseCreateQuantityUnit.mockReturnValue({
 		mutateAsync: mockMutateAsync,
 		isPending: false,
+	});
+	mockUseUnitConversions.mockReturnValue({
+		data: [mockConversion],
 	});
 });
 
@@ -139,6 +167,15 @@ describe("QuantityUnitsPage", () => {
 			expect(screen.getByText("kg")).toBeDefined();
 		});
 
+		it("shows conversions in grid view", () => {
+			renderPage();
+
+			const conversionLines = screen.getAllByTestId("conversion-line");
+			expect(conversionLines.length).toBeGreaterThanOrEqual(1);
+			expect(conversionLines[0].textContent).toContain("Gram (g)");
+			expect(conversionLines[0].textContent).toContain("1000");
+		});
+
 		it("switches to table view", () => {
 			renderPage();
 
@@ -148,13 +185,28 @@ describe("QuantityUnitsPage", () => {
 			expect(screen.getByText("Kilogram")).toBeDefined();
 		});
 
-		it("switches to compact view", () => {
+		it("shows expandable conversions in table view", () => {
+			renderPage();
+
+			fireEvent.click(screen.getByTitle("table view"));
+
+			const toggleButtons = screen.getAllByTitle("Toggle conversions");
+			expect(toggleButtons.length).toBeGreaterThanOrEqual(1);
+
+			fireEvent.click(toggleButtons[0]);
+
+			const conversionLines = screen.getAllByTestId("conversion-line");
+			expect(conversionLines.length).toBeGreaterThanOrEqual(1);
+		});
+
+		it("switches to compact view without conversions", () => {
 			renderPage();
 
 			fireEvent.click(screen.getByTitle("compact view"));
 
 			expect(screen.getByText("Kilogram")).toBeDefined();
 			expect(screen.getByText("kg")).toBeDefined();
+			expect(screen.queryAllByTestId("conversion-line")).toHaveLength(0);
 		});
 	});
 

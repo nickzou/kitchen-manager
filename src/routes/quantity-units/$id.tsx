@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, Pencil, Trash2, X } from "lucide-react";
+import { ArrowLeft, Check, Pencil, Plus, Trash2, X } from "lucide-react";
 import { type FormEvent, useState } from "react";
+import { Combobox } from "#/components/Combobox";
 import InventorySubNav from "#/components/InventorySubNav";
 import { Island } from "#/components/Island";
 import { Page } from "#/components/Page";
@@ -8,8 +9,16 @@ import { authClient } from "#/lib/auth-client";
 import {
 	useDeleteQuantityUnit,
 	useQuantityUnit,
+	useQuantityUnits,
 	useUpdateQuantityUnit,
 } from "#/lib/hooks/use-quantity-units";
+import {
+	type UnitConversion,
+	useCreateUnitConversion,
+	useDeleteUnitConversion,
+	useUnitConversions,
+	useUpdateUnitConversion,
+} from "#/lib/hooks/use-unit-conversions";
 import { cn } from "#/lib/utils";
 
 export const Route = createFileRoute("/quantity-units/$id")({
@@ -22,8 +31,12 @@ function QuantityUnitDetail() {
 	const { data: session, isPending: sessionLoading } = authClient.useSession();
 
 	const { data: quantityUnit, isLoading, error } = useQuantityUnit(id);
+	const { data: allUnits } = useQuantityUnits();
+	const { data: conversions } = useUnitConversions();
 	const updateQuantityUnit = useUpdateQuantityUnit(id);
 	const deleteQuantityUnit = useDeleteQuantityUnit();
+	const createConversion = useCreateUnitConversion();
+	const deleteConversion = useDeleteUnitConversion();
 
 	const [editing, setEditing] = useState(false);
 	const [confirmDelete, setConfirmDelete] = useState(false);
@@ -31,6 +44,9 @@ function QuantityUnitDetail() {
 		name: "",
 		abbreviation: "",
 	});
+
+	const [newConvToUnitId, setNewConvToUnitId] = useState("");
+	const [newConvFactor, setNewConvFactor] = useState("");
 
 	if (sessionLoading) return null;
 	if (!session) {
@@ -64,6 +80,32 @@ function QuantityUnitDetail() {
 		);
 	}
 
+	const unitConversions =
+		conversions?.filter((c) => c.fromUnitId === id || c.toUnitId === id) ?? [];
+
+	function unitName(unitId: string) {
+		const u = allUnits?.find((u) => u.id === unitId);
+		if (!u) return unitId;
+		return u.abbreviation ? `${u.name} (${u.abbreviation})` : u.name;
+	}
+
+	function otherUnitId(c: UnitConversion) {
+		return c.fromUnitId === id ? c.toUnitId : c.fromUnitId;
+	}
+
+	function displayFactor(c: UnitConversion) {
+		if (c.fromUnitId === id) return c.factor;
+		const inv = 1 / Number(c.factor);
+		return inv % 1 === 0 ? String(inv) : inv.toPrecision(6);
+	}
+
+	const unitOptions = (allUnits ?? [])
+		.filter((u) => u.id !== id)
+		.map((u) => ({
+			value: u.id,
+			label: u.abbreviation ? `${u.name} (${u.abbreviation})` : u.name,
+		}));
+
 	function startEditing() {
 		if (!quantityUnit) return;
 		setForm({
@@ -85,6 +127,21 @@ function QuantityUnitDetail() {
 	async function handleDelete() {
 		await deleteQuantityUnit.mutateAsync(id);
 		navigate({ to: "/quantity-units" });
+	}
+
+	async function handleAddConversion() {
+		if (!newConvToUnitId || !newConvFactor) return;
+		await createConversion.mutateAsync({
+			fromUnitId: id,
+			toUnitId: newConvToUnitId,
+			factor: newConvFactor,
+		});
+		setNewConvToUnitId("");
+		setNewConvFactor("");
+	}
+
+	async function handleDeleteConversion(conversionId: string) {
+		await deleteConversion.mutateAsync(conversionId);
 	}
 
 	const inputClass =
@@ -146,6 +203,62 @@ function QuantityUnitDetail() {
 							/>
 						</label>
 
+						<div className="border-t border-(--line) pt-4">
+							<h2 className="mb-3 text-sm font-semibold text-(--sea-ink)">
+								Conversions
+							</h2>
+							{unitConversions.length === 0 ? (
+								<p className="mb-3 text-sm text-(--sea-ink-soft)">
+									No conversions for this unit.
+								</p>
+							) : (
+								<div className="mb-3 flex flex-col gap-2">
+									{unitConversions.map((c) => (
+										<EditConversionInline
+											key={c.id}
+											conversion={c}
+											unitName={unitName}
+											otherUnitId={otherUnitId(c)}
+											displayFactor={displayFactor(c)}
+											onDelete={() => handleDeleteConversion(c.id)}
+										/>
+									))}
+								</div>
+							)}
+
+							<div className="flex flex-wrap items-end gap-2">
+								<div className="flex-1 min-w-[140px]">
+									<Combobox
+										value={newConvToUnitId}
+										onChange={setNewConvToUnitId}
+										options={unitOptions}
+										placeholder="Target unit"
+									/>
+								</div>
+								<input
+									type="number"
+									step="any"
+									placeholder="Factor"
+									value={newConvFactor}
+									onChange={(e) => setNewConvFactor(e.target.value)}
+									className={cn(inputClass, "w-28")}
+								/>
+								<button
+									type="button"
+									onClick={handleAddConversion}
+									disabled={
+										createConversion.isPending ||
+										!newConvToUnitId ||
+										!newConvFactor
+									}
+									className="flex h-10 items-center gap-1 rounded-full bg-(--lagoon-deep) px-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
+								>
+									<Plus size={14} />
+									Add
+								</button>
+							</div>
+						</div>
+
 						<button
 							type="submit"
 							disabled={updateQuantityUnit.isPending}
@@ -203,6 +316,38 @@ function QuantityUnitDetail() {
 							</div>
 						</dl>
 
+						<div className="mt-6 border-t border-(--line) pt-4">
+							<h2 className="mb-3 text-sm font-semibold text-(--sea-ink)">
+								Conversions
+							</h2>
+							{unitConversions.length === 0 ? (
+								<p className="text-sm text-(--sea-ink-soft)">
+									No conversions for this unit.
+								</p>
+							) : (
+								<div className="flex flex-col gap-1">
+									{unitConversions.map((c) => (
+										<div
+											key={c.id}
+											className="flex items-center justify-between rounded-lg px-2 py-1.5"
+										>
+											<span className="text-sm text-(--sea-ink)">
+												→ {unitName(otherUnitId(c))}: {displayFactor(c)}
+											</span>
+											<button
+												type="button"
+												onClick={() => handleDeleteConversion(c.id)}
+												className="rounded-lg p-1.5 text-(--sea-ink-soft) transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950"
+												title="Delete conversion"
+											>
+												<Trash2 size={14} />
+											</button>
+										</div>
+									))}
+								</div>
+							)}
+						</div>
+
 						{confirmDelete && (
 							<div className="mt-6 flex items-center gap-3 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900 dark:bg-red-950/50">
 								<p className="flex-1 text-sm text-red-700 dark:text-red-300">
@@ -229,5 +374,90 @@ function QuantityUnitDetail() {
 				)}
 			</Island>
 		</Page>
+	);
+}
+
+function EditConversionInline({
+	conversion,
+	unitName,
+	otherUnitId,
+	displayFactor,
+	onDelete,
+}: {
+	conversion: UnitConversion;
+	unitName: (id: string) => string;
+	otherUnitId: string;
+	displayFactor: string;
+	onDelete: () => void;
+}) {
+	const updateConversion = useUpdateUnitConversion(conversion.id);
+	const [editingFactor, setEditingFactor] = useState(false);
+	const [factorValue, setFactorValue] = useState(conversion.factor);
+
+	async function handleSaveFactor() {
+		await updateConversion.mutateAsync({ factor: factorValue });
+		setEditingFactor(false);
+	}
+
+	return (
+		<div className="flex items-center gap-2 rounded-lg border border-(--line) px-3 py-2">
+			<span className="flex-1 text-sm text-(--sea-ink)">
+				→ {unitName(otherUnitId)}:
+			</span>
+			{editingFactor ? (
+				<>
+					<input
+						type="number"
+						step="any"
+						value={factorValue}
+						onChange={(e) => setFactorValue(e.target.value)}
+						className="h-8 w-24 rounded-lg border border-(--line) bg-(--surface) px-2 text-sm text-(--sea-ink) outline-none focus:border-(--lagoon)"
+					/>
+					<button
+						type="button"
+						onClick={handleSaveFactor}
+						disabled={updateConversion.isPending}
+						className="rounded-lg p-1 text-(--lagoon-deep) transition hover:bg-(--surface)"
+						title="Save factor"
+					>
+						<Check size={14} />
+					</button>
+					<button
+						type="button"
+						onClick={() => {
+							setFactorValue(conversion.factor);
+							setEditingFactor(false);
+						}}
+						className="rounded-lg p-1 text-(--sea-ink-soft) transition hover:bg-(--surface)"
+						title="Cancel"
+					>
+						<X size={14} />
+					</button>
+				</>
+			) : (
+				<>
+					<span className="text-sm text-(--sea-ink-soft)">{displayFactor}</span>
+					<button
+						type="button"
+						onClick={() => {
+							setFactorValue(conversion.factor);
+							setEditingFactor(true);
+						}}
+						className="rounded-lg p-1 text-(--sea-ink-soft) transition hover:bg-(--surface)"
+						title="Edit factor"
+					>
+						<Pencil size={14} />
+					</button>
+				</>
+			)}
+			<button
+				type="button"
+				onClick={onDelete}
+				className="rounded-lg p-1 text-(--sea-ink-soft) transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950"
+				title="Delete conversion"
+			>
+				<Trash2 size={14} />
+			</button>
+		</div>
 	);
 }

@@ -13,12 +13,10 @@ import { Route as SignUpRouteImport } from './routes/sign-up'
 import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as UnitConversionsIndexRouteImport } from './routes/unit-conversions/index'
 import { Route as StockIndexRouteImport } from './routes/stock/index'
 import { Route as QuantityUnitsIndexRouteImport } from './routes/quantity-units/index'
 import { Route as ProductsIndexRouteImport } from './routes/products/index'
 import { Route as CategoriesIndexRouteImport } from './routes/categories/index'
-import { Route as UnitConversionsIdRouteImport } from './routes/unit-conversions/$id'
 import { Route as QuantityUnitsIdRouteImport } from './routes/quantity-units/$id'
 import { Route as ProductsIdRouteImport } from './routes/products/$id'
 import { Route as CategoriesIdRouteImport } from './routes/categories/$id'
@@ -57,11 +55,6 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const UnitConversionsIndexRoute = UnitConversionsIndexRouteImport.update({
-  id: '/unit-conversions/',
-  path: '/unit-conversions/',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const StockIndexRoute = StockIndexRouteImport.update({
   id: '/stock/',
   path: '/stock/',
@@ -80,11 +73,6 @@ const ProductsIndexRoute = ProductsIndexRouteImport.update({
 const CategoriesIndexRoute = CategoriesIndexRouteImport.update({
   id: '/categories/',
   path: '/categories/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const UnitConversionsIdRoute = UnitConversionsIdRouteImport.update({
-  id: '/unit-conversions/$id',
-  path: '/unit-conversions/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const QuantityUnitsIdRoute = QuantityUnitsIdRouteImport.update({
@@ -181,12 +169,10 @@ export interface FileRoutesByFullPath {
   '/categories/$id': typeof CategoriesIdRoute
   '/products/$id': typeof ProductsIdRoute
   '/quantity-units/$id': typeof QuantityUnitsIdRoute
-  '/unit-conversions/$id': typeof UnitConversionsIdRoute
   '/categories/': typeof CategoriesIndexRoute
   '/products/': typeof ProductsIndexRoute
   '/quantity-units/': typeof QuantityUnitsIndexRoute
   '/stock/': typeof StockIndexRoute
-  '/unit-conversions/': typeof UnitConversionsIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/categories/$id': typeof ApiCategoriesIdRoute
   '/api/products/$id': typeof ApiProductsIdRoute
@@ -210,12 +196,10 @@ export interface FileRoutesByTo {
   '/categories/$id': typeof CategoriesIdRoute
   '/products/$id': typeof ProductsIdRoute
   '/quantity-units/$id': typeof QuantityUnitsIdRoute
-  '/unit-conversions/$id': typeof UnitConversionsIdRoute
   '/categories': typeof CategoriesIndexRoute
   '/products': typeof ProductsIndexRoute
   '/quantity-units': typeof QuantityUnitsIndexRoute
   '/stock': typeof StockIndexRoute
-  '/unit-conversions': typeof UnitConversionsIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/categories/$id': typeof ApiCategoriesIdRoute
   '/api/products/$id': typeof ApiProductsIdRoute
@@ -240,12 +224,10 @@ export interface FileRoutesById {
   '/categories/$id': typeof CategoriesIdRoute
   '/products/$id': typeof ProductsIdRoute
   '/quantity-units/$id': typeof QuantityUnitsIdRoute
-  '/unit-conversions/$id': typeof UnitConversionsIdRoute
   '/categories/': typeof CategoriesIndexRoute
   '/products/': typeof ProductsIndexRoute
   '/quantity-units/': typeof QuantityUnitsIndexRoute
   '/stock/': typeof StockIndexRoute
-  '/unit-conversions/': typeof UnitConversionsIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/categories/$id': typeof ApiCategoriesIdRoute
   '/api/products/$id': typeof ApiProductsIdRoute
@@ -271,12 +253,10 @@ export interface FileRouteTypes {
     | '/categories/$id'
     | '/products/$id'
     | '/quantity-units/$id'
-    | '/unit-conversions/$id'
     | '/categories/'
     | '/products/'
     | '/quantity-units/'
     | '/stock/'
-    | '/unit-conversions/'
     | '/api/auth/$'
     | '/api/categories/$id'
     | '/api/products/$id'
@@ -300,12 +280,10 @@ export interface FileRouteTypes {
     | '/categories/$id'
     | '/products/$id'
     | '/quantity-units/$id'
-    | '/unit-conversions/$id'
     | '/categories'
     | '/products'
     | '/quantity-units'
     | '/stock'
-    | '/unit-conversions'
     | '/api/auth/$'
     | '/api/categories/$id'
     | '/api/products/$id'
@@ -329,12 +307,10 @@ export interface FileRouteTypes {
     | '/categories/$id'
     | '/products/$id'
     | '/quantity-units/$id'
-    | '/unit-conversions/$id'
     | '/categories/'
     | '/products/'
     | '/quantity-units/'
     | '/stock/'
-    | '/unit-conversions/'
     | '/api/auth/$'
     | '/api/categories/$id'
     | '/api/products/$id'
@@ -359,12 +335,10 @@ export interface RootRouteChildren {
   CategoriesIdRoute: typeof CategoriesIdRoute
   ProductsIdRoute: typeof ProductsIdRoute
   QuantityUnitsIdRoute: typeof QuantityUnitsIdRoute
-  UnitConversionsIdRoute: typeof UnitConversionsIdRoute
   CategoriesIndexRoute: typeof CategoriesIndexRoute
   ProductsIndexRoute: typeof ProductsIndexRoute
   QuantityUnitsIndexRoute: typeof QuantityUnitsIndexRoute
   StockIndexRoute: typeof StockIndexRoute
-  UnitConversionsIndexRoute: typeof UnitConversionsIndexRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiCategoriesIdRoute: typeof ApiCategoriesIdRoute
   ApiProductsIdRoute: typeof ApiProductsIdRoute
@@ -411,13 +385,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/unit-conversions/': {
-      id: '/unit-conversions/'
-      path: '/unit-conversions'
-      fullPath: '/unit-conversions/'
-      preLoaderRoute: typeof UnitConversionsIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/stock/': {
       id: '/stock/'
       path: '/stock'
@@ -444,13 +411,6 @@ declare module '@tanstack/react-router' {
       path: '/categories'
       fullPath: '/categories/'
       preLoaderRoute: typeof CategoriesIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/unit-conversions/$id': {
-      id: '/unit-conversions/$id'
-      path: '/unit-conversions/$id'
-      fullPath: '/unit-conversions/$id'
-      preLoaderRoute: typeof UnitConversionsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/quantity-units/$id': {
@@ -583,12 +543,10 @@ const rootRouteChildren: RootRouteChildren = {
   CategoriesIdRoute: CategoriesIdRoute,
   ProductsIdRoute: ProductsIdRoute,
   QuantityUnitsIdRoute: QuantityUnitsIdRoute,
-  UnitConversionsIdRoute: UnitConversionsIdRoute,
   CategoriesIndexRoute: CategoriesIndexRoute,
   ProductsIndexRoute: ProductsIndexRoute,
   QuantityUnitsIndexRoute: QuantityUnitsIndexRoute,
   StockIndexRoute: StockIndexRoute,
-  UnitConversionsIndexRoute: UnitConversionsIndexRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiCategoriesIdRoute: ApiCategoriesIdRoute,
   ApiProductsIdRoute: ApiProductsIdRoute,

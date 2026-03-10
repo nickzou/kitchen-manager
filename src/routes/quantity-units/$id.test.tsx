@@ -8,13 +8,19 @@ import {
 import type { ComponentType, ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { QuantityUnit } from "#/lib/hooks/use-quantity-units";
+import type { UnitConversion } from "#/lib/hooks/use-unit-conversions";
 import { createTestWrapper } from "#/tests/helpers/test-wrapper";
 
 const mockNavigate = vi.fn();
 const mockUseSession = vi.fn();
 const mockUseQuantityUnit = vi.fn();
+const mockUseQuantityUnits = vi.fn();
 const mockUseUpdateQuantityUnit = vi.fn();
 const mockUseDeleteQuantityUnit = vi.fn();
+const mockUseUnitConversions = vi.fn();
+const mockUseCreateUnitConversion = vi.fn();
+const mockUseUpdateUnitConversion = vi.fn();
+const mockUseDeleteUnitConversion = vi.fn();
 
 vi.mock("@tanstack/react-router", () => ({
 	createFileRoute: () => (opts: { component: ComponentType }) => ({
@@ -35,10 +41,21 @@ vi.mock("#/lib/auth-client", () => ({
 
 vi.mock("#/lib/hooks/use-quantity-units", () => ({
 	useQuantityUnit: (...args: unknown[]) => mockUseQuantityUnit(...args),
+	useQuantityUnits: (...args: unknown[]) => mockUseQuantityUnits(...args),
 	useUpdateQuantityUnit: (...args: unknown[]) =>
 		mockUseUpdateQuantityUnit(...args),
 	useDeleteQuantityUnit: (...args: unknown[]) =>
 		mockUseDeleteQuantityUnit(...args),
+}));
+
+vi.mock("#/lib/hooks/use-unit-conversions", () => ({
+	useUnitConversions: (...args: unknown[]) => mockUseUnitConversions(...args),
+	useCreateUnitConversion: (...args: unknown[]) =>
+		mockUseCreateUnitConversion(...args),
+	useUpdateUnitConversion: (...args: unknown[]) =>
+		mockUseUpdateUnitConversion(...args),
+	useDeleteUnitConversion: (...args: unknown[]) =>
+		mockUseDeleteUnitConversion(...args),
 }));
 
 vi.mock("#/lib/utils", () => ({
@@ -49,9 +66,40 @@ vi.mock("#/components/InventorySubNav", () => ({
 	default: () => <nav data-testid="inventory-sub-nav" />,
 }));
 
+vi.mock("#/components/Combobox", () => ({
+	Combobox: ({
+		value,
+		onChange,
+		options,
+		placeholder,
+		required,
+	}: {
+		value: string;
+		onChange: (v: string) => void;
+		options: { value: string; label: string }[];
+		placeholder?: string;
+		required?: boolean;
+	}) => (
+		<select
+			data-testid="combobox"
+			value={value}
+			onChange={(e) => onChange(e.target.value)}
+			required={required}
+			aria-label={placeholder}
+		>
+			<option value="">{placeholder}</option>
+			{options.map((o) => (
+				<option key={o.value} value={o.value}>
+					{o.label}
+				</option>
+			))}
+		</select>
+	),
+}));
+
 import { Route } from "./$id";
 
-const mockQuantityUnit: QuantityUnit = {
+const mockKilogram: QuantityUnit = {
 	id: "1",
 	name: "Kilogram",
 	abbreviation: "kg",
@@ -60,8 +108,30 @@ const mockQuantityUnit: QuantityUnit = {
 	updatedAt: "2026-03-02T00:00:00Z",
 };
 
+const mockGram: QuantityUnit = {
+	id: "2",
+	name: "Gram",
+	abbreviation: "g",
+	userId: "u1",
+	createdAt: "2026-03-01T00:00:00Z",
+	updatedAt: "2026-03-01T00:00:00Z",
+};
+
+const mockConversion: UnitConversion = {
+	id: "c1",
+	fromUnitId: "1",
+	toUnitId: "2",
+	factor: "1000",
+	userId: "u1",
+	createdAt: "2026-03-01T00:00:00Z",
+	updatedAt: "2026-03-01T00:00:00Z",
+};
+
 const mockUpdateMutateAsync = vi.fn().mockResolvedValue({});
 const mockDeleteMutateAsync = vi.fn().mockResolvedValue({});
+const mockCreateConvMutateAsync = vi.fn().mockResolvedValue({});
+const mockUpdateConvMutateAsync = vi.fn().mockResolvedValue({});
+const mockDeleteConvMutateAsync = vi.fn().mockResolvedValue({});
 
 beforeEach(() => {
 	vi.clearAllMocks();
@@ -71,9 +141,12 @@ beforeEach(() => {
 		isPending: false,
 	});
 	mockUseQuantityUnit.mockReturnValue({
-		data: mockQuantityUnit,
+		data: mockKilogram,
 		isLoading: false,
 		error: null,
+	});
+	mockUseQuantityUnits.mockReturnValue({
+		data: [mockKilogram, mockGram],
 	});
 	mockUseUpdateQuantityUnit.mockReturnValue({
 		mutateAsync: mockUpdateMutateAsync,
@@ -81,6 +154,21 @@ beforeEach(() => {
 	});
 	mockUseDeleteQuantityUnit.mockReturnValue({
 		mutateAsync: mockDeleteMutateAsync,
+		isPending: false,
+	});
+	mockUseUnitConversions.mockReturnValue({
+		data: [mockConversion],
+	});
+	mockUseCreateUnitConversion.mockReturnValue({
+		mutateAsync: mockCreateConvMutateAsync,
+		isPending: false,
+	});
+	mockUseUpdateUnitConversion.mockReturnValue({
+		mutateAsync: mockUpdateConvMutateAsync,
+		isPending: false,
+	});
+	mockUseDeleteUnitConversion.mockReturnValue({
+		mutateAsync: mockDeleteConvMutateAsync,
 		isPending: false,
 	});
 });
@@ -128,6 +216,36 @@ describe("QuantityUnitDetail", () => {
 			expect(screen.getByText("Kilogram")).toBeDefined();
 			expect(screen.getByText("kg")).toBeDefined();
 		});
+
+		it("displays conversions in view mode", () => {
+			renderPage();
+
+			expect(screen.getByText("Conversions")).toBeDefined();
+			expect(
+				screen.getByText(
+					(content) => content.includes("Gram (g)") && content.includes("1000"),
+				),
+			).toBeDefined();
+		});
+
+		it("shows empty state when no conversions", () => {
+			mockUseUnitConversions.mockReturnValue({ data: [] });
+
+			renderPage();
+
+			expect(screen.getByText("No conversions for this unit.")).toBeDefined();
+		});
+
+		it("deletes a conversion in view mode", async () => {
+			renderPage();
+
+			const deleteButtons = screen.getAllByTitle("Delete conversion");
+			fireEvent.click(deleteButtons[0]);
+
+			await waitFor(() => {
+				expect(mockDeleteConvMutateAsync).toHaveBeenCalledWith("c1");
+			});
+		});
 	});
 
 	describe("edit flow", () => {
@@ -147,6 +265,29 @@ describe("QuantityUnitDetail", () => {
 				expect(mockUpdateMutateAsync).toHaveBeenCalledWith({
 					name: "Kilogramme",
 					abbreviation: "kg",
+				});
+			});
+		});
+
+		it("creates a conversion in edit mode", async () => {
+			renderPage();
+
+			fireEvent.click(screen.getByTitle("Edit"));
+
+			const comboboxes = screen.getAllByTestId("combobox");
+			fireEvent.change(comboboxes[0], { target: { value: "2" } });
+
+			const factorInput = screen.getByPlaceholderText("Factor");
+			fireEvent.change(factorInput, { target: { value: "500" } });
+
+			const addButtons = screen.getAllByText("Add");
+			fireEvent.click(addButtons[0]);
+
+			await waitFor(() => {
+				expect(mockCreateConvMutateAsync).toHaveBeenCalledWith({
+					fromUnitId: "1",
+					toUnitId: "2",
+					factor: "500",
 				});
 			});
 		});
