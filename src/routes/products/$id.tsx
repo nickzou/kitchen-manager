@@ -1,8 +1,10 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Pencil, Trash2, X } from "lucide-react";
 import { type FormEvent, useState } from "react";
+import { Combobox } from "#src/components/Combobox";
 import InventorySubNav from "#src/components/InventorySubNav";
 import { Island } from "#src/components/Island";
+import { NumberInput } from "#src/components/NumberInput";
 import { Page } from "#src/components/Page";
 import { authClient } from "#src/lib/auth-client";
 import { useCategories } from "#src/lib/hooks/use-categories";
@@ -172,23 +174,18 @@ function ProductDetail() {
 							/>
 						</label>
 
-						<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
+						<div className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
 							Category
-							<select
+							<Combobox
 								value={form.categoryId}
-								onChange={(e) =>
-									setForm({ ...form, categoryId: e.target.value })
-								}
-								className={inputClass}
-							>
-								<option value="">None</option>
-								{(categories ?? []).map((c) => (
-									<option key={c.id} value={c.id}>
-										{c.name}
-									</option>
-								))}
-							</select>
-						</label>
+								onChange={(v) => setForm({ ...form, categoryId: v })}
+								options={(categories ?? []).map((c) => ({
+									value: c.id,
+									label: c.name,
+								}))}
+								placeholder="None"
+							/>
+						</div>
 
 						<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
 							Description
@@ -202,49 +199,43 @@ function ProductDetail() {
 							/>
 						</label>
 
-						<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
+						<div className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
 							Quantity Unit
-							<select
+							<Combobox
 								value={form.quantityUnitId}
-								onChange={(e) =>
-									setForm({ ...form, quantityUnitId: e.target.value })
-								}
-								className={inputClass}
-							>
-								<option value="">None</option>
-								{(quantityUnits ?? []).map((u) => (
-									<option key={u.id} value={u.id}>
-										{u.name}
-										{u.abbreviation ? ` (${u.abbreviation})` : ""}
-									</option>
-								))}
-							</select>
-						</label>
+								onChange={(v) => setForm({ ...form, quantityUnitId: v })}
+								options={(quantityUnits ?? []).map((u) => ({
+									value: u.id,
+									label: u.abbreviation
+										? `${u.name} (${u.abbreviation})`
+										: u.name,
+								}))}
+								placeholder="None"
+							/>
+						</div>
 
 						<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
 							Min Stock Amount
-							<input
-								type="number"
+							<NumberInput
 								step="any"
 								min="0"
 								value={form.minStockAmount}
 								onChange={(e) =>
 									setForm({ ...form, minStockAmount: e.target.value })
 								}
-								className={inputClass}
+								className="w-full"
 							/>
 						</label>
 
 						<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
 							Default Expiration Days
-							<input
-								type="number"
+							<NumberInput
 								min="1"
 								value={form.defaultExpirationDays}
 								onChange={(e) =>
 									setForm({ ...form, defaultExpirationDays: e.target.value })
 								}
-								className={inputClass}
+								className="w-full"
 							/>
 						</label>
 
