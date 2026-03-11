@@ -34,7 +34,7 @@ export function GridView<T>({
 							<img
 								src={image}
 								alt={getImageAlt?.(item) ?? ""}
-								className="h-24 w-full object-cover"
+								className="aspect-[21/9] w-full object-cover"
 							/>
 						)}
 						<div className={image ? "p-4" : ""}>{renderCard(item)}</div>
