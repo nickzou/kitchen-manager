@@ -50,12 +50,13 @@ export function AddIngredientForm({
 				Add ingredient
 			</h3>
 			<div className="flex flex-wrap items-end gap-2">
-				<div className="w-full">
+				<div className="w-full grid grid-cols-2 md:grid-cols-12 gap-2">
 					<Combobox
 						value={productId}
 						onChange={(v) => update({ productId: v })}
 						options={productOptions}
 						placeholder="Product"
+						className="col-span-2 md:col-span-6 lg:col-span-12"
 						onCreateNew={
 							onCreateProduct
 								? async (name) => {
@@ -65,22 +66,20 @@ export function AddIngredientForm({
 								: undefined
 						}
 					/>
-				</div>
-				<div className="flex-1">
 					<NumberInput
 						id={`${htmlId}-ing-qty`}
 						step="any"
 						min="0"
 						placeholder="Qty"
+						className="col-span-1 md:col-span-4 lg:col-span-8"
 						value={quantity}
 						onChange={(e) => update({ quantity: e.target.value })}
 					/>
-				</div>
-				<div className="flex-1">
 					<Combobox
 						value={quantityUnitId}
 						onChange={(v) => update({ quantityUnitId: v })}
 						options={unitOptions}
+						className="col-span-1 md:col-span-2 lg:col-span-4"
 						placeholder="Unit"
 					/>
 				</div>
