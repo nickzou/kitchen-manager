@@ -1,3 +1,4 @@
+import { Plus } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "#src/lib/utils";
 
@@ -13,6 +14,7 @@ interface ComboboxProps {
 	placeholder?: string;
 	className?: string;
 	required?: boolean;
+	onCreateNew?: (query: string) => void;
 }
 
 export function Combobox({
@@ -22,6 +24,7 @@ export function Combobox({
 	placeholder = "Select…",
 	className,
 	required,
+	onCreateNew,
 }: ComboboxProps) {
 	const [open, setOpen] = useState(false);
 	const [query, setQuery] = useState("");
@@ -70,6 +73,18 @@ export function Combobox({
 		setOpen(false);
 	}
 
+	const showCreateRow = !!onCreateNew && query.trim().length > 0;
+	const totalItems = filtered.length + (showCreateRow ? 1 : 0);
+	const createRowIndex = filtered.length;
+
+	function handleCreateNew() {
+		if (onCreateNew && query.trim()) {
+			onCreateNew(query.trim());
+			setQuery("");
+			setOpen(false);
+		}
+	}
+
 	function handleKeyDown(e: React.KeyboardEvent) {
 		if (!open) {
 			if (e.key === "ArrowDown" || e.key === "ArrowUp") {
@@ -82,7 +97,7 @@ export function Combobox({
 		switch (e.key) {
 			case "ArrowDown":
 				e.preventDefault();
-				setHighlightedIndex((i) => Math.min(i + 1, filtered.length - 1));
+				setHighlightedIndex((i) => Math.min(i + 1, totalItems - 1));
 				break;
 			case "ArrowUp":
 				e.preventDefault();
@@ -90,7 +105,9 @@ export function Combobox({
 				break;
 			case "Enter":
 				e.preventDefault();
-				if (filtered[highlightedIndex]) {
+				if (highlightedIndex === createRowIndex && showCreateRow) {
+					handleCreateNew();
+				} else if (filtered[highlightedIndex]) {
 					select(filtered[highlightedIndex].value);
 				}
 				break;
@@ -130,7 +147,7 @@ export function Combobox({
 					!value && !open && "text-(--sea-ink-soft)",
 				)}
 			/>
-			{open && filtered.length > 0 && (
+			{open && totalItems > 0 && (
 				<div
 					id={listId}
 					ref={listRef}
@@ -157,6 +174,26 @@ export function Combobox({
 							{option.label}
 						</div>
 					))}
+					{showCreateRow && (
+						<div
+							role="option"
+							aria-selected={highlightedIndex === createRowIndex}
+							tabIndex={-1}
+							onMouseDown={(e) => {
+								e.preventDefault();
+								handleCreateNew();
+							}}
+							onMouseEnter={() => setHighlightedIndex(createRowIndex)}
+							className={cn(
+								"flex cursor-pointer items-center gap-1.5 border-t border-(--line) px-3 py-2 text-sm font-medium text-(--lagoon-deep)",
+								highlightedIndex === createRowIndex &&
+									"bg-[rgba(79,184,178,0.14)]",
+							)}
+						>
+							<Plus size={14} />
+							Create &ldquo;{query.trim()}&rdquo;
+						</div>
+					)}
 				</div>
 			)}
 		</div>
