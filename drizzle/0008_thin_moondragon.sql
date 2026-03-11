@@ -1,0 +1,1 @@
+ALTER TABLE "meal_plan_entry" ADD COLUMN "cooked_at" timestamp;

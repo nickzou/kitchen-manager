@@ -52,6 +52,10 @@ export const Route = createFileRoute("/api/meal-plan-entries/cook")({
 						return { error: "Meal plan entry not found", status: 404 };
 					}
 
+					if (entry.cookedAt) {
+						return { error: "Already cooked", status: 400 };
+					}
+
 					// Get the recipe
 					const [rec] = await tx
 						.select()
@@ -136,6 +140,11 @@ export const Route = createFileRoute("/api/meal-plan-entries/cook")({
 							);
 						}
 					}
+
+					await tx
+						.update(mealPlanEntry)
+						.set({ cookedAt: new Date() })
+						.where(eq(mealPlanEntry.id, mealPlanEntryId));
 
 					return { deductions, warnings, status: 200 };
 				});

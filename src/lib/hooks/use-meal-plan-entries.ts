@@ -7,6 +7,7 @@ export interface MealPlanEntry {
 	recipeId: string;
 	servings: number | null;
 	sortOrder: number;
+	cookedAt: string | null;
 	userId: string;
 	createdAt: string;
 	updatedAt: string;

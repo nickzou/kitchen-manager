@@ -384,6 +384,7 @@ export const mealPlanEntry = pgTable(
 			.references(() => recipe.id, { onDelete: "cascade" }),
 		servings: integer("servings"),
 		sortOrder: integer("sort_order").default(0).notNull(),
+		cookedAt: timestamp("cooked_at"),
 		userId: text("user_id")
 			.notNull()
 			.references(() => user.id, { onDelete: "cascade" }),

@@ -39,6 +39,7 @@ export const Route = createFileRoute("/api/meal-plan-entries/")({
 						recipeId: mealPlanEntry.recipeId,
 						servings: mealPlanEntry.servings,
 						sortOrder: mealPlanEntry.sortOrder,
+						cookedAt: mealPlanEntry.cookedAt,
 						userId: mealPlanEntry.userId,
 						createdAt: mealPlanEntry.createdAt,
 						updatedAt: mealPlanEntry.updatedAt,

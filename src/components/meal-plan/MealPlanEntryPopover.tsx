@@ -70,15 +70,22 @@ export function MealPlanEntryPopover({
 			</div>
 
 			<div className="flex gap-2">
-				<button
-					type="button"
-					onClick={onCook}
-					disabled={isCooking}
-					className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-(--lagoon-deep) px-3 py-1.5 text-xs font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
-				>
-					<CookingPot size={14} />
-					Cook
-				</button>
+				{entry.cookedAt ? (
+					<span className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-green-100 px-3 py-1.5 text-xs font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-300">
+						<CookingPot size={14} />
+						Cooked
+					</span>
+				) : (
+					<button
+						type="button"
+						onClick={onCook}
+						disabled={isCooking}
+						className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-(--lagoon-deep) px-3 py-1.5 text-xs font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
+					>
+						<CookingPot size={14} />
+						Cook
+					</button>
+				)}
 				<button
 					type="button"
 					onClick={onDelete}
