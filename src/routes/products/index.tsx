@@ -191,7 +191,7 @@ function GridView({ products, getCategoryName }: ViewProps) {
 						key={p.id}
 						to="/products/$id"
 						params={{ id: p.id }}
-						className={`block rounded-xl border border-(--line) bg-linear-165 from-(--surface-strong) to-(--surface) shadow-[inset_0_1px_0_var(--inset-glint),0_22px_44px_rgba(30,90,72,0.1),0_6px_18px_rgba(23,58,64,0.08)] backdrop-blur-[4px] ${p.image ? "overflow-hidden" : "p-4"} no-underline transition hover:-translate-y-0.5`}
+						className={`block rounded-xl border border-(--line) bg-linear-165 from-(--surface-strong) to-(--surface) shadow-[inset_0_1px_0_var(--inset-glint),0_22px_44px_rgba(30,90,72,0.1),0_6px_18px_rgba(23,58,64,0.08)] backdrop-blur-xs ${p.image ? "overflow-hidden" : "p-4"} no-underline transition hover:-translate-y-0.5`}
 					>
 						{p.image && (
 							<img
