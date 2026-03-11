@@ -17,6 +17,7 @@ interface MealPlanCellProps {
 	onUpdateServings: (entryId: string, servings: number | null) => void;
 	onDeleteEntry: (entryId: string) => void;
 	onCookEntry: (entryId: string) => void;
+	onUncookEntry: (entryId: string) => void;
 	isCooking: boolean;
 }
 
@@ -27,6 +28,7 @@ export function MealPlanCell({
 	onUpdateServings,
 	onDeleteEntry,
 	onCookEntry,
+	onUncookEntry,
 	isCooking,
 }: MealPlanCellProps) {
 	const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
@@ -53,6 +55,10 @@ export function MealPlanCell({
 							}}
 							onCook={() => {
 								onCookEntry(entry.id);
+								setSelectedEntryId(null);
+							}}
+							onUncook={() => {
+								onUncookEntry(entry.id);
 								setSelectedEntryId(null);
 							}}
 							isCooking={isCooking}

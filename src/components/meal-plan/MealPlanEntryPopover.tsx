@@ -1,4 +1,4 @@
-import { CookingPot, Minus, Plus, Trash2 } from "lucide-react";
+import { CookingPot, Minus, Plus, Trash2, Undo2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { MealPlanEntry } from "#src/lib/hooks/use-meal-plan-entries";
 
@@ -8,6 +8,7 @@ interface MealPlanEntryPopoverProps {
 	onUpdateServings: (servings: number | null) => void;
 	onDelete: () => void;
 	onCook: () => void;
+	onUncook: () => void;
 	isCooking: boolean;
 }
 
@@ -17,6 +18,7 @@ export function MealPlanEntryPopover({
 	onUpdateServings,
 	onDelete,
 	onCook,
+	onUncook,
 	isCooking,
 }: MealPlanEntryPopoverProps) {
 	const servings = entry.servings ?? entry.recipeServings ?? 1;
@@ -71,10 +73,15 @@ export function MealPlanEntryPopover({
 
 			<div className="flex gap-2">
 				{entry.cookedAt ? (
-					<span className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-green-100 px-3 py-1.5 text-xs font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-300">
-						<CookingPot size={14} />
-						Cooked
-					</span>
+					<button
+						type="button"
+						onClick={onUncook}
+						disabled={isCooking}
+						className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-green-200 bg-green-50 px-3 py-1.5 text-xs font-semibold text-green-700 transition hover:bg-green-100 disabled:opacity-50 dark:border-green-800 dark:bg-green-900/20 dark:text-green-300 dark:hover:bg-green-900/40"
+					>
+						<Undo2 size={14} />
+						Undo Cook
+					</button>
 				) : (
 					<button
 						type="button"

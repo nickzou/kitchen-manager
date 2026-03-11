@@ -12,6 +12,7 @@ import {
 	useCreateMealPlanEntry,
 	useDeleteMealPlanEntry,
 	useMealPlanEntries,
+	useUncookMealPlanEntry,
 	useUpdateMealPlanEntry,
 } from "#src/lib/hooks/use-meal-plan-entries";
 import {
@@ -65,6 +66,7 @@ function MealPlanPage() {
 	const updateEntry = useUpdateMealPlanEntry();
 	const deleteEntry = useDeleteMealPlanEntry();
 	const cookEntry = useCookMealPlanEntry();
+	const uncookEntry = useUncookMealPlanEntry();
 	const createSlot = useCreateMealSlot();
 	const updateSlot = useUpdateMealSlot();
 	const reorderSlots = useReorderMealSlots();
@@ -118,6 +120,10 @@ function MealPlanPage() {
 
 	function handleCookEntry(entryId: string) {
 		cookEntry.mutate(entryId);
+	}
+
+	function handleUncookEntry(entryId: string) {
+		uncookEntry.mutate(entryId);
 	}
 
 	function handleCreateSlot(name: string, sortOrder: number) {
@@ -193,7 +199,8 @@ function MealPlanPage() {
 						onUpdateServings={handleUpdateServings}
 						onDeleteEntry={handleDeleteEntry}
 						onCookEntry={handleCookEntry}
-						isCooking={cookEntry.isPending}
+						onUncookEntry={handleUncookEntry}
+						isCooking={cookEntry.isPending || uncookEntry.isPending}
 						selectedDay={selectedDay}
 						onSelectDay={setSelectedDay}
 					/>

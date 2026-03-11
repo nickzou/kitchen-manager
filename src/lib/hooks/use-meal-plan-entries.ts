@@ -118,3 +118,23 @@ export function useCookMealPlanEntry() {
 		},
 	});
 }
+
+export function useUncookMealPlanEntry() {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: async (mealPlanEntryId: string) => {
+			const res = await fetch("/api/meal-plan-entries/cook", {
+				method: "DELETE",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ mealPlanEntryId }),
+			});
+			if (!res.ok) throw new Error("Failed to uncook meal plan entry");
+			return res.json();
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["meal-plan-entries"] });
+			queryClient.invalidateQueries({ queryKey: ["stock-entries"] });
+			queryClient.invalidateQueries({ queryKey: ["stock-logs"] });
+		},
+	});
+}

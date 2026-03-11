@@ -18,6 +18,7 @@ interface MealPlanCalendarProps {
 	onUpdateServings: (entryId: string, servings: number | null) => void;
 	onDeleteEntry: (entryId: string) => void;
 	onCookEntry: (entryId: string) => void;
+	onUncookEntry: (entryId: string) => void;
 	isCooking: boolean;
 	selectedDay: number;
 	onSelectDay: (day: number) => void;
@@ -54,6 +55,7 @@ export function MealPlanCalendar({
 	onUpdateServings,
 	onDeleteEntry,
 	onCookEntry,
+	onUncookEntry,
 	isCooking,
 	selectedDay,
 	onSelectDay,
@@ -126,6 +128,7 @@ export function MealPlanCalendar({
 										onUpdateServings={onUpdateServings}
 										onDeleteEntry={onDeleteEntry}
 										onCookEntry={onCookEntry}
+										onUncookEntry={onUncookEntry}
 										isCooking={isCooking}
 									/>
 								</div>
@@ -189,6 +192,7 @@ export function MealPlanCalendar({
 								onUpdateServings={onUpdateServings}
 								onDeleteEntry={onDeleteEntry}
 								onCookEntry={onCookEntry}
+								onUncookEntry={onUncookEntry}
 								isCooking={isCooking}
 							/>
 						</div>
