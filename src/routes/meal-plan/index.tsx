@@ -12,11 +12,14 @@ import {
 	useCreateMealPlanEntry,
 	useDeleteMealPlanEntry,
 	useMealPlanEntries,
+	useUpdateMealPlanEntry,
 } from "#src/lib/hooks/use-meal-plan-entries";
 import {
 	useCreateMealSlot,
 	useDeleteMealSlot,
 	useMealSlots,
+	useReorderMealSlots,
+	useUpdateMealSlot,
 } from "#src/lib/hooks/use-meal-slots";
 import { useRecipes } from "#src/lib/hooks/use-recipes";
 
@@ -59,9 +62,12 @@ function MealPlanPage() {
 	const { data: recipes } = useRecipes();
 
 	const createEntry = useCreateMealPlanEntry();
+	const updateEntry = useUpdateMealPlanEntry();
 	const deleteEntry = useDeleteMealPlanEntry();
 	const cookEntry = useCookMealPlanEntry();
 	const createSlot = useCreateMealSlot();
+	const updateSlot = useUpdateMealSlot();
+	const reorderSlots = useReorderMealSlots();
 	const deleteSlot = useDeleteMealSlot();
 
 	const recipeOptions = (recipes ?? []).map((r) => ({
@@ -103,11 +109,7 @@ function MealPlanPage() {
 	}
 
 	function handleUpdateServings(entryId: string, servings: number | null) {
-		fetch(`/api/meal-plan-entries/${entryId}`, {
-			method: "PUT",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ servings }),
-		});
+		updateEntry.mutate({ id: entryId, servings });
 	}
 
 	function handleDeleteEntry(entryId: string) {
@@ -126,11 +128,7 @@ function MealPlanPage() {
 		id: string,
 		updates: { name?: string; sortOrder?: number },
 	) {
-		fetch(`/api/meal-slots/${id}`, {
-			method: "PUT",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify(updates),
-		});
+		updateSlot.mutate({ id, ...updates });
 	}
 
 	function handleDeleteSlot(id: string) {
@@ -179,6 +177,7 @@ function MealPlanPage() {
 							slots={mealSlots ?? []}
 							onCreateSlot={handleCreateSlot}
 							onUpdateSlot={handleUpdateSlot}
+							onReorderSlots={(ids) => reorderSlots.mutate(ids)}
 							onDeleteSlot={handleDeleteSlot}
 						/>
 					</div>

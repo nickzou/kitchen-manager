@@ -42,6 +42,7 @@ import { Route as ApiStockEntriesIdRouteImport } from './routes/api/stock-entrie
 import { Route as ApiRecipesIdRouteImport } from './routes/api/recipes/$id'
 import { Route as ApiQuantityUnitsIdRouteImport } from './routes/api/quantity-units/$id'
 import { Route as ApiProductsIdRouteImport } from './routes/api/products/$id'
+import { Route as ApiMealSlotsReorderRouteImport } from './routes/api/meal-slots/reorder'
 import { Route as ApiMealSlotsIdRouteImport } from './routes/api/meal-slots/$id'
 import { Route as ApiMealPlanEntriesIngredientSummaryRouteImport } from './routes/api/meal-plan-entries/ingredient-summary'
 import { Route as ApiMealPlanEntriesCookRouteImport } from './routes/api/meal-plan-entries/cook'
@@ -216,6 +217,11 @@ const ApiProductsIdRoute = ApiProductsIdRouteImport.update({
   path: '/api/products/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiMealSlotsReorderRoute = ApiMealSlotsReorderRouteImport.update({
+  id: '/api/meal-slots/reorder',
+  path: '/api/meal-slots/reorder',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiMealSlotsIdRoute = ApiMealSlotsIdRouteImport.update({
   id: '/api/meal-slots/$id',
   path: '/api/meal-slots/$id',
@@ -282,6 +288,7 @@ export interface FileRoutesByFullPath {
   '/api/meal-plan-entries/cook': typeof ApiMealPlanEntriesCookRoute
   '/api/meal-plan-entries/ingredient-summary': typeof ApiMealPlanEntriesIngredientSummaryRoute
   '/api/meal-slots/$id': typeof ApiMealSlotsIdRoute
+  '/api/meal-slots/reorder': typeof ApiMealSlotsReorderRoute
   '/api/products/$id': typeof ApiProductsIdRoute
   '/api/quantity-units/$id': typeof ApiQuantityUnitsIdRoute
   '/api/recipes/$id': typeof ApiRecipesIdRouteWithChildren
@@ -325,6 +332,7 @@ export interface FileRoutesByTo {
   '/api/meal-plan-entries/cook': typeof ApiMealPlanEntriesCookRoute
   '/api/meal-plan-entries/ingredient-summary': typeof ApiMealPlanEntriesIngredientSummaryRoute
   '/api/meal-slots/$id': typeof ApiMealSlotsIdRoute
+  '/api/meal-slots/reorder': typeof ApiMealSlotsReorderRoute
   '/api/products/$id': typeof ApiProductsIdRoute
   '/api/quantity-units/$id': typeof ApiQuantityUnitsIdRoute
   '/api/recipes/$id': typeof ApiRecipesIdRouteWithChildren
@@ -369,6 +377,7 @@ export interface FileRoutesById {
   '/api/meal-plan-entries/cook': typeof ApiMealPlanEntriesCookRoute
   '/api/meal-plan-entries/ingredient-summary': typeof ApiMealPlanEntriesIngredientSummaryRoute
   '/api/meal-slots/$id': typeof ApiMealSlotsIdRoute
+  '/api/meal-slots/reorder': typeof ApiMealSlotsReorderRoute
   '/api/products/$id': typeof ApiProductsIdRoute
   '/api/quantity-units/$id': typeof ApiQuantityUnitsIdRoute
   '/api/recipes/$id': typeof ApiRecipesIdRouteWithChildren
@@ -414,6 +423,7 @@ export interface FileRouteTypes {
     | '/api/meal-plan-entries/cook'
     | '/api/meal-plan-entries/ingredient-summary'
     | '/api/meal-slots/$id'
+    | '/api/meal-slots/reorder'
     | '/api/products/$id'
     | '/api/quantity-units/$id'
     | '/api/recipes/$id'
@@ -457,6 +467,7 @@ export interface FileRouteTypes {
     | '/api/meal-plan-entries/cook'
     | '/api/meal-plan-entries/ingredient-summary'
     | '/api/meal-slots/$id'
+    | '/api/meal-slots/reorder'
     | '/api/products/$id'
     | '/api/quantity-units/$id'
     | '/api/recipes/$id'
@@ -500,6 +511,7 @@ export interface FileRouteTypes {
     | '/api/meal-plan-entries/cook'
     | '/api/meal-plan-entries/ingredient-summary'
     | '/api/meal-slots/$id'
+    | '/api/meal-slots/reorder'
     | '/api/products/$id'
     | '/api/quantity-units/$id'
     | '/api/recipes/$id'
@@ -544,6 +556,7 @@ export interface RootRouteChildren {
   ApiMealPlanEntriesCookRoute: typeof ApiMealPlanEntriesCookRoute
   ApiMealPlanEntriesIngredientSummaryRoute: typeof ApiMealPlanEntriesIngredientSummaryRoute
   ApiMealSlotsIdRoute: typeof ApiMealSlotsIdRoute
+  ApiMealSlotsReorderRoute: typeof ApiMealSlotsReorderRoute
   ApiProductsIdRoute: typeof ApiProductsIdRoute
   ApiQuantityUnitsIdRoute: typeof ApiQuantityUnitsIdRoute
   ApiRecipesIdRoute: typeof ApiRecipesIdRouteWithChildren
@@ -797,6 +810,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiProductsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/meal-slots/reorder': {
+      id: '/api/meal-slots/reorder'
+      path: '/api/meal-slots/reorder'
+      fullPath: '/api/meal-slots/reorder'
+      preLoaderRoute: typeof ApiMealSlotsReorderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/meal-slots/$id': {
       id: '/api/meal-slots/$id'
       path: '/api/meal-slots/$id'
@@ -894,6 +914,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiMealPlanEntriesIngredientSummaryRoute:
     ApiMealPlanEntriesIngredientSummaryRoute,
   ApiMealSlotsIdRoute: ApiMealSlotsIdRoute,
+  ApiMealSlotsReorderRoute: ApiMealSlotsReorderRoute,
   ApiProductsIdRoute: ApiProductsIdRoute,
   ApiQuantityUnitsIdRoute: ApiQuantityUnitsIdRoute,
   ApiRecipesIdRoute: ApiRecipesIdRouteWithChildren,

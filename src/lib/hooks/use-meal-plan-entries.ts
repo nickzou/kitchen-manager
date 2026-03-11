@@ -63,14 +63,15 @@ export function useCreateMealPlanEntry() {
 	});
 }
 
-export function useUpdateMealPlanEntry(id: string) {
+export function useUpdateMealPlanEntry() {
 	const queryClient = useQueryClient();
 	return useMutation({
-		mutationFn: async (input: UpdateMealPlanEntryInput) => {
+		mutationFn: async (input: UpdateMealPlanEntryInput & { id: string }) => {
+			const { id, ...updates } = input;
 			const res = await fetch(`/api/meal-plan-entries/${id}`, {
 				method: "PUT",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify(input),
+				body: JSON.stringify(updates),
 			});
 			if (!res.ok) throw new Error("Failed to update meal plan entry");
 			return res.json();

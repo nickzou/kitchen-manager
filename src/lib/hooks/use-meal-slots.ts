@@ -59,16 +59,35 @@ export function useCreateMealSlot() {
 	});
 }
 
-export function useUpdateMealSlot(id: string) {
+export function useUpdateMealSlot() {
 	const queryClient = useQueryClient();
 	return useMutation({
-		mutationFn: async (input: UpdateMealSlotInput) => {
+		mutationFn: async (input: UpdateMealSlotInput & { id: string }) => {
+			const { id, ...updates } = input;
 			const res = await fetch(`/api/meal-slots/${id}`, {
 				method: "PUT",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify(input),
+				body: JSON.stringify(updates),
 			});
 			if (!res.ok) throw new Error("Failed to update meal slot");
+			return res.json();
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["meal-slots"] });
+		},
+	});
+}
+
+export function useReorderMealSlots() {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: async (orderedIds: string[]) => {
+			const res = await fetch("/api/meal-slots/reorder", {
+				method: "PUT",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ orderedIds }),
+			});
+			if (!res.ok) throw new Error("Failed to reorder meal slots");
 			return res.json();
 		},
 		onSuccess: () => {

@@ -1,4 +1,4 @@
-import { GripVertical, Plus, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronUp, Plus, Trash2 } from "lucide-react";
 import { type FormEvent, useState } from "react";
 import type { MealSlot } from "#src/lib/hooks/use-meal-slots";
 
@@ -9,6 +9,7 @@ interface MealSlotManagerProps {
 		id: string,
 		updates: { name?: string; sortOrder?: number },
 	) => void;
+	onReorderSlots: (orderedIds: string[]) => void;
 	onDeleteSlot: (id: string) => void;
 }
 
@@ -16,6 +17,7 @@ export function MealSlotManager({
 	slots,
 	onCreateSlot,
 	onUpdateSlot,
+	onReorderSlots,
 	onDeleteSlot,
 }: MealSlotManagerProps) {
 	const [newName, setNewName] = useState("");
@@ -46,11 +48,10 @@ export function MealSlotManager({
 		const targetIndex = index + direction;
 		if (targetIndex < 0 || targetIndex >= slots.length) return;
 
-		const current = slots[index];
-		const target = slots[targetIndex];
-
-		onUpdateSlot(current.id, { sortOrder: target.sortOrder });
-		onUpdateSlot(target.id, { sortOrder: current.sortOrder });
+		const reordered = [...slots];
+		const [moved] = reordered.splice(index, 1);
+		reordered.splice(targetIndex, 0, moved);
+		onReorderSlots(reordered.map((s) => s.id));
 	}
 
 	return (
@@ -70,7 +71,15 @@ export function MealSlotManager({
 								disabled={i === 0}
 								className="text-(--sea-ink-soft) hover:text-(--sea-ink) disabled:opacity-30"
 							>
-								<GripVertical size={12} />
+								<ChevronUp size={14} />
+							</button>
+							<button
+								type="button"
+								onClick={() => moveSlot(i, 1)}
+								disabled={i === slots.length - 1}
+								className="text-(--sea-ink-soft) hover:text-(--sea-ink) disabled:opacity-30"
+							>
+								<ChevronDown size={14} />
 							</button>
 						</div>
 
