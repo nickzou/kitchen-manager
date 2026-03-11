@@ -179,20 +179,33 @@ function GridView({ recipes, getCategoryName }: ViewProps) {
 						key={r.id}
 						to="/recipes/$id"
 						params={{ id: r.id }}
-						className="block rounded-xl border border-(--line) bg-linear-165 from-(--surface-strong) to-(--surface) shadow-[inset_0_1px_0_var(--inset-glint),0_22px_44px_rgba(30,90,72,0.1),0_6px_18px_rgba(23,58,64,0.08)] backdrop-blur-[4px] p-4 no-underline transition hover:-translate-y-0.5"
+						className={`block rounded-xl border border-(--line) bg-linear-165 from-(--surface-strong) to-(--surface) shadow-[inset_0_1px_0_var(--inset-glint),0_22px_44px_rgba(30,90,72,0.1),0_6px_18px_rgba(23,58,64,0.08)] backdrop-blur-[4px] ${r.image ? "overflow-hidden" : "p-4"} no-underline transition hover:-translate-y-0.5`}
 					>
-						<h3 className="mb-1 text-sm font-semibold text-(--sea-ink)">
-							{r.name}
-						</h3>
-						{catName && (
-							<span className="mb-2 inline-block rounded-full bg-[rgba(79,184,178,0.14)] px-2 py-0.5 text-xs font-medium text-(--lagoon-deep)">
-								{catName}
-							</span>
+						{r.image && (
+							<img
+								src={r.image}
+								alt={r.name}
+								className="h-24 w-full object-cover"
+							/>
 						)}
-						<div className="flex gap-3 text-xs text-(--sea-ink-soft)">
-							{r.servings != null && <span>{r.servings} servings</span>}
-							{r.prepTime != null && <span>Prep {formatTime(r.prepTime)}</span>}
-							{r.cookTime != null && <span>Cook {formatTime(r.cookTime)}</span>}
+						<div className={r.image ? "p-4" : ""}>
+							<h3 className="mb-1 text-sm font-semibold text-(--sea-ink)">
+								{r.name}
+							</h3>
+							{catName && (
+								<span className="mb-2 inline-block rounded-full bg-[rgba(79,184,178,0.14)] px-2 py-0.5 text-xs font-medium text-(--lagoon-deep)">
+									{catName}
+								</span>
+							)}
+							<div className="flex gap-3 text-xs text-(--sea-ink-soft)">
+								{r.servings != null && <span>{r.servings} servings</span>}
+								{r.prepTime != null && (
+									<span>Prep {formatTime(r.prepTime)}</span>
+								)}
+								{r.cookTime != null && (
+									<span>Cook {formatTime(r.cookTime)}</span>
+								)}
+							</div>
 						</div>
 					</Link>
 				);

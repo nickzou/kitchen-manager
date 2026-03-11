@@ -191,21 +191,30 @@ function GridView({ products, getCategoryName }: ViewProps) {
 						key={p.id}
 						to="/products/$id"
 						params={{ id: p.id }}
-						className="block rounded-xl border border-(--line) bg-linear-165 from-(--surface-strong) to-(--surface) shadow-[inset_0_1px_0_var(--inset-glint),0_22px_44px_rgba(30,90,72,0.1),0_6px_18px_rgba(23,58,64,0.08)] backdrop-blur-[4px] p-4 no-underline transition hover:-translate-y-0.5"
+						className={`block rounded-xl border border-(--line) bg-linear-165 from-(--surface-strong) to-(--surface) shadow-[inset_0_1px_0_var(--inset-glint),0_22px_44px_rgba(30,90,72,0.1),0_6px_18px_rgba(23,58,64,0.08)] backdrop-blur-[4px] ${p.image ? "overflow-hidden" : "p-4"} no-underline transition hover:-translate-y-0.5`}
 					>
-						<h3 className="mb-1 text-sm font-semibold text-(--sea-ink)">
-							{p.name}
-						</h3>
-						{catName && (
-							<span className="mb-2 inline-block rounded-full bg-[rgba(79,184,178,0.14)] px-2 py-0.5 text-xs font-medium text-(--lagoon-deep)">
-								{catName}
-							</span>
+						{p.image && (
+							<img
+								src={p.image}
+								alt={p.name}
+								className="h-24 w-full object-cover"
+							/>
 						)}
-						{Number.parseFloat(p.minStockAmount) > 0 && (
-							<p className="m-0 text-xs text-(--sea-ink-soft)">
-								Min stock: {p.minStockAmount}
-							</p>
-						)}
+						<div className={p.image ? "p-4" : ""}>
+							<h3 className="mb-1 text-sm font-semibold text-(--sea-ink)">
+								{p.name}
+							</h3>
+							{catName && (
+								<span className="mb-2 inline-block rounded-full bg-[rgba(79,184,178,0.14)] px-2 py-0.5 text-xs font-medium text-(--lagoon-deep)">
+									{catName}
+								</span>
+							)}
+							{Number.parseFloat(p.minStockAmount) > 0 && (
+								<p className="m-0 text-xs text-(--sea-ink-soft)">
+									Min stock: {p.minStockAmount}
+								</p>
+							)}
+						</div>
 					</Link>
 				);
 			})}
