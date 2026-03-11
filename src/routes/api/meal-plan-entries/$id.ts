@@ -45,7 +45,7 @@ export const Route = createFileRoute("/api/meal-plan-entries/$id")({
 				const body = await request.json();
 				const updates: Record<string, unknown> = {};
 
-				if (body.date !== undefined) updates.date = new Date(body.date);
+				if (body.date !== undefined) updates.date = body.date;
 				if (body.mealSlotId !== undefined) updates.mealSlotId = body.mealSlotId;
 				if (body.recipeId !== undefined) updates.recipeId = body.recipeId;
 				if (body.servings !== undefined) updates.servings = body.servings;

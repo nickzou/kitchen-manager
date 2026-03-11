@@ -51,8 +51,8 @@ export const Route = createFileRoute("/api/meal-plan-entries/")({
 					.where(
 						and(
 							eq(mealPlanEntry.userId, session.user.id),
-							gte(mealPlanEntry.date, new Date(startDate)),
-							lte(mealPlanEntry.date, new Date(endDate)),
+							gte(mealPlanEntry.date, startDate),
+							lte(mealPlanEntry.date, endDate),
 						),
 					);
 
@@ -76,7 +76,7 @@ export const Route = createFileRoute("/api/meal-plan-entries/")({
 				const [created] = await db
 					.insert(mealPlanEntry)
 					.values({
-						date: new Date(body.date),
+						date: body.date,
 						mealSlotId: body.mealSlotId,
 						recipeId: body.recipeId,
 						servings: body.servings ?? null,

@@ -68,8 +68,8 @@ export const Route = createFileRoute(
 					.where(
 						and(
 							eq(mealPlanEntry.userId, session.user.id),
-							gte(mealPlanEntry.date, new Date(startDate)),
-							lte(mealPlanEntry.date, new Date(endDate)),
+							gte(mealPlanEntry.date, startDate),
+							lte(mealPlanEntry.date, endDate),
 						),
 					);
 

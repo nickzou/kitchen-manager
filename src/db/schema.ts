@@ -1,5 +1,6 @@
 import { relations } from "drizzle-orm";
 import {
+	date,
 	index,
 	integer,
 	numeric,
@@ -374,7 +375,7 @@ export const mealPlanEntry = pgTable(
 		id: text("id")
 			.primaryKey()
 			.$defaultFn(() => crypto.randomUUID()),
-		date: timestamp("date").notNull(),
+		date: date("date").notNull(),
 		mealSlotId: text("meal_slot_id")
 			.notNull()
 			.references(() => mealSlot.id, { onDelete: "cascade" }),

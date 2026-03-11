@@ -106,7 +106,7 @@ export function MealPlanCalendar({
 							const dateStr = toDateString(day);
 							const cellEntries = entries.filter(
 								(e) =>
-									e.mealSlotId === slot.id && isSameDay(new Date(e.date), day),
+									e.mealSlotId === slot.id && e.date === toDateString(day),
 							);
 							return (
 								<div

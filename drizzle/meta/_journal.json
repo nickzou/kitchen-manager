@@ -50,6 +50,13 @@
       "when": 1773269380471,
       "tag": "0006_foamy_liz_osborn",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1773270726392,
+      "tag": "0007_talented_sebastian_shaw",
+      "breakpoints": true
     }
   ]
 }
