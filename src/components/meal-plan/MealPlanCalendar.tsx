@@ -99,16 +99,13 @@ export function MealPlanCalendar({
 				{/* Slot rows */}
 				{mealSlots.map((slot) => (
 					<Fragment key={slot.id}>
-						<div
-							className="flex items-start bg-(--surface-strong) p-2 text-xs font-semibold text-(--sea-ink-soft)"
-						>
+						<div className="flex items-start bg-(--surface-strong) p-2 text-xs font-semibold text-(--sea-ink-soft)">
 							{slot.name}
 						</div>
 						{days.map((day, i) => {
 							const dateStr = toDateString(day);
 							const cellEntries = entries.filter(
-								(e) =>
-									e.mealSlotId === slot.id && e.date === toDateString(day),
+								(e) => e.mealSlotId === slot.id && e.date === toDateString(day),
 							);
 							return (
 								<div
@@ -172,8 +169,7 @@ export function MealPlanCalendar({
 			<div className="flex flex-col gap-3">
 				{mealSlots.map((slot) => {
 					const cellEntries = entries.filter(
-						(e) =>
-							e.mealSlotId === slot.id && e.date === mobileDateStr,
+						(e) => e.mealSlotId === slot.id && e.date === mobileDateStr,
 					);
 					return (
 						<div

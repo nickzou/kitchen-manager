@@ -109,9 +109,7 @@ export const Route = createFileRoute("/api/meal-plan-entries/cook")({
 									.where(eq(stockEntry.id, log.stockEntryId));
 
 								if (stock) {
-									const newQty = (
-										Number(stock.quantity) + restore
-									).toString();
+									const newQty = (Number(stock.quantity) + restore).toString();
 									await tx
 										.update(stockEntry)
 										.set({ quantity: newQty })
