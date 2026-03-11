@@ -22,6 +22,7 @@ import { Route as RecipesIdRouteImport } from './routes/recipes/$id'
 import { Route as QuantityUnitsIdRouteImport } from './routes/quantity-units/$id'
 import { Route as ProductsIdRouteImport } from './routes/products/$id'
 import { Route as CategoriesIdRouteImport } from './routes/categories/$id'
+import { Route as ApiUploadsIndexRouteImport } from './routes/api/uploads/index'
 import { Route as ApiUnitConversionsIndexRouteImport } from './routes/api/unit-conversions/index'
 import { Route as ApiStockLogsIndexRouteImport } from './routes/api/stock-logs/index'
 import { Route as ApiStockEntriesIndexRouteImport } from './routes/api/stock-entries/index'
@@ -29,6 +30,7 @@ import { Route as ApiRecipesIndexRouteImport } from './routes/api/recipes/index'
 import { Route as ApiQuantityUnitsIndexRouteImport } from './routes/api/quantity-units/index'
 import { Route as ApiProductsIndexRouteImport } from './routes/api/products/index'
 import { Route as ApiCategoriesIndexRouteImport } from './routes/api/categories/index'
+import { Route as ApiUploadsFilenameRouteImport } from './routes/api/uploads/$filename'
 import { Route as ApiUnitConversionsIdRouteImport } from './routes/api/unit-conversions/$id'
 import { Route as ApiStockLogsIdRouteImport } from './routes/api/stock-logs/$id'
 import { Route as ApiStockEntriesConsumeRouteImport } from './routes/api/stock-entries/consume'
@@ -106,6 +108,11 @@ const CategoriesIdRoute = CategoriesIdRouteImport.update({
   path: '/categories/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiUploadsIndexRoute = ApiUploadsIndexRouteImport.update({
+  id: '/api/uploads/',
+  path: '/api/uploads/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiUnitConversionsIndexRoute = ApiUnitConversionsIndexRouteImport.update({
   id: '/api/unit-conversions/',
   path: '/api/unit-conversions/',
@@ -139,6 +146,11 @@ const ApiProductsIndexRoute = ApiProductsIndexRouteImport.update({
 const ApiCategoriesIndexRoute = ApiCategoriesIndexRouteImport.update({
   id: '/api/categories/',
   path: '/api/categories/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiUploadsFilenameRoute = ApiUploadsFilenameRouteImport.update({
+  id: '/api/uploads/$filename',
+  path: '/api/uploads/$filename',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiUnitConversionsIdRoute = ApiUnitConversionsIdRouteImport.update({
@@ -222,6 +234,7 @@ export interface FileRoutesByFullPath {
   '/api/stock-entries/consume': typeof ApiStockEntriesConsumeRoute
   '/api/stock-logs/$id': typeof ApiStockLogsIdRoute
   '/api/unit-conversions/$id': typeof ApiUnitConversionsIdRoute
+  '/api/uploads/$filename': typeof ApiUploadsFilenameRoute
   '/api/categories/': typeof ApiCategoriesIndexRoute
   '/api/products/': typeof ApiProductsIndexRoute
   '/api/quantity-units/': typeof ApiQuantityUnitsIndexRoute
@@ -229,6 +242,7 @@ export interface FileRoutesByFullPath {
   '/api/stock-entries/': typeof ApiStockEntriesIndexRoute
   '/api/stock-logs/': typeof ApiStockLogsIndexRoute
   '/api/unit-conversions/': typeof ApiUnitConversionsIndexRoute
+  '/api/uploads/': typeof ApiUploadsIndexRoute
   '/api/recipes/$id/ingredients/$ingredientId': typeof ApiRecipesIdIngredientsIngredientIdRoute
   '/api/recipes/$id/ingredients/': typeof ApiRecipesIdIngredientsIndexRoute
 }
@@ -255,6 +269,7 @@ export interface FileRoutesByTo {
   '/api/stock-entries/consume': typeof ApiStockEntriesConsumeRoute
   '/api/stock-logs/$id': typeof ApiStockLogsIdRoute
   '/api/unit-conversions/$id': typeof ApiUnitConversionsIdRoute
+  '/api/uploads/$filename': typeof ApiUploadsFilenameRoute
   '/api/categories': typeof ApiCategoriesIndexRoute
   '/api/products': typeof ApiProductsIndexRoute
   '/api/quantity-units': typeof ApiQuantityUnitsIndexRoute
@@ -262,6 +277,7 @@ export interface FileRoutesByTo {
   '/api/stock-entries': typeof ApiStockEntriesIndexRoute
   '/api/stock-logs': typeof ApiStockLogsIndexRoute
   '/api/unit-conversions': typeof ApiUnitConversionsIndexRoute
+  '/api/uploads': typeof ApiUploadsIndexRoute
   '/api/recipes/$id/ingredients/$ingredientId': typeof ApiRecipesIdIngredientsIngredientIdRoute
   '/api/recipes/$id/ingredients': typeof ApiRecipesIdIngredientsIndexRoute
 }
@@ -289,6 +305,7 @@ export interface FileRoutesById {
   '/api/stock-entries/consume': typeof ApiStockEntriesConsumeRoute
   '/api/stock-logs/$id': typeof ApiStockLogsIdRoute
   '/api/unit-conversions/$id': typeof ApiUnitConversionsIdRoute
+  '/api/uploads/$filename': typeof ApiUploadsFilenameRoute
   '/api/categories/': typeof ApiCategoriesIndexRoute
   '/api/products/': typeof ApiProductsIndexRoute
   '/api/quantity-units/': typeof ApiQuantityUnitsIndexRoute
@@ -296,6 +313,7 @@ export interface FileRoutesById {
   '/api/stock-entries/': typeof ApiStockEntriesIndexRoute
   '/api/stock-logs/': typeof ApiStockLogsIndexRoute
   '/api/unit-conversions/': typeof ApiUnitConversionsIndexRoute
+  '/api/uploads/': typeof ApiUploadsIndexRoute
   '/api/recipes/$id/ingredients/$ingredientId': typeof ApiRecipesIdIngredientsIngredientIdRoute
   '/api/recipes/$id/ingredients/': typeof ApiRecipesIdIngredientsIndexRoute
 }
@@ -324,6 +342,7 @@ export interface FileRouteTypes {
     | '/api/stock-entries/consume'
     | '/api/stock-logs/$id'
     | '/api/unit-conversions/$id'
+    | '/api/uploads/$filename'
     | '/api/categories/'
     | '/api/products/'
     | '/api/quantity-units/'
@@ -331,6 +350,7 @@ export interface FileRouteTypes {
     | '/api/stock-entries/'
     | '/api/stock-logs/'
     | '/api/unit-conversions/'
+    | '/api/uploads/'
     | '/api/recipes/$id/ingredients/$ingredientId'
     | '/api/recipes/$id/ingredients/'
   fileRoutesByTo: FileRoutesByTo
@@ -357,6 +377,7 @@ export interface FileRouteTypes {
     | '/api/stock-entries/consume'
     | '/api/stock-logs/$id'
     | '/api/unit-conversions/$id'
+    | '/api/uploads/$filename'
     | '/api/categories'
     | '/api/products'
     | '/api/quantity-units'
@@ -364,6 +385,7 @@ export interface FileRouteTypes {
     | '/api/stock-entries'
     | '/api/stock-logs'
     | '/api/unit-conversions'
+    | '/api/uploads'
     | '/api/recipes/$id/ingredients/$ingredientId'
     | '/api/recipes/$id/ingredients'
   id:
@@ -390,6 +412,7 @@ export interface FileRouteTypes {
     | '/api/stock-entries/consume'
     | '/api/stock-logs/$id'
     | '/api/unit-conversions/$id'
+    | '/api/uploads/$filename'
     | '/api/categories/'
     | '/api/products/'
     | '/api/quantity-units/'
@@ -397,6 +420,7 @@ export interface FileRouteTypes {
     | '/api/stock-entries/'
     | '/api/stock-logs/'
     | '/api/unit-conversions/'
+    | '/api/uploads/'
     | '/api/recipes/$id/ingredients/$ingredientId'
     | '/api/recipes/$id/ingredients/'
   fileRoutesById: FileRoutesById
@@ -424,6 +448,7 @@ export interface RootRouteChildren {
   ApiStockEntriesConsumeRoute: typeof ApiStockEntriesConsumeRoute
   ApiStockLogsIdRoute: typeof ApiStockLogsIdRoute
   ApiUnitConversionsIdRoute: typeof ApiUnitConversionsIdRoute
+  ApiUploadsFilenameRoute: typeof ApiUploadsFilenameRoute
   ApiCategoriesIndexRoute: typeof ApiCategoriesIndexRoute
   ApiProductsIndexRoute: typeof ApiProductsIndexRoute
   ApiQuantityUnitsIndexRoute: typeof ApiQuantityUnitsIndexRoute
@@ -431,6 +456,7 @@ export interface RootRouteChildren {
   ApiStockEntriesIndexRoute: typeof ApiStockEntriesIndexRoute
   ApiStockLogsIndexRoute: typeof ApiStockLogsIndexRoute
   ApiUnitConversionsIndexRoute: typeof ApiUnitConversionsIndexRoute
+  ApiUploadsIndexRoute: typeof ApiUploadsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -526,6 +552,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CategoriesIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/uploads/': {
+      id: '/api/uploads/'
+      path: '/api/uploads'
+      fullPath: '/api/uploads/'
+      preLoaderRoute: typeof ApiUploadsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/unit-conversions/': {
       id: '/api/unit-conversions/'
       path: '/api/unit-conversions'
@@ -573,6 +606,13 @@ declare module '@tanstack/react-router' {
       path: '/api/categories'
       fullPath: '/api/categories/'
       preLoaderRoute: typeof ApiCategoriesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/uploads/$filename': {
+      id: '/api/uploads/$filename'
+      path: '/api/uploads/$filename'
+      fullPath: '/api/uploads/$filename'
+      preLoaderRoute: typeof ApiUploadsFilenameRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/unit-conversions/$id': {
@@ -693,6 +733,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiStockEntriesConsumeRoute: ApiStockEntriesConsumeRoute,
   ApiStockLogsIdRoute: ApiStockLogsIdRoute,
   ApiUnitConversionsIdRoute: ApiUnitConversionsIdRoute,
+  ApiUploadsFilenameRoute: ApiUploadsFilenameRoute,
   ApiCategoriesIndexRoute: ApiCategoriesIndexRoute,
   ApiProductsIndexRoute: ApiProductsIndexRoute,
   ApiQuantityUnitsIndexRoute: ApiQuantityUnitsIndexRoute,
@@ -700,6 +741,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiStockEntriesIndexRoute: ApiStockEntriesIndexRoute,
   ApiStockLogsIndexRoute: ApiStockLogsIndexRoute,
   ApiUnitConversionsIndexRoute: ApiUnitConversionsIndexRoute,
+  ApiUploadsIndexRoute: ApiUploadsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

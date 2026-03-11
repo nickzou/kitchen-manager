@@ -14,6 +14,7 @@ const mockRecipes = [
 		id: "1",
 		name: "Pancakes",
 		description: "Fluffy pancakes",
+		image: null,
 		servings: 4,
 		prepTime: 10,
 		cookTime: 15,

@@ -253,6 +253,7 @@ export const recipe = pgTable(
 			.$defaultFn(() => crypto.randomUUID()),
 		name: text("name").notNull(),
 		description: text("description"),
+		image: text("image"),
 		servings: integer("servings"),
 		prepTime: integer("prep_time"),
 		cookTime: integer("cook_time"),

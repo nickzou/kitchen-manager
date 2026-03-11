@@ -6,6 +6,7 @@ import {
 	type IngredientFormState,
 } from "#src/components/AddIngredientForm";
 import { Combobox } from "#src/components/Combobox";
+import { ImageInput } from "#src/components/ImageInput";
 import { Island } from "#src/components/Island";
 import { NumberInput } from "#src/components/NumberInput";
 import { Page } from "#src/components/Page";
@@ -51,6 +52,7 @@ function RecipeDetail() {
 	const [form, setForm] = useState({
 		name: "",
 		description: "",
+		image: null as string | null,
 		categoryId: "",
 		servings: "",
 		prepTime: "",
@@ -118,6 +120,7 @@ function RecipeDetail() {
 		setForm({
 			name: recipe.name,
 			description: recipe.description || "",
+			image: recipe.image,
 			categoryId: recipe.categoryId || "",
 			servings: recipe.servings != null ? String(recipe.servings) : "",
 			prepTime: recipe.prepTime != null ? String(recipe.prepTime) : "",
@@ -132,6 +135,7 @@ function RecipeDetail() {
 		await updateRecipe.mutateAsync({
 			name: form.name,
 			description: form.description || undefined,
+			image: form.image || undefined,
 			categoryId: form.categoryId || undefined,
 			servings: form.servings ? Number.parseInt(form.servings, 10) : undefined,
 			prepTime: form.prepTime ? Number.parseInt(form.prepTime, 10) : undefined,
@@ -244,6 +248,11 @@ function RecipeDetail() {
 								className={cn(inputClass, "h-auto py-2")}
 							/>
 						</label>
+
+						<ImageInput
+							value={form.image}
+							onChange={(url) => setForm({ ...form, image: url })}
+						/>
 
 						<div className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
 							Category
@@ -360,6 +369,14 @@ function RecipeDetail() {
 							<p className="mb-4 text-sm text-(--sea-ink-soft)">
 								{recipe.description}
 							</p>
+						)}
+
+						{recipe.image && (
+							<img
+								src={recipe.image}
+								alt={recipe.name}
+								className="mb-4 h-40 w-40 rounded-lg border border-(--line) object-cover"
+							/>
 						)}
 
 						<dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-3">
