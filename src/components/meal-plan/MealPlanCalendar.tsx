@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import type { MealPlanEntry } from "#src/lib/hooks/use-meal-plan-entries";
 import type { MealSlot } from "#src/lib/hooks/use-meal-slots";
 import { cn } from "#src/lib/utils";
@@ -95,9 +96,8 @@ export function MealPlanCalendar({
 
 				{/* Slot rows */}
 				{mealSlots.map((slot) => (
-					<>
+					<Fragment key={slot.id}>
 						<div
-							key={`label-${slot.id}`}
 							className="flex items-start bg-(--surface-strong) p-2 text-xs font-semibold text-(--sea-ink-soft)"
 						>
 							{slot.name}
@@ -131,7 +131,7 @@ export function MealPlanCalendar({
 								</div>
 							);
 						})}
-					</>
+					</Fragment>
 				))}
 			</div>
 		</div>
@@ -170,8 +170,7 @@ export function MealPlanCalendar({
 				{mealSlots.map((slot) => {
 					const cellEntries = entries.filter(
 						(e) =>
-							e.mealSlotId === slot.id &&
-							isSameDay(new Date(e.date), mobileDay),
+							e.mealSlotId === slot.id && e.date === mobileDateStr,
 					);
 					return (
 						<div
