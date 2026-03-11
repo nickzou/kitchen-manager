@@ -1,3 +1,4 @@
+import { Calendar } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { DayPicker } from "react-day-picker";
 import "react-day-picker/src/style.css";
@@ -62,13 +63,14 @@ export function DatePicker({
 				type="button"
 				onClick={() => setOpen(!open)}
 				className={cn(
-					"h-10 rounded-lg border border-(--line) bg-(--surface) px-3 text-sm outline-none focus:border-(--lagoon) text-left",
+					"flex h-10 items-center gap-2 rounded-lg border border-(--line) bg-(--surface) px-3 text-sm outline-none focus:border-(--lagoon) text-left",
 					!value && "text-(--sea-ink-soft)",
 					value && "text-(--sea-ink)",
 					className,
 				)}
 			>
-				{displayText}
+				<span className="flex-1">{displayText}</span>
+				<Calendar size={14} className="shrink-0 text-(--sea-ink-soft)" />
 			</button>
 			{open && (
 				<div className="absolute top-full left-0 z-50 mt-1 rounded-xl border border-(--line) bg-white p-2 shadow-lg dark:bg-[#1a2e30]">
