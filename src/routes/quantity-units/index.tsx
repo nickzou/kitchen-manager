@@ -1,11 +1,15 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ChevronDown, Grid3x3, List, Plus, Rows3 } from "lucide-react";
+import { ChevronDown, Plus } from "lucide-react";
 import { type FormEvent, Fragment, useMemo, useState } from "react";
+import { CompactView } from "#src/components/CompactView";
+import { GridView } from "#src/components/GridView";
 import InventorySubNav from "#src/components/InventorySubNav";
 import { Island } from "#src/components/Island";
 import { Page } from "#src/components/Page";
 import { SearchInput } from "#src/components/SearchInput";
+import { type ViewMode, ViewSwitcher } from "#src/components/ViewSwitcher";
 import { authClient } from "#src/lib/auth-client";
+import { formatDate } from "#src/lib/format-date";
 import {
 	type QuantityUnit,
 	useCreateQuantityUnit,
@@ -21,7 +25,17 @@ export const Route = createFileRoute("/quantity-units/")({
 	component: QuantityUnitsPage,
 });
 
-type ViewMode = "grid" | "table" | "compact";
+function formatConversionFactor(
+	conversion: UnitConversion,
+	unitId: string,
+	unitName: (id: string) => string,
+) {
+	if (conversion.fromUnitId === unitId) {
+		return `→ ${unitName(conversion.toUnitId)}: ${conversion.factor}`;
+	}
+	const inverseFactor = 1 / Number(conversion.factor);
+	return `→ ${unitName(conversion.fromUnitId)}: ${inverseFactor % 1 === 0 ? inverseFactor : inverseFactor.toPrecision(6)}`;
+}
 
 function QuantityUnitsPage() {
 	const { data: session, isPending: sessionLoading } = authClient.useSession();
@@ -126,30 +140,7 @@ function QuantityUnitsPage() {
 						value={search}
 						onChange={(e) => setSearch(e.target.value)}
 					/>
-					<div className="flex items-center gap-1 sm:ml-auto">
-						{(
-							[
-								["grid", Grid3x3],
-								["table", List],
-								["compact", Rows3],
-							] as const
-						).map(([mode, Icon]) => (
-							<button
-								key={mode}
-								type="button"
-								onClick={() => setView(mode)}
-								className={cn(
-									"rounded-lg p-2 transition",
-									view === mode
-										? "bg-(--lagoon) text-white"
-										: "text-(--sea-ink-soft) hover:bg-(--surface)",
-								)}
-								title={`${mode} view`}
-							>
-								<Icon size={18} />
-							</button>
-						))}
-					</div>
+					<ViewSwitcher view={view} onViewChange={setView} />
 				</div>
 
 				{isLoading ? (
@@ -164,102 +155,74 @@ function QuantityUnitsPage() {
 					</p>
 				) : view === "grid" ? (
 					<GridView
-						quantityUnits={filteredQuantityUnits}
-						getConversionsForUnit={getConversionsForUnit}
-						unitName={unitName}
+						items={filteredQuantityUnits}
+						getKey={(u) => u.id}
+						getLink={(u) => ({
+							to: "/quantity-units/$id",
+							params: { id: u.id },
+						})}
+						renderCard={(u) => {
+							const unitConversions = getConversionsForUnit(u.id);
+							return (
+								<>
+									<h3 className="mb-1 text-sm font-semibold text-(--sea-ink)">
+										{u.name}
+									</h3>
+									{u.abbreviation && (
+										<p className="m-0 text-xs text-(--sea-ink-soft)">
+											{u.abbreviation}
+										</p>
+									)}
+									{unitConversions.length > 0 && (
+										<div className="mt-2 border-t border-(--line) pt-2">
+											{unitConversions.map((c) => (
+												<p
+													key={c.id}
+													className="m-0 text-xs text-(--sea-ink-soft)"
+													data-testid="conversion-line"
+												>
+													{formatConversionFactor(c, u.id, unitName)}
+												</p>
+											))}
+										</div>
+									)}
+								</>
+							);
+						}}
 					/>
 				) : view === "table" ? (
-					<TableView
+					<QuantityUnitsTableView
 						quantityUnits={filteredQuantityUnits}
 						getConversionsForUnit={getConversionsForUnit}
 						unitName={unitName}
 					/>
 				) : (
-					<CompactView quantityUnits={filteredQuantityUnits} />
+					<CompactView
+						items={filteredQuantityUnits}
+						getKey={(u) => u.id}
+						getLink={(u) => ({
+							to: "/quantity-units/$id",
+							params: { id: u.id },
+						})}
+						getName={(u) => u.name}
+						getSecondary={(u) => u.abbreviation || "—"}
+					/>
 				)}
 			</Island>
 		</Page>
 	);
 }
 
-function formatDate(dateStr: string | null) {
-	if (!dateStr) return "—";
-	return new Date(dateStr).toLocaleDateString();
-}
-
-function formatConversionFactor(
-	conversion: UnitConversion,
-	unitId: string,
-	unitName: (id: string) => string,
-) {
-	if (conversion.fromUnitId === unitId) {
-		return `→ ${unitName(conversion.toUnitId)}: ${conversion.factor}`;
-	}
-	const inverseFactor = 1 / Number(conversion.factor);
-	return `→ ${unitName(conversion.fromUnitId)}: ${inverseFactor % 1 === 0 ? inverseFactor : inverseFactor.toPrecision(6)}`;
-}
-
-interface GridViewProps {
-	quantityUnits: QuantityUnit[];
-	getConversionsForUnit: (id: string) => UnitConversion[];
-	unitName: (id: string) => string;
-}
-
-function GridView({
+/* quantity-units TableView stays local because of its expandable-row state */
+function QuantityUnitsTableView({
 	quantityUnits,
 	getConversionsForUnit,
 	unitName,
-}: GridViewProps) {
-	return (
-		<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-			{quantityUnits.map((u) => {
-				const unitConversions = getConversionsForUnit(u.id);
-				return (
-					<Link
-						key={u.id}
-						to="/quantity-units/$id"
-						params={{ id: u.id }}
-						className="block rounded-xl border border-(--line) bg-linear-165 from-(--surface-strong) to-(--surface) shadow-[inset_0_1px_0_var(--inset-glint),0_22px_44px_rgba(30,90,72,0.1),0_6px_18px_rgba(23,58,64,0.08)] backdrop-blur-xs p-4 no-underline transition hover:-translate-y-0.5"
-					>
-						<h3 className="mb-1 text-sm font-semibold text-(--sea-ink)">
-							{u.name}
-						</h3>
-						{u.abbreviation && (
-							<p className="m-0 text-xs text-(--sea-ink-soft)">
-								{u.abbreviation}
-							</p>
-						)}
-						{unitConversions.length > 0 && (
-							<div className="mt-2 border-t border-(--line) pt-2">
-								{unitConversions.map((c) => (
-									<p
-										key={c.id}
-										className="m-0 text-xs text-(--sea-ink-soft)"
-										data-testid="conversion-line"
-									>
-										{formatConversionFactor(c, u.id, unitName)}
-									</p>
-								))}
-							</div>
-						)}
-					</Link>
-				);
-			})}
-		</div>
-	);
-}
-
-interface TableViewProps {
+}: {
 	quantityUnits: QuantityUnit[];
 	getConversionsForUnit: (id: string) => UnitConversion[];
 	unitName: (id: string) => string;
-}
-
-function TableView({
-	quantityUnits,
-	getConversionsForUnit,
-	unitName,
-}: TableViewProps) {
+}) {
 	const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
 
 	function toggleExpand(id: string) {
@@ -346,26 +309,6 @@ function TableView({
 					})}
 				</tbody>
 			</table>
-		</div>
-	);
-}
-
-function CompactView({ quantityUnits }: { quantityUnits: QuantityUnit[] }) {
-	return (
-		<div className="flex flex-col gap-1">
-			{quantityUnits.map((u) => (
-				<Link
-					key={u.id}
-					to="/quantity-units/$id"
-					params={{ id: u.id }}
-					className="flex items-center justify-between rounded-lg px-3 py-2 no-underline transition hover:bg-(--surface)"
-				>
-					<span className="text-sm font-medium text-(--sea-ink)">{u.name}</span>
-					<span className="text-xs text-(--sea-ink-soft)">
-						{u.abbreviation || "—"}
-					</span>
-				</Link>
-			))}
 		</div>
 	);
 }
