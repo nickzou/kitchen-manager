@@ -43,6 +43,13 @@
       "when": 1773198709078,
       "tag": "0005_clear_bloodstorm",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1773269380471,
+      "tag": "0006_foamy_liz_osborn",
+      "breakpoints": true
     }
   ]
 }
