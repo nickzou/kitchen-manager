@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { DatePicker } from "#src/components/DatePicker";
 import { Island } from "#src/components/Island";
 import { Page } from "#src/components/Page";
 import { authClient } from "#src/lib/auth-client";
@@ -79,24 +80,20 @@ function ShoppingListPage() {
 
 				{/* Date range picker */}
 				<div className="mb-6 flex flex-wrap items-center gap-3 border-b border-(--line) pb-6">
-					<label className="flex items-center gap-2 text-sm text-(--sea-ink-soft)">
-						From
-						<input
-							type="date"
-							value={startDate}
-							onChange={(e) => setStartDate(e.target.value)}
-							className="rounded-lg border border-(--line) bg-(--surface) px-3 py-1.5 text-sm text-(--sea-ink) outline-none focus:border-(--lagoon)"
-						/>
-					</label>
-					<label className="flex items-center gap-2 text-sm text-(--sea-ink-soft)">
-						To
-						<input
-							type="date"
-							value={endDate}
-							onChange={(e) => setEndDate(e.target.value)}
-							className="rounded-lg border border-(--line) bg-(--surface) px-3 py-1.5 text-sm text-(--sea-ink) outline-none focus:border-(--lagoon)"
-						/>
-					</label>
+					<span className="text-sm text-(--sea-ink-soft)">From</span>
+					<DatePicker
+						value={startDate}
+						onChange={setStartDate}
+						placeholder="Start date"
+						className="w-40"
+					/>
+					<span className="text-sm text-(--sea-ink-soft)">To</span>
+					<DatePicker
+						value={endDate}
+						onChange={setEndDate}
+						placeholder="End date"
+						className="w-40"
+					/>
 				</div>
 
 				{isLoading ? (
