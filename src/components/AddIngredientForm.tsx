@@ -2,7 +2,6 @@ import { Plus } from "lucide-react";
 import { useId } from "react";
 import { Combobox } from "#src/components/Combobox";
 import { NumberInput } from "#src/components/NumberInput";
-import { cn } from "#src/lib/utils";
 
 export type IngredientFormState = {
 	productId: string;
@@ -49,58 +48,52 @@ export function AddIngredientForm({
 			<h3 className="mb-3 text-sm font-semibold text-(--sea-ink)">
 				Add ingredient
 			</h3>
-			<div className="flex flex-wrap items-end gap-2">
-				<div className="w-full grid grid-cols-2 md:grid-cols-12 gap-2">
-					<Combobox
-						value={productId}
-						onChange={(v) => update({ productId: v })}
-						options={productOptions}
-						placeholder="Product"
-						className="col-span-2 md:col-span-6 lg:col-span-12"
-						onCreateNew={
-							onCreateProduct
-								? async (name) => {
-										const newId = await onCreateProduct(name);
-										update({ productId: newId });
-									}
-								: undefined
-						}
-					/>
-					<NumberInput
-						id={`${htmlId}-ing-qty`}
-						step="any"
-						min="0"
-						placeholder="Qty"
-						className="col-span-1 md:col-span-4 lg:col-span-8"
-						value={quantity}
-						onChange={(e) => update({ quantity: e.target.value })}
-					/>
-					<Combobox
-						value={quantityUnitId}
-						onChange={(v) => update({ quantityUnitId: v })}
-						options={unitOptions}
-						className="col-span-1 md:col-span-2 lg:col-span-4"
-						placeholder="Unit"
-					/>
-				</div>
-				<div className="flex-1 flex gap-2">
-					<input
-						type="text"
-						placeholder="Notes"
-						value={notes}
-						onChange={(e) => update({ notes: e.target.value })}
-						className={cn(inputClass, "flex-1")}
-					/>
-					<button
-						type="button"
-						onClick={onAdd}
-						disabled={isPending || !quantity}
-						className="flex h-10 items-center gap-1 rounded-full bg-(--lagoon-deep) px-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
-					>
-						<Plus size={14} />
-						Add
-					</button>
-				</div>
+			<div className="grid grid-cols-[1fr_1fr] gap-2 sm:grid-cols-[1fr_auto_1fr_1fr_auto]">
+				<Combobox
+					value={productId}
+					onChange={(v) => update({ productId: v })}
+					options={productOptions}
+					placeholder="Product"
+					className="col-span-full sm:col-span-1"
+					onCreateNew={
+						onCreateProduct
+							? async (name) => {
+									const newId = await onCreateProduct(name);
+									update({ productId: newId });
+								}
+							: undefined
+					}
+				/>
+				<NumberInput
+					id={`${htmlId}-ing-qty`}
+					step="any"
+					min="0"
+					placeholder="Qty"
+					value={quantity}
+					onChange={(e) => update({ quantity: e.target.value })}
+				/>
+				<Combobox
+					value={quantityUnitId}
+					onChange={(v) => update({ quantityUnitId: v })}
+					options={unitOptions}
+					placeholder="Unit"
+				/>
+				<input
+					type="text"
+					placeholder="Notes"
+					value={notes}
+					onChange={(e) => update({ notes: e.target.value })}
+					className={inputClass}
+				/>
+				<button
+					type="button"
+					onClick={onAdd}
+					disabled={isPending || !quantity}
+					className="flex h-10 items-center gap-1 rounded-full bg-(--lagoon-deep) px-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
+				>
+					<Plus size={14} />
+					Add
+				</button>
 			</div>
 		</div>
 	);
