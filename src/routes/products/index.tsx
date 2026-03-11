@@ -1,22 +1,21 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Grid3x3, List, Plus, Rows3 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { type FormEvent, useMemo, useState } from "react";
+import { CompactView } from "#src/components/CompactView";
+import { GridView } from "#src/components/GridView";
 import InventorySubNav from "#src/components/InventorySubNav";
 import { Island } from "#src/components/Island";
 import { Page } from "#src/components/Page";
 import { SearchInput } from "#src/components/SearchInput";
+import { TableView } from "#src/components/TableView";
+import { type ViewMode, ViewSwitcher } from "#src/components/ViewSwitcher";
 import { authClient } from "#src/lib/auth-client";
+import { formatDate } from "#src/lib/format-date";
 import { useCategories } from "#src/lib/hooks/use-categories";
-import {
-	type Product,
-	useCreateProduct,
-	useProducts,
-} from "#src/lib/hooks/use-products";
+import { useCreateProduct, useProducts } from "#src/lib/hooks/use-products";
 import { cn } from "#src/lib/utils";
 
 export const Route = createFileRoute("/products/")({ component: ProductsPage });
-
-type ViewMode = "grid" | "table" | "compact";
 
 function ProductsPage() {
 	const { data: session, isPending: sessionLoading } = authClient.useSession();
@@ -114,30 +113,7 @@ function ProductsPage() {
 						value={search}
 						onChange={(e) => setSearch(e.target.value)}
 					/>
-					<div className="flex items-center gap-1 sm:ml-auto">
-						{(
-							[
-								["grid", Grid3x3],
-								["table", List],
-								["compact", Rows3],
-							] as const
-						).map(([mode, Icon]) => (
-							<button
-								key={mode}
-								type="button"
-								onClick={() => setView(mode)}
-								className={cn(
-									"rounded-lg p-2 transition",
-									view === mode
-										? "bg-(--lagoon) text-white"
-										: "text-(--sea-ink-soft) hover:bg-(--surface)",
-								)}
-								title={`${mode} view`}
-							>
-								<Icon size={18} />
-							</button>
-						))}
-					</div>
+					<ViewSwitcher view={view} onViewChange={setView} />
 				</div>
 
 				{isLoading ? (
@@ -152,126 +128,77 @@ function ProductsPage() {
 					</p>
 				) : view === "grid" ? (
 					<GridView
-						products={filteredProducts}
-						getCategoryName={getCategoryName}
+						items={filteredProducts}
+						getKey={(p) => p.id}
+						getLink={(p) => ({ to: "/products/$id", params: { id: p.id } })}
+						getImage={(p) => p.image}
+						getImageAlt={(p) => p.name}
+						renderCard={(p) => {
+							const catName = getCategoryName(p.categoryId);
+							return (
+								<>
+									<h3 className="mb-1 text-sm font-semibold text-(--sea-ink)">
+										{p.name}
+									</h3>
+									{catName && (
+										<span className="mb-2 inline-block rounded-full bg-[rgba(79,184,178,0.14)] px-2 py-0.5 text-xs font-medium text-(--lagoon-deep)">
+											{catName}
+										</span>
+									)}
+									{Number.parseFloat(p.minStockAmount) > 0 && (
+										<p className="m-0 text-xs text-(--sea-ink-soft)">
+											Min stock: {p.minStockAmount}
+										</p>
+									)}
+								</>
+							);
+						}}
 					/>
 				) : view === "table" ? (
 					<TableView
-						products={filteredProducts}
-						getCategoryName={getCategoryName}
+						columns={[
+							{ label: "Name" },
+							{ label: "Category" },
+							{ label: "Min Stock" },
+							{ label: "Created" },
+						]}
+						items={filteredProducts}
+						getKey={(p) => p.id}
+						renderRow={(p) => (
+							<>
+								<td className="py-2.5 pr-4">
+									<Link
+										to="/products/$id"
+										params={{ id: p.id }}
+										className="font-medium text-(--lagoon-deep) no-underline hover:underline"
+									>
+										{p.name}
+									</Link>
+								</td>
+								<td className="py-2.5 pr-4 text-(--sea-ink-soft)">
+									{getCategoryName(p.categoryId) || "—"}
+								</td>
+								<td className="py-2.5 pr-4 text-(--sea-ink-soft)">
+									{Number.parseFloat(p.minStockAmount) > 0
+										? p.minStockAmount
+										: "—"}
+								</td>
+								<td className="py-2.5 text-(--sea-ink-soft)">
+									{formatDate(p.createdAt)}
+								</td>
+							</>
+						)}
 					/>
 				) : (
 					<CompactView
-						products={filteredProducts}
-						getCategoryName={getCategoryName}
+						items={filteredProducts}
+						getKey={(p) => p.id}
+						getLink={(p) => ({ to: "/products/$id", params: { id: p.id } })}
+						getName={(p) => p.name}
+						getSecondary={(p) => getCategoryName(p.categoryId) || "—"}
 					/>
 				)}
 			</Island>
 		</Page>
-	);
-}
-
-function formatDate(dateStr: string | null) {
-	if (!dateStr) return "—";
-	return new Date(dateStr).toLocaleDateString();
-}
-
-type ViewProps = {
-	products: Product[];
-	getCategoryName: (id: string | null) => string | null;
-};
-
-function GridView({ products, getCategoryName }: ViewProps) {
-	return (
-		<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-			{products.map((p) => {
-				const catName = getCategoryName(p.categoryId);
-				return (
-					<Link
-						key={p.id}
-						to="/products/$id"
-						params={{ id: p.id }}
-						className="block rounded-xl border border-(--line) bg-linear-165 from-(--surface-strong) to-(--surface) shadow-[inset_0_1px_0_var(--inset-glint),0_22px_44px_rgba(30,90,72,0.1),0_6px_18px_rgba(23,58,64,0.08)] backdrop-blur-[4px] p-4 no-underline transition hover:-translate-y-0.5"
-					>
-						<h3 className="mb-1 text-sm font-semibold text-(--sea-ink)">
-							{p.name}
-						</h3>
-						{catName && (
-							<span className="mb-2 inline-block rounded-full bg-[rgba(79,184,178,0.14)] px-2 py-0.5 text-xs font-medium text-(--lagoon-deep)">
-								{catName}
-							</span>
-						)}
-						{Number.parseFloat(p.minStockAmount) > 0 && (
-							<p className="m-0 text-xs text-(--sea-ink-soft)">
-								Min stock: {p.minStockAmount}
-							</p>
-						)}
-					</Link>
-				);
-			})}
-		</div>
-	);
-}
-
-function TableView({ products, getCategoryName }: ViewProps) {
-	return (
-		<div className="overflow-x-auto">
-			<table className="w-full text-left text-sm">
-				<thead>
-					<tr className="border-b border-(--line) text-xs font-semibold uppercase tracking-wide text-(--sea-ink-soft)">
-						<th className="pb-2 pr-4">Name</th>
-						<th className="pb-2 pr-4">Category</th>
-						<th className="pb-2 pr-4">Min Stock</th>
-						<th className="pb-2">Created</th>
-					</tr>
-				</thead>
-				<tbody>
-					{products.map((p) => (
-						<tr key={p.id} className="border-b border-(--line) last:border-0">
-							<td className="py-2.5 pr-4">
-								<Link
-									to="/products/$id"
-									params={{ id: p.id }}
-									className="font-medium text-(--lagoon-deep) no-underline hover:underline"
-								>
-									{p.name}
-								</Link>
-							</td>
-							<td className="py-2.5 pr-4 text-(--sea-ink-soft)">
-								{getCategoryName(p.categoryId) || "—"}
-							</td>
-							<td className="py-2.5 pr-4 text-(--sea-ink-soft)">
-								{Number.parseFloat(p.minStockAmount) > 0
-									? p.minStockAmount
-									: "—"}
-							</td>
-							<td className="py-2.5 text-(--sea-ink-soft)">
-								{formatDate(p.createdAt)}
-							</td>
-						</tr>
-					))}
-				</tbody>
-			</table>
-		</div>
-	);
-}
-
-function CompactView({ products, getCategoryName }: ViewProps) {
-	return (
-		<div className="flex flex-col gap-1">
-			{products.map((p) => (
-				<Link
-					key={p.id}
-					to="/products/$id"
-					params={{ id: p.id }}
-					className="flex items-center justify-between rounded-lg px-3 py-2 no-underline transition hover:bg-(--surface)"
-				>
-					<span className="text-sm font-medium text-(--sea-ink)">{p.name}</span>
-					<span className="text-xs text-(--sea-ink-soft)">
-						{getCategoryName(p.categoryId) || "—"}
-					</span>
-				</Link>
-			))}
-		</div>
 	);
 }

@@ -3,6 +3,7 @@ import type { QueryClient } from "@tanstack/react-query";
 import {
 	createRootRouteWithContext,
 	HeadContent,
+	Link,
 	Scripts,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
@@ -21,6 +22,7 @@ interface MyRouterContext {
 const THEME_INIT_SCRIPT = `(function(){try{var stored=window.localStorage.getItem('theme');var mode=(stored==='light'||stored==='dark'||stored==='auto')?stored:'auto';var prefersDark=window.matchMedia('(prefers-color-scheme: dark)').matches;var resolved=mode==='auto'?(prefersDark?'dark':'light'):mode;var root=document.documentElement;root.classList.remove('light','dark');root.classList.add(resolved);if(mode==='auto'){root.removeAttribute('data-theme')}else{root.setAttribute('data-theme',mode)}root.style.colorScheme=resolved;}catch(e){}})();`;
 
 export const Route = createRootRouteWithContext<MyRouterContext>()({
+	notFoundComponent: NotFound,
 	head: () => ({
 		meta: [
 			{
@@ -70,6 +72,21 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 	}),
 	shellComponent: RootDocument,
 });
+
+function NotFound() {
+	return (
+		<main className="flex flex-1 flex-col items-center justify-center px-4 py-24 text-center">
+			<h1 className="mb-2 text-5xl font-bold text-(--sea-ink)">404</h1>
+			<p className="mb-6 text-(--sea-ink-soft)">This page doesn't exist.</p>
+			<Link
+				to="/"
+				className="rounded-lg bg-(--lagoon-deep) px-4 py-2 text-sm font-medium text-white no-underline transition hover:opacity-90"
+			>
+				Go home
+			</Link>
+		</main>
+	);
+}
 
 function RootDocument({ children }: { children: ReactNode }) {
 	return (

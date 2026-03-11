@@ -81,6 +81,7 @@ const mockRecipe: Recipe = {
 	id: "1",
 	name: "Pasta Bolognese",
 	description: "Classic Italian pasta",
+	image: null,
 	servings: 4,
 	prepTime: 15,
 	cookTime: 45,

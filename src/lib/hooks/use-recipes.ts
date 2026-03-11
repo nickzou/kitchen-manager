@@ -4,6 +4,7 @@ export interface Recipe {
 	id: string;
 	name: string;
 	description: string | null;
+	image: string | null;
 	servings: number | null;
 	prepTime: number | null;
 	cookTime: number | null;
@@ -17,6 +18,7 @@ export interface Recipe {
 export type CreateRecipeInput = {
 	name: string;
 	description?: string;
+	image?: string;
 	servings?: number;
 	prepTime?: number;
 	cookTime?: number;

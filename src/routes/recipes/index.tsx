@@ -1,21 +1,28 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Grid3x3, List, Plus, Rows3 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { type FormEvent, useMemo, useState } from "react";
+import { CompactView } from "#src/components/CompactView";
+import { GridView } from "#src/components/GridView";
 import { Island } from "#src/components/Island";
 import { Page } from "#src/components/Page";
 import { SearchInput } from "#src/components/SearchInput";
+import { TableView } from "#src/components/TableView";
+import { type ViewMode, ViewSwitcher } from "#src/components/ViewSwitcher";
 import { authClient } from "#src/lib/auth-client";
+import { formatDate } from "#src/lib/format-date";
 import { useCategories } from "#src/lib/hooks/use-categories";
-import {
-	type Recipe,
-	useCreateRecipe,
-	useRecipes,
-} from "#src/lib/hooks/use-recipes";
+import { useCreateRecipe, useRecipes } from "#src/lib/hooks/use-recipes";
 import { cn } from "#src/lib/utils";
 
 export const Route = createFileRoute("/recipes/")({ component: RecipesPage });
 
-type ViewMode = "grid" | "table" | "compact";
+function formatTime(minutes: number | null) {
+	if (minutes == null) return "—";
+	if (minutes < 60) return `${minutes}m`;
+	const h = Math.floor(minutes / 60);
+	const m = minutes % 60;
+	return m > 0 ? `${h}h ${m}m` : `${h}h`;
+}
 
 function RecipesPage() {
 	const { data: session, isPending: sessionLoading } = authClient.useSession();
@@ -94,30 +101,7 @@ function RecipesPage() {
 						value={search}
 						onChange={(e) => setSearch(e.target.value)}
 					/>
-					<div className="flex items-center gap-1 sm:ml-auto">
-						{(
-							[
-								["grid", Grid3x3],
-								["table", List],
-								["compact", Rows3],
-							] as const
-						).map(([mode, Icon]) => (
-							<button
-								key={mode}
-								type="button"
-								onClick={() => setView(mode)}
-								className={cn(
-									"rounded-lg p-2 transition",
-									view === mode
-										? "bg-(--lagoon) text-white"
-										: "text-(--sea-ink-soft) hover:bg-(--surface)",
-								)}
-								title={`${mode} view`}
-							>
-								<Icon size={18} />
-							</button>
-						))}
-					</div>
+					<ViewSwitcher view={view} onViewChange={setView} />
 				</div>
 
 				{isLoading ? (
@@ -132,138 +116,85 @@ function RecipesPage() {
 					</p>
 				) : view === "grid" ? (
 					<GridView
-						recipes={filteredRecipes}
-						getCategoryName={getCategoryName}
+						items={filteredRecipes}
+						getKey={(r) => r.id}
+						getLink={(r) => ({ to: "/recipes/$id", params: { id: r.id } })}
+						getImage={(r) => r.image}
+						getImageAlt={(r) => r.name}
+						renderCard={(r) => {
+							const catName = getCategoryName(r.categoryId);
+							return (
+								<>
+									<h3 className="mb-1 text-sm font-semibold text-(--sea-ink)">
+										{r.name}
+									</h3>
+									{catName && (
+										<span className="mb-2 inline-block rounded-full bg-[rgba(79,184,178,0.14)] px-2 py-0.5 text-xs font-medium text-(--lagoon-deep)">
+											{catName}
+										</span>
+									)}
+									<div className="flex gap-3 text-xs text-(--sea-ink-soft)">
+										{r.servings != null && <span>{r.servings} servings</span>}
+										{r.prepTime != null && (
+											<span>Prep {formatTime(r.prepTime)}</span>
+										)}
+										{r.cookTime != null && (
+											<span>Cook {formatTime(r.cookTime)}</span>
+										)}
+									</div>
+								</>
+							);
+						}}
 					/>
 				) : view === "table" ? (
 					<TableView
-						recipes={filteredRecipes}
-						getCategoryName={getCategoryName}
+						columns={[
+							{ label: "Name" },
+							{ label: "Category" },
+							{ label: "Servings" },
+							{ label: "Time" },
+							{ label: "Created" },
+						]}
+						items={filteredRecipes}
+						getKey={(r) => r.id}
+						renderRow={(r) => (
+							<>
+								<td className="py-2.5 pr-4">
+									<Link
+										to="/recipes/$id"
+										params={{ id: r.id }}
+										className="font-medium text-(--lagoon-deep) no-underline hover:underline"
+									>
+										{r.name}
+									</Link>
+								</td>
+								<td className="py-2.5 pr-4 text-(--sea-ink-soft)">
+									{getCategoryName(r.categoryId) || "—"}
+								</td>
+								<td className="py-2.5 pr-4 text-(--sea-ink-soft)">
+									{r.servings ?? "—"}
+								</td>
+								<td className="py-2.5 pr-4 text-(--sea-ink-soft)">
+									{r.prepTime != null || r.cookTime != null
+										? `${formatTime(r.prepTime)} / ${formatTime(r.cookTime)}`
+										: "—"}
+								</td>
+								<td className="py-2.5 text-(--sea-ink-soft)">
+									{formatDate(r.createdAt)}
+								</td>
+							</>
+						)}
 					/>
 				) : (
 					<CompactView
-						recipes={filteredRecipes}
-						getCategoryName={getCategoryName}
+						items={filteredRecipes}
+						getKey={(r) => r.id}
+						getLink={(r) => ({ to: "/recipes/$id", params: { id: r.id } })}
+						getName={(r) => r.name}
+						getSecondary={(r) => getCategoryName(r.categoryId) || "—"}
 					/>
 				)}
 			</Island>
 		</Page>
-	);
-}
-
-function formatDate(dateStr: string | null) {
-	if (!dateStr) return "—";
-	return new Date(dateStr).toLocaleDateString();
-}
-
-function formatTime(minutes: number | null) {
-	if (minutes == null) return "—";
-	if (minutes < 60) return `${minutes}m`;
-	const h = Math.floor(minutes / 60);
-	const m = minutes % 60;
-	return m > 0 ? `${h}h ${m}m` : `${h}h`;
-}
-
-type ViewProps = {
-	recipes: Recipe[];
-	getCategoryName: (id: string | null) => string | null;
-};
-
-function GridView({ recipes, getCategoryName }: ViewProps) {
-	return (
-		<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-			{recipes.map((r) => {
-				const catName = getCategoryName(r.categoryId);
-				return (
-					<Link
-						key={r.id}
-						to="/recipes/$id"
-						params={{ id: r.id }}
-						className="block rounded-xl border border-(--line) bg-linear-165 from-(--surface-strong) to-(--surface) shadow-[inset_0_1px_0_var(--inset-glint),0_22px_44px_rgba(30,90,72,0.1),0_6px_18px_rgba(23,58,64,0.08)] backdrop-blur-[4px] p-4 no-underline transition hover:-translate-y-0.5"
-					>
-						<h3 className="mb-1 text-sm font-semibold text-(--sea-ink)">
-							{r.name}
-						</h3>
-						{catName && (
-							<span className="mb-2 inline-block rounded-full bg-[rgba(79,184,178,0.14)] px-2 py-0.5 text-xs font-medium text-(--lagoon-deep)">
-								{catName}
-							</span>
-						)}
-						<div className="flex gap-3 text-xs text-(--sea-ink-soft)">
-							{r.servings != null && <span>{r.servings} servings</span>}
-							{r.prepTime != null && <span>Prep {formatTime(r.prepTime)}</span>}
-							{r.cookTime != null && <span>Cook {formatTime(r.cookTime)}</span>}
-						</div>
-					</Link>
-				);
-			})}
-		</div>
-	);
-}
-
-function TableView({ recipes, getCategoryName }: ViewProps) {
-	return (
-		<div className="overflow-x-auto">
-			<table className="w-full text-left text-sm">
-				<thead>
-					<tr className="border-b border-(--line) text-xs font-semibold uppercase tracking-wide text-(--sea-ink-soft)">
-						<th className="pb-2 pr-4">Name</th>
-						<th className="pb-2 pr-4">Category</th>
-						<th className="pb-2 pr-4">Servings</th>
-						<th className="pb-2 pr-4">Time</th>
-						<th className="pb-2">Created</th>
-					</tr>
-				</thead>
-				<tbody>
-					{recipes.map((r) => (
-						<tr key={r.id} className="border-b border-(--line) last:border-0">
-							<td className="py-2.5 pr-4">
-								<Link
-									to="/recipes/$id"
-									params={{ id: r.id }}
-									className="font-medium text-(--lagoon-deep) no-underline hover:underline"
-								>
-									{r.name}
-								</Link>
-							</td>
-							<td className="py-2.5 pr-4 text-(--sea-ink-soft)">
-								{getCategoryName(r.categoryId) || "—"}
-							</td>
-							<td className="py-2.5 pr-4 text-(--sea-ink-soft)">
-								{r.servings ?? "—"}
-							</td>
-							<td className="py-2.5 pr-4 text-(--sea-ink-soft)">
-								{r.prepTime != null || r.cookTime != null
-									? `${formatTime(r.prepTime)} / ${formatTime(r.cookTime)}`
-									: "—"}
-							</td>
-							<td className="py-2.5 text-(--sea-ink-soft)">
-								{formatDate(r.createdAt)}
-							</td>
-						</tr>
-					))}
-				</tbody>
-			</table>
-		</div>
-	);
-}
-
-function CompactView({ recipes, getCategoryName }: ViewProps) {
-	return (
-		<div className="flex flex-col gap-1">
-			{recipes.map((r) => (
-				<Link
-					key={r.id}
-					to="/recipes/$id"
-					params={{ id: r.id }}
-					className="flex items-center justify-between rounded-lg px-3 py-2 no-underline transition hover:bg-(--surface)"
-				>
-					<span className="text-sm font-medium text-(--sea-ink)">{r.name}</span>
-					<span className="text-xs text-(--sea-ink-soft)">
-						{getCategoryName(r.categoryId) || "—"}
-					</span>
-				</Link>
-			))}
-		</div>
 	);
 }

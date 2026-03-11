@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Pencil, Trash2, X } from "lucide-react";
 import { type FormEvent, useId, useState } from "react";
 import { Combobox } from "#src/components/Combobox";
+import { ImageInput } from "#src/components/ImageInput";
 import InventorySubNav from "#src/components/InventorySubNav";
 import { Island } from "#src/components/Island";
 import { NumberInput } from "#src/components/NumberInput";
@@ -38,6 +39,7 @@ function ProductDetail() {
 		name: "",
 		categoryId: "",
 		description: "",
+		image: null as string | null,
 		quantityUnitId: "",
 		minStockAmount: "",
 		defaultExpirationDays: "",
@@ -92,6 +94,7 @@ function ProductDetail() {
 			name: product.name,
 			categoryId: product.categoryId || "",
 			description: product.description || "",
+			image: product.image,
 			quantityUnitId: product.quantityUnitId || "",
 			minStockAmount:
 				Number.parseFloat(product.minStockAmount) > 0
@@ -111,6 +114,7 @@ function ProductDetail() {
 			name: form.name,
 			categoryId: form.categoryId || undefined,
 			description: form.description || undefined,
+			image: form.image || undefined,
 			quantityUnitId: form.quantityUnitId || undefined,
 			minStockAmount: form.minStockAmount || undefined,
 			defaultExpirationDays: form.defaultExpirationDays
@@ -199,6 +203,11 @@ function ProductDetail() {
 								className={cn(inputClass, "h-auto py-2")}
 							/>
 						</label>
+
+						<ImageInput
+							value={form.image}
+							onChange={(url) => setForm({ ...form, image: url })}
+						/>
 
 						<div className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
 							Quantity Unit
@@ -297,6 +306,14 @@ function ProductDetail() {
 							<p className="mb-4 text-sm text-(--sea-ink-soft)">
 								{product.description}
 							</p>
+						)}
+
+						{product.image && (
+							<img
+								src={product.image}
+								alt={product.name}
+								className="mb-4 h-40 w-40 rounded-lg border border-(--line) object-cover"
+							/>
 						)}
 
 						<dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-3">

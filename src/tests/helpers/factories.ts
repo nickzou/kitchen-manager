@@ -117,6 +117,7 @@ export function makeRecipe(overrides?: Record<string, unknown>) {
 		id: "recipe-1",
 		name: "Pancakes",
 		description: "Fluffy pancakes",
+		image: null,
 		servings: 4,
 		prepTime: 10,
 		cookTime: 15,
