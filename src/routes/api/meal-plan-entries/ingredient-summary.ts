@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { and, eq, gte, lte, sql } from "drizzle-orm";
+import { and, eq, gte, inArray, lte, sql } from "drizzle-orm";
 import { db } from "#src/db";
 import {
 	mealPlanEntry,
@@ -129,7 +129,7 @@ export const Route = createFileRoute(
 					.where(
 						and(
 							eq(product.userId, session.user.id),
-							sql`${product.id} = ANY(${productIds})`,
+							inArray(product.id, productIds),
 						),
 					);
 
@@ -142,7 +142,7 @@ export const Route = createFileRoute(
 					.where(
 						and(
 							eq(stockEntry.userId, session.user.id),
-							sql`${stockEntry.productId} = ANY(${productIds})`,
+							inArray(stockEntry.productId, productIds),
 						),
 					)
 					.groupBy(stockEntry.productId);
