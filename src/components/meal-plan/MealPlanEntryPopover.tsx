@@ -87,7 +87,7 @@ export function MealPlanEntryPopover({
 						type="button"
 						onClick={onCook}
 						disabled={isCooking}
-						className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-(--lagoon-deep) px-3 py-1.5 text-xs font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
+						className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-(--lagoon) px-3 py-1.5 text-xs font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
 					>
 						<CookingPot size={14} />
 						Cook

@@ -127,7 +127,7 @@ export function MealSlotManager({
 				<button
 					type="submit"
 					disabled={!newName.trim()}
-					className="flex items-center gap-1 rounded-lg bg-(--lagoon-deep) px-3 py-1.5 text-xs font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
+					className="flex items-center gap-1 rounded-lg bg-(--lagoon) px-3 py-1.5 text-xs font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
 				>
 					<Plus size={14} />
 					Add

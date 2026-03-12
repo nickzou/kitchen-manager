@@ -152,7 +152,7 @@ export function MealPlanCalendar({
 						className={cn(
 							"flex flex-1 flex-col items-center rounded-lg py-1.5 text-xs transition",
 							i === selectedDay
-								? "bg-(--lagoon-deep) text-white"
+								? "bg-(--lagoon) text-white"
 								: "text-(--sea-ink-soft) hover:bg-(--surface)",
 							isSameDay(day, today) &&
 								i !== selectedDay &&

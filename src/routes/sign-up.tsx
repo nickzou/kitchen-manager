@@ -89,7 +89,7 @@ function SignUp() {
 					<button
 						type="submit"
 						disabled={loading}
-						className="mt-2 h-10 rounded-full bg-(--lagoon-deep) text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
+						className="mt-2 h-10 rounded-full bg-(--lagoon) text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
 					>
 						{loading ? "Creating account\u2026" : "Sign up"}
 					</button>
