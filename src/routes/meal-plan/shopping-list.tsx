@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { DatePicker } from "#src/components/DatePicker";
+import { DateRangePicker } from "#src/components/DateRangePicker";
 import { Island } from "#src/components/Island";
 import { Page } from "#src/components/Page";
 import { authClient } from "#src/lib/auth-client";
@@ -79,20 +79,14 @@ function ShoppingListPage() {
 				</div>
 
 				{/* Date range picker */}
-				<div className="mb-6 flex flex-wrap items-center gap-3 border-b border-(--line) pb-6">
-					<span className="text-sm text-(--sea-ink-soft)">From</span>
-					<DatePicker
-						value={startDate}
-						onChange={setStartDate}
-						placeholder="Start date"
-						className="w-40"
-					/>
-					<span className="text-sm text-(--sea-ink-soft)">To</span>
-					<DatePicker
-						value={endDate}
-						onChange={setEndDate}
-						placeholder="End date"
-						className="w-40"
+				<div className="mb-6 border-b border-(--line) pb-6">
+					<DateRangePicker
+						startDate={startDate}
+						endDate={endDate}
+						onChange={(start, end) => {
+							setStartDate(start);
+							setEndDate(end);
+						}}
 					/>
 				</div>
 
