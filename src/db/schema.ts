@@ -1,5 +1,6 @@
 import { relations } from "drizzle-orm";
 import {
+	date,
 	index,
 	integer,
 	numeric,
@@ -339,3 +340,78 @@ export const recipeIngredientRelations = relations(
 		}),
 	}),
 );
+
+export const mealSlot = pgTable(
+	"meal_slot",
+	{
+		id: text("id")
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		name: text("name").notNull(),
+		sortOrder: integer("sort_order").default(0).notNull(),
+		userId: text("user_id")
+			.notNull()
+			.references(() => user.id, { onDelete: "cascade" }),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+		updatedAt: timestamp("updated_at")
+			.defaultNow()
+			.$onUpdate(() => new Date())
+			.notNull(),
+	},
+	(table) => [index("mealSlot_userId_idx").on(table.userId)],
+);
+
+export const mealSlotRelations = relations(mealSlot, ({ one, many }) => ({
+	user: one(user, {
+		fields: [mealSlot.userId],
+		references: [user.id],
+	}),
+	entries: many(mealPlanEntry),
+}));
+
+export const mealPlanEntry = pgTable(
+	"meal_plan_entry",
+	{
+		id: text("id")
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		date: date("date").notNull(),
+		mealSlotId: text("meal_slot_id")
+			.notNull()
+			.references(() => mealSlot.id, { onDelete: "cascade" }),
+		recipeId: text("recipe_id")
+			.notNull()
+			.references(() => recipe.id, { onDelete: "cascade" }),
+		servings: integer("servings"),
+		sortOrder: integer("sort_order").default(0).notNull(),
+		cookedAt: timestamp("cooked_at"),
+		userId: text("user_id")
+			.notNull()
+			.references(() => user.id, { onDelete: "cascade" }),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+		updatedAt: timestamp("updated_at")
+			.defaultNow()
+			.$onUpdate(() => new Date())
+			.notNull(),
+	},
+	(table) => [
+		index("mealPlanEntry_userId_idx").on(table.userId),
+		index("mealPlanEntry_date_idx").on(table.date),
+		index("mealPlanEntry_mealSlotId_idx").on(table.mealSlotId),
+	],
+);
+
+export const mealPlanEntryRelations = relations(mealPlanEntry, ({ one }) => ({
+	user: one(user, {
+		fields: [mealPlanEntry.userId],
+		references: [user.id],
+	}),
+	mealSlot: one(mealSlot, {
+		fields: [mealPlanEntry.mealSlotId],
+		references: [mealSlot.id],
+	}),
+	recipe: one(recipe, {
+		fields: [mealPlanEntry.recipeId],
+		references: [recipe.id],
+	}),
+}));

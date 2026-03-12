@@ -89,7 +89,7 @@ export function AddIngredientForm({
 					type="button"
 					onClick={onAdd}
 					disabled={isPending || !quantity}
-					className="flex h-10 items-center gap-1 rounded-full bg-(--lagoon-deep) px-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
+					className="flex h-10 items-center gap-1 rounded-full bg-(--lagoon) px-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
 				>
 					<Plus size={14} />
 					Add

@@ -80,7 +80,7 @@ function NotFound() {
 			<p className="mb-6 text-(--sea-ink-soft)">This page doesn't exist.</p>
 			<Link
 				to="/"
-				className="rounded-lg bg-(--lagoon-deep) px-4 py-2 text-sm font-medium text-white no-underline transition hover:opacity-90"
+				className="rounded-lg bg-(--lagoon) px-4 py-2 text-sm font-medium text-white no-underline transition hover:opacity-90"
 			>
 				Go home
 			</Link>

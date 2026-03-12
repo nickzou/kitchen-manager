@@ -29,6 +29,7 @@ export default function Header() {
 					</Link>
 					<Link to="/products">Products</Link>
 					<Link to="/recipes">Recipes</Link>
+					<Link to="/meal-plan">Meal Plan</Link>
 					<Link to="/stock">Stock</Link>
 				</div>
 
@@ -60,6 +61,9 @@ export default function Header() {
 						</MobileNavLink>
 						<MobileNavLink to="/recipes" onClick={() => setMenuOpen(false)}>
 							Recipes
+						</MobileNavLink>
+						<MobileNavLink to="/meal-plan" onClick={() => setMenuOpen(false)}>
+							Meal Plan
 						</MobileNavLink>
 						<MobileNavLink to="/stock" onClick={() => setMenuOpen(false)}>
 							Stock

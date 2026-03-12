@@ -1,0 +1,1 @@
+ALTER TABLE "meal_plan_entry" ALTER COLUMN "date" SET DATA TYPE date;

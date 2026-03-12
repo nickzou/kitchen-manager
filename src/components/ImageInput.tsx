@@ -95,7 +95,7 @@ export function ImageInput({ value, onChange }: ImageInputProps) {
 				<button
 					type="button"
 					onClick={() => setMode("upload")}
-					className={`flex items-center gap-1 rounded-md px-2 py-1 transition ${mode === "upload" ? "bg-(--lagoon-deep) text-white" : "text-(--sea-ink-soft) hover:bg-(--surface)"}`}
+					className={`flex items-center gap-1 rounded-md px-2 py-1 transition ${mode === "upload" ? "bg-(--lagoon) text-white" : "text-(--sea-ink-soft) hover:bg-(--surface)"}`}
 				>
 					<Upload size={12} />
 					Upload
@@ -103,7 +103,7 @@ export function ImageInput({ value, onChange }: ImageInputProps) {
 				<button
 					type="button"
 					onClick={() => setMode("url")}
-					className={`flex items-center gap-1 rounded-md px-2 py-1 transition ${mode === "url" ? "bg-(--lagoon-deep) text-white" : "text-(--sea-ink-soft) hover:bg-(--surface)"}`}
+					className={`flex items-center gap-1 rounded-md px-2 py-1 transition ${mode === "url" ? "bg-(--lagoon) text-white" : "text-(--sea-ink-soft) hover:bg-(--surface)"}`}
 				>
 					<Link size={12} />
 					URL
@@ -148,7 +148,7 @@ export function ImageInput({ value, onChange }: ImageInputProps) {
 						type="button"
 						onClick={handleUrlDownload}
 						disabled={uploading || !urlInput.trim()}
-						className="h-10 rounded-lg bg-(--lagoon-deep) px-3 text-sm font-medium text-white transition hover:opacity-90 disabled:opacity-50"
+						className="h-10 rounded-lg bg-(--lagoon) px-3 text-sm font-medium text-white transition hover:opacity-90 disabled:opacity-50"
 					>
 						{uploading ? (
 							<Loader2 size={16} className="animate-spin" />

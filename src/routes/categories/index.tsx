@@ -97,7 +97,7 @@ function CategoriesPage() {
 					<button
 						type="submit"
 						disabled={createCategory.isPending}
-						className="flex h-10 items-center gap-1.5 rounded-full bg-(--lagoon-deep) px-4 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
+						className="flex h-10 items-center gap-1.5 rounded-full bg-(--lagoon) px-4 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
 					>
 						<Plus size={16} />
 						Add

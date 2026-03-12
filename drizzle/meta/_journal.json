@@ -43,6 +43,27 @@
       "when": 1773198709078,
       "tag": "0005_clear_bloodstorm",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1773269380471,
+      "tag": "0006_foamy_liz_osborn",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1773270726392,
+      "tag": "0007_talented_sebastian_shaw",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1773271308576,
+      "tag": "0008_thin_moondragon",
+      "breakpoints": true
     }
   ]
 }
