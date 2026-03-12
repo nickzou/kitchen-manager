@@ -9,8 +9,12 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as SignUpRouteImport } from './routes/sign-up'
 import { Route as SignInRouteImport } from './routes/sign-in'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as StockIndexRouteImport } from './routes/stock/index'
@@ -52,6 +56,11 @@ import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as ApiRecipesIdIngredientsIndexRouteImport } from './routes/api/recipes/$id/ingredients/index'
 import { Route as ApiRecipesIdIngredientsIngredientIdRouteImport } from './routes/api/recipes/$id/ingredients/$ingredientId'
 
+const VerifyEmailRoute = VerifyEmailRouteImport.update({
+  id: '/verify-email',
+  path: '/verify-email',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SignUpRoute = SignUpRouteImport.update({
   id: '/sign-up',
   path: '/sign-up',
@@ -60,6 +69,21 @@ const SignUpRoute = SignUpRouteImport.update({
 const SignInRoute = SignInRouteImport.update({
   id: '/sign-in',
   path: '/sign-in',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AboutRoute = AboutRouteImport.update({
@@ -269,8 +293,12 @@ const ApiRecipesIdIngredientsIngredientIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/profile': typeof ProfileRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
+  '/verify-email': typeof VerifyEmailRoute
   '/categories/$id': typeof CategoriesIdRoute
   '/meal-plan/shopping-list': typeof MealPlanShoppingListRoute
   '/products/$id': typeof ProductsIdRoute
@@ -313,8 +341,12 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/profile': typeof ProfileRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
+  '/verify-email': typeof VerifyEmailRoute
   '/categories/$id': typeof CategoriesIdRoute
   '/meal-plan/shopping-list': typeof MealPlanShoppingListRoute
   '/products/$id': typeof ProductsIdRoute
@@ -358,8 +390,12 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/profile': typeof ProfileRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
+  '/verify-email': typeof VerifyEmailRoute
   '/categories/$id': typeof CategoriesIdRoute
   '/meal-plan/shopping-list': typeof MealPlanShoppingListRoute
   '/products/$id': typeof ProductsIdRoute
@@ -404,8 +440,12 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/about'
+    | '/forgot-password'
+    | '/profile'
+    | '/reset-password'
     | '/sign-in'
     | '/sign-up'
+    | '/verify-email'
     | '/categories/$id'
     | '/meal-plan/shopping-list'
     | '/products/$id'
@@ -448,8 +488,12 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/about'
+    | '/forgot-password'
+    | '/profile'
+    | '/reset-password'
     | '/sign-in'
     | '/sign-up'
+    | '/verify-email'
     | '/categories/$id'
     | '/meal-plan/shopping-list'
     | '/products/$id'
@@ -492,8 +536,12 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/about'
+    | '/forgot-password'
+    | '/profile'
+    | '/reset-password'
     | '/sign-in'
     | '/sign-up'
+    | '/verify-email'
     | '/categories/$id'
     | '/meal-plan/shopping-list'
     | '/products/$id'
@@ -537,8 +585,12 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
+  ProfileRoute: typeof ProfileRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   SignInRoute: typeof SignInRoute
   SignUpRoute: typeof SignUpRoute
+  VerifyEmailRoute: typeof VerifyEmailRoute
   CategoriesIdRoute: typeof CategoriesIdRoute
   MealPlanShoppingListRoute: typeof MealPlanShoppingListRoute
   ProductsIdRoute: typeof ProductsIdRoute
@@ -579,6 +631,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/verify-email': {
+      id: '/verify-email'
+      path: '/verify-email'
+      fullPath: '/verify-email'
+      preLoaderRoute: typeof VerifyEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sign-up': {
       id: '/sign-up'
       path: '/sign-up'
@@ -591,6 +650,27 @@ declare module '@tanstack/react-router' {
       path: '/sign-in'
       fullPath: '/sign-in'
       preLoaderRoute: typeof SignInRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/about': {
@@ -894,8 +974,12 @@ const ApiRecipesIdRouteWithChildren = ApiRecipesIdRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
+  ForgotPasswordRoute: ForgotPasswordRoute,
+  ProfileRoute: ProfileRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   SignInRoute: SignInRoute,
   SignUpRoute: SignUpRoute,
+  VerifyEmailRoute: VerifyEmailRoute,
   CategoriesIdRoute: CategoriesIdRoute,
   MealPlanShoppingListRoute: MealPlanShoppingListRoute,
   ProductsIdRoute: ProductsIdRoute,

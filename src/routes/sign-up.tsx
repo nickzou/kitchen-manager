@@ -32,7 +32,7 @@ function SignUp() {
 			return;
 		}
 
-		navigate({ to: "/" });
+		navigate({ to: "/verify-email", search: { email } });
 	}
 
 	return (
