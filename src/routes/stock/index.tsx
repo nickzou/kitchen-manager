@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Minus, Pencil, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { type FormEvent, useState } from "react";
 import { Accordion } from "#src/components/Accordion";
 import { Combobox } from "#src/components/Combobox";
@@ -9,6 +9,8 @@ import { Modal } from "#src/components/Modal";
 import { NumberInput } from "#src/components/NumberInput";
 import { Page } from "#src/components/Page";
 import { SearchInput } from "#src/components/SearchInput";
+import { StockProductContent } from "#src/components/stock/StockProductContent";
+import { StockProductTrigger } from "#src/components/stock/StockProductTrigger";
 import { authClient } from "#src/lib/auth-client";
 import { useCategories } from "#src/lib/hooks/use-categories";
 import { useProducts } from "#src/lib/hooks/use-products";
@@ -92,11 +94,6 @@ function StockPage() {
 	function getCategoryName(categoryId: string | null) {
 		if (!categoryId) return null;
 		return categories?.find((c) => c.id === categoryId)?.name ?? null;
-	}
-
-	function getStoreName(sid: string | null) {
-		if (!sid) return null;
-		return stores?.find((s) => s.id === sid)?.name ?? null;
 	}
 
 	// Group stock entries by product
@@ -232,123 +229,33 @@ function StockPage() {
 								...item,
 								key: item.product.id,
 							}))}
-							renderTrigger={(item) => {
-								const unit = getUnitAbbr(item.product.quantityUnitId);
-								const isLow =
-									Number.parseFloat(item.product.minStockAmount) > 0 &&
-									item.totalStock <
-										Number.parseFloat(item.product.minStockAmount);
-								const categoryName = getCategoryName(
-									item.product.categoryId,
-								);
-
-								return (
-									<>
-										<span className="flex-1 text-sm font-medium text-(--sea-ink)">
-											{item.product.name}
-											{categoryName && (
-												<span className="ml-2 rounded-full bg-[rgba(79,184,178,0.14)] px-2 py-0.5 text-xs font-medium text-(--lagoon-deep)">
-													{categoryName}
-												</span>
-											)}
-										</span>
-										<span
-											className={cn(
-												"text-sm font-semibold",
-												isLow
-													? "text-red-600 dark:text-red-400"
-													: "text-(--sea-ink)",
-											)}
-										>
-											{item.totalStock}
-											{unit ? ` ${unit}` : ""}
-											{isLow && " ⚠"}
-										</span>
-									</>
-								);
-							}}
-							renderContent={(item) => {
-								const unit = getUnitAbbr(item.product.quantityUnitId);
-
-								if (item.entries.length === 0) {
-									return (
-										<p className="px-3 py-2 text-xs text-(--sea-ink-soft)">
-											No stock entries
-										</p>
-									);
-								}
-
-								return (
-									<div className="flex flex-col gap-1">
-										{item.entries.map((entry) => (
-											<div
-												key={entry.id}
-												className="flex flex-wrap items-center gap-3 rounded-lg bg-(--surface) px-3 py-2 text-xs text-(--sea-ink-soft)"
-											>
-												<span className="font-medium text-(--sea-ink)">
-													{entry.quantity}
-													{unit ? ` ${unit}` : ""}
-												</span>
-												{entry.expirationDate && (
-													<span>
-														Exp:{" "}
-														{new Date(
-															entry.expirationDate,
-														).toLocaleDateString()}
-													</span>
-												)}
-												{entry.purchaseDate && (
-													<span>
-														Purchased:{" "}
-														{new Date(
-															entry.purchaseDate,
-														).toLocaleDateString()}
-													</span>
-												)}
-												{entry.price && <span>${entry.price}</span>}
-												{getStoreName(entry.storeId) && (
-													<span>{getStoreName(entry.storeId)}</span>
-												)}
-												<div className="ml-auto flex items-center gap-1.5">
-													<NumberInput
-														placeholder="Qty"
-														step="any"
-														min="0.01"
-														max={entry.quantity}
-														value={consumeAmounts[entry.id] ?? "1"}
-														onChange={(e) =>
-															setConsumeAmounts((prev) => ({
-																...prev,
-																[entry.id]: e.target.value,
-															}))
-														}
-														className="h-7 w-20 rounded border bg-white px-2 text-xs dark:bg-(--surface)"
-													/>
-													<button
-														type="button"
-														onClick={() => handleConsume(entry.id)}
-														disabled={
-															consumeStock.isPending ||
-															!(consumeAmounts[entry.id] ?? "1")
-														}
-														className="flex h-7 items-center gap-1 rounded-full bg-amber-600 px-2.5 text-xs font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
-													>
-														<Minus size={12} />
-														Use
-													</button>
-													<button
-														type="button"
-														onClick={() => setEditingEntry(entry)}
-														className="flex h-7 items-center gap-1 rounded-full border border-(--line) px-2.5 text-xs font-semibold text-(--sea-ink-soft) transition hover:bg-(--line)"
-													>
-														<Pencil size={12} />
-													</button>
-												</div>
-											</div>
-										))}
-									</div>
-								);
-							}}
+							renderTrigger={(item) => (
+								<StockProductTrigger
+									product={item.product}
+									totalStock={item.totalStock}
+									unitAbbr={getUnitAbbr(item.product.quantityUnitId)}
+									categoryName={getCategoryName(item.product.categoryId)}
+								/>
+							)}
+							renderContent={(item) => (
+								<StockProductContent
+									entries={item.entries}
+									unitAbbr={getUnitAbbr(item.product.quantityUnitId)}
+									consumeAmounts={consumeAmounts}
+									onConsumeAmountChange={(entryId, value) =>
+										setConsumeAmounts((prev) => ({
+											...prev,
+											[entryId]: value,
+										}))
+									}
+									onConsume={handleConsume}
+									consumePending={consumeStock.isPending}
+									onEdit={setEditingEntry}
+									storeNames={Object.fromEntries(
+										(stores ?? []).map((s) => [s.id, s.name]),
+									)}
+								/>
+							)}
 						/>
 					</div>
 				)}
