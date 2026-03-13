@@ -38,6 +38,7 @@ import { Route as ApiProductsIndexRouteImport } from './routes/api/products/inde
 import { Route as ApiMealSlotsIndexRouteImport } from './routes/api/meal-slots/index'
 import { Route as ApiMealPlanEntriesIndexRouteImport } from './routes/api/meal-plan-entries/index'
 import { Route as ApiCategoriesIndexRouteImport } from './routes/api/categories/index'
+import { Route as ApiApiKeysIndexRouteImport } from './routes/api/api-keys/index'
 import { Route as ApiUploadsFilenameRouteImport } from './routes/api/uploads/$filename'
 import { Route as ApiUnitConversionsIdRouteImport } from './routes/api/unit-conversions/$id'
 import { Route as ApiStockLogsIdRouteImport } from './routes/api/stock-logs/$id'
@@ -53,6 +54,7 @@ import { Route as ApiMealPlanEntriesCookRouteImport } from './routes/api/meal-pl
 import { Route as ApiMealPlanEntriesIdRouteImport } from './routes/api/meal-plan-entries/$id'
 import { Route as ApiCategoriesIdRouteImport } from './routes/api/categories/$id'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as ApiApiKeysIdRouteImport } from './routes/api/api-keys/$id'
 import { Route as ApiRecipesIdIngredientsIndexRouteImport } from './routes/api/recipes/$id/ingredients/index'
 import { Route as ApiRecipesIdIngredientsIngredientIdRouteImport } from './routes/api/recipes/$id/ingredients/$ingredientId'
 
@@ -201,6 +203,11 @@ const ApiCategoriesIndexRoute = ApiCategoriesIndexRouteImport.update({
   path: '/api/categories/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiApiKeysIndexRoute = ApiApiKeysIndexRouteImport.update({
+  id: '/api/api-keys/',
+  path: '/api/api-keys/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiUploadsFilenameRoute = ApiUploadsFilenameRouteImport.update({
   id: '/api/uploads/$filename',
   path: '/api/uploads/$filename',
@@ -277,6 +284,11 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiApiKeysIdRoute = ApiApiKeysIdRouteImport.update({
+  id: '/api/api-keys/$id',
+  path: '/api/api-keys/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiRecipesIdIngredientsIndexRoute =
   ApiRecipesIdIngredientsIndexRouteImport.update({
     id: '/ingredients/',
@@ -310,6 +322,7 @@ export interface FileRoutesByFullPath {
   '/quantity-units/': typeof QuantityUnitsIndexRoute
   '/recipes/': typeof RecipesIndexRoute
   '/stock/': typeof StockIndexRoute
+  '/api/api-keys/$id': typeof ApiApiKeysIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/categories/$id': typeof ApiCategoriesIdRoute
   '/api/meal-plan-entries/$id': typeof ApiMealPlanEntriesIdRoute
@@ -325,6 +338,7 @@ export interface FileRoutesByFullPath {
   '/api/stock-logs/$id': typeof ApiStockLogsIdRoute
   '/api/unit-conversions/$id': typeof ApiUnitConversionsIdRoute
   '/api/uploads/$filename': typeof ApiUploadsFilenameRoute
+  '/api/api-keys/': typeof ApiApiKeysIndexRoute
   '/api/categories/': typeof ApiCategoriesIndexRoute
   '/api/meal-plan-entries/': typeof ApiMealPlanEntriesIndexRoute
   '/api/meal-slots/': typeof ApiMealSlotsIndexRoute
@@ -358,6 +372,7 @@ export interface FileRoutesByTo {
   '/quantity-units': typeof QuantityUnitsIndexRoute
   '/recipes': typeof RecipesIndexRoute
   '/stock': typeof StockIndexRoute
+  '/api/api-keys/$id': typeof ApiApiKeysIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/categories/$id': typeof ApiCategoriesIdRoute
   '/api/meal-plan-entries/$id': typeof ApiMealPlanEntriesIdRoute
@@ -373,6 +388,7 @@ export interface FileRoutesByTo {
   '/api/stock-logs/$id': typeof ApiStockLogsIdRoute
   '/api/unit-conversions/$id': typeof ApiUnitConversionsIdRoute
   '/api/uploads/$filename': typeof ApiUploadsFilenameRoute
+  '/api/api-keys': typeof ApiApiKeysIndexRoute
   '/api/categories': typeof ApiCategoriesIndexRoute
   '/api/meal-plan-entries': typeof ApiMealPlanEntriesIndexRoute
   '/api/meal-slots': typeof ApiMealSlotsIndexRoute
@@ -407,6 +423,7 @@ export interface FileRoutesById {
   '/quantity-units/': typeof QuantityUnitsIndexRoute
   '/recipes/': typeof RecipesIndexRoute
   '/stock/': typeof StockIndexRoute
+  '/api/api-keys/$id': typeof ApiApiKeysIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/categories/$id': typeof ApiCategoriesIdRoute
   '/api/meal-plan-entries/$id': typeof ApiMealPlanEntriesIdRoute
@@ -422,6 +439,7 @@ export interface FileRoutesById {
   '/api/stock-logs/$id': typeof ApiStockLogsIdRoute
   '/api/unit-conversions/$id': typeof ApiUnitConversionsIdRoute
   '/api/uploads/$filename': typeof ApiUploadsFilenameRoute
+  '/api/api-keys/': typeof ApiApiKeysIndexRoute
   '/api/categories/': typeof ApiCategoriesIndexRoute
   '/api/meal-plan-entries/': typeof ApiMealPlanEntriesIndexRoute
   '/api/meal-slots/': typeof ApiMealSlotsIndexRoute
@@ -457,6 +475,7 @@ export interface FileRouteTypes {
     | '/quantity-units/'
     | '/recipes/'
     | '/stock/'
+    | '/api/api-keys/$id'
     | '/api/auth/$'
     | '/api/categories/$id'
     | '/api/meal-plan-entries/$id'
@@ -472,6 +491,7 @@ export interface FileRouteTypes {
     | '/api/stock-logs/$id'
     | '/api/unit-conversions/$id'
     | '/api/uploads/$filename'
+    | '/api/api-keys/'
     | '/api/categories/'
     | '/api/meal-plan-entries/'
     | '/api/meal-slots/'
@@ -505,6 +525,7 @@ export interface FileRouteTypes {
     | '/quantity-units'
     | '/recipes'
     | '/stock'
+    | '/api/api-keys/$id'
     | '/api/auth/$'
     | '/api/categories/$id'
     | '/api/meal-plan-entries/$id'
@@ -520,6 +541,7 @@ export interface FileRouteTypes {
     | '/api/stock-logs/$id'
     | '/api/unit-conversions/$id'
     | '/api/uploads/$filename'
+    | '/api/api-keys'
     | '/api/categories'
     | '/api/meal-plan-entries'
     | '/api/meal-slots'
@@ -553,6 +575,7 @@ export interface FileRouteTypes {
     | '/quantity-units/'
     | '/recipes/'
     | '/stock/'
+    | '/api/api-keys/$id'
     | '/api/auth/$'
     | '/api/categories/$id'
     | '/api/meal-plan-entries/$id'
@@ -568,6 +591,7 @@ export interface FileRouteTypes {
     | '/api/stock-logs/$id'
     | '/api/unit-conversions/$id'
     | '/api/uploads/$filename'
+    | '/api/api-keys/'
     | '/api/categories/'
     | '/api/meal-plan-entries/'
     | '/api/meal-slots/'
@@ -602,6 +626,7 @@ export interface RootRouteChildren {
   QuantityUnitsIndexRoute: typeof QuantityUnitsIndexRoute
   RecipesIndexRoute: typeof RecipesIndexRoute
   StockIndexRoute: typeof StockIndexRoute
+  ApiApiKeysIdRoute: typeof ApiApiKeysIdRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiCategoriesIdRoute: typeof ApiCategoriesIdRoute
   ApiMealPlanEntriesIdRoute: typeof ApiMealPlanEntriesIdRoute
@@ -617,6 +642,7 @@ export interface RootRouteChildren {
   ApiStockLogsIdRoute: typeof ApiStockLogsIdRoute
   ApiUnitConversionsIdRoute: typeof ApiUnitConversionsIdRoute
   ApiUploadsFilenameRoute: typeof ApiUploadsFilenameRoute
+  ApiApiKeysIndexRoute: typeof ApiApiKeysIndexRoute
   ApiCategoriesIndexRoute: typeof ApiCategoriesIndexRoute
   ApiMealPlanEntriesIndexRoute: typeof ApiMealPlanEntriesIndexRoute
   ApiMealSlotsIndexRoute: typeof ApiMealSlotsIndexRoute
@@ -834,6 +860,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiCategoriesIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/api-keys/': {
+      id: '/api/api-keys/'
+      path: '/api/api-keys'
+      fullPath: '/api/api-keys/'
+      preLoaderRoute: typeof ApiApiKeysIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/uploads/$filename': {
       id: '/api/uploads/$filename'
       path: '/api/uploads/$filename'
@@ -939,6 +972,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/api-keys/$id': {
+      id: '/api/api-keys/$id'
+      path: '/api/api-keys/$id'
+      fullPath: '/api/api-keys/$id'
+      preLoaderRoute: typeof ApiApiKeysIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/recipes/$id/ingredients/': {
       id: '/api/recipes/$id/ingredients/'
       path: '/ingredients'
@@ -991,6 +1031,7 @@ const rootRouteChildren: RootRouteChildren = {
   QuantityUnitsIndexRoute: QuantityUnitsIndexRoute,
   RecipesIndexRoute: RecipesIndexRoute,
   StockIndexRoute: StockIndexRoute,
+  ApiApiKeysIdRoute: ApiApiKeysIdRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiCategoriesIdRoute: ApiCategoriesIdRoute,
   ApiMealPlanEntriesIdRoute: ApiMealPlanEntriesIdRoute,
@@ -1007,6 +1048,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiStockLogsIdRoute: ApiStockLogsIdRoute,
   ApiUnitConversionsIdRoute: ApiUnitConversionsIdRoute,
   ApiUploadsFilenameRoute: ApiUploadsFilenameRoute,
+  ApiApiKeysIndexRoute: ApiApiKeysIndexRoute,
   ApiCategoriesIndexRoute: ApiCategoriesIndexRoute,
   ApiMealPlanEntriesIndexRoute: ApiMealPlanEntriesIndexRoute,
   ApiMealSlotsIndexRoute: ApiMealSlotsIndexRoute,

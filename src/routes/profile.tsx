@@ -1,10 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { type FormEvent, useEffect, useState } from "react";
+import { type FormEvent, useCallback, useEffect, useState } from "react";
 import { ImageInput } from "#src/components/ImageInput";
 import { Island } from "#src/components/Island";
 import { Page } from "#src/components/Page";
 import { PasswordInput } from "#src/components/PasswordInput";
 import { authClient } from "#src/lib/auth-client";
+
+interface ApiKeyEntry {
+	id: string;
+	name: string;
+	keyPrefix: string;
+	lastUsedAt: string | null;
+	createdAt: string;
+}
 
 export const Route = createFileRoute("/profile")({ component: Profile });
 
@@ -23,6 +31,22 @@ function Profile() {
 	const [passwordSaved, setPasswordSaved] = useState(false);
 	const [passwordLoading, setPasswordLoading] = useState(false);
 	const [passwordError, setPasswordError] = useState("");
+
+	const [apiKeys, setApiKeys] = useState<ApiKeyEntry[]>([]);
+	const [newKeyName, setNewKeyName] = useState("");
+	const [generatedKey, setGeneratedKey] = useState("");
+	const [apiKeyLoading, setApiKeyLoading] = useState(false);
+	const [apiKeyError, setApiKeyError] = useState("");
+	const [keyCopied, setKeyCopied] = useState(false);
+
+	const fetchApiKeys = useCallback(async () => {
+		const res = await fetch("/api/api-keys");
+		if (res.ok) setApiKeys(await res.json());
+	}, []);
+
+	useEffect(() => {
+		fetchApiKeys();
+	}, [fetchApiKeys]);
 
 	useEffect(() => {
 		if (session?.user) {
@@ -83,9 +107,46 @@ function Profile() {
 		setPasswordLoading(false);
 	}
 
+	async function handleGenerateKey(e: FormEvent) {
+		e.preventDefault();
+		setApiKeyError("");
+		setGeneratedKey("");
+		setApiKeyLoading(true);
+
+		const res = await fetch("/api/api-keys", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ name: newKeyName }),
+		});
+
+		if (!res.ok) {
+			const data = await res.json();
+			setApiKeyError(data.error ?? "Failed to generate key");
+			setApiKeyLoading(false);
+			return;
+		}
+
+		const data = await res.json();
+		setGeneratedKey(data.key);
+		setNewKeyName("");
+		setApiKeyLoading(false);
+		fetchApiKeys();
+	}
+
+	async function handleDeleteKey(id: string) {
+		const res = await fetch(`/api/api-keys/${id}`, { method: "DELETE" });
+		if (res.ok) fetchApiKeys();
+	}
+
+	async function handleCopyKey() {
+		await navigator.clipboard.writeText(generatedKey);
+		setKeyCopied(true);
+		setTimeout(() => setKeyCopied(false), 2000);
+	}
+
 	return (
 		<Page as="main" className="py-12">
-			<div className="mx-auto flex max-w-md flex-col gap-6">
+			<div className="mx-auto grid gap-6 lg:grid-cols-2">
 				<Island as="section" className="animate-rise-in rounded-2xl p-6 sm:p-8">
 					<p className="mb-2 text-[0.69rem] font-bold uppercase tracking-[0.16em] text-(--kicker)">
 						Account
@@ -185,6 +246,92 @@ function Profile() {
 							className="mt-2 h-10 rounded-full bg-(--lagoon) text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
 						>
 							{passwordLoading ? "Changing\u2026" : "Change password"}
+						</button>
+					</form>
+				</Island>
+				<Island
+					as="section"
+					className="animate-rise-in rounded-2xl p-6 sm:p-8 lg:col-span-2"
+				>
+					<h2 className="font-display mb-6 text-xl font-bold text-(--sea-ink)">
+						API Keys
+					</h2>
+
+					{apiKeys.length > 0 && (
+						<ul className="mb-6 flex flex-col gap-3">
+							{apiKeys.map((k) => (
+								<li
+									key={k.id}
+									className="flex items-center justify-between gap-2 rounded-lg border border-(--line) bg-(--surface) px-3 py-2"
+								>
+									<div className="min-w-0">
+										<p className="truncate text-sm font-medium text-(--sea-ink)">
+											{k.name}
+										</p>
+										<p className="text-xs text-(--sea-ink-soft)">
+											{k.keyPrefix}...
+											{k.lastUsedAt
+												? ` \u00b7 Last used ${new Date(k.lastUsedAt).toLocaleDateString()}`
+												: " \u00b7 Never used"}
+										</p>
+									</div>
+									<button
+										type="button"
+										onClick={() => handleDeleteKey(k.id)}
+										className="shrink-0 rounded-md px-2 py-1 text-xs font-medium text-red-600 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950"
+									>
+										Revoke
+									</button>
+								</li>
+							))}
+						</ul>
+					)}
+
+					{generatedKey && (
+						<div className="mb-6 rounded-lg border border-amber-300 bg-amber-50 p-3 dark:border-amber-700 dark:bg-amber-950">
+							<p className="mb-1 text-xs font-semibold text-amber-800 dark:text-amber-200">
+								Copy your key now — it won't be shown again
+							</p>
+							<div className="flex items-center gap-2">
+								<code className="min-w-0 flex-1 truncate text-xs text-amber-900 dark:text-amber-100">
+									{generatedKey}
+								</code>
+								<button
+									type="button"
+									onClick={handleCopyKey}
+									className="shrink-0 rounded-md bg-amber-200 px-2 py-1 text-xs font-medium text-amber-900 transition hover:bg-amber-300 dark:bg-amber-800 dark:text-amber-100 dark:hover:bg-amber-700"
+								>
+									{keyCopied ? "Copied!" : "Copy"}
+								</button>
+							</div>
+						</div>
+					)}
+
+					<form onSubmit={handleGenerateKey} className="flex flex-col gap-4">
+						<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
+							Key name
+							<input
+								type="text"
+								required
+								placeholder="e.g. My Script"
+								value={newKeyName}
+								onChange={(e) => setNewKeyName(e.target.value)}
+								className="h-10 rounded-lg border border-(--line) bg-(--surface) px-3 text-sm text-(--sea-ink) outline-none focus:border-(--lagoon)"
+							/>
+						</label>
+
+						{apiKeyError && (
+							<p className="text-sm text-red-600 dark:text-red-400">
+								{apiKeyError}
+							</p>
+						)}
+
+						<button
+							type="submit"
+							disabled={apiKeyLoading}
+							className="mt-2 h-10 rounded-full bg-(--lagoon) text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
+						>
+							{apiKeyLoading ? "Generating\u2026" : "Generate new key"}
 						</button>
 					</form>
 				</Island>

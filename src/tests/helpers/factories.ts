@@ -130,6 +130,20 @@ export function makeRecipe(overrides?: Record<string, unknown>) {
 	};
 }
 
+export function makeApiKey(overrides?: Record<string, unknown>) {
+	return {
+		id: "api-key-1",
+		name: "My Script",
+		keyPrefix: "km_a1b2c3d",
+		keyHash: "abc123hash",
+		userId: "user-1",
+		lastUsedAt: null,
+		createdAt: new Date("2025-01-01"),
+		updatedAt: new Date("2025-01-01"),
+		...overrides,
+	};
+}
+
 export function makeRecipeIngredient(overrides?: Record<string, unknown>) {
 	return {
 		id: "recipe-ingredient-1",

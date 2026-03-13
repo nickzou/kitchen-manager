@@ -415,3 +415,35 @@ export const mealPlanEntryRelations = relations(mealPlanEntry, ({ one }) => ({
 		references: [recipe.id],
 	}),
 }));
+
+export const apiKey = pgTable(
+	"api_key",
+	{
+		id: text("id")
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		name: text("name").notNull(),
+		keyHash: text("key_hash").notNull(),
+		keyPrefix: text("key_prefix").notNull(),
+		userId: text("user_id")
+			.notNull()
+			.references(() => user.id, { onDelete: "cascade" }),
+		lastUsedAt: timestamp("last_used_at"),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+		updatedAt: timestamp("updated_at")
+			.defaultNow()
+			.$onUpdate(() => new Date())
+			.notNull(),
+	},
+	(table) => [
+		index("apiKey_keyHash_idx").on(table.keyHash),
+		index("apiKey_userId_idx").on(table.userId),
+	],
+);
+
+export const apiKeyRelations = relations(apiKey, ({ one }) => ({
+	user: one(user, {
+		fields: [apiKey.userId],
+		references: [user.id],
+	}),
+}));
