@@ -3,6 +3,7 @@ import { and, eq, gte, lte } from "drizzle-orm";
 import { db } from "#src/db";
 import { mealPlanEntry, recipe } from "#src/db/schema";
 import { getAuthSession } from "#src/lib/auth-session";
+import { dispatchWebhook } from "#src/lib/webhooks";
 
 function json(data: unknown, init?: { status?: number }) {
 	return new Response(JSON.stringify(data), {
@@ -86,6 +87,7 @@ export const Route = createFileRoute("/api/meal-plan-entries/")({
 					})
 					.returning();
 
+				dispatchWebhook(session.user.id, "meal_plan.entry.created", created);
 				return json(created, { status: 201 });
 			},
 		},
