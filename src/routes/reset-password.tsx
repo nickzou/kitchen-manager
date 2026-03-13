@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { type FormEvent, useState } from "react";
 import { Island } from "#src/components/Island";
 import { Page } from "#src/components/Page";
+import { PasswordInput } from "#src/components/PasswordInput";
 import { authClient } from "#src/lib/auth-client";
 
 export const Route = createFileRoute("/reset-password")({
@@ -53,29 +54,21 @@ function ResetPassword() {
 				</h1>
 
 				<form onSubmit={handleSubmit} className="flex flex-col gap-4">
-					<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
-						New password
-						<input
-							type="password"
-							required
-							minLength={8}
-							value={password}
-							onChange={(e) => setPassword(e.target.value)}
-							className="h-10 rounded-lg border border-(--line) bg-(--surface) px-3 text-sm text-(--sea-ink) outline-none focus:border-(--lagoon)"
-						/>
-					</label>
+					<PasswordInput
+						label="New password"
+						required
+						minLength={8}
+						value={password}
+						onChange={(e) => setPassword(e.target.value)}
+					/>
 
-					<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
-						Confirm password
-						<input
-							type="password"
-							required
-							minLength={8}
-							value={confirmPassword}
-							onChange={(e) => setConfirmPassword(e.target.value)}
-							className="h-10 rounded-lg border border-(--line) bg-(--surface) px-3 text-sm text-(--sea-ink) outline-none focus:border-(--lagoon)"
-						/>
-					</label>
+					<PasswordInput
+						label="Confirm password"
+						required
+						minLength={8}
+						value={confirmPassword}
+						onChange={(e) => setConfirmPassword(e.target.value)}
+					/>
 
 					{error && (
 						<p className="text-sm text-red-600 dark:text-red-400">{error}</p>
