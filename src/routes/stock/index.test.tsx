@@ -222,7 +222,9 @@ describe("StockPage", () => {
 		it("renders the stock page title", () => {
 			renderPage();
 
-			expect(screen.getByText("Stock")).toBeDefined();
+			expect(
+				screen.getByRole("heading", { name: "Stock", level: 1 }),
+			).toBeDefined();
 			expect(screen.getByText("Inventory")).toBeDefined();
 		});
 
@@ -246,7 +248,8 @@ describe("StockPage", () => {
 		it("shows recent activity section", () => {
 			renderPage();
 
-			expect(screen.getByText("Recent Activity")).toBeDefined();
+			fireEvent.click(screen.getByRole("button", { name: "Recent Activity" }));
+
 			expect(screen.getByText("add")).toBeDefined();
 		});
 	});

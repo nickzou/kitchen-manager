@@ -51,6 +51,7 @@ function StockPage() {
 		{},
 	);
 	const [editingEntry, setEditingEntry] = useState<StockEntry | null>(null);
+	const [activeTab, setActiveTab] = useState<"stock" | "activity">("stock");
 
 	if (sessionLoading) return null;
 	if (!session) {
@@ -202,69 +203,95 @@ function StockPage() {
 					</button>
 				</form>
 
-				<div className="mb-4">
-					<SearchInput
-						placeholder="Search..."
-						value={search}
-						onChange={(e) => setSearch(e.target.value)}
-					/>
-				</div>
+				{/* Tab bar */}
+				<nav className="mb-6 flex gap-4 text-sm font-semibold">
+					<button
+						type="button"
+						onClick={() => setActiveTab("stock")}
+						className={cn(
+							"relative no-underline after:content-[''] after:absolute after:left-0 after:-bottom-2 after:h-0.5 after:w-full after:origin-left after:scale-x-0 after:bg-[linear-gradient(90deg,var(--lagoon),#7ed3bf)] after:transition-transform after:duration-[170ms] hover:text-(--sea-ink) hover:after:scale-x-100",
+							activeTab === "stock"
+								? "text-(--sea-ink) after:scale-x-100"
+								: "text-(--sea-ink-soft)",
+						)}
+					>
+						Stock
+					</button>
+					<button
+						type="button"
+						onClick={() => setActiveTab("activity")}
+						className={cn(
+							"relative no-underline after:content-[''] after:absolute after:left-0 after:-bottom-2 after:h-0.5 after:w-full after:origin-left after:scale-x-0 after:bg-[linear-gradient(90deg,var(--lagoon),#7ed3bf)] after:transition-transform after:duration-[170ms] hover:text-(--sea-ink) hover:after:scale-x-100",
+							activeTab === "activity"
+								? "text-(--sea-ink) after:scale-x-100"
+								: "text-(--sea-ink-soft)",
+						)}
+					>
+						Recent Activity
+					</button>
+				</nav>
 
-				{/* Product stock list */}
-				{entriesLoading ? (
-					<p className="text-sm text-(--sea-ink-soft)">Loading…</p>
-				) : !productStockList.length ? (
-					<p className="text-sm text-(--sea-ink-soft)">
-						No products yet. Add stock above!
-					</p>
-				) : !filteredProductStockList.length ? (
-					<p className="text-sm text-(--sea-ink-soft)">
-						No products match your search.
-					</p>
-				) : (
-					<div className="mb-8">
-						<Accordion
-							items={filteredProductStockList.map((item) => ({
-								...item,
-								key: item.product.id,
-							}))}
-							renderTrigger={(item) => (
-								<StockProductTrigger
-									product={item.product}
-									totalStock={item.totalStock}
-									unitAbbr={getUnitAbbr(item.product.quantityUnitId)}
-									categoryName={getCategoryName(item.product.categoryId)}
-								/>
-							)}
-							renderContent={(item) => (
-								<StockProductContent
-									entries={item.entries}
-									unitAbbr={getUnitAbbr(item.product.quantityUnitId)}
-									consumeAmounts={consumeAmounts}
-									onConsumeAmountChange={(entryId, value) =>
-										setConsumeAmounts((prev) => ({
-											...prev,
-											[entryId]: value,
-										}))
-									}
-									onConsume={handleConsume}
-									consumePending={consumeStock.isPending}
-									onEdit={setEditingEntry}
-									storeNames={Object.fromEntries(
-										(stores ?? []).map((s) => [s.id, s.name]),
-									)}
-								/>
-							)}
-						/>
-					</div>
+				{activeTab === "stock" && (
+					<>
+						<div className="mb-4">
+							<SearchInput
+								placeholder="Search..."
+								value={search}
+								onChange={(e) => setSearch(e.target.value)}
+							/>
+						</div>
+
+						{/* Product stock list */}
+						{entriesLoading ? (
+							<p className="text-sm text-(--sea-ink-soft)">Loading…</p>
+						) : !productStockList.length ? (
+							<p className="text-sm text-(--sea-ink-soft)">
+								No products yet. Add stock above!
+							</p>
+						) : !filteredProductStockList.length ? (
+							<p className="text-sm text-(--sea-ink-soft)">
+								No products match your search.
+							</p>
+						) : (
+							<Accordion
+								items={filteredProductStockList.map((item) => ({
+									...item,
+									key: item.product.id,
+								}))}
+								renderTrigger={(item) => (
+									<StockProductTrigger
+										product={item.product}
+										totalStock={item.totalStock}
+										unitAbbr={getUnitAbbr(item.product.quantityUnitId)}
+										categoryName={getCategoryName(item.product.categoryId)}
+									/>
+								)}
+								renderContent={(item) => (
+									<StockProductContent
+										entries={item.entries}
+										unitAbbr={getUnitAbbr(item.product.quantityUnitId)}
+										consumeAmounts={consumeAmounts}
+										onConsumeAmountChange={(entryId, value) =>
+											setConsumeAmounts((prev) => ({
+												...prev,
+												[entryId]: value,
+											}))
+										}
+										onConsume={handleConsume}
+										consumePending={consumeStock.isPending}
+										onEdit={setEditingEntry}
+										storeNames={Object.fromEntries(
+											(stores ?? []).map((s) => [s.id, s.name]),
+										)}
+									/>
+								)}
+							/>
+						)}
+					</>
 				)}
 
-				{/* Recent activity */}
-				{recentLogs.length > 0 && (
-					<div className="border-t border-(--line) pt-6">
-						<h2 className="mb-4 text-lg font-bold text-(--sea-ink)">
-							Recent Activity
-						</h2>
+				{activeTab === "activity" &&
+					(recentLogs.length > 0 ? (
 						<div className="flex flex-col gap-1">
 							{recentLogs.map((log) => (
 								<div
@@ -297,8 +324,9 @@ function StockPage() {
 								</div>
 							))}
 						</div>
-					</div>
-				)}
+					) : (
+						<p className="text-sm text-(--sea-ink-soft)">No recent activity.</p>
+					))}
 			</Island>
 			{editingEntry && (
 				<EditStockModal
