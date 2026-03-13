@@ -304,6 +304,10 @@ function StockPage() {
 				<EditStockModal
 					entry={editingEntry}
 					stores={stores ?? []}
+					unitAbbr={getUnitAbbr(
+						products?.find((p) => p.id === editingEntry.productId)
+							?.quantityUnitId ?? null,
+					)}
 					onClose={() => setEditingEntry(null)}
 				/>
 			)}
@@ -314,18 +318,22 @@ function StockPage() {
 function EditStockModal({
 	entry,
 	stores,
+	unitAbbr,
 	onClose,
 }: {
 	entry: StockEntry;
 	stores: { id: string; name: string }[];
+	unitAbbr: string;
 	onClose: () => void;
 }) {
 	const updateStockEntry = useUpdateStockEntry(entry.id);
 	const [quantity, setQuantity] = useState(entry.quantity);
 	const [expirationDate, setExpirationDate] = useState(
-		entry.expirationDate ?? "",
+		entry.expirationDate?.slice(0, 10) ?? "",
 	);
-	const [purchaseDate, setPurchaseDate] = useState(entry.purchaseDate ?? "");
+	const [purchaseDate, setPurchaseDate] = useState(
+		entry.purchaseDate?.slice(0, 10) ?? "",
+	);
 	const [price, setPrice] = useState(entry.price ?? "");
 	const [storeId, setStoreId] = useState(entry.storeId ?? "");
 
@@ -350,13 +358,19 @@ function EditStockModal({
 			<form onSubmit={handleSubmit} className="flex flex-col gap-4">
 				<label className="flex flex-col gap-1 text-sm font-medium text-(--sea-ink)">
 					Quantity
-					<NumberInput
-						required
-						step="any"
-						min="0.01"
-						value={quantity}
-						onChange={(e) => setQuantity(e.target.value)}
-					/>
+					<div className="flex items-center gap-2">
+						<NumberInput
+							required
+							step="any"
+							min="0.01"
+							value={quantity}
+							onChange={(e) => setQuantity(e.target.value)}
+							className="flex-1"
+						/>
+						{unitAbbr && (
+							<span className="text-xs text-(--sea-ink-soft)">{unitAbbr}</span>
+						)}
+					</div>
 				</label>
 				<label className="flex flex-col gap-1 text-sm font-medium text-(--sea-ink)">
 					Expiration Date
