@@ -64,6 +64,13 @@
       "when": 1773271308576,
       "tag": "0008_thin_moondragon",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1773373460291,
+      "tag": "0009_tricky_zzzax",
+      "breakpoints": true
     }
   ]
 }
