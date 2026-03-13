@@ -3,6 +3,7 @@ import { type FormEvent, useState } from "react";
 import { Island } from "#src/components/Island";
 import { MobileLink } from "#src/components/MobileLink";
 import { Page } from "#src/components/Page";
+import { PasswordInput } from "#src/components/PasswordInput";
 import { authClient } from "#src/lib/auth-client";
 
 export const Route = createFileRoute("/sign-in")({ component: SignIn });
@@ -58,16 +59,12 @@ function SignIn() {
 						/>
 					</label>
 
-					<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
-						Password
-						<input
-							type="password"
-							required
-							value={password}
-							onChange={(e) => setPassword(e.target.value)}
-							className="h-10 rounded-lg border border-(--line) bg-(--surface) px-3 text-sm text-(--sea-ink) outline-none focus:border-(--lagoon)"
-						/>
-					</label>
+					<PasswordInput
+						label="Password"
+						required
+						value={password}
+						onChange={(e) => setPassword(e.target.value)}
+					/>
 
 					<div className="text-right">
 						<MobileLink
