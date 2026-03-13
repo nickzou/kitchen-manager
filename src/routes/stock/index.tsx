@@ -18,6 +18,7 @@ import {
 	useStockEntries,
 } from "#src/lib/hooks/use-stock-entries";
 import { useStockLogs } from "#src/lib/hooks/use-stock-logs";
+import { useStores } from "#src/lib/hooks/use-stores";
 import { cn } from "#src/lib/utils";
 
 export const Route = createFileRoute("/stock/")({ component: StockPage });
@@ -28,6 +29,7 @@ function StockPage() {
 
 	const { data: products } = useProducts();
 	const { data: categories } = useCategories();
+	const { data: stores } = useStores();
 	const { data: quantityUnits } = useQuantityUnits();
 	const { data: stockEntries, isLoading: entriesLoading } = useStockEntries();
 	const { data: stockLogs } = useStockLogs();
@@ -38,6 +40,7 @@ function StockPage() {
 	const [quantity, setQuantity] = useState("");
 	const [expirationDate, setExpirationDate] = useState("");
 	const [price, setPrice] = useState("");
+	const [storeId, setStoreId] = useState("");
 	const [expandedProduct, setExpandedProduct] = useState<string | null>(null);
 	const [search, setSearch] = useState("");
 	const [consumeAmounts, setConsumeAmounts] = useState<Record<string, string>>(
@@ -58,10 +61,12 @@ function StockPage() {
 			quantity,
 			expirationDate: expirationDate || undefined,
 			price: price || undefined,
+			storeId: storeId || undefined,
 		});
 		setQuantity("");
 		setExpirationDate("");
 		setPrice("");
+		setStoreId("");
 	}
 
 	async function handleConsume(stockEntryId: string) {
@@ -84,6 +89,11 @@ function StockPage() {
 	function getCategoryName(categoryId: string | null) {
 		if (!categoryId) return null;
 		return categories?.find((c) => c.id === categoryId)?.name ?? null;
+	}
+
+	function getStoreName(sid: string | null) {
+		if (!sid) return null;
+		return stores?.find((s) => s.id === sid)?.name ?? null;
 	}
 
 	// Group stock entries by product
@@ -172,6 +182,16 @@ function StockPage() {
 						value={price}
 						onChange={(e) => setPrice(e.target.value)}
 						className="w-28"
+					/>
+					<Combobox
+						value={storeId}
+						onChange={setStoreId}
+						options={(stores ?? []).map((s) => ({
+							value: s.id,
+							label: s.name,
+						}))}
+						placeholder="Store"
+						className="w-40"
 					/>
 					<button
 						type="submit"
@@ -283,6 +303,9 @@ function StockPage() {
 															</span>
 														)}
 														{entry.price && <span>${entry.price}</span>}
+														{getStoreName(entry.storeId) && (
+															<span>{getStoreName(entry.storeId)}</span>
+														)}
 														<div className="ml-auto flex items-center gap-1.5">
 															<NumberInput
 																placeholder="Qty"
