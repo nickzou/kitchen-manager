@@ -83,6 +83,17 @@ export function makeUnitConversion(overrides?: Record<string, unknown>) {
 	};
 }
 
+export function makeStore(overrides?: Record<string, unknown>) {
+	return {
+		id: "store-1",
+		name: "Whole Foods",
+		userId: "user-1",
+		createdAt: new Date("2025-01-01"),
+		updatedAt: new Date("2025-01-01"),
+		...overrides,
+	};
+}
+
 export function makeStockEntry(overrides?: Record<string, unknown>) {
 	return {
 		id: "stock-entry-1",
@@ -91,6 +102,7 @@ export function makeStockEntry(overrides?: Record<string, unknown>) {
 		expirationDate: null,
 		purchaseDate: null,
 		price: null,
+		storeId: null,
 		userId: "user-1",
 		createdAt: new Date("2025-01-01"),
 		updatedAt: new Date("2025-01-01"),

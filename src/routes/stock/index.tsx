@@ -1,12 +1,16 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ChevronDown, ChevronRight, Minus, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { type FormEvent, useState } from "react";
+import { Accordion } from "#src/components/Accordion";
 import { Combobox } from "#src/components/Combobox";
 import { DatePicker } from "#src/components/DatePicker";
 import { Island } from "#src/components/Island";
+import { Modal } from "#src/components/Modal";
 import { NumberInput } from "#src/components/NumberInput";
 import { Page } from "#src/components/Page";
 import { SearchInput } from "#src/components/SearchInput";
+import { StockProductContent } from "#src/components/stock/StockProductContent";
+import { StockProductTrigger } from "#src/components/stock/StockProductTrigger";
 import { authClient } from "#src/lib/auth-client";
 import { useCategories } from "#src/lib/hooks/use-categories";
 import { useProducts } from "#src/lib/hooks/use-products";
@@ -16,8 +20,10 @@ import {
 	useConsumeStock,
 	useCreateStockEntry,
 	useStockEntries,
+	useUpdateStockEntry,
 } from "#src/lib/hooks/use-stock-entries";
 import { useStockLogs } from "#src/lib/hooks/use-stock-logs";
+import { useStores } from "#src/lib/hooks/use-stores";
 import { cn } from "#src/lib/utils";
 
 export const Route = createFileRoute("/stock/")({ component: StockPage });
@@ -28,6 +34,7 @@ function StockPage() {
 
 	const { data: products } = useProducts();
 	const { data: categories } = useCategories();
+	const { data: stores } = useStores();
 	const { data: quantityUnits } = useQuantityUnits();
 	const { data: stockEntries, isLoading: entriesLoading } = useStockEntries();
 	const { data: stockLogs } = useStockLogs();
@@ -38,11 +45,13 @@ function StockPage() {
 	const [quantity, setQuantity] = useState("");
 	const [expirationDate, setExpirationDate] = useState("");
 	const [price, setPrice] = useState("");
-	const [expandedProduct, setExpandedProduct] = useState<string | null>(null);
+	const [storeId, setStoreId] = useState("");
 	const [search, setSearch] = useState("");
 	const [consumeAmounts, setConsumeAmounts] = useState<Record<string, string>>(
 		{},
 	);
+	const [editingEntry, setEditingEntry] = useState<StockEntry | null>(null);
+	const [activeTab, setActiveTab] = useState<"stock" | "activity">("stock");
 
 	if (sessionLoading) return null;
 	if (!session) {
@@ -58,17 +67,18 @@ function StockPage() {
 			quantity,
 			expirationDate: expirationDate || undefined,
 			price: price || undefined,
+			storeId: storeId || undefined,
 		});
 		setQuantity("");
 		setExpirationDate("");
 		setPrice("");
+		setStoreId("");
 	}
 
 	async function handleConsume(stockEntryId: string) {
 		const amount = consumeAmounts[stockEntryId] ?? "1";
 		if (!amount) return;
 		await consumeStock.mutateAsync({ stockEntryId, quantity: amount });
-		setConsumeAmounts((prev) => ({ ...prev, [stockEntryId]: "" }));
 	}
 
 	function getProductName(id: string) {
@@ -148,7 +158,7 @@ function StockPage() {
 						}))}
 						placeholder="Select product *"
 						required
-						className="flex-1 min-w-[160px]"
+						className="flex-1 min-w-40"
 					/>
 					<NumberInput
 						placeholder="Quantity *"
@@ -173,6 +183,16 @@ function StockPage() {
 						onChange={(e) => setPrice(e.target.value)}
 						className="w-28"
 					/>
+					<Combobox
+						value={storeId}
+						onChange={setStoreId}
+						options={(stores ?? []).map((s) => ({
+							value: s.id,
+							label: s.name,
+						}))}
+						placeholder="Store"
+						className="w-40"
+					/>
 					<button
 						type="submit"
 						disabled={createStockEntry.isPending}
@@ -183,162 +203,95 @@ function StockPage() {
 					</button>
 				</form>
 
-				<div className="mb-4">
-					<SearchInput
-						placeholder="Search..."
-						value={search}
-						onChange={(e) => setSearch(e.target.value)}
-					/>
-				</div>
-
-				{/* Product stock list */}
-				{entriesLoading ? (
-					<p className="text-sm text-(--sea-ink-soft)">Loading…</p>
-				) : !productStockList.length ? (
-					<p className="text-sm text-(--sea-ink-soft)">
-						No products yet. Add stock above!
-					</p>
-				) : !filteredProductStockList.length ? (
-					<p className="text-sm text-(--sea-ink-soft)">
-						No products match your search.
-					</p>
-				) : (
-					<div className="mb-8 flex flex-col gap-1">
-						{filteredProductStockList.map(
-							({ product, entries, totalStock }) => {
-								const unit = getUnitAbbr(product.quantityUnitId);
-								const isLow =
-									Number.parseFloat(product.minStockAmount) > 0 &&
-									totalStock < Number.parseFloat(product.minStockAmount);
-								const isExpanded = expandedProduct === product.id;
-								const categoryName = getCategoryName(product.categoryId);
-
-								return (
-									<div key={product.id}>
-										<button
-											type="button"
-											onClick={() =>
-												setExpandedProduct(isExpanded ? null : product.id)
-											}
-											className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition hover:bg-(--surface)"
-										>
-											{isExpanded ? (
-												<ChevronDown
-													size={16}
-													className="text-(--sea-ink-soft)"
-												/>
-											) : (
-												<ChevronRight
-													size={16}
-													className="text-(--sea-ink-soft)"
-												/>
-											)}
-											<span className="flex-1 text-sm font-medium text-(--sea-ink)">
-												{product.name}
-												{categoryName && (
-													<span className="ml-2 rounded-full bg-[rgba(79,184,178,0.14)] px-2 py-0.5 text-xs font-medium text-(--lagoon-deep)">
-														{categoryName}
-													</span>
-												)}
-											</span>
-											<span
-												className={cn(
-													"text-sm font-semibold",
-													isLow
-														? "text-red-600 dark:text-red-400"
-														: "text-(--sea-ink)",
-												)}
-											>
-												{totalStock}
-												{unit ? ` ${unit}` : ""}
-												{isLow && " ⚠"}
-											</span>
-										</button>
-
-										{isExpanded && entries.length > 0 && (
-											<div className="ml-8 mb-2 flex flex-col gap-1">
-												{entries.map((entry) => (
-													<div
-														key={entry.id}
-														className="flex flex-wrap items-center gap-3 rounded-lg bg-(--surface) px-3 py-2 text-xs text-(--sea-ink-soft)"
-													>
-														<span className="font-medium text-(--sea-ink)">
-															{entry.quantity}
-															{unit ? ` ${unit}` : ""}
-														</span>
-														{entry.expirationDate && (
-															<span>
-																Exp:{" "}
-																{new Date(
-																	entry.expirationDate,
-																).toLocaleDateString()}
-															</span>
-														)}
-														{entry.purchaseDate && (
-															<span>
-																Purchased:{" "}
-																{new Date(
-																	entry.purchaseDate,
-																).toLocaleDateString()}
-															</span>
-														)}
-														{entry.price && <span>${entry.price}</span>}
-														<div className="ml-auto flex items-center gap-1.5">
-															<NumberInput
-																placeholder="Qty"
-																step="any"
-																min="0.01"
-																max={entry.quantity}
-																value={consumeAmounts[entry.id] ?? "1"}
-																onChange={(e) =>
-																	setConsumeAmounts((prev) => ({
-																		...prev,
-																		[entry.id]: e.target.value,
-																	}))
-																}
-																className="h-7 w-20 rounded border bg-white px-2 text-xs dark:bg-(--surface)"
-															/>
-															<button
-																type="button"
-																onClick={() => handleConsume(entry.id)}
-																disabled={
-																	consumeStock.isPending ||
-																	!(consumeAmounts[entry.id] ?? "1")
-																}
-																className="flex h-7 items-center gap-1 rounded-full bg-amber-600 px-2.5 text-xs font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
-															>
-																<Minus size={12} />
-																Use
-															</button>
-														</div>
-													</div>
-												))}
-												{entries.length === 0 && (
-													<p className="px-3 py-2 text-xs text-(--sea-ink-soft)">
-														No stock entries
-													</p>
-												)}
-											</div>
-										)}
-
-										{isExpanded && entries.length === 0 && (
-											<p className="ml-8 mb-2 px-3 py-2 text-xs text-(--sea-ink-soft)">
-												No stock entries
-											</p>
-										)}
-									</div>
-								);
-							},
+				{/* Tab bar */}
+				<nav className="mb-6 flex gap-4 text-sm font-semibold">
+					<button
+						type="button"
+						onClick={() => setActiveTab("stock")}
+						className={cn(
+							"relative no-underline after:content-[''] after:absolute after:left-0 after:-bottom-2 after:h-0.5 after:w-full after:origin-left after:scale-x-0 after:bg-[linear-gradient(90deg,var(--lagoon),#7ed3bf)] after:transition-transform after:duration-[170ms] hover:text-(--sea-ink) hover:after:scale-x-100",
+							activeTab === "stock"
+								? "text-(--sea-ink) after:scale-x-100"
+								: "text-(--sea-ink-soft)",
 						)}
-					</div>
+					>
+						Stock
+					</button>
+					<button
+						type="button"
+						onClick={() => setActiveTab("activity")}
+						className={cn(
+							"relative no-underline after:content-[''] after:absolute after:left-0 after:-bottom-2 after:h-0.5 after:w-full after:origin-left after:scale-x-0 after:bg-[linear-gradient(90deg,var(--lagoon),#7ed3bf)] after:transition-transform after:duration-[170ms] hover:text-(--sea-ink) hover:after:scale-x-100",
+							activeTab === "activity"
+								? "text-(--sea-ink) after:scale-x-100"
+								: "text-(--sea-ink-soft)",
+						)}
+					>
+						Recent Activity
+					</button>
+				</nav>
+
+				{activeTab === "stock" && (
+					<>
+						<div className="mb-4">
+							<SearchInput
+								placeholder="Search..."
+								value={search}
+								onChange={(e) => setSearch(e.target.value)}
+							/>
+						</div>
+
+						{/* Product stock list */}
+						{entriesLoading ? (
+							<p className="text-sm text-(--sea-ink-soft)">Loading…</p>
+						) : !productStockList.length ? (
+							<p className="text-sm text-(--sea-ink-soft)">
+								No products yet. Add stock above!
+							</p>
+						) : !filteredProductStockList.length ? (
+							<p className="text-sm text-(--sea-ink-soft)">
+								No products match your search.
+							</p>
+						) : (
+							<Accordion
+								items={filteredProductStockList.map((item) => ({
+									...item,
+									key: item.product.id,
+								}))}
+								renderTrigger={(item) => (
+									<StockProductTrigger
+										product={item.product}
+										totalStock={item.totalStock}
+										unitAbbr={getUnitAbbr(item.product.quantityUnitId)}
+										categoryName={getCategoryName(item.product.categoryId)}
+									/>
+								)}
+								renderContent={(item) => (
+									<StockProductContent
+										entries={item.entries}
+										unitAbbr={getUnitAbbr(item.product.quantityUnitId)}
+										consumeAmounts={consumeAmounts}
+										onConsumeAmountChange={(entryId, value) =>
+											setConsumeAmounts((prev) => ({
+												...prev,
+												[entryId]: value,
+											}))
+										}
+										onConsume={handleConsume}
+										consumePending={consumeStock.isPending}
+										onEdit={setEditingEntry}
+										storeNames={Object.fromEntries(
+											(stores ?? []).map((s) => [s.id, s.name]),
+										)}
+									/>
+								)}
+							/>
+						)}
+					</>
 				)}
 
-				{/* Recent activity */}
-				{recentLogs.length > 0 && (
-					<div className="border-t border-(--line) pt-6">
-						<h2 className="mb-4 text-lg font-bold text-(--sea-ink)">
-							Recent Activity
-						</h2>
+				{activeTab === "activity" &&
+					(recentLogs.length > 0 ? (
 						<div className="flex flex-col gap-1">
 							{recentLogs.map((log) => (
 								<div
@@ -347,16 +300,21 @@ function StockPage() {
 								>
 									<span
 										className={cn(
-											"rounded-full px-2 py-0.5 text-xs font-semibold capitalize",
+											"w-[4.5rem] shrink-0 rounded-full px-2 py-0.5 text-center text-xs font-semibold capitalize",
 											transactionBadgeClass[log.transactionType],
 										)}
 									>
 										{log.transactionType}
 									</span>
-									<span className="font-medium text-(--sea-ink)">
-										{getProductName(log.productId)}
-									</span>
-									<span className="text-(--sea-ink-soft)">
+									<div className="flex min-w-0 flex-1 flex-col">
+										<span className="font-medium text-(--sea-ink)">
+											{getProductName(log.productId)}
+										</span>
+										<span className="text-xs text-(--sea-ink-soft)">
+											{new Date(log.createdAt).toLocaleString()}
+										</span>
+									</div>
+									<span className="shrink-0 text-(--sea-ink-soft)">
 										{log.quantity}
 										{getUnitAbbr(
 											products?.find((p) => p.id === log.productId)
@@ -365,15 +323,140 @@ function StockPage() {
 											? ` ${getUnitAbbr(products?.find((p) => p.id === log.productId)?.quantityUnitId ?? null)}`
 											: ""}
 									</span>
-									<span className="ml-auto text-xs text-(--sea-ink-soft)">
-										{new Date(log.createdAt).toLocaleString()}
-									</span>
 								</div>
 							))}
 						</div>
-					</div>
-				)}
+					) : (
+						<p className="text-sm text-(--sea-ink-soft)">No recent activity.</p>
+					))}
 			</Island>
+			{editingEntry && (
+				<EditStockModal
+					entry={editingEntry}
+					stores={stores ?? []}
+					unitAbbr={getUnitAbbr(
+						products?.find((p) => p.id === editingEntry.productId)
+							?.quantityUnitId ?? null,
+					)}
+					onClose={() => setEditingEntry(null)}
+				/>
+			)}
 		</Page>
+	);
+}
+
+function EditStockModal({
+	entry,
+	stores,
+	unitAbbr,
+	onClose,
+}: {
+	entry: StockEntry;
+	stores: { id: string; name: string }[];
+	unitAbbr: string;
+	onClose: () => void;
+}) {
+	const updateStockEntry = useUpdateStockEntry(entry.id);
+	const [quantity, setQuantity] = useState(entry.quantity);
+	const [expirationDate, setExpirationDate] = useState(
+		entry.expirationDate?.slice(0, 10) ?? "",
+	);
+	const [purchaseDate, setPurchaseDate] = useState(
+		entry.purchaseDate?.slice(0, 10) ?? "",
+	);
+	const [price, setPrice] = useState(entry.price ?? "");
+	const [storeId, setStoreId] = useState(entry.storeId ?? "");
+
+	async function handleSubmit(e: FormEvent) {
+		e.preventDefault();
+		await updateStockEntry.mutateAsync({
+			quantity,
+			expirationDate: expirationDate || undefined,
+			purchaseDate: purchaseDate || undefined,
+			price: price || undefined,
+			storeId: storeId || undefined,
+		});
+		onClose();
+	}
+
+	return (
+		<Modal
+			open
+			onOpenChange={(open) => !open && onClose()}
+			title="Edit Stock Entry"
+		>
+			<form onSubmit={handleSubmit} className="flex flex-col gap-4">
+				<label className="flex flex-col gap-1 text-sm font-medium text-(--sea-ink)">
+					Quantity
+					<div className="flex items-center gap-2">
+						<NumberInput
+							required
+							step="any"
+							min="0.01"
+							value={quantity}
+							onChange={(e) => setQuantity(e.target.value)}
+							className="flex-1"
+						/>
+						{unitAbbr && (
+							<span className="text-xs text-(--sea-ink-soft)">{unitAbbr}</span>
+						)}
+					</div>
+				</label>
+				<label className="flex flex-col gap-1 text-sm font-medium text-(--sea-ink)">
+					Expiration Date
+					<DatePicker
+						value={expirationDate}
+						onChange={setExpirationDate}
+						placeholder="No expiration"
+					/>
+				</label>
+				<label className="flex flex-col gap-1 text-sm font-medium text-(--sea-ink)">
+					Purchase Date
+					<DatePicker
+						value={purchaseDate}
+						onChange={setPurchaseDate}
+						placeholder="No purchase date"
+					/>
+				</label>
+				<label className="flex flex-col gap-1 text-sm font-medium text-(--sea-ink)">
+					Price
+					<NumberInput
+						step="0.01"
+						min="0"
+						value={price}
+						onChange={(e) => setPrice(e.target.value)}
+						placeholder="Price"
+					/>
+				</label>
+				<label className="flex flex-col gap-1 text-sm font-medium text-(--sea-ink)">
+					Store
+					<Combobox
+						value={storeId}
+						onChange={setStoreId}
+						options={stores.map((s) => ({
+							value: s.id,
+							label: s.name,
+						}))}
+						placeholder="Select store"
+					/>
+				</label>
+				<div className="flex justify-end gap-2 pt-2">
+					<button
+						type="button"
+						onClick={onClose}
+						className="h-10 rounded-full border border-(--line) px-4 text-sm font-semibold text-(--sea-ink-soft) transition hover:bg-(--line)"
+					>
+						Cancel
+					</button>
+					<button
+						type="submit"
+						disabled={updateStockEntry.isPending}
+						className="flex h-10 items-center gap-1.5 rounded-full bg-(--lagoon) px-4 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
+					>
+						Save Changes
+					</button>
+				</div>
+			</form>
+		</Modal>
 	);
 }

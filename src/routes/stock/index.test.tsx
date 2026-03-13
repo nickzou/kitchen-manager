@@ -18,6 +18,7 @@ const mockUseStockEntries = vi.fn();
 const mockUseStockLogs = vi.fn();
 const mockUseCreateStockEntry = vi.fn();
 const mockUseConsumeStock = vi.fn();
+const mockUseStores = vi.fn();
 
 vi.mock("@tanstack/react-router", () => ({
 	createFileRoute: () => (opts: { component: ComponentType }) => ({
@@ -55,6 +56,10 @@ vi.mock("#src/lib/hooks/use-stock-entries", () => ({
 
 vi.mock("#src/lib/hooks/use-stock-logs", () => ({
 	useStockLogs: (...args: unknown[]) => mockUseStockLogs(...args),
+}));
+
+vi.mock("#src/lib/hooks/use-stores", () => ({
+	useStores: (...args: unknown[]) => mockUseStores(...args),
 }));
 
 vi.mock("#src/lib/utils", () => ({
@@ -134,6 +139,7 @@ const mockStockEntry = {
 	expirationDate: "2026-04-01T00:00:00Z",
 	purchaseDate: "2026-03-01T00:00:00Z",
 	price: "5.99",
+	storeId: null,
 	userId: "u1",
 	createdAt: "2026-03-01T00:00:00Z",
 	updatedAt: "2026-03-01T00:00:00Z",
@@ -179,6 +185,7 @@ beforeEach(() => {
 		mutateAsync: mockMutateAsync,
 		isPending: false,
 	});
+	mockUseStores.mockReturnValue({ data: [] });
 });
 
 afterEach(() => {
@@ -215,7 +222,9 @@ describe("StockPage", () => {
 		it("renders the stock page title", () => {
 			renderPage();
 
-			expect(screen.getByText("Stock")).toBeDefined();
+			expect(
+				screen.getByRole("heading", { name: "Stock", level: 1 }),
+			).toBeDefined();
 			expect(screen.getByText("Inventory")).toBeDefined();
 		});
 
@@ -239,7 +248,8 @@ describe("StockPage", () => {
 		it("shows recent activity section", () => {
 			renderPage();
 
-			expect(screen.getByText("Recent Activity")).toBeDefined();
+			fireEvent.click(screen.getByRole("button", { name: "Recent Activity" }));
+
 			expect(screen.getByText("add")).toBeDefined();
 		});
 	});
@@ -312,9 +322,10 @@ describe("StockPage", () => {
 		it("submits stock entry form", async () => {
 			renderPage();
 
-			fireEvent.change(screen.getByRole("combobox"), {
-				target: { value: "p1" },
-			});
+			fireEvent.change(
+				screen.getByRole("combobox", { name: "Select product *" }),
+				{ target: { value: "p1" } },
+			);
 			fireEvent.change(screen.getByPlaceholderText("Quantity *"), {
 				target: { value: "5" },
 			});
@@ -326,6 +337,7 @@ describe("StockPage", () => {
 					quantity: "5",
 					expirationDate: undefined,
 					price: undefined,
+					storeId: undefined,
 				});
 			});
 		});
