@@ -158,7 +158,7 @@ function StockPage() {
 						}))}
 						placeholder="Select product *"
 						required
-						className="flex-1 min-w-[160px]"
+						className="flex-1 min-w-40"
 					/>
 					<NumberInput
 						placeholder="Quantity *"
