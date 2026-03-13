@@ -144,6 +144,39 @@ export function makeApiKey(overrides?: Record<string, unknown>) {
 	};
 }
 
+export function makeWebhookEndpoint(overrides?: Record<string, unknown>) {
+	return {
+		id: "webhook-endpoint-1",
+		name: "My Webhook",
+		url: "https://example.com/webhook",
+		secret: "whsec_abc123",
+		events: ["stock.entry.created"],
+		status: "active",
+		failCount: 0,
+		userId: "user-1",
+		createdAt: new Date("2025-01-01"),
+		updatedAt: new Date("2025-01-01"),
+		...overrides,
+	};
+}
+
+export function makeWebhookDelivery(overrides?: Record<string, unknown>) {
+	return {
+		id: "webhook-delivery-1",
+		webhookEndpointId: "webhook-endpoint-1",
+		event: "stock.entry.created",
+		payload:
+			'{"event":"stock.entry.created","data":{},"timestamp":"2025-01-01T00:00:00.000Z"}',
+		status: "pending",
+		statusCode: null,
+		attempt: 1,
+		nextRetryAt: null,
+		userId: "user-1",
+		createdAt: new Date("2025-01-01"),
+		...overrides,
+	};
+}
+
 export function makeRecipeIngredient(overrides?: Record<string, unknown>) {
 	return {
 		id: "recipe-ingredient-1",

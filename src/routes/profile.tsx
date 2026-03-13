@@ -14,6 +14,33 @@ interface ApiKeyEntry {
 	createdAt: string;
 }
 
+interface WebhookEntry {
+	id: string;
+	name: string;
+	url: string;
+	events: string[];
+	status: "active" | "suspended";
+	failCount: number;
+	createdAt: string;
+}
+
+const EVENT_GROUPS = {
+	Stock: [
+		"stock.entry.created",
+		"stock.entry.updated",
+		"stock.entry.deleted",
+		"stock.entry.consumed",
+	],
+	"Meal Plan": [
+		"meal_plan.entry.created",
+		"meal_plan.entry.updated",
+		"meal_plan.entry.deleted",
+		"meal_plan.entry.cooked",
+		"meal_plan.entry.uncooked",
+	],
+	"Meal Slot": ["meal_slot.created", "meal_slot.updated", "meal_slot.deleted"],
+} as const;
+
 export const Route = createFileRoute("/profile")({ component: Profile });
 
 function Profile() {
@@ -39,14 +66,29 @@ function Profile() {
 	const [apiKeyError, setApiKeyError] = useState("");
 	const [keyCopied, setKeyCopied] = useState(false);
 
+	const [webhooks, setWebhooks] = useState<WebhookEntry[]>([]);
+	const [webhookName, setWebhookName] = useState("");
+	const [webhookUrl, setWebhookUrl] = useState("");
+	const [webhookEvents, setWebhookEvents] = useState<string[]>([]);
+	const [webhookSecret, setWebhookSecret] = useState("");
+	const [webhookLoading, setWebhookLoading] = useState(false);
+	const [webhookError, setWebhookError] = useState("");
+	const [secretCopied, setSecretCopied] = useState(false);
+
 	const fetchApiKeys = useCallback(async () => {
 		const res = await fetch("/api/api-keys");
 		if (res.ok) setApiKeys(await res.json());
 	}, []);
 
+	const fetchWebhooks = useCallback(async () => {
+		const res = await fetch("/api/webhooks");
+		if (res.ok) setWebhooks(await res.json());
+	}, []);
+
 	useEffect(() => {
 		fetchApiKeys();
-	}, [fetchApiKeys]);
+		fetchWebhooks();
+	}, [fetchApiKeys, fetchWebhooks]);
 
 	useEffect(() => {
 		if (session?.user) {
@@ -142,6 +184,64 @@ function Profile() {
 		await navigator.clipboard.writeText(generatedKey);
 		setKeyCopied(true);
 		setTimeout(() => setKeyCopied(false), 2000);
+	}
+
+	function toggleEvent(event: string) {
+		setWebhookEvents((prev) =>
+			prev.includes(event) ? prev.filter((e) => e !== event) : [...prev, event],
+		);
+	}
+
+	async function handleCreateWebhook(e: FormEvent) {
+		e.preventDefault();
+		setWebhookError("");
+		setWebhookSecret("");
+		setWebhookLoading(true);
+
+		const res = await fetch("/api/webhooks", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({
+				name: webhookName,
+				url: webhookUrl,
+				events: webhookEvents,
+			}),
+		});
+
+		if (!res.ok) {
+			const data = await res.json();
+			setWebhookError(data.error ?? "Failed to create webhook");
+			setWebhookLoading(false);
+			return;
+		}
+
+		const data = await res.json();
+		setWebhookSecret(data.secret);
+		setWebhookName("");
+		setWebhookUrl("");
+		setWebhookEvents([]);
+		setWebhookLoading(false);
+		fetchWebhooks();
+	}
+
+	async function handleDeleteWebhook(id: string) {
+		const res = await fetch(`/api/webhooks/${id}`, { method: "DELETE" });
+		if (res.ok) fetchWebhooks();
+	}
+
+	async function handleReactivateWebhook(id: string) {
+		const res = await fetch(`/api/webhooks/${id}`, {
+			method: "PUT",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ status: "active" }),
+		});
+		if (res.ok) fetchWebhooks();
+	}
+
+	async function handleCopySecret() {
+		await navigator.clipboard.writeText(webhookSecret);
+		setSecretCopied(true);
+		setTimeout(() => setSecretCopied(false), 2000);
 	}
 
 	return (
@@ -332,6 +432,154 @@ function Profile() {
 							className="mt-2 h-10 rounded-full bg-(--lagoon) text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
 						>
 							{apiKeyLoading ? "Generating\u2026" : "Generate new key"}
+						</button>
+					</form>
+				</Island>
+
+				<Island
+					as="section"
+					className="animate-rise-in rounded-2xl p-6 sm:p-8 lg:col-span-2"
+				>
+					<h2 className="font-display mb-6 text-xl font-bold text-(--sea-ink)">
+						Webhooks
+					</h2>
+
+					{webhooks.length > 0 && (
+						<ul className="mb-6 flex flex-col gap-3">
+							{webhooks.map((wh) => (
+								<li
+									key={wh.id}
+									className="flex items-center justify-between gap-2 rounded-lg border border-(--line) bg-(--surface) px-3 py-2"
+								>
+									<div className="min-w-0">
+										<div className="flex items-center gap-2">
+											<p className="truncate text-sm font-medium text-(--sea-ink)">
+												{wh.name}
+											</p>
+											<span
+												className={`inline-block rounded-full px-2 py-0.5 text-[0.65rem] font-semibold ${
+													wh.status === "active"
+														? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+														: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+												}`}
+											>
+												{wh.status}
+											</span>
+										</div>
+										<p className="truncate text-xs text-(--sea-ink-soft)">
+											{wh.url} · {wh.events.length} event
+											{wh.events.length !== 1 && "s"}
+										</p>
+									</div>
+									<div className="flex shrink-0 gap-1">
+										{wh.status === "suspended" && (
+											<button
+												type="button"
+												onClick={() => handleReactivateWebhook(wh.id)}
+												className="rounded-md px-2 py-1 text-xs font-medium text-green-600 transition hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-950"
+											>
+												Reactivate
+											</button>
+										)}
+										<button
+											type="button"
+											onClick={() => handleDeleteWebhook(wh.id)}
+											className="rounded-md px-2 py-1 text-xs font-medium text-red-600 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950"
+										>
+											Delete
+										</button>
+									</div>
+								</li>
+							))}
+						</ul>
+					)}
+
+					{webhookSecret && (
+						<div className="mb-6 rounded-lg border border-amber-300 bg-amber-50 p-3 dark:border-amber-700 dark:bg-amber-950">
+							<p className="mb-1 text-xs font-semibold text-amber-800 dark:text-amber-200">
+								Copy your signing secret now — it won't be shown again
+							</p>
+							<div className="flex items-center gap-2">
+								<code className="min-w-0 flex-1 truncate text-xs text-amber-900 dark:text-amber-100">
+									{webhookSecret}
+								</code>
+								<button
+									type="button"
+									onClick={handleCopySecret}
+									className="shrink-0 rounded-md bg-amber-200 px-2 py-1 text-xs font-medium text-amber-900 transition hover:bg-amber-300 dark:bg-amber-800 dark:text-amber-100 dark:hover:bg-amber-700"
+								>
+									{secretCopied ? "Copied!" : "Copy"}
+								</button>
+							</div>
+						</div>
+					)}
+
+					<form onSubmit={handleCreateWebhook} className="flex flex-col gap-4">
+						<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
+							Name
+							<input
+								type="text"
+								required
+								placeholder="e.g. My Integration"
+								value={webhookName}
+								onChange={(e) => setWebhookName(e.target.value)}
+								className="h-10 rounded-lg border border-(--line) bg-(--surface) px-3 text-sm text-(--sea-ink) outline-none focus:border-(--lagoon)"
+							/>
+						</label>
+
+						<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
+							URL
+							<input
+								type="url"
+								required
+								placeholder="https://example.com/webhook"
+								value={webhookUrl}
+								onChange={(e) => setWebhookUrl(e.target.value)}
+								className="h-10 rounded-lg border border-(--line) bg-(--surface) px-3 text-sm text-(--sea-ink) outline-none focus:border-(--lagoon)"
+							/>
+						</label>
+
+						<fieldset className="flex flex-col gap-2">
+							<legend className="text-sm font-medium text-(--sea-ink)">
+								Events
+							</legend>
+							{Object.entries(EVENT_GROUPS).map(([group, events]) => (
+								<div key={group}>
+									<p className="mb-1 text-xs font-semibold text-(--sea-ink-soft)">
+										{group}
+									</p>
+									<div className="flex flex-wrap gap-2">
+										{events.map((event) => (
+											<label
+												key={event}
+												className="flex items-center gap-1.5 text-xs text-(--sea-ink)"
+											>
+												<input
+													type="checkbox"
+													checked={webhookEvents.includes(event)}
+													onChange={() => toggleEvent(event)}
+													className="rounded border-(--line)"
+												/>
+												{event}
+											</label>
+										))}
+									</div>
+								</div>
+							))}
+						</fieldset>
+
+						{webhookError && (
+							<p className="text-sm text-red-600 dark:text-red-400">
+								{webhookError}
+							</p>
+						)}
+
+						<button
+							type="submit"
+							disabled={webhookLoading || webhookEvents.length === 0}
+							className="mt-2 h-10 rounded-full bg-(--lagoon) text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
+						>
+							{webhookLoading ? "Creating\u2026" : "Create webhook"}
 						</button>
 					</form>
 				</Island>

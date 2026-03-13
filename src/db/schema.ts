@@ -17,6 +17,17 @@ export const transactionTypeEnum = pgEnum("transaction_type", [
 	"remove",
 ]);
 
+export const webhookStatusEnum = pgEnum("webhook_status", [
+	"active",
+	"suspended",
+]);
+
+export const webhookDeliveryStatusEnum = pgEnum("webhook_delivery_status", [
+	"pending",
+	"success",
+	"failed",
+]);
+
 export const category = pgTable(
 	"category",
 	{
@@ -447,3 +458,82 @@ export const apiKeyRelations = relations(apiKey, ({ one }) => ({
 		references: [user.id],
 	}),
 }));
+
+export const webhookEndpoint = pgTable(
+	"webhook_endpoint",
+	{
+		id: text("id")
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		name: text("name").notNull(),
+		url: text("url").notNull(),
+		secret: text("secret").notNull(),
+		events: text("events").array().notNull(),
+		status: webhookStatusEnum("status").default("active").notNull(),
+		failCount: integer("fail_count").default(0).notNull(),
+		userId: text("user_id")
+			.notNull()
+			.references(() => user.id, { onDelete: "cascade" }),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+		updatedAt: timestamp("updated_at")
+			.defaultNow()
+			.$onUpdate(() => new Date())
+			.notNull(),
+	},
+	(table) => [index("webhookEndpoint_userId_idx").on(table.userId)],
+);
+
+export const webhookEndpointRelations = relations(
+	webhookEndpoint,
+	({ one, many }) => ({
+		user: one(user, {
+			fields: [webhookEndpoint.userId],
+			references: [user.id],
+		}),
+		deliveries: many(webhookDelivery),
+	}),
+);
+
+export const webhookDelivery = pgTable(
+	"webhook_delivery",
+	{
+		id: text("id")
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		webhookEndpointId: text("webhook_endpoint_id")
+			.notNull()
+			.references(() => webhookEndpoint.id, { onDelete: "cascade" }),
+		event: text("event").notNull(),
+		payload: text("payload").notNull(),
+		status: webhookDeliveryStatusEnum("status").default("pending").notNull(),
+		statusCode: integer("status_code"),
+		attempt: integer("attempt").default(0).notNull(),
+		nextRetryAt: timestamp("next_retry_at"),
+		userId: text("user_id")
+			.notNull()
+			.references(() => user.id, { onDelete: "cascade" }),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+	},
+	(table) => [
+		index("webhookDelivery_endpointId_idx").on(table.webhookEndpointId),
+		index("webhookDelivery_userId_idx").on(table.userId),
+		index("webhookDelivery_status_retry_idx").on(
+			table.status,
+			table.nextRetryAt,
+		),
+	],
+);
+
+export const webhookDeliveryRelations = relations(
+	webhookDelivery,
+	({ one }) => ({
+		webhookEndpoint: one(webhookEndpoint, {
+			fields: [webhookDelivery.webhookEndpointId],
+			references: [webhookEndpoint.id],
+		}),
+		user: one(user, {
+			fields: [webhookDelivery.userId],
+			references: [user.id],
+		}),
+	}),
+);

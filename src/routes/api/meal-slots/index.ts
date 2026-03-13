@@ -3,6 +3,7 @@ import { asc, eq } from "drizzle-orm";
 import { db } from "#src/db";
 import { mealSlot } from "#src/db/schema";
 import { getAuthSession } from "#src/lib/auth-session";
+import { dispatchWebhook } from "#src/lib/webhooks";
 
 function json(data: unknown, init?: { status?: number }) {
 	return new Response(JSON.stringify(data), {
@@ -70,6 +71,7 @@ export const Route = createFileRoute("/api/meal-slots/")({
 					})
 					.returning();
 
+				dispatchWebhook(session.user.id, "meal_slot.created", created);
 				return json(created, { status: 201 });
 			},
 		},

@@ -9,6 +9,7 @@ import {
 	stockLog,
 } from "#src/db/schema";
 import { getAuthSession } from "#src/lib/auth-session";
+import { dispatchWebhook } from "#src/lib/webhooks";
 
 function json(data: unknown, init?: { status?: number }) {
 	return new Response(JSON.stringify(data), {
@@ -145,6 +146,9 @@ export const Route = createFileRoute("/api/meal-plan-entries/cook")({
 					);
 				}
 
+				dispatchWebhook(session.user.id, "meal_plan.entry.uncooked", {
+					mealPlanEntryId: body.mealPlanEntryId,
+				});
 				return json({ success: true });
 			},
 			POST: async ({ request }) => {
@@ -283,6 +287,11 @@ export const Route = createFileRoute("/api/meal-plan-entries/cook")({
 					);
 				}
 
+				dispatchWebhook(session.user.id, "meal_plan.entry.cooked", {
+					mealPlanEntryId: body.mealPlanEntryId,
+					deductions: result.deductions,
+					warnings: result.warnings,
+				});
 				return json({
 					success: true,
 					deductions: result.deductions,

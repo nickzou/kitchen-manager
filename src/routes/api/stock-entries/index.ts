@@ -3,6 +3,7 @@ import { and, eq } from "drizzle-orm";
 import { db } from "#src/db";
 import { stockEntry, stockLog } from "#src/db/schema";
 import { getAuthSession } from "#src/lib/auth-session";
+import { dispatchWebhook } from "#src/lib/webhooks";
 
 function json(data: unknown, init?: { status?: number }) {
 	return new Response(JSON.stringify(data), {
@@ -71,6 +72,7 @@ export const Route = createFileRoute("/api/stock-entries/")({
 					return created;
 				});
 
+				dispatchWebhook(session.user.id, "stock.entry.created", result);
 				return json(result, { status: 201 });
 			},
 		},

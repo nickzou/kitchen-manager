@@ -28,6 +28,7 @@ import { Route as QuantityUnitsIdRouteImport } from './routes/quantity-units/$id
 import { Route as ProductsIdRouteImport } from './routes/products/$id'
 import { Route as MealPlanShoppingListRouteImport } from './routes/meal-plan/shopping-list'
 import { Route as CategoriesIdRouteImport } from './routes/categories/$id'
+import { Route as ApiWebhooksIndexRouteImport } from './routes/api/webhooks/index'
 import { Route as ApiUploadsIndexRouteImport } from './routes/api/uploads/index'
 import { Route as ApiUnitConversionsIndexRouteImport } from './routes/api/unit-conversions/index'
 import { Route as ApiStockLogsIndexRouteImport } from './routes/api/stock-logs/index'
@@ -39,6 +40,8 @@ import { Route as ApiMealSlotsIndexRouteImport } from './routes/api/meal-slots/i
 import { Route as ApiMealPlanEntriesIndexRouteImport } from './routes/api/meal-plan-entries/index'
 import { Route as ApiCategoriesIndexRouteImport } from './routes/api/categories/index'
 import { Route as ApiApiKeysIndexRouteImport } from './routes/api/api-keys/index'
+import { Route as ApiWebhooksRetryRouteImport } from './routes/api/webhooks/retry'
+import { Route as ApiWebhooksIdRouteImport } from './routes/api/webhooks/$id'
 import { Route as ApiUploadsFilenameRouteImport } from './routes/api/uploads/$filename'
 import { Route as ApiUnitConversionsIdRouteImport } from './routes/api/unit-conversions/$id'
 import { Route as ApiStockLogsIdRouteImport } from './routes/api/stock-logs/$id'
@@ -153,6 +156,11 @@ const CategoriesIdRoute = CategoriesIdRouteImport.update({
   path: '/categories/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiWebhooksIndexRoute = ApiWebhooksIndexRouteImport.update({
+  id: '/api/webhooks/',
+  path: '/api/webhooks/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiUploadsIndexRoute = ApiUploadsIndexRouteImport.update({
   id: '/api/uploads/',
   path: '/api/uploads/',
@@ -206,6 +214,16 @@ const ApiCategoriesIndexRoute = ApiCategoriesIndexRouteImport.update({
 const ApiApiKeysIndexRoute = ApiApiKeysIndexRouteImport.update({
   id: '/api/api-keys/',
   path: '/api/api-keys/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiWebhooksRetryRoute = ApiWebhooksRetryRouteImport.update({
+  id: '/api/webhooks/retry',
+  path: '/api/webhooks/retry',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiWebhooksIdRoute = ApiWebhooksIdRouteImport.update({
+  id: '/api/webhooks/$id',
+  path: '/api/webhooks/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiUploadsFilenameRoute = ApiUploadsFilenameRouteImport.update({
@@ -338,6 +356,8 @@ export interface FileRoutesByFullPath {
   '/api/stock-logs/$id': typeof ApiStockLogsIdRoute
   '/api/unit-conversions/$id': typeof ApiUnitConversionsIdRoute
   '/api/uploads/$filename': typeof ApiUploadsFilenameRoute
+  '/api/webhooks/$id': typeof ApiWebhooksIdRoute
+  '/api/webhooks/retry': typeof ApiWebhooksRetryRoute
   '/api/api-keys/': typeof ApiApiKeysIndexRoute
   '/api/categories/': typeof ApiCategoriesIndexRoute
   '/api/meal-plan-entries/': typeof ApiMealPlanEntriesIndexRoute
@@ -349,6 +369,7 @@ export interface FileRoutesByFullPath {
   '/api/stock-logs/': typeof ApiStockLogsIndexRoute
   '/api/unit-conversions/': typeof ApiUnitConversionsIndexRoute
   '/api/uploads/': typeof ApiUploadsIndexRoute
+  '/api/webhooks/': typeof ApiWebhooksIndexRoute
   '/api/recipes/$id/ingredients/$ingredientId': typeof ApiRecipesIdIngredientsIngredientIdRoute
   '/api/recipes/$id/ingredients/': typeof ApiRecipesIdIngredientsIndexRoute
 }
@@ -388,6 +409,8 @@ export interface FileRoutesByTo {
   '/api/stock-logs/$id': typeof ApiStockLogsIdRoute
   '/api/unit-conversions/$id': typeof ApiUnitConversionsIdRoute
   '/api/uploads/$filename': typeof ApiUploadsFilenameRoute
+  '/api/webhooks/$id': typeof ApiWebhooksIdRoute
+  '/api/webhooks/retry': typeof ApiWebhooksRetryRoute
   '/api/api-keys': typeof ApiApiKeysIndexRoute
   '/api/categories': typeof ApiCategoriesIndexRoute
   '/api/meal-plan-entries': typeof ApiMealPlanEntriesIndexRoute
@@ -399,6 +422,7 @@ export interface FileRoutesByTo {
   '/api/stock-logs': typeof ApiStockLogsIndexRoute
   '/api/unit-conversions': typeof ApiUnitConversionsIndexRoute
   '/api/uploads': typeof ApiUploadsIndexRoute
+  '/api/webhooks': typeof ApiWebhooksIndexRoute
   '/api/recipes/$id/ingredients/$ingredientId': typeof ApiRecipesIdIngredientsIngredientIdRoute
   '/api/recipes/$id/ingredients': typeof ApiRecipesIdIngredientsIndexRoute
 }
@@ -439,6 +463,8 @@ export interface FileRoutesById {
   '/api/stock-logs/$id': typeof ApiStockLogsIdRoute
   '/api/unit-conversions/$id': typeof ApiUnitConversionsIdRoute
   '/api/uploads/$filename': typeof ApiUploadsFilenameRoute
+  '/api/webhooks/$id': typeof ApiWebhooksIdRoute
+  '/api/webhooks/retry': typeof ApiWebhooksRetryRoute
   '/api/api-keys/': typeof ApiApiKeysIndexRoute
   '/api/categories/': typeof ApiCategoriesIndexRoute
   '/api/meal-plan-entries/': typeof ApiMealPlanEntriesIndexRoute
@@ -450,6 +476,7 @@ export interface FileRoutesById {
   '/api/stock-logs/': typeof ApiStockLogsIndexRoute
   '/api/unit-conversions/': typeof ApiUnitConversionsIndexRoute
   '/api/uploads/': typeof ApiUploadsIndexRoute
+  '/api/webhooks/': typeof ApiWebhooksIndexRoute
   '/api/recipes/$id/ingredients/$ingredientId': typeof ApiRecipesIdIngredientsIngredientIdRoute
   '/api/recipes/$id/ingredients/': typeof ApiRecipesIdIngredientsIndexRoute
 }
@@ -491,6 +518,8 @@ export interface FileRouteTypes {
     | '/api/stock-logs/$id'
     | '/api/unit-conversions/$id'
     | '/api/uploads/$filename'
+    | '/api/webhooks/$id'
+    | '/api/webhooks/retry'
     | '/api/api-keys/'
     | '/api/categories/'
     | '/api/meal-plan-entries/'
@@ -502,6 +531,7 @@ export interface FileRouteTypes {
     | '/api/stock-logs/'
     | '/api/unit-conversions/'
     | '/api/uploads/'
+    | '/api/webhooks/'
     | '/api/recipes/$id/ingredients/$ingredientId'
     | '/api/recipes/$id/ingredients/'
   fileRoutesByTo: FileRoutesByTo
@@ -541,6 +571,8 @@ export interface FileRouteTypes {
     | '/api/stock-logs/$id'
     | '/api/unit-conversions/$id'
     | '/api/uploads/$filename'
+    | '/api/webhooks/$id'
+    | '/api/webhooks/retry'
     | '/api/api-keys'
     | '/api/categories'
     | '/api/meal-plan-entries'
@@ -552,6 +584,7 @@ export interface FileRouteTypes {
     | '/api/stock-logs'
     | '/api/unit-conversions'
     | '/api/uploads'
+    | '/api/webhooks'
     | '/api/recipes/$id/ingredients/$ingredientId'
     | '/api/recipes/$id/ingredients'
   id:
@@ -591,6 +624,8 @@ export interface FileRouteTypes {
     | '/api/stock-logs/$id'
     | '/api/unit-conversions/$id'
     | '/api/uploads/$filename'
+    | '/api/webhooks/$id'
+    | '/api/webhooks/retry'
     | '/api/api-keys/'
     | '/api/categories/'
     | '/api/meal-plan-entries/'
@@ -602,6 +637,7 @@ export interface FileRouteTypes {
     | '/api/stock-logs/'
     | '/api/unit-conversions/'
     | '/api/uploads/'
+    | '/api/webhooks/'
     | '/api/recipes/$id/ingredients/$ingredientId'
     | '/api/recipes/$id/ingredients/'
   fileRoutesById: FileRoutesById
@@ -642,6 +678,8 @@ export interface RootRouteChildren {
   ApiStockLogsIdRoute: typeof ApiStockLogsIdRoute
   ApiUnitConversionsIdRoute: typeof ApiUnitConversionsIdRoute
   ApiUploadsFilenameRoute: typeof ApiUploadsFilenameRoute
+  ApiWebhooksIdRoute: typeof ApiWebhooksIdRoute
+  ApiWebhooksRetryRoute: typeof ApiWebhooksRetryRoute
   ApiApiKeysIndexRoute: typeof ApiApiKeysIndexRoute
   ApiCategoriesIndexRoute: typeof ApiCategoriesIndexRoute
   ApiMealPlanEntriesIndexRoute: typeof ApiMealPlanEntriesIndexRoute
@@ -653,6 +691,7 @@ export interface RootRouteChildren {
   ApiStockLogsIndexRoute: typeof ApiStockLogsIndexRoute
   ApiUnitConversionsIndexRoute: typeof ApiUnitConversionsIndexRoute
   ApiUploadsIndexRoute: typeof ApiUploadsIndexRoute
+  ApiWebhooksIndexRoute: typeof ApiWebhooksIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -790,6 +829,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CategoriesIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/webhooks/': {
+      id: '/api/webhooks/'
+      path: '/api/webhooks'
+      fullPath: '/api/webhooks/'
+      preLoaderRoute: typeof ApiWebhooksIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/uploads/': {
       id: '/api/uploads/'
       path: '/api/uploads'
@@ -865,6 +911,20 @@ declare module '@tanstack/react-router' {
       path: '/api/api-keys'
       fullPath: '/api/api-keys/'
       preLoaderRoute: typeof ApiApiKeysIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/webhooks/retry': {
+      id: '/api/webhooks/retry'
+      path: '/api/webhooks/retry'
+      fullPath: '/api/webhooks/retry'
+      preLoaderRoute: typeof ApiWebhooksRetryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/webhooks/$id': {
+      id: '/api/webhooks/$id'
+      path: '/api/webhooks/$id'
+      fullPath: '/api/webhooks/$id'
+      preLoaderRoute: typeof ApiWebhooksIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/uploads/$filename': {
@@ -1048,6 +1108,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiStockLogsIdRoute: ApiStockLogsIdRoute,
   ApiUnitConversionsIdRoute: ApiUnitConversionsIdRoute,
   ApiUploadsFilenameRoute: ApiUploadsFilenameRoute,
+  ApiWebhooksIdRoute: ApiWebhooksIdRoute,
+  ApiWebhooksRetryRoute: ApiWebhooksRetryRoute,
   ApiApiKeysIndexRoute: ApiApiKeysIndexRoute,
   ApiCategoriesIndexRoute: ApiCategoriesIndexRoute,
   ApiMealPlanEntriesIndexRoute: ApiMealPlanEntriesIndexRoute,
@@ -1059,6 +1121,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiStockLogsIndexRoute: ApiStockLogsIndexRoute,
   ApiUnitConversionsIndexRoute: ApiUnitConversionsIndexRoute,
   ApiUploadsIndexRoute: ApiUploadsIndexRoute,
+  ApiWebhooksIndexRoute: ApiWebhooksIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
