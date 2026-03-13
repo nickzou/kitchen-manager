@@ -78,7 +78,6 @@ function StockPage() {
 		const amount = consumeAmounts[stockEntryId] ?? "1";
 		if (!amount) return;
 		await consumeStock.mutateAsync({ stockEntryId, quantity: amount });
-		setConsumeAmounts((prev) => ({ ...prev, [stockEntryId]: "" }));
 	}
 
 	function getProductName(id: string) {
