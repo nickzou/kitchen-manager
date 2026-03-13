@@ -121,8 +121,9 @@ export function useConsumeStock() {
 			await queryClient.cancelQueries({ queryKey: ["stock-entries"] });
 
 			// Snapshot the current cache value (used to roll back on error)
-			const previous =
-				queryClient.getQueryData<StockEntry[]>(["stock-entries"]);
+			const previous = queryClient.getQueryData<StockEntry[]>([
+				"stock-entries",
+			]);
 
 			// Write the optimistic value into the cache
 			queryClient.setQueryData<StockEntry[]>(["stock-entries"], (old) =>

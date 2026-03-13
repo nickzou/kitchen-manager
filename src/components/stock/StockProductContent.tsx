@@ -42,7 +42,7 @@ export function StockProductContent({
 					onConsume={() => onConsume(entry.id)}
 					consumePending={consumePending}
 					onEdit={() => onEdit(entry)}
-					storeName={entry.storeId ? storeNames[entry.storeId] ?? null : null}
+					storeName={entry.storeId ? (storeNames[entry.storeId] ?? null) : null}
 				/>
 			))}
 		</div>

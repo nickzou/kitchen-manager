@@ -53,23 +53,15 @@ export function Accordion<T extends AccordionItem>({
 									className={`text-(--sea-ink-soft) transition-transform ${isExpanded ? "" : "-rotate-90"}`}
 								/>
 							) : isExpanded ? (
-								<ChevronDown
-									size={16}
-									className="text-(--sea-ink-soft)"
-								/>
+								<ChevronDown size={16} className="text-(--sea-ink-soft)" />
 							) : (
-								<ChevronRight
-									size={16}
-									className="text-(--sea-ink-soft)"
-								/>
+								<ChevronRight size={16} className="text-(--sea-ink-soft)" />
 							)}
 							{renderTrigger(item, isExpanded)}
 						</button>
 
 						{isExpanded && (
-							<div className="ml-8 mb-2">
-								{renderContent(item)}
-							</div>
+							<div className="ml-8 mb-2">{renderContent(item)}</div>
 						)}
 					</div>
 				);

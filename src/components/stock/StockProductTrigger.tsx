@@ -28,9 +28,7 @@ export function StockProductTrigger({
 			<span
 				className={cn(
 					"text-sm font-semibold",
-					isLow
-						? "text-red-600 dark:text-red-400"
-						: "text-(--sea-ink)",
+					isLow ? "text-red-600 dark:text-red-400" : "text-(--sea-ink)",
 				)}
 			>
 				{totalStock}

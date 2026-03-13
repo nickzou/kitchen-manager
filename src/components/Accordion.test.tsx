@@ -88,7 +88,7 @@ describe("Accordion", () => {
 		render(
 			<Accordion
 				items={[{ key: "x", label: "Item" }]}
-				renderTrigger={(item, isExpanded) => (
+				renderTrigger={(_item, isExpanded) => (
 					<span>{isExpanded ? "Open" : "Closed"}</span>
 				)}
 				renderContent={() => <p>Content</p>}
