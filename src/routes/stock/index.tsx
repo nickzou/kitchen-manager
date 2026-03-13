@@ -300,16 +300,21 @@ function StockPage() {
 								>
 									<span
 										className={cn(
-											"rounded-full px-2 py-0.5 text-xs font-semibold capitalize",
+											"w-[4.5rem] shrink-0 rounded-full px-2 py-0.5 text-center text-xs font-semibold capitalize",
 											transactionBadgeClass[log.transactionType],
 										)}
 									>
 										{log.transactionType}
 									</span>
-									<span className="font-medium text-(--sea-ink)">
-										{getProductName(log.productId)}
-									</span>
-									<span className="text-(--sea-ink-soft)">
+									<div className="flex min-w-0 flex-1 flex-col">
+										<span className="font-medium text-(--sea-ink)">
+											{getProductName(log.productId)}
+										</span>
+										<span className="text-xs text-(--sea-ink-soft)">
+											{new Date(log.createdAt).toLocaleString()}
+										</span>
+									</div>
+									<span className="shrink-0 text-(--sea-ink-soft)">
 										{log.quantity}
 										{getUnitAbbr(
 											products?.find((p) => p.id === log.productId)
@@ -317,9 +322,6 @@ function StockPage() {
 										)
 											? ` ${getUnitAbbr(products?.find((p) => p.id === log.productId)?.quantityUnitId ?? null)}`
 											: ""}
-									</span>
-									<span className="ml-auto text-xs text-(--sea-ink-soft)">
-										{new Date(log.createdAt).toLocaleString()}
 									</span>
 								</div>
 							))}
