@@ -13,14 +13,29 @@ export default function BetterAuthHeader() {
 	if (session?.user) {
 		return (
 			<div className="flex items-center gap-2">
-				{session.user.image ? (
-					<img src={session.user.image} alt="" className="h-8 w-8" />
-				) : (
-					<div className="h-8 w-8 bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center">
-						<span className="text-xs font-medium text-neutral-600 dark:text-neutral-400">
-							{session.user.name?.charAt(0).toUpperCase() || "U"}
-						</span>
-					</div>
+				<Link to="/profile" className="block">
+					{session.user.image ? (
+						<img
+							src={session.user.image}
+							alt=""
+							className="h-8 w-8 rounded-full"
+						/>
+					) : (
+						<div className="h-8 w-8 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center">
+							<span className="text-xs font-medium text-neutral-600 dark:text-neutral-400">
+								{session.user.name?.charAt(0).toUpperCase() || "U"}
+							</span>
+						</div>
+					)}
+				</Link>
+				{session.user.emailVerified === false && (
+					<Link
+						to="/verify-email"
+						search={{ email: session.user.email }}
+						className="text-xs font-medium text-amber-600 dark:text-amber-400 hover:underline"
+					>
+						Verify email
+					</Link>
 				)}
 				<button
 					type="button"
