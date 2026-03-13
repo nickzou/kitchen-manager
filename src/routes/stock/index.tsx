@@ -1,9 +1,10 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ChevronDown, ChevronRight, Minus, Plus } from "lucide-react";
+import { ChevronDown, ChevronRight, Minus, Pencil, Plus } from "lucide-react";
 import { type FormEvent, useState } from "react";
 import { Combobox } from "#src/components/Combobox";
 import { DatePicker } from "#src/components/DatePicker";
 import { Island } from "#src/components/Island";
+import { Modal } from "#src/components/Modal";
 import { NumberInput } from "#src/components/NumberInput";
 import { Page } from "#src/components/Page";
 import { SearchInput } from "#src/components/SearchInput";
@@ -16,6 +17,7 @@ import {
 	useConsumeStock,
 	useCreateStockEntry,
 	useStockEntries,
+	useUpdateStockEntry,
 } from "#src/lib/hooks/use-stock-entries";
 import { useStockLogs } from "#src/lib/hooks/use-stock-logs";
 import { useStores } from "#src/lib/hooks/use-stores";
@@ -46,6 +48,7 @@ function StockPage() {
 	const [consumeAmounts, setConsumeAmounts] = useState<Record<string, string>>(
 		{},
 	);
+	const [editingEntry, setEditingEntry] = useState<StockEntry | null>(null);
 
 	if (sessionLoading) return null;
 	if (!session) {
@@ -333,6 +336,13 @@ function StockPage() {
 																<Minus size={12} />
 																Use
 															</button>
+															<button
+																type="button"
+																onClick={() => setEditingEntry(entry)}
+																className="flex h-7 items-center gap-1 rounded-full border border-(--line) px-2.5 text-xs font-semibold text-(--sea-ink-soft) transition hover:bg-(--line)"
+															>
+																<Pencil size={12} />
+															</button>
 														</div>
 													</div>
 												))}
@@ -397,6 +407,115 @@ function StockPage() {
 					</div>
 				)}
 			</Island>
+			{editingEntry && (
+				<EditStockModal
+					entry={editingEntry}
+					stores={stores ?? []}
+					onClose={() => setEditingEntry(null)}
+				/>
+			)}
 		</Page>
+	);
+}
+
+function EditStockModal({
+	entry,
+	stores,
+	onClose,
+}: {
+	entry: StockEntry;
+	stores: { id: string; name: string }[];
+	onClose: () => void;
+}) {
+	const updateStockEntry = useUpdateStockEntry(entry.id);
+	const [quantity, setQuantity] = useState(entry.quantity);
+	const [expirationDate, setExpirationDate] = useState(
+		entry.expirationDate ?? "",
+	);
+	const [purchaseDate, setPurchaseDate] = useState(entry.purchaseDate ?? "");
+	const [price, setPrice] = useState(entry.price ?? "");
+	const [storeId, setStoreId] = useState(entry.storeId ?? "");
+
+	async function handleSubmit(e: FormEvent) {
+		e.preventDefault();
+		await updateStockEntry.mutateAsync({
+			quantity,
+			expirationDate: expirationDate || undefined,
+			purchaseDate: purchaseDate || undefined,
+			price: price || undefined,
+			storeId: storeId || undefined,
+		});
+		onClose();
+	}
+
+	return (
+		<Modal open onOpenChange={(open) => !open && onClose()} title="Edit Stock Entry">
+			<form onSubmit={handleSubmit} className="flex flex-col gap-4">
+				<label className="flex flex-col gap-1 text-sm font-medium text-(--sea-ink)">
+					Quantity
+					<NumberInput
+						required
+						step="any"
+						min="0.01"
+						value={quantity}
+						onChange={(e) => setQuantity(e.target.value)}
+					/>
+				</label>
+				<label className="flex flex-col gap-1 text-sm font-medium text-(--sea-ink)">
+					Expiration Date
+					<DatePicker
+						value={expirationDate}
+						onChange={setExpirationDate}
+						placeholder="No expiration"
+					/>
+				</label>
+				<label className="flex flex-col gap-1 text-sm font-medium text-(--sea-ink)">
+					Purchase Date
+					<DatePicker
+						value={purchaseDate}
+						onChange={setPurchaseDate}
+						placeholder="No purchase date"
+					/>
+				</label>
+				<label className="flex flex-col gap-1 text-sm font-medium text-(--sea-ink)">
+					Price
+					<NumberInput
+						step="0.01"
+						min="0"
+						value={price}
+						onChange={(e) => setPrice(e.target.value)}
+						placeholder="Price"
+					/>
+				</label>
+				<label className="flex flex-col gap-1 text-sm font-medium text-(--sea-ink)">
+					Store
+					<Combobox
+						value={storeId}
+						onChange={setStoreId}
+						options={stores.map((s) => ({
+							value: s.id,
+							label: s.name,
+						}))}
+						placeholder="Select store"
+					/>
+				</label>
+				<div className="flex justify-end gap-2 pt-2">
+					<button
+						type="button"
+						onClick={onClose}
+						className="h-10 rounded-full border border-(--line) px-4 text-sm font-semibold text-(--sea-ink-soft) transition hover:bg-(--line)"
+					>
+						Cancel
+					</button>
+					<button
+						type="submit"
+						disabled={updateStockEntry.isPending}
+						className="flex h-10 items-center gap-1.5 rounded-full bg-(--lagoon) px-4 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
+					>
+						Save Changes
+					</button>
+				</div>
+			</form>
+		</Modal>
 	);
 }
