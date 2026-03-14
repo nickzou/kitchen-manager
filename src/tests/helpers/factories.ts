@@ -48,7 +48,7 @@ export function makeProduct(overrides?: Record<string, unknown>) {
 		description: "Whole milk",
 		image: null,
 		categoryId: null,
-		quantityUnitId: null,
+		defaultQuantityUnitId: null,
 		minStockAmount: "0",
 		defaultExpirationDays: null,
 		userId: "user-1",

@@ -40,7 +40,7 @@ function ProductDetail() {
 		categoryId: "",
 		description: "",
 		image: null as string | null,
-		quantityUnitId: "",
+		defaultQuantityUnitId: "",
 		minStockAmount: "",
 		defaultExpirationDays: "",
 	});
@@ -95,7 +95,7 @@ function ProductDetail() {
 			categoryId: product.categoryId || "",
 			description: product.description || "",
 			image: product.image,
-			quantityUnitId: product.quantityUnitId || "",
+			defaultQuantityUnitId: product.defaultQuantityUnitId || "",
 			minStockAmount:
 				Number.parseFloat(product.minStockAmount) > 0
 					? product.minStockAmount
@@ -115,7 +115,7 @@ function ProductDetail() {
 			categoryId: form.categoryId || undefined,
 			description: form.description || undefined,
 			image: form.image || undefined,
-			quantityUnitId: form.quantityUnitId || undefined,
+			defaultQuantityUnitId: form.defaultQuantityUnitId || undefined,
 			minStockAmount: form.minStockAmount || undefined,
 			defaultExpirationDays: form.defaultExpirationDays
 				? Number.parseInt(form.defaultExpirationDays, 10)
@@ -138,7 +138,7 @@ function ProductDetail() {
 	}
 
 	const categoryName = getCategoryName(product.categoryId);
-	const unitName = getUnitName(product.quantityUnitId);
+	const unitName = getUnitName(product.defaultQuantityUnitId);
 
 	return (
 		<Page as="main" className="pb-8 pt-14">
@@ -210,10 +210,10 @@ function ProductDetail() {
 						/>
 
 						<div className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
-							Quantity Unit
+							Default Quantity Unit
 							<Combobox
-								value={form.quantityUnitId}
-								onChange={(v) => setForm({ ...form, quantityUnitId: v })}
+								value={form.defaultQuantityUnitId}
+								onChange={(v) => setForm({ ...form, defaultQuantityUnitId: v })}
 								options={(quantityUnits ?? []).map((u) => ({
 									value: u.id,
 									label: u.abbreviation
@@ -319,7 +319,7 @@ function ProductDetail() {
 						<dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-3">
 							{unitName && (
 								<div>
-									<dt className="font-medium text-(--sea-ink-soft)">Unit</dt>
+									<dt className="font-medium text-(--sea-ink-soft)">Default Unit</dt>
 									<dd className="mt-0.5 text-(--sea-ink)">{unitName}</dd>
 								</div>
 							)}

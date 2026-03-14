@@ -65,7 +65,7 @@ const mockProduct: Product = {
 	categoryId: "c1",
 	description: "Fresh red tomatoes",
 	image: null,
-	quantityUnitId: null,
+	defaultQuantityUnitId: null,
 	minStockAmount: "0",
 	defaultExpirationDays: null,
 	userId: "u1",
@@ -168,7 +168,7 @@ describe("ProductDetail", () => {
 					name: "Cherry Tomatoes",
 					description: "Fresh red tomatoes",
 					categoryId: "c1",
-					quantityUnitId: undefined,
+					defaultQuantityUnitId: undefined,
 					minStockAmount: undefined,
 					defaultExpirationDays: undefined,
 				});

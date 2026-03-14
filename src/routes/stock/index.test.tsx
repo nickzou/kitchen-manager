@@ -124,7 +124,7 @@ const mockProduct = {
 	categoryId: "c1",
 	description: null,
 	image: null,
-	quantityUnitId: "qu1",
+	defaultQuantityUnitId: "qu1",
 	minStockAmount: "5",
 	defaultExpirationDays: 14,
 	userId: "u1",

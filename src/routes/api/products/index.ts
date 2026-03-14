@@ -42,7 +42,7 @@ export const Route = createFileRoute("/api/products/")({
 						description: body.description,
 						image: body.image,
 						categoryId: body.categoryId ?? null,
-						quantityUnitId: body.quantityUnitId ?? null,
+						defaultQuantityUnitId: body.defaultQuantityUnitId ?? null,
 						minStockAmount: body.minStockAmount ?? "0",
 						defaultExpirationDays: body.defaultExpirationDays ?? null,
 						userId: session.user.id,

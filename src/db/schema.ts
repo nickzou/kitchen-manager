@@ -141,9 +141,12 @@ export const product = pgTable(
 		categoryId: text("category_id").references(() => category.id, {
 			onDelete: "set null",
 		}),
-		quantityUnitId: text("quantity_unit_id").references(() => quantityUnit.id, {
-			onDelete: "set null",
-		}),
+		defaultQuantityUnitId: text("default_quantity_unit_id").references(
+			() => quantityUnit.id,
+			{
+				onDelete: "set null",
+			},
+		),
 		minStockAmount: numeric("min_stock_amount").default("0").notNull(),
 		defaultExpirationDays: integer("default_expiration_days"),
 		userId: text("user_id")
@@ -167,8 +170,8 @@ export const productRelations = relations(product, ({ one }) => ({
 		fields: [product.categoryId],
 		references: [category.id],
 	}),
-	quantityUnit: one(quantityUnit, {
-		fields: [product.quantityUnitId],
+	defaultQuantityUnit: one(quantityUnit, {
+		fields: [product.defaultQuantityUnitId],
 		references: [quantityUnit.id],
 	}),
 }));

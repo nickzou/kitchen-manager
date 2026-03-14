@@ -16,7 +16,7 @@ const mockProducts = [
 		categoryId: "c1",
 		description: null,
 		image: null,
-		quantityUnitId: null,
+		defaultQuantityUnitId: null,
 		minStockAmount: "0",
 		defaultExpirationDays: null,
 		userId: "u1",

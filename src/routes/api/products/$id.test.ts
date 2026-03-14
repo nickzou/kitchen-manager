@@ -155,14 +155,14 @@ describe("PUT /api/products/:id", () => {
 		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
 		const updated = makeProduct({
 			categoryId: "category-1",
-			quantityUnitId: "unit-1",
+			defaultQuantityUnitId: "unit-1",
 			minStockAmount: "5",
 			defaultExpirationDays: 14,
 		});
 		mockUpdateReturning.mockResolvedValue([updated]);
 		const request = makePutRequest("/api/products/product-1", {
 			categoryId: "category-1",
-			quantityUnitId: "unit-1",
+			defaultQuantityUnitId: "unit-1",
 			minStockAmount: "5",
 			defaultExpirationDays: 14,
 		});
@@ -172,7 +172,7 @@ describe("PUT /api/products/:id", () => {
 		expect(response.status).toBe(200);
 		const data = await response.json();
 		expect(data.categoryId).toBe("category-1");
-		expect(data.quantityUnitId).toBe("unit-1");
+		expect(data.defaultQuantityUnitId).toBe("unit-1");
 		expect(data.minStockAmount).toBe("5");
 		expect(data.defaultExpirationDays).toBe(14);
 	});

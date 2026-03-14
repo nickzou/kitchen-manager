@@ -6,7 +6,7 @@ export interface Product {
 	categoryId: string | null;
 	description: string | null;
 	image: string | null;
-	quantityUnitId: string | null;
+	defaultQuantityUnitId: string | null;
 	minStockAmount: string;
 	defaultExpirationDays: number | null;
 	userId: string;
@@ -19,7 +19,7 @@ export type CreateProductInput = {
 	categoryId?: string;
 	description?: string;
 	image?: string;
-	quantityUnitId?: string;
+	defaultQuantityUnitId?: string;
 	minStockAmount?: string;
 	defaultExpirationDays?: number;
 };

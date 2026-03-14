@@ -92,6 +92,13 @@
       "when": 1773421220112,
       "tag": "0012_spooky_norrin_radd",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1773447152412,
+      "tag": "0013_serious_sunfire",
+      "breakpoints": true
     }
   ]
 }

@@ -262,14 +262,14 @@ function StockPage() {
 									<StockProductTrigger
 										product={item.product}
 										totalStock={item.totalStock}
-										unitAbbr={getUnitAbbr(item.product.quantityUnitId)}
+										unitAbbr={getUnitAbbr(item.product.defaultQuantityUnitId)}
 										categoryName={getCategoryName(item.product.categoryId)}
 									/>
 								)}
 								renderContent={(item) => (
 									<StockProductContent
 										entries={item.entries}
-										unitAbbr={getUnitAbbr(item.product.quantityUnitId)}
+										unitAbbr={getUnitAbbr(item.product.defaultQuantityUnitId)}
 										consumeAmounts={consumeAmounts}
 										onConsumeAmountChange={(entryId, value) =>
 											setConsumeAmounts((prev) => ({
@@ -318,9 +318,9 @@ function StockPage() {
 										{log.quantity}
 										{getUnitAbbr(
 											products?.find((p) => p.id === log.productId)
-												?.quantityUnitId ?? null,
+												?.defaultQuantityUnitId ?? null,
 										)
-											? ` ${getUnitAbbr(products?.find((p) => p.id === log.productId)?.quantityUnitId ?? null)}`
+											? ` ${getUnitAbbr(products?.find((p) => p.id === log.productId)?.defaultQuantityUnitId ?? null)}`
 											: ""}
 									</span>
 								</div>
@@ -336,7 +336,7 @@ function StockPage() {
 					stores={stores ?? []}
 					unitAbbr={getUnitAbbr(
 						products?.find((p) => p.id === editingEntry.productId)
-							?.quantityUnitId ?? null,
+							?.defaultQuantityUnitId ?? null,
 					)}
 					onClose={() => setEditingEntry(null)}
 				/>
