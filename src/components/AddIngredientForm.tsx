@@ -20,6 +20,8 @@ export function AddIngredientForm({
 	newIngredient: { productId, quantity, quantityUnitId, notes },
 	setNewIngredient,
 	onCreateProduct,
+	onProductChange,
+	unitHint,
 }: {
 	productOptions: ComboboxOption[];
 	unitOptions: ComboboxOption[];
@@ -28,6 +30,8 @@ export function AddIngredientForm({
 	newIngredient: IngredientFormState;
 	setNewIngredient: (state: IngredientFormState) => void;
 	onCreateProduct?: (name: string) => Promise<string>;
+	onProductChange?: (productId: string) => void;
+	unitHint?: string;
 }) {
 	const htmlId = useId();
 	const inputClass =
@@ -51,7 +55,10 @@ export function AddIngredientForm({
 			<div className="grid grid-cols-[1fr_1fr] gap-2 sm:grid-cols-[1fr_auto_1fr_1fr_auto]">
 				<Combobox
 					value={productId}
-					onChange={(v) => update({ productId: v })}
+					onChange={(v) => {
+						update({ productId: v });
+						onProductChange?.(v);
+					}}
 					options={productOptions}
 					placeholder="Product"
 					className="col-span-full sm:col-span-1"
@@ -95,6 +102,13 @@ export function AddIngredientForm({
 					Add
 				</button>
 			</div>
+			{unitHint && (
+				<p
+					className={`mt-1.5 text-xs ${unitHint.includes("No conversion") ? "text-amber-600 dark:text-amber-400" : "text-(--sea-ink-soft)"}`}
+				>
+					{unitHint}
+				</p>
+			)}
 		</div>
 	);
 }

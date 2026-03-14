@@ -56,6 +56,11 @@ vi.mock("#src/lib/hooks/use-quantity-units", () => ({
 	useQuantityUnits: (...args: unknown[]) => mockUseQuantityUnits(...args),
 }));
 
+const mockUseUnitConversions = vi.fn();
+vi.mock("#src/lib/hooks/use-unit-conversions", () => ({
+	useUnitConversions: (...args: unknown[]) => mockUseUnitConversions(...args),
+}));
+
 const mockUseRecipeIngredients = vi.fn();
 const mockUseCreateRecipeIngredient = vi.fn();
 const mockUseUpdateRecipeIngredient = vi.fn();
@@ -99,6 +104,7 @@ const mockDeleteIngredientMutateAsync = vi.fn().mockResolvedValue({});
 
 beforeEach(() => {
 	vi.clearAllMocks();
+	Element.prototype.scrollIntoView = vi.fn();
 
 	mockUseSession.mockReturnValue({
 		data: { user: { id: "u1" }, session: { id: "s1" } },
@@ -121,14 +127,34 @@ beforeEach(() => {
 		data: [{ id: "c1", name: "Italian" }],
 	});
 	mockUseProducts.mockReturnValue({
-		data: [{ id: "p1", name: "Spaghetti" }],
+		data: [
+			{ id: "p1", name: "Spaghetti", defaultQuantityUnitId: "qu1" },
+			{ id: "p2", name: "Olive Oil", defaultQuantityUnitId: "qu2" },
+		],
 	});
 	mockUseCreateProduct.mockReturnValue({
 		mutateAsync: vi.fn(),
 		isPending: false,
 	});
 	mockUseQuantityUnits.mockReturnValue({
-		data: [{ id: "qu1", name: "Grams", abbreviation: "g" }],
+		data: [
+			{ id: "qu1", name: "Grams", abbreviation: "g" },
+			{ id: "qu2", name: "Milliliters", abbreviation: "ml" },
+			{ id: "qu3", name: "Cups", abbreviation: "cup" },
+		],
+	});
+	mockUseUnitConversions.mockReturnValue({
+		data: [
+			{
+				id: "uc1",
+				fromUnitId: "qu3",
+				toUnitId: "qu2",
+				factor: "250",
+				userId: "u1",
+				createdAt: "2026-03-01T00:00:00Z",
+				updatedAt: "2026-03-01T00:00:00Z",
+			},
+		],
 	});
 	mockUseRecipeIngredients.mockReturnValue({
 		data: [
@@ -293,6 +319,82 @@ describe("RecipeDetail", () => {
 			renderPage();
 
 			expect(screen.getByText("No ingredients yet.")).toBeDefined();
+		});
+
+		it("auto-fills unit when product with default unit is selected", async () => {
+			renderPage();
+
+			const comboboxes = screen.getAllByRole("combobox");
+			const productCombobox = comboboxes[0];
+
+			fireEvent.focus(productCombobox);
+
+			await waitFor(() => {
+				expect(screen.getAllByRole("option").length).toBeGreaterThan(0);
+			});
+
+			const option = screen.getAllByRole("option").find(
+				(el) => el.textContent === "Spaghetti",
+			) as HTMLElement;
+			fireEvent.mouseDown(option);
+
+			await waitFor(() => {
+				const unitCombobox = screen.getAllByRole("combobox")[1];
+				expect(unitCombobox).toHaveProperty("value", "Grams (g)");
+			});
+		});
+
+		it("shows conversion hint when unit differs from product default", async () => {
+			renderPage();
+
+			const comboboxes = screen.getAllByRole("combobox");
+			const productCombobox = comboboxes[0];
+
+			// Select Olive Oil (default unit: ml / qu2)
+			fireEvent.focus(productCombobox);
+			await waitFor(() => {
+				expect(screen.getByText("Olive Oil")).toBeDefined();
+			});
+			fireEvent.mouseDown(screen.getByText("Olive Oil"));
+
+			// Now manually change unit to Cups (qu3) — need to open unit combobox
+			const unitCombobox = screen.getAllByRole("combobox")[1];
+			fireEvent.focus(unitCombobox);
+			await waitFor(() => {
+				expect(screen.getByText("Cups (cup)")).toBeDefined();
+			});
+			fireEvent.mouseDown(screen.getByText("Cups (cup)"));
+
+			await waitFor(() => {
+				expect(screen.getByText("1 cup = 250 ml")).toBeDefined();
+			});
+		});
+
+		it("shows no-conversion warning when no conversion exists", async () => {
+			mockUseUnitConversions.mockReturnValue({ data: [] });
+
+			renderPage();
+
+			const comboboxes = screen.getAllByRole("combobox");
+
+			// Select Olive Oil (default unit: ml / qu2)
+			fireEvent.focus(comboboxes[0]);
+			await waitFor(() => {
+				expect(screen.getByText("Olive Oil")).toBeDefined();
+			});
+			fireEvent.mouseDown(screen.getByText("Olive Oil"));
+
+			// Change unit to Cups (qu3)
+			const unitCombobox = screen.getAllByRole("combobox")[1];
+			fireEvent.focus(unitCombobox);
+			await waitFor(() => {
+				expect(screen.getByText("Cups (cup)")).toBeDefined();
+			});
+			fireEvent.mouseDown(screen.getByText("Cups (cup)"));
+
+			await waitFor(() => {
+				expect(screen.getByText("No conversion to ml")).toBeDefined();
+			});
 		});
 	});
 });
