@@ -13,7 +13,7 @@ const mockProducts = [
 	{
 		id: "1",
 		name: "Tomatoes",
-		categoryId: "c1",
+		categoryIds: ["c1"],
 		description: null,
 		image: null,
 		defaultQuantityUnitId: null,
@@ -86,13 +86,13 @@ describe("useCreateProduct", () => {
 		});
 
 		await waitFor(() =>
-			result.current.mutateAsync({ name: "Carrots", categoryId: "c1" }),
+			result.current.mutateAsync({ name: "Carrots", categoryIds: ["c1"] }),
 		);
 
 		expect(fetch).toHaveBeenCalledWith("/api/products", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ name: "Carrots", categoryId: "c1" }),
+			body: JSON.stringify({ name: "Carrots", categoryIds: ["c1"] }),
 		});
 	});
 });

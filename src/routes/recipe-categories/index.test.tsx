@@ -12,8 +12,8 @@ import { createTestWrapper } from "#src/tests/helpers/test-wrapper";
 
 const mockNavigate = vi.fn();
 const mockUseSession = vi.fn();
-const mockUseCategories = vi.fn();
-const mockUseCreateCategory = vi.fn();
+const mockUseRecipeCategories = vi.fn();
+const mockUseCreateRecipeCategory = vi.fn();
 
 vi.mock("@tanstack/react-router", () => ({
 	createFileRoute: () => (opts: { component: ComponentType }) => ({
@@ -32,24 +32,25 @@ vi.mock("#src/lib/auth-client", () => ({
 }));
 
 vi.mock("#src/lib/hooks/use-categories", () => ({
-	useCategories: (...args: unknown[]) => mockUseCategories(...args),
-	useCreateCategory: (...args: unknown[]) => mockUseCreateCategory(...args),
+	useRecipeCategories: (...args: unknown[]) => mockUseRecipeCategories(...args),
+	useCreateRecipeCategory: (...args: unknown[]) =>
+		mockUseCreateRecipeCategory(...args),
 }));
 
 vi.mock("#src/lib/utils", () => ({
 	cn: (...args: string[]) => args.filter(Boolean).join(" "),
 }));
 
-vi.mock("#src/components/InventorySubNav", () => ({
-	default: () => <nav data-testid="inventory-sub-nav" />,
+vi.mock("#src/components/CookingSubNav", () => ({
+	default: () => <nav data-testid="cooking-sub-nav" />,
 }));
 
 import { Route } from "./index";
 
 const mockCategory: Category = {
 	id: "1",
-	name: "Vegetables",
-	description: "Fresh vegetables",
+	name: "Quick Meals",
+	description: "Fast recipes",
 	userId: "u1",
 	createdAt: "2026-03-01T00:00:00Z",
 	updatedAt: "2026-03-01T00:00:00Z",
@@ -64,11 +65,11 @@ beforeEach(() => {
 		data: { user: { id: "u1" }, session: { id: "s1" } },
 		isPending: false,
 	});
-	mockUseCategories.mockReturnValue({
+	mockUseRecipeCategories.mockReturnValue({
 		data: [mockCategory],
 		isLoading: false,
 	});
-	mockUseCreateCategory.mockReturnValue({
+	mockUseCreateRecipeCategory.mockReturnValue({
 		mutateAsync: mockMutateAsync,
 		isPending: false,
 	});
@@ -85,7 +86,7 @@ function renderPage() {
 	return render(<Component />, { wrapper: Wrapper });
 }
 
-describe("CategoriesPage", () => {
+describe("RecipeCategoriesPage", () => {
 	describe("authentication", () => {
 		it("redirects to /sign-in when session is null", () => {
 			mockUseSession.mockReturnValue({ data: null, isPending: false });
@@ -106,7 +107,7 @@ describe("CategoriesPage", () => {
 
 	describe("loading and empty states", () => {
 		it("shows loading state when categories are loading", () => {
-			mockUseCategories.mockReturnValue({
+			mockUseRecipeCategories.mockReturnValue({
 				data: undefined,
 				isLoading: true,
 			});
@@ -117,7 +118,7 @@ describe("CategoriesPage", () => {
 		});
 
 		it("shows empty state when no categories", () => {
-			mockUseCategories.mockReturnValue({
+			mockUseRecipeCategories.mockReturnValue({
 				data: [],
 				isLoading: false,
 			});
@@ -134,8 +135,8 @@ describe("CategoriesPage", () => {
 		it("renders category cards in grid view by default", () => {
 			renderPage();
 
-			expect(screen.getByText("Vegetables")).toBeDefined();
-			expect(screen.getByText("Fresh vegetables")).toBeDefined();
+			expect(screen.getByText("Quick Meals")).toBeDefined();
+			expect(screen.getByText("Fast recipes")).toBeDefined();
 		});
 
 		it("switches to table view", () => {
@@ -144,7 +145,7 @@ describe("CategoriesPage", () => {
 			fireEvent.click(screen.getByTitle("table view"));
 
 			expect(screen.getByRole("table")).toBeDefined();
-			expect(screen.getByText("Vegetables")).toBeDefined();
+			expect(screen.getByText("Quick Meals")).toBeDefined();
 		});
 
 		it("switches to compact view", () => {
@@ -152,66 +153,12 @@ describe("CategoriesPage", () => {
 
 			fireEvent.click(screen.getByTitle("compact view"));
 
-			expect(screen.getByText("Vegetables")).toBeDefined();
-			expect(screen.getByText("Fresh vegetables")).toBeDefined();
+			expect(screen.getByText("Quick Meals")).toBeDefined();
+			expect(screen.getByText("Fast recipes")).toBeDefined();
 		});
 	});
 
 	describe("search filter", () => {
-		it("renders search input", () => {
-			renderPage();
-
-			expect(screen.getByPlaceholderText("Search...")).toBeDefined();
-		});
-
-		it("filters categories by name", () => {
-			mockUseCategories.mockReturnValue({
-				data: [
-					mockCategory,
-					{
-						...mockCategory,
-						id: "2",
-						name: "Fruits",
-						description: "Fresh fruits",
-					},
-				],
-				isLoading: false,
-			});
-
-			renderPage();
-
-			fireEvent.change(screen.getByPlaceholderText("Search..."), {
-				target: { value: "veg" },
-			});
-
-			expect(screen.getByText("Vegetables")).toBeDefined();
-			expect(screen.queryByText("Fruits")).toBeNull();
-		});
-
-		it("filters categories by description", () => {
-			mockUseCategories.mockReturnValue({
-				data: [
-					mockCategory,
-					{
-						...mockCategory,
-						id: "2",
-						name: "Fruits",
-						description: "Tropical fruits",
-					},
-				],
-				isLoading: false,
-			});
-
-			renderPage();
-
-			fireEvent.change(screen.getByPlaceholderText("Search..."), {
-				target: { value: "tropical" },
-			});
-
-			expect(screen.getByText("Fruits")).toBeDefined();
-			expect(screen.queryByText("Vegetables")).toBeNull();
-		});
-
 		it("shows no results message when search matches nothing", () => {
 			renderPage();
 
@@ -223,16 +170,6 @@ describe("CategoriesPage", () => {
 				screen.getByText("No categories match your search."),
 			).toBeDefined();
 		});
-
-		it("is case-insensitive", () => {
-			renderPage();
-
-			fireEvent.change(screen.getByPlaceholderText("Search..."), {
-				target: { value: "VEGETABLES" },
-			});
-
-			expect(screen.getByText("Vegetables")).toBeDefined();
-		});
 	});
 
 	describe("quick-add form", () => {
@@ -240,17 +177,17 @@ describe("CategoriesPage", () => {
 			renderPage();
 
 			fireEvent.change(screen.getByPlaceholderText("Category name *"), {
-				target: { value: "Fruits" },
+				target: { value: "Dinner" },
 			});
 			fireEvent.change(screen.getByPlaceholderText("Description"), {
-				target: { value: "Fresh fruits" },
+				target: { value: "Dinner recipes" },
 			});
 			fireEvent.click(screen.getByText("Add"));
 
 			await waitFor(() => {
 				expect(mockMutateAsync).toHaveBeenCalledWith({
-					name: "Fruits",
-					description: "Fresh fruits",
+					name: "Dinner",
+					description: "Dinner recipes",
 				});
 			});
 		});

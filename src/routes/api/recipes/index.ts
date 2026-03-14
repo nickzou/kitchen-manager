@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { db } from "#src/db";
-import { recipe } from "#src/db/schema";
+import { recipe, recipeCategory } from "#src/db/schema";
 import { getAuthSession } from "#src/lib/auth-session";
 
 function json(data: unknown, init?: { status?: number }) {
@@ -25,7 +25,27 @@ export const Route = createFileRoute("/api/recipes/")({
 					.from(recipe)
 					.where(eq(recipe.userId, session.user.id));
 
-				return json(recipes);
+				if (recipes.length === 0) return json([]);
+
+				const recipeIds = recipes.map((r) => r.id);
+				const categoryRows = await db
+					.select()
+					.from(recipeCategory)
+					.where(inArray(recipeCategory.recipeId, recipeIds));
+
+				const categoryMap = new Map<string, string[]>();
+				for (const row of categoryRows) {
+					const list = categoryMap.get(row.recipeId) ?? [];
+					list.push(row.categoryId);
+					categoryMap.set(row.recipeId, list);
+				}
+
+				const result = recipes.map((r) => ({
+					...r,
+					categoryIds: categoryMap.get(r.id) ?? [],
+				}));
+
+				return json(result);
 			},
 			POST: async ({ request }) => {
 				const session = await getAuthSession(request);
@@ -49,12 +69,21 @@ export const Route = createFileRoute("/api/recipes/")({
 						prepTime: body.prepTime,
 						cookTime: body.cookTime,
 						instructions: body.instructions,
-						categoryId: body.categoryId,
 						userId: session.user.id,
 					})
 					.returning();
 
-				return json(created, { status: 201 });
+				const categoryIds: string[] = body.categoryIds ?? [];
+				if (categoryIds.length > 0) {
+					await db.insert(recipeCategory).values(
+						categoryIds.map((categoryId: string) => ({
+							recipeId: created.id,
+							categoryId,
+						})),
+					);
+				}
+
+				return json({ ...created, categoryIds }, { status: 201 });
 			},
 		},
 	},

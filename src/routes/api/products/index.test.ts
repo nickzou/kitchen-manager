@@ -11,16 +11,24 @@ vi.mock("#src/lib/auth-session", () => ({
 
 vi.mock("#src/db/schema", () => ({
 	product: {},
+	productCategory: {},
 }));
 
 const mockWhere = vi.fn();
 const mockReturning = vi.fn();
+const mockCategoryWhere = vi.fn();
+
+let selectCallCount = 0;
 
 vi.mock("#src/db", () => ({
 	db: {
 		select: vi.fn(() => ({
 			from: vi.fn(() => ({
-				where: mockWhere,
+				where: (() => {
+					selectCallCount++;
+					if (selectCallCount % 2 === 1) return mockWhere;
+					return mockCategoryWhere;
+				})(),
 			})),
 		})),
 		insert: vi.fn(() => ({
@@ -46,6 +54,7 @@ const { GET, POST } = Route.options.server!.handlers! as Record<
 describe("GET /api/products/", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+		selectCallCount = 0;
 	});
 
 	it("returns 401 when not authenticated", async () => {
@@ -69,13 +78,16 @@ describe("GET /api/products/", () => {
 		expect(await response.json()).toEqual([]);
 	});
 
-	it("returns 200 with the user's products", async () => {
+	it("returns 200 with the user's products including categoryIds", async () => {
 		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
 		const products = [
 			makeProduct(),
 			makeProduct({ id: "product-2", name: "Eggs" }),
 		];
 		mockWhere.mockResolvedValue(products);
+		mockCategoryWhere.mockResolvedValue([
+			{ productId: "product-1", categoryId: "cat-1" },
+		]);
 		const request = makeGetRequest();
 
 		const response = await GET({ request } as never);
@@ -84,13 +96,16 @@ describe("GET /api/products/", () => {
 		const data = await response.json();
 		expect(data).toHaveLength(2);
 		expect(data[0].name).toBe("Milk");
+		expect(data[0].categoryIds).toEqual(["cat-1"]);
 		expect(data[1].name).toBe("Eggs");
+		expect(data[1].categoryIds).toEqual([]);
 	});
 });
 
 describe("POST /api/products/", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+		selectCallCount = 0;
 	});
 
 	it("returns 401 when not authenticated", async () => {
@@ -105,11 +120,11 @@ describe("POST /api/products/", () => {
 
 	it("returns 201 with the created product", async () => {
 		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
-		const created = makeProduct({ categoryId: "category-1" });
+		const created = makeProduct({ categoryIds: ["category-1"] });
 		mockReturning.mockResolvedValue([created]);
 		const request = makePostRequest("/api/products", {
 			name: "Milk",
-			categoryId: "category-1",
+			categoryIds: ["category-1"],
 		});
 
 		const response = await POST({ request } as never);
@@ -117,7 +132,7 @@ describe("POST /api/products/", () => {
 		expect(response.status).toBe(201);
 		const data = await response.json();
 		expect(data.name).toBe("Milk");
-		expect(data.categoryId).toBe("category-1");
+		expect(data.categoryIds).toEqual(["category-1"]);
 	});
 
 	it("sets userId from session, not from request body", async () => {
@@ -156,7 +171,7 @@ describe("POST /api/products/", () => {
 	it("accepts optional new fields", async () => {
 		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
 		const created = makeProduct({
-			categoryId: "category-1",
+			categoryIds: ["category-1"],
 			defaultQuantityUnitId: "unit-1",
 			minStockAmount: "5",
 			defaultExpirationDays: 7,
@@ -164,7 +179,7 @@ describe("POST /api/products/", () => {
 		mockReturning.mockResolvedValue([created]);
 		const request = makePostRequest("/api/products", {
 			name: "Milk",
-			categoryId: "category-1",
+			categoryIds: ["category-1"],
 			defaultQuantityUnitId: "unit-1",
 			minStockAmount: "5",
 			defaultExpirationDays: 7,
@@ -174,7 +189,7 @@ describe("POST /api/products/", () => {
 
 		expect(response.status).toBe(201);
 		const data = await response.json();
-		expect(data.categoryId).toBe("category-1");
+		expect(data.categoryIds).toEqual(["category-1"]);
 		expect(data.defaultQuantityUnitId).toBe("unit-1");
 		expect(data.minStockAmount).toBe("5");
 		expect(data.defaultExpirationDays).toBe(7);

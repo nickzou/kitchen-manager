@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { and, eq } from "drizzle-orm";
 import { db } from "#src/db";
-import { category } from "#src/db/schema";
+import { productCategoryType } from "#src/db/schema";
 import { getAuthSession } from "#src/lib/auth-session";
 
 function json(data: unknown, init?: { status?: number }) {
@@ -11,7 +11,7 @@ function json(data: unknown, init?: { status?: number }) {
 	});
 }
 
-export const Route = createFileRoute("/api/categories/$id")({
+export const Route = createFileRoute("/api/product-categories/$id")({
 	server: {
 		handlers: {
 			GET: async ({ request, params }) => {
@@ -22,11 +22,11 @@ export const Route = createFileRoute("/api/categories/$id")({
 
 				const [found] = await db
 					.select()
-					.from(category)
+					.from(productCategoryType)
 					.where(
 						and(
-							eq(category.id, params.id),
-							eq(category.userId, session.user.id),
+							eq(productCategoryType.id, params.id),
+							eq(productCategoryType.userId, session.user.id),
 						),
 					);
 
@@ -50,12 +50,12 @@ export const Route = createFileRoute("/api/categories/$id")({
 					updates.description = body.description;
 
 				const [updated] = await db
-					.update(category)
+					.update(productCategoryType)
 					.set(updates)
 					.where(
 						and(
-							eq(category.id, params.id),
-							eq(category.userId, session.user.id),
+							eq(productCategoryType.id, params.id),
+							eq(productCategoryType.userId, session.user.id),
 						),
 					)
 					.returning();
@@ -73,11 +73,11 @@ export const Route = createFileRoute("/api/categories/$id")({
 				}
 
 				const [deleted] = await db
-					.delete(category)
+					.delete(productCategoryType)
 					.where(
 						and(
-							eq(category.id, params.id),
-							eq(category.userId, session.user.id),
+							eq(productCategoryType.id, params.id),
+							eq(productCategoryType.userId, session.user.id),
 						),
 					)
 					.returning();

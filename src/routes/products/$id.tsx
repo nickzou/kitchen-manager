@@ -5,10 +5,11 @@ import { Combobox } from "#src/components/Combobox";
 import { ImageInput } from "#src/components/ImageInput";
 import InventorySubNav from "#src/components/InventorySubNav";
 import { Island } from "#src/components/Island";
+import { MultiCombobox } from "#src/components/MultiCombobox";
 import { NumberInput } from "#src/components/NumberInput";
 import { Page } from "#src/components/Page";
 import { authClient } from "#src/lib/auth-client";
-import { useCategories } from "#src/lib/hooks/use-categories";
+import { useProductCategories } from "#src/lib/hooks/use-categories";
 import {
 	useDeleteProduct,
 	useProduct,
@@ -27,7 +28,7 @@ function ProductDetail() {
 	const { data: session, isPending: sessionLoading } = authClient.useSession();
 
 	const { data: product, isLoading, error } = useProduct(id);
-	const { data: categories } = useCategories();
+	const { data: categories } = useProductCategories();
 	const { data: quantityUnits } = useQuantityUnits();
 	const updateProduct = useUpdateProduct(id);
 	const deleteProduct = useDeleteProduct();
@@ -37,7 +38,7 @@ function ProductDetail() {
 	const htmlId = useId();
 	const [form, setForm] = useState({
 		name: "",
-		categoryId: "",
+		categoryIds: [] as string[],
 		description: "",
 		image: null as string | null,
 		defaultQuantityUnitId: "",
@@ -77,9 +78,10 @@ function ProductDetail() {
 		);
 	}
 
-	function getCategoryName(catId: string | null) {
-		if (!catId) return null;
-		return categories?.find((c) => c.id === catId)?.name ?? null;
+	function getCategoryNames(catIds: string[]) {
+		return catIds
+			.map((id) => categories?.find((c) => c.id === id)?.name)
+			.filter(Boolean) as string[];
 	}
 
 	function getUnitName(unitId: string | null) {
@@ -92,7 +94,7 @@ function ProductDetail() {
 		if (!product) return;
 		setForm({
 			name: product.name,
-			categoryId: product.categoryId || "",
+			categoryIds: [...product.categoryIds],
 			description: product.description || "",
 			image: product.image,
 			defaultQuantityUnitId: product.defaultQuantityUnitId || "",
@@ -112,7 +114,7 @@ function ProductDetail() {
 		e.preventDefault();
 		await updateProduct.mutateAsync({
 			name: form.name,
-			categoryId: form.categoryId || undefined,
+			categoryIds: form.categoryIds,
 			description: form.description || undefined,
 			image: form.image || undefined,
 			defaultQuantityUnitId: form.defaultQuantityUnitId || undefined,
@@ -137,7 +139,7 @@ function ProductDetail() {
 		return new Date(dateStr).toLocaleDateString();
 	}
 
-	const categoryName = getCategoryName(product.categoryId);
+	const categoryNames = getCategoryNames(product.categoryIds);
 	const unitName = getUnitName(product.defaultQuantityUnitId);
 
 	return (
@@ -180,10 +182,10 @@ function ProductDetail() {
 						</label>
 
 						<div className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
-							Category
-							<Combobox
-								value={form.categoryId}
-								onChange={(v) => setForm({ ...form, categoryId: v })}
+							Categories
+							<MultiCombobox
+								value={form.categoryIds}
+								onChange={(v) => setForm({ ...form, categoryIds: v })}
 								options={(categories ?? []).map((c) => ({
 									value: c.id,
 									label: c.name,
@@ -276,10 +278,17 @@ function ProductDetail() {
 								<h1 className="font-display text-2xl font-bold text-(--sea-ink)">
 									{product.name}
 								</h1>
-								{categoryName && (
-									<span className="mt-2 inline-block rounded-full bg-[rgba(79,184,178,0.14)] px-2.5 py-0.5 text-xs font-medium text-(--lagoon-deep)">
-										{categoryName}
-									</span>
+								{categoryNames.length > 0 && (
+									<div className="mt-2 flex flex-wrap gap-1">
+										{categoryNames.map((name) => (
+											<span
+												key={name}
+												className="inline-block rounded-full bg-[rgba(79,184,178,0.14)] px-2.5 py-0.5 text-xs font-medium text-(--lagoon-deep)"
+											>
+												{name}
+											</span>
+										))}
+									</div>
 								)}
 							</div>
 							<div className="flex gap-1">

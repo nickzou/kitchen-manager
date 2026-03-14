@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { db } from "#src/db";
-import { product } from "#src/db/schema";
+import { product, productCategory } from "#src/db/schema";
 import { getAuthSession } from "#src/lib/auth-session";
 
 function json(data: unknown, init?: { status?: number }) {
@@ -25,7 +25,27 @@ export const Route = createFileRoute("/api/products/")({
 					.from(product)
 					.where(eq(product.userId, session.user.id));
 
-				return json(products);
+				if (products.length === 0) return json([]);
+
+				const productIds = products.map((p) => p.id);
+				const categoryRows = await db
+					.select()
+					.from(productCategory)
+					.where(inArray(productCategory.productId, productIds));
+
+				const categoryMap = new Map<string, string[]>();
+				for (const row of categoryRows) {
+					const list = categoryMap.get(row.productId) ?? [];
+					list.push(row.categoryId);
+					categoryMap.set(row.productId, list);
+				}
+
+				const result = products.map((p) => ({
+					...p,
+					categoryIds: categoryMap.get(p.id) ?? [],
+				}));
+
+				return json(result);
 			},
 			POST: async ({ request }) => {
 				const session = await getAuthSession(request);
@@ -41,7 +61,6 @@ export const Route = createFileRoute("/api/products/")({
 						name: body.name,
 						description: body.description,
 						image: body.image,
-						categoryId: body.categoryId ?? null,
 						defaultQuantityUnitId: body.defaultQuantityUnitId ?? null,
 						minStockAmount: body.minStockAmount ?? "0",
 						defaultExpirationDays: body.defaultExpirationDays ?? null,
@@ -49,7 +68,17 @@ export const Route = createFileRoute("/api/products/")({
 					})
 					.returning();
 
-				return json(created, { status: 201 });
+				const categoryIds: string[] = body.categoryIds ?? [];
+				if (categoryIds.length > 0) {
+					await db.insert(productCategory).values(
+						categoryIds.map((categoryId: string) => ({
+							productId: created.id,
+							categoryId,
+						})),
+					);
+				}
+
+				return json({ ...created, categoryIds }, { status: 201 });
 			},
 		},
 	},

@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { eq } from "drizzle-orm";
 import { db } from "#src/db";
-import { category } from "#src/db/schema";
+import { recipeCategoryType } from "#src/db/schema";
 import { getAuthSession } from "#src/lib/auth-session";
 
 function json(data: unknown, init?: { status?: number }) {
@@ -11,7 +11,7 @@ function json(data: unknown, init?: { status?: number }) {
 	});
 }
 
-export const Route = createFileRoute("/api/categories/")({
+export const Route = createFileRoute("/api/recipe-categories/")({
 	server: {
 		handlers: {
 			GET: async ({ request }) => {
@@ -22,8 +22,8 @@ export const Route = createFileRoute("/api/categories/")({
 
 				const categories = await db
 					.select()
-					.from(category)
-					.where(eq(category.userId, session.user.id));
+					.from(recipeCategoryType)
+					.where(eq(recipeCategoryType.userId, session.user.id));
 
 				return json(categories);
 			},
@@ -40,7 +40,7 @@ export const Route = createFileRoute("/api/categories/")({
 				}
 
 				const [created] = await db
-					.insert(category)
+					.insert(recipeCategoryType)
 					.values({
 						name: body.name,
 						description: body.description,

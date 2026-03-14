@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 export interface Product {
 	id: string;
 	name: string;
-	categoryId: string | null;
+	categoryIds: string[];
 	description: string | null;
 	image: string | null;
 	defaultQuantityUnitId: string | null;
@@ -16,7 +16,7 @@ export interface Product {
 
 export type CreateProductInput = {
 	name: string;
-	categoryId?: string;
+	categoryIds?: string[];
 	description?: string;
 	image?: string;
 	defaultQuantityUnitId?: string;

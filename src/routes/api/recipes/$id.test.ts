@@ -12,6 +12,7 @@ vi.mock("#src/lib/auth-session", () => ({
 
 vi.mock("#src/db/schema", () => ({
 	recipe: {},
+	recipeCategory: {},
 }));
 
 const mockSelectWhere = vi.fn();
@@ -36,6 +37,9 @@ vi.mock("#src/db", () => ({
 			where: vi.fn(() => ({
 				returning: mockDeleteReturning,
 			})),
+		})),
+		insert: vi.fn(() => ({
+			values: vi.fn(() => ({})),
 		})),
 	},
 }));
@@ -76,10 +80,10 @@ describe("GET /api/recipes/:id", () => {
 		expect(await response.json()).toEqual({ error: "Not found" });
 	});
 
-	it("returns 200 with the recipe", async () => {
+	it("returns 200 with the recipe and categoryIds", async () => {
 		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
 		const found = makeRecipe();
-		mockSelectWhere.mockResolvedValue([found]);
+		mockSelectWhere.mockResolvedValueOnce([found]).mockResolvedValueOnce([]);
 		const request = makeGetRequest("/api/recipes/recipe-1");
 
 		const response = await GET({ request, params } as never);
@@ -87,6 +91,7 @@ describe("GET /api/recipes/:id", () => {
 		expect(response.status).toBe(200);
 		const data = await response.json();
 		expect(data.name).toBe("Pancakes");
+		expect(data.categoryIds).toEqual([]);
 	});
 });
 
@@ -124,6 +129,7 @@ describe("PUT /api/recipes/:id", () => {
 		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
 		const updated = makeRecipe({ name: "Waffles" });
 		mockUpdateReturning.mockResolvedValue([updated]);
+		mockSelectWhere.mockResolvedValueOnce([]);
 		const request = makePutRequest("/api/recipes/recipe-1", {
 			name: "Waffles",
 		});
@@ -139,6 +145,7 @@ describe("PUT /api/recipes/:id", () => {
 		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
 		const updated = makeRecipe({ name: "Waffles" });
 		mockUpdateReturning.mockResolvedValue([updated]);
+		mockSelectWhere.mockResolvedValueOnce([]);
 		const request = makePutRequest("/api/recipes/recipe-1", {
 			name: "Waffles",
 		});

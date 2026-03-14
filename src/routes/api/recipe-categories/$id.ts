@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { and, eq } from "drizzle-orm";
 import { db } from "#src/db";
-import { recipe, recipeCategory } from "#src/db/schema";
+import { recipeCategoryType } from "#src/db/schema";
 import { getAuthSession } from "#src/lib/auth-session";
 
 function json(data: unknown, init?: { status?: number }) {
@@ -11,7 +11,7 @@ function json(data: unknown, init?: { status?: number }) {
 	});
 }
 
-export const Route = createFileRoute("/api/recipes/$id")({
+export const Route = createFileRoute("/api/recipe-categories/$id")({
 	server: {
 		handlers: {
 			GET: async ({ request, params }) => {
@@ -22,24 +22,19 @@ export const Route = createFileRoute("/api/recipes/$id")({
 
 				const [found] = await db
 					.select()
-					.from(recipe)
+					.from(recipeCategoryType)
 					.where(
-						and(eq(recipe.id, params.id), eq(recipe.userId, session.user.id)),
+						and(
+							eq(recipeCategoryType.id, params.id),
+							eq(recipeCategoryType.userId, session.user.id),
+						),
 					);
 
 				if (!found) {
 					return json({ error: "Not found" }, { status: 404 });
 				}
 
-				const categoryRows = await db
-					.select()
-					.from(recipeCategory)
-					.where(eq(recipeCategory.recipeId, found.id));
-
-				return json({
-					...found,
-					categoryIds: categoryRows.map((r) => r.categoryId),
-				});
+				return json(found);
 			},
 			PUT: async ({ request, params }) => {
 				const session = await getAuthSession(request);
@@ -53,18 +48,15 @@ export const Route = createFileRoute("/api/recipes/$id")({
 				if (body.name !== undefined) updates.name = body.name;
 				if (body.description !== undefined)
 					updates.description = body.description;
-				if (body.servings !== undefined) updates.servings = body.servings;
-				if (body.prepTime !== undefined) updates.prepTime = body.prepTime;
-				if (body.cookTime !== undefined) updates.cookTime = body.cookTime;
-				if (body.instructions !== undefined)
-					updates.instructions = body.instructions;
-				if (body.image !== undefined) updates.image = body.image;
 
 				const [updated] = await db
-					.update(recipe)
+					.update(recipeCategoryType)
 					.set(updates)
 					.where(
-						and(eq(recipe.id, params.id), eq(recipe.userId, session.user.id)),
+						and(
+							eq(recipeCategoryType.id, params.id),
+							eq(recipeCategoryType.userId, session.user.id),
+						),
 					)
 					.returning();
 
@@ -72,30 +64,7 @@ export const Route = createFileRoute("/api/recipes/$id")({
 					return json({ error: "Not found" }, { status: 404 });
 				}
 
-				if (body.categoryIds !== undefined) {
-					await db
-						.delete(recipeCategory)
-						.where(eq(recipeCategory.recipeId, updated.id));
-					const categoryIds: string[] = body.categoryIds;
-					if (categoryIds.length > 0) {
-						await db.insert(recipeCategory).values(
-							categoryIds.map((categoryId: string) => ({
-								recipeId: updated.id,
-								categoryId,
-							})),
-						);
-					}
-				}
-
-				const categoryRows = await db
-					.select()
-					.from(recipeCategory)
-					.where(eq(recipeCategory.recipeId, updated.id));
-
-				return json({
-					...updated,
-					categoryIds: categoryRows.map((r) => r.categoryId),
-				});
+				return json(updated);
 			},
 			DELETE: async ({ request, params }) => {
 				const session = await getAuthSession(request);
@@ -104,9 +73,12 @@ export const Route = createFileRoute("/api/recipes/$id")({
 				}
 
 				const [deleted] = await db
-					.delete(recipe)
+					.delete(recipeCategoryType)
 					.where(
-						and(eq(recipe.id, params.id), eq(recipe.userId, session.user.id)),
+						and(
+							eq(recipeCategoryType.id, params.id),
+							eq(recipeCategoryType.userId, session.user.id),
+						),
 					)
 					.returning();
 

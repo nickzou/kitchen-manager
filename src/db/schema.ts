@@ -28,8 +28,8 @@ export const webhookDeliveryStatusEnum = pgEnum("webhook_delivery_status", [
 	"failed",
 ]);
 
-export const category = pgTable(
-	"category",
+export const productCategoryType = pgTable(
+	"product_category_type",
 	{
 		id: text("id")
 			.primaryKey()
@@ -45,15 +45,50 @@ export const category = pgTable(
 			.$onUpdate(() => new Date())
 			.notNull(),
 	},
-	(table) => [index("category_userId_idx").on(table.userId)],
+	(table) => [index("productCategoryType_userId_idx").on(table.userId)],
 );
 
-export const categoryRelations = relations(category, ({ one }) => ({
-	user: one(user, {
-		fields: [category.userId],
-		references: [user.id],
+export const productCategoryTypeRelations = relations(
+	productCategoryType,
+	({ one, many }) => ({
+		user: one(user, {
+			fields: [productCategoryType.userId],
+			references: [user.id],
+		}),
+		products: many(productCategory),
 	}),
-}));
+);
+
+export const recipeCategoryType = pgTable(
+	"recipe_category_type",
+	{
+		id: text("id")
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		name: text("name").notNull(),
+		description: text("description"),
+		userId: text("user_id")
+			.notNull()
+			.references(() => user.id, { onDelete: "cascade" }),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+		updatedAt: timestamp("updated_at")
+			.defaultNow()
+			.$onUpdate(() => new Date())
+			.notNull(),
+	},
+	(table) => [index("recipeCategoryType_userId_idx").on(table.userId)],
+);
+
+export const recipeCategoryTypeRelations = relations(
+	recipeCategoryType,
+	({ one, many }) => ({
+		user: one(user, {
+			fields: [recipeCategoryType.userId],
+			references: [user.id],
+		}),
+		recipes: many(recipeCategory),
+	}),
+);
 
 export const quantityUnit = pgTable(
 	"quantity_unit",
@@ -129,6 +164,69 @@ export const unitConversionRelations = relations(unitConversion, ({ one }) => ({
 	}),
 }));
 
+export const productCategory = pgTable(
+	"product_category",
+	{
+		id: text("id")
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		productId: text("product_id")
+			.notNull()
+			.references(() => product.id, { onDelete: "cascade" }),
+		categoryId: text("category_id")
+			.notNull()
+			.references(() => productCategoryType.id, { onDelete: "cascade" }),
+	},
+	(table) => [
+		index("productCategory_productId_idx").on(table.productId),
+		index("productCategory_categoryId_idx").on(table.categoryId),
+	],
+);
+
+export const productCategoryRelations = relations(
+	productCategory,
+	({ one }) => ({
+		product: one(product, {
+			fields: [productCategory.productId],
+			references: [product.id],
+		}),
+		category: one(productCategoryType, {
+			fields: [productCategory.categoryId],
+			references: [productCategoryType.id],
+		}),
+	}),
+);
+
+export const recipeCategory = pgTable(
+	"recipe_category",
+	{
+		id: text("id")
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		recipeId: text("recipe_id")
+			.notNull()
+			.references(() => recipe.id, { onDelete: "cascade" }),
+		categoryId: text("category_id")
+			.notNull()
+			.references(() => recipeCategoryType.id, { onDelete: "cascade" }),
+	},
+	(table) => [
+		index("recipeCategory_recipeId_idx").on(table.recipeId),
+		index("recipeCategory_categoryId_idx").on(table.categoryId),
+	],
+);
+
+export const recipeCategoryRelations = relations(recipeCategory, ({ one }) => ({
+	recipe: one(recipe, {
+		fields: [recipeCategory.recipeId],
+		references: [recipe.id],
+	}),
+	category: one(recipeCategoryType, {
+		fields: [recipeCategory.categoryId],
+		references: [recipeCategoryType.id],
+	}),
+}));
+
 export const product = pgTable(
 	"product",
 	{
@@ -138,9 +236,6 @@ export const product = pgTable(
 		name: text("name").notNull(),
 		description: text("description"),
 		image: text("image"),
-		categoryId: text("category_id").references(() => category.id, {
-			onDelete: "set null",
-		}),
 		defaultQuantityUnitId: text("default_quantity_unit_id").references(
 			() => quantityUnit.id,
 			{
@@ -161,15 +256,12 @@ export const product = pgTable(
 	(table) => [index("product_userId_idx").on(table.userId)],
 );
 
-export const productRelations = relations(product, ({ one }) => ({
+export const productRelations = relations(product, ({ one, many }) => ({
 	user: one(user, {
 		fields: [product.userId],
 		references: [user.id],
 	}),
-	category: one(category, {
-		fields: [product.categoryId],
-		references: [category.id],
-	}),
+	categories: many(productCategory),
 	defaultQuantityUnit: one(quantityUnit, {
 		fields: [product.defaultQuantityUnitId],
 		references: [quantityUnit.id],
@@ -307,9 +399,6 @@ export const recipe = pgTable(
 		prepTime: integer("prep_time"),
 		cookTime: integer("cook_time"),
 		instructions: text("instructions"),
-		categoryId: text("category_id").references(() => category.id, {
-			onDelete: "set null",
-		}),
 		userId: text("user_id")
 			.notNull()
 			.references(() => user.id, { onDelete: "cascade" }),
@@ -327,10 +416,7 @@ export const recipeRelations = relations(recipe, ({ one, many }) => ({
 		fields: [recipe.userId],
 		references: [user.id],
 	}),
-	category: one(category, {
-		fields: [recipe.categoryId],
-		references: [category.id],
-	}),
+	categories: many(recipeCategory),
 	ingredients: many(recipeIngredient),
 }));
 

@@ -6,24 +6,24 @@ import { Island } from "#src/components/Island";
 import { Page } from "#src/components/Page";
 import { authClient } from "#src/lib/auth-client";
 import {
-	useCategory,
-	useDeleteCategory,
-	useUpdateCategory,
+	useDeleteProductCategory,
+	useProductCategory,
+	useUpdateProductCategory,
 } from "#src/lib/hooks/use-categories";
 import { cn } from "#src/lib/utils";
 
-export const Route = createFileRoute("/categories/$id")({
-	component: CategoryDetail,
+export const Route = createFileRoute("/product-categories/$id")({
+	component: ProductCategoryDetail,
 });
 
-function CategoryDetail() {
+function ProductCategoryDetail() {
 	const { id } = Route.useParams();
 	const navigate = useNavigate();
 	const { data: session, isPending: sessionLoading } = authClient.useSession();
 
-	const { data: category, isLoading, error } = useCategory(id);
-	const updateCategory = useUpdateCategory(id);
-	const deleteCategory = useDeleteCategory();
+	const { data: category, isLoading, error } = useProductCategory(id);
+	const updateCategory = useUpdateProductCategory(id);
+	const deleteCategory = useDeleteProductCategory();
 
 	const [editing, setEditing] = useState(false);
 	const [confirmDelete, setConfirmDelete] = useState(false);
@@ -54,7 +54,7 @@ function CategoryDetail() {
 						Category not found
 					</h1>
 					<Link
-						to="/categories"
+						to="/product-categories"
 						className="text-sm font-medium text-(--lagoon-deep)"
 					>
 						&larr; Back to categories
@@ -84,7 +84,7 @@ function CategoryDetail() {
 
 	async function handleDelete() {
 		await deleteCategory.mutateAsync(id);
-		navigate({ to: "/categories" });
+		navigate({ to: "/product-categories" });
 	}
 
 	const inputClass =
@@ -98,7 +98,7 @@ function CategoryDetail() {
 	return (
 		<Page as="main" className="pb-8 pt-14">
 			<Link
-				to="/categories"
+				to="/product-categories"
 				className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-(--lagoon-deep) no-underline hover:underline"
 			>
 				<ArrowLeft size={14} />

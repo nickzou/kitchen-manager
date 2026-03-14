@@ -36,9 +36,10 @@ vi.mock("#src/lib/hooks/use-products", () => ({
 	useCreateProduct: (...args: unknown[]) => mockUseCreateProduct(...args),
 }));
 
-const mockUseCategories = vi.fn();
+const mockUseProductCategories = vi.fn();
 vi.mock("#src/lib/hooks/use-categories", () => ({
-	useCategories: (...args: unknown[]) => mockUseCategories(...args),
+	useProductCategories: (...args: unknown[]) =>
+		mockUseProductCategories(...args),
 }));
 
 vi.mock("#src/lib/utils", () => ({
@@ -49,12 +50,42 @@ vi.mock("#src/components/InventorySubNav", () => ({
 	default: () => <nav data-testid="inventory-sub-nav" />,
 }));
 
+vi.mock("#src/components/MultiCombobox", () => ({
+	MultiCombobox: ({
+		value,
+		onChange,
+		options,
+		placeholder,
+	}: {
+		value: string[];
+		onChange: (v: string[]) => void;
+		options: { value: string; label: string }[];
+		placeholder?: string;
+	}) => (
+		<select
+			multiple
+			value={value}
+			onChange={(e) => {
+				const selected = Array.from(e.target.selectedOptions, (o) => o.value);
+				onChange(selected);
+			}}
+			aria-label={placeholder}
+		>
+			{options.map((o) => (
+				<option key={o.value} value={o.value}>
+					{o.label}
+				</option>
+			))}
+		</select>
+	),
+}));
+
 import { Route } from "./index";
 
 const mockProduct: Product = {
 	id: "1",
 	name: "Tomatoes",
-	categoryId: "c1",
+	categoryIds: ["c1"],
 	description: null,
 	image: null,
 	defaultQuantityUnitId: null,
@@ -82,7 +113,7 @@ beforeEach(() => {
 		mutateAsync: mockMutateAsync,
 		isPending: false,
 	});
-	mockUseCategories.mockReturnValue({
+	mockUseProductCategories.mockReturnValue({
 		data: [{ id: "c1", name: "Vegetables" }],
 	});
 });
@@ -179,7 +210,7 @@ describe("ProductsPage", () => {
 			mockUseProducts.mockReturnValue({
 				data: [
 					mockProduct,
-					{ ...mockProduct, id: "2", name: "Carrots", categoryId: null },
+					{ ...mockProduct, id: "2", name: "Carrots", categoryIds: [] },
 				],
 				isLoading: false,
 			});
@@ -216,21 +247,17 @@ describe("ProductsPage", () => {
 	});
 
 	describe("quick-add form", () => {
-		it("submits form with name and category", async () => {
+		it("submits form with name", async () => {
 			renderPage();
 
 			fireEvent.change(screen.getByPlaceholderText("Product name *"), {
 				target: { value: "Carrots" },
-			});
-			fireEvent.change(screen.getByRole("combobox"), {
-				target: { value: "c1" },
 			});
 			fireEvent.click(screen.getByText("Add"));
 
 			await waitFor(() => {
 				expect(mockMutateAsync).toHaveBeenCalledWith({
 					name: "Carrots",
-					categoryId: "c1",
 				});
 			});
 		});

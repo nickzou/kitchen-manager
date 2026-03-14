@@ -9,7 +9,7 @@ export interface Recipe {
 	prepTime: number | null;
 	cookTime: number | null;
 	instructions: string | null;
-	categoryId: string | null;
+	categoryIds: string[];
 	userId: string;
 	createdAt: string;
 	updatedAt: string;
@@ -23,7 +23,7 @@ export type CreateRecipeInput = {
 	prepTime?: number;
 	cookTime?: number;
 	instructions?: string;
-	categoryId?: string;
+	categoryIds?: string[];
 };
 
 export type UpdateRecipeInput = Partial<CreateRecipeInput>;

@@ -41,13 +41,37 @@ export function makeCategory(overrides?: Record<string, unknown>) {
 	};
 }
 
+export function makeProductCategory(overrides?: Record<string, unknown>) {
+	return {
+		id: "category-1",
+		name: "Dairy",
+		description: "Dairy products",
+		userId: "user-1",
+		createdAt: new Date("2025-01-01"),
+		updatedAt: new Date("2025-01-01"),
+		...overrides,
+	};
+}
+
+export function makeRecipeCategory(overrides?: Record<string, unknown>) {
+	return {
+		id: "category-1",
+		name: "Quick Meals",
+		description: "Fast recipes",
+		userId: "user-1",
+		createdAt: new Date("2025-01-01"),
+		updatedAt: new Date("2025-01-01"),
+		...overrides,
+	};
+}
+
 export function makeProduct(overrides?: Record<string, unknown>) {
 	return {
 		id: "product-1",
 		name: "Milk",
 		description: "Whole milk",
 		image: null,
-		categoryId: null,
+		categoryIds: [],
 		defaultQuantityUnitId: null,
 		minStockAmount: "0",
 		defaultExpirationDays: null,
@@ -134,7 +158,7 @@ export function makeRecipe(overrides?: Record<string, unknown>) {
 		prepTime: 10,
 		cookTime: 15,
 		instructions: "Mix and cook",
-		categoryId: null,
+		categoryIds: [],
 		userId: "user-1",
 		createdAt: new Date("2025-01-01"),
 		updatedAt: new Date("2025-01-01"),

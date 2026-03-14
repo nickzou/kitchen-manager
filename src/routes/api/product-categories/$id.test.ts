@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { makeCategory, makeSession } from "#src/tests/helpers/factories";
+import { makeProductCategory, makeSession } from "#src/tests/helpers/factories";
 import {
 	makeDeleteRequest,
 	makeGetRequest,
@@ -11,7 +11,7 @@ vi.mock("#src/lib/auth-session", () => ({
 }));
 
 vi.mock("#src/db/schema", () => ({
-	category: {},
+	productCategoryType: {},
 }));
 
 const mockSelectWhere = vi.fn();
@@ -41,7 +41,7 @@ vi.mock("#src/db", () => ({
 }));
 
 const { getAuthSession } = await import("#src/lib/auth-session");
-const { Route } = await import("#src/routes/api/categories/$id");
+const { Route } = await import("#src/routes/api/product-categories/$id");
 
 type Handler = (ctx: never) => Promise<Response>;
 
@@ -50,14 +50,14 @@ const h = Route.options.server!.handlers! as Record<string, Handler>;
 const { GET, PUT, DELETE: DELETE_HANDLER } = h;
 const params = { id: "category-1" };
 
-describe("GET /api/categories/:id", () => {
+describe("GET /api/product-categories/:id", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 	});
 
 	it("returns 401 when not authenticated", async () => {
 		vi.mocked(getAuthSession).mockResolvedValue(null);
-		const request = makeGetRequest("/api/categories/category-1");
+		const request = makeGetRequest("/api/product-categories/category-1");
 
 		const response = await GET({ request, params } as never);
 
@@ -68,7 +68,7 @@ describe("GET /api/categories/:id", () => {
 	it("returns 404 when category not found", async () => {
 		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
 		mockSelectWhere.mockResolvedValue([]);
-		const request = makeGetRequest("/api/categories/category-1");
+		const request = makeGetRequest("/api/product-categories/category-1");
 
 		const response = await GET({ request, params } as never);
 
@@ -78,9 +78,9 @@ describe("GET /api/categories/:id", () => {
 
 	it("returns 200 with the category", async () => {
 		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
-		const found = makeCategory();
+		const found = makeProductCategory();
 		mockSelectWhere.mockResolvedValue([found]);
-		const request = makeGetRequest("/api/categories/category-1");
+		const request = makeGetRequest("/api/product-categories/category-1");
 
 		const response = await GET({ request, params } as never);
 
@@ -90,14 +90,14 @@ describe("GET /api/categories/:id", () => {
 	});
 });
 
-describe("PUT /api/categories/:id", () => {
+describe("PUT /api/product-categories/:id", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 	});
 
 	it("returns 401 when not authenticated", async () => {
 		vi.mocked(getAuthSession).mockResolvedValue(null);
-		const request = makePutRequest("/api/categories/category-1", {
+		const request = makePutRequest("/api/product-categories/category-1", {
 			name: "Produce",
 		});
 
@@ -110,7 +110,7 @@ describe("PUT /api/categories/:id", () => {
 	it("returns 404 when category not found", async () => {
 		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
 		mockUpdateReturning.mockResolvedValue([]);
-		const request = makePutRequest("/api/categories/category-1", {
+		const request = makePutRequest("/api/product-categories/category-1", {
 			name: "Produce",
 		});
 
@@ -122,9 +122,9 @@ describe("PUT /api/categories/:id", () => {
 
 	it("returns 200 with the updated category", async () => {
 		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
-		const updated = makeCategory({ name: "Produce" });
+		const updated = makeProductCategory({ name: "Produce" });
 		mockUpdateReturning.mockResolvedValue([updated]);
-		const request = makePutRequest("/api/categories/category-1", {
+		const request = makePutRequest("/api/product-categories/category-1", {
 			name: "Produce",
 		});
 
@@ -137,9 +137,9 @@ describe("PUT /api/categories/:id", () => {
 
 	it("only updates fields present in request body", async () => {
 		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
-		const updated = makeCategory({ name: "Produce" });
+		const updated = makeProductCategory({ name: "Produce" });
 		mockUpdateReturning.mockResolvedValue([updated]);
-		const request = makePutRequest("/api/categories/category-1", {
+		const request = makePutRequest("/api/product-categories/category-1", {
 			name: "Produce",
 		});
 
@@ -152,14 +152,14 @@ describe("PUT /api/categories/:id", () => {
 	});
 });
 
-describe("DELETE /api/categories/:id", () => {
+describe("DELETE /api/product-categories/:id", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 	});
 
 	it("returns 401 when not authenticated", async () => {
 		vi.mocked(getAuthSession).mockResolvedValue(null);
-		const request = makeDeleteRequest("/api/categories/category-1");
+		const request = makeDeleteRequest("/api/product-categories/category-1");
 
 		const response = await DELETE_HANDLER({ request, params } as never);
 
@@ -170,7 +170,7 @@ describe("DELETE /api/categories/:id", () => {
 	it("returns 404 when category not found", async () => {
 		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
 		mockDeleteReturning.mockResolvedValue([]);
-		const request = makeDeleteRequest("/api/categories/category-1");
+		const request = makeDeleteRequest("/api/product-categories/category-1");
 
 		const response = await DELETE_HANDLER({ request, params } as never);
 
@@ -180,9 +180,9 @@ describe("DELETE /api/categories/:id", () => {
 
 	it("returns 200 with the deleted category", async () => {
 		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
-		const deleted = makeCategory();
+		const deleted = makeProductCategory();
 		mockDeleteReturning.mockResolvedValue([deleted]);
-		const request = makeDeleteRequest("/api/categories/category-1");
+		const request = makeDeleteRequest("/api/product-categories/category-1");
 
 		const response = await DELETE_HANDLER({ request, params } as never);
 
