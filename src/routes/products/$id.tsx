@@ -319,7 +319,9 @@ function ProductDetail() {
 						<dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-3">
 							{unitName && (
 								<div>
-									<dt className="font-medium text-(--sea-ink-soft)">Default Unit</dt>
+									<dt className="font-medium text-(--sea-ink-soft)">
+										Default Unit
+									</dt>
 									<dd className="mt-0.5 text-(--sea-ink)">{unitName}</dd>
 								</div>
 							)}

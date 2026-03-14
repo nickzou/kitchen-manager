@@ -333,9 +333,9 @@ describe("RecipeDetail", () => {
 				expect(screen.getAllByRole("option").length).toBeGreaterThan(0);
 			});
 
-			const option = screen.getAllByRole("option").find(
-				(el) => el.textContent === "Spaghetti",
-			) as HTMLElement;
+			const option = screen
+				.getAllByRole("option")
+				.find((el) => el.textContent === "Spaghetti") as HTMLElement;
 			fireEvent.mouseDown(option);
 
 			await waitFor(() => {
