@@ -4,6 +4,7 @@ import { type FormEvent, useMemo, useState } from "react";
 import { CompactView } from "#src/components/CompactView";
 import CookingSubNav from "#src/components/CookingSubNav";
 import { GridView } from "#src/components/GridView";
+import { ImageToggle } from "#src/components/ImageToggle";
 import { Island } from "#src/components/Island";
 import { MultiCombobox } from "#src/components/MultiCombobox";
 import { Page } from "#src/components/Page";
@@ -38,6 +39,7 @@ function RecipesPage() {
 	const [name, setName] = useState("");
 	const [categoryIds, setCategoryIds] = useState<string[]>([]);
 	const [search, setSearch] = useState("");
+	const [showImages, setShowImages] = useState(true);
 
 	const filteredRecipes = useMemo(() => {
 		if (!recipes || !search.trim()) return recipes;
@@ -121,7 +123,13 @@ function RecipesPage() {
 						value={search}
 						onChange={(e) => setSearch(e.target.value)}
 					/>
-					<ViewSwitcher view={view} onViewChange={setView} />
+					<div className="flex items-center gap-2">
+						<ImageToggle
+							show={showImages}
+							onToggle={() => setShowImages((v) => !v)}
+						/>
+						<ViewSwitcher view={view} onViewChange={setView} />
+					</div>
 				</div>
 
 				{isLoading ? (
@@ -139,8 +147,8 @@ function RecipesPage() {
 						items={filteredRecipes}
 						getKey={(r) => r.id}
 						getLink={(r) => ({ to: "/recipes/$id", params: { id: r.id } })}
-						getImage={(r) => r.image}
-						getImageAlt={(r) => r.name}
+						getImage={showImages ? (r) => r.image : undefined}
+						getImageAlt={showImages ? (r) => r.name : undefined}
 						renderCard={(r) => {
 							const catNames = getCategoryNames(r.categoryIds);
 							return (

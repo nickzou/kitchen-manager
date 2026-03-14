@@ -213,6 +213,20 @@ export function makeWebhookDelivery(overrides?: Record<string, unknown>) {
 	};
 }
 
+export function makeProductUnitConversion(overrides?: Record<string, unknown>) {
+	return {
+		id: "puc-1",
+		productId: "product-1",
+		fromUnitId: "unit-1",
+		toUnitId: "unit-2",
+		factor: "120",
+		userId: "user-1",
+		createdAt: new Date("2025-01-01"),
+		updatedAt: new Date("2025-01-01"),
+		...overrides,
+	};
+}
+
 export function makeRecipeIngredient(overrides?: Record<string, unknown>) {
 	return {
 		id: "recipe-ingredient-1",

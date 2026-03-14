@@ -266,7 +266,63 @@ export const productRelations = relations(product, ({ one, many }) => ({
 		fields: [product.defaultQuantityUnitId],
 		references: [quantityUnit.id],
 	}),
+	unitConversions: many(productUnitConversion),
 }));
+
+export const productUnitConversion = pgTable(
+	"product_unit_conversion",
+	{
+		id: text("id")
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		productId: text("product_id")
+			.notNull()
+			.references(() => product.id, { onDelete: "cascade" }),
+		fromUnitId: text("from_unit_id")
+			.notNull()
+			.references(() => quantityUnit.id, { onDelete: "cascade" }),
+		toUnitId: text("to_unit_id")
+			.notNull()
+			.references(() => quantityUnit.id, { onDelete: "cascade" }),
+		factor: numeric("factor").notNull(),
+		userId: text("user_id")
+			.notNull()
+			.references(() => user.id, { onDelete: "cascade" }),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+		updatedAt: timestamp("updated_at")
+			.defaultNow()
+			.$onUpdate(() => new Date())
+			.notNull(),
+	},
+	(table) => [
+		index("productUnitConversion_productId_idx").on(table.productId),
+		index("productUnitConversion_userId_idx").on(table.userId),
+	],
+);
+
+export const productUnitConversionRelations = relations(
+	productUnitConversion,
+	({ one }) => ({
+		product: one(product, {
+			fields: [productUnitConversion.productId],
+			references: [product.id],
+		}),
+		user: one(user, {
+			fields: [productUnitConversion.userId],
+			references: [user.id],
+		}),
+		fromUnit: one(quantityUnit, {
+			fields: [productUnitConversion.fromUnitId],
+			references: [quantityUnit.id],
+			relationName: "productFromUnit",
+		}),
+		toUnit: one(quantityUnit, {
+			fields: [productUnitConversion.toUnitId],
+			references: [quantityUnit.id],
+			relationName: "productToUnit",
+		}),
+	}),
+);
 
 export const store = pgTable(
 	"store",

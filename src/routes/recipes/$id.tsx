@@ -12,6 +12,7 @@ import { NumberInput } from "#src/components/NumberInput";
 import { Page } from "#src/components/Page";
 import { authClient } from "#src/lib/auth-client";
 import { useRecipeCategories } from "#src/lib/hooks/use-categories";
+import { useProductUnitConversions } from "#src/lib/hooks/use-product-unit-conversions";
 import { useCreateProduct, useProducts } from "#src/lib/hooks/use-products";
 import { useQuantityUnits } from "#src/lib/hooks/use-quantity-units";
 import {
@@ -68,6 +69,9 @@ function RecipeDetail() {
 		quantityUnitId: "",
 		notes: "",
 	});
+	const { data: productConversions } = useProductUnitConversions(
+		newIngredient.productId,
+	);
 
 	if (sessionLoading) return null;
 	if (!session) {
@@ -205,11 +209,19 @@ function RecipeDetail() {
 		const fromLabel = fromUnit.abbreviation ?? fromUnit.name;
 		const toLabel = toUnit.abbreviation ?? toUnit.name;
 
-		const conversion = unitConversions?.find(
+		const productConversion = productConversions?.find(
 			(c) =>
 				(c.fromUnitId === fromId && c.toUnitId === toId) ||
 				(c.fromUnitId === toId && c.toUnitId === fromId),
 		);
+
+		const conversion =
+			productConversion ??
+			unitConversions?.find(
+				(c) =>
+					(c.fromUnitId === fromId && c.toUnitId === toId) ||
+					(c.fromUnitId === toId && c.toUnitId === fromId),
+			);
 
 		if (conversion) {
 			if (conversion.fromUnitId === fromId) {

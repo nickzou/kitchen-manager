@@ -3,6 +3,7 @@ import { Plus } from "lucide-react";
 import { type FormEvent, useMemo, useState } from "react";
 import { CompactView } from "#src/components/CompactView";
 import { GridView } from "#src/components/GridView";
+import { ImageToggle } from "#src/components/ImageToggle";
 import InventorySubNav from "#src/components/InventorySubNav";
 import { Island } from "#src/components/Island";
 import { MultiCombobox } from "#src/components/MultiCombobox";
@@ -30,6 +31,7 @@ function ProductsPage() {
 	const [name, setName] = useState("");
 	const [categoryIds, setCategoryIds] = useState<string[]>([]);
 	const [search, setSearch] = useState("");
+	const [showImages, setShowImages] = useState(true);
 
 	const filteredProducts = useMemo(() => {
 		if (!products || !search.trim()) return products;
@@ -113,7 +115,13 @@ function ProductsPage() {
 						value={search}
 						onChange={(e) => setSearch(e.target.value)}
 					/>
-					<ViewSwitcher view={view} onViewChange={setView} />
+					<div className="flex items-center gap-2">
+						<ImageToggle
+							show={showImages}
+							onToggle={() => setShowImages((v) => !v)}
+						/>
+						<ViewSwitcher view={view} onViewChange={setView} />
+					</div>
 				</div>
 
 				{isLoading ? (
@@ -131,8 +139,8 @@ function ProductsPage() {
 						items={filteredProducts}
 						getKey={(p) => p.id}
 						getLink={(p) => ({ to: "/products/$id", params: { id: p.id } })}
-						getImage={(p) => p.image}
-						getImageAlt={(p) => p.name}
+						getImage={showImages ? (p) => p.image : undefined}
+						getImageAlt={showImages ? (p) => p.name : undefined}
 						renderCard={(p) => {
 							const catNames = getCategoryNames(p.categoryIds);
 							return (
