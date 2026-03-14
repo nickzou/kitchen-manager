@@ -52,7 +52,7 @@ export function AddIngredientForm({
 			<h3 className="mb-3 text-sm font-semibold text-(--sea-ink)">
 				Add ingredient
 			</h3>
-			<div className="grid grid-cols-[1fr_1fr] gap-2 sm:grid-cols-[1fr_auto_1fr_1fr_auto]">
+			<div className="grid grid-cols-[1fr_1fr] gap-2 sm:grid-cols-[2fr_5rem_1fr_1fr_auto]">
 				<Combobox
 					value={productId}
 					onChange={(v) => {

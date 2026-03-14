@@ -1,12 +1,14 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, Minus, Pencil, Plus, Trash2, X } from "lucide-react";
+import { ArrowLeft, Check, Minus, Pencil, Plus, Trash2, X } from "lucide-react";
 import { type FormEvent, useId, useState } from "react";
 import {
 	AddIngredientForm,
 	type IngredientFormState,
 } from "#src/components/AddIngredientForm";
+import { Combobox } from "#src/components/Combobox";
 import { ImageInput } from "#src/components/ImageInput";
 import { Island } from "#src/components/Island";
+import { DetailColumns } from "#src/components/layouts/DetailColumns";
 import { MultiCombobox } from "#src/components/MultiCombobox";
 import { NumberInput } from "#src/components/NumberInput";
 import { Page } from "#src/components/Page";
@@ -19,6 +21,7 @@ import {
 	useCreateRecipeIngredient,
 	useDeleteRecipeIngredient,
 	useRecipeIngredients,
+	useUpdateRecipeIngredient,
 } from "#src/lib/hooks/use-recipe-ingredients";
 import {
 	useDeleteRecipe,
@@ -46,6 +49,7 @@ function RecipeDetail() {
 	const updateRecipe = useUpdateRecipe(id);
 	const deleteRecipe = useDeleteRecipe();
 	const createIngredient = useCreateRecipeIngredient(id);
+	const updateIngredient = useUpdateRecipeIngredient(id);
 	const deleteIngredient = useDeleteRecipeIngredient(id);
 	const createProduct = useCreateProduct();
 
@@ -70,8 +74,20 @@ function RecipeDetail() {
 		quantityUnitId: "",
 		notes: "",
 	});
+	const [editingIngredientId, setEditingIngredientId] = useState<string | null>(
+		null,
+	);
+	const [editIngredient, setEditIngredient] = useState<IngredientFormState>({
+		productId: "",
+		quantity: "",
+		quantityUnitId: "",
+		notes: "",
+	});
 	const { data: productConversions } = useProductUnitConversions(
 		newIngredient.productId,
+	);
+	const { data: editProductConversions } = useProductUnitConversions(
+		editIngredient.productId,
 	);
 
 	if (sessionLoading) return null;
@@ -183,6 +199,46 @@ function RecipeDetail() {
 		await deleteIngredient.mutateAsync(ingredientId);
 	}
 
+	function startEditingIngredient(ing: {
+		id: string;
+		productId: string | null;
+		quantity: string;
+		quantityUnitId: string | null;
+		notes: string | null;
+	}) {
+		setEditIngredient({
+			productId: ing.productId ?? "",
+			quantity: ing.quantity,
+			quantityUnitId: ing.quantityUnitId ?? "",
+			notes: ing.notes ?? "",
+		});
+		setEditingIngredientId(ing.id);
+	}
+
+	async function handleSaveIngredient() {
+		if (!editingIngredientId || !editIngredient.quantity) return;
+		await updateIngredient.mutateAsync({
+			id: editingIngredientId,
+			productId: editIngredient.productId || undefined,
+			quantity: editIngredient.quantity,
+			quantityUnitId: editIngredient.quantityUnitId || undefined,
+			notes: editIngredient.notes || undefined,
+		});
+		setEditingIngredientId(null);
+	}
+
+	function handleEditProductChange(selectedProductId: string) {
+		if (editIngredient.quantityUnitId) return;
+		const product = products?.find((p) => p.id === selectedProductId);
+		if (product?.defaultQuantityUnitId) {
+			setEditIngredient({
+				...editIngredient,
+				productId: selectedProductId,
+				quantityUnitId: product.defaultQuantityUnitId,
+			});
+		}
+	}
+
 	function handleProductChange(selectedProductId: string) {
 		if (newIngredient.quantityUnitId) return;
 		const product = products?.find((p) => p.id === selectedProductId);
@@ -211,6 +267,46 @@ function RecipeDetail() {
 		const toLabel = toUnit.abbreviation ?? toUnit.name;
 
 		const productConversion = productConversions?.find(
+			(c) =>
+				(c.fromUnitId === fromId && c.toUnitId === toId) ||
+				(c.fromUnitId === toId && c.toUnitId === fromId),
+		);
+
+		const conversion =
+			productConversion ??
+			unitConversions?.find(
+				(c) =>
+					(c.fromUnitId === fromId && c.toUnitId === toId) ||
+					(c.fromUnitId === toId && c.toUnitId === fromId),
+			);
+
+		if (conversion) {
+			if (conversion.fromUnitId === fromId) {
+				return `1 ${fromLabel} = ${conversion.factor} ${toLabel}`;
+			}
+			const inverse = 1 / Number(conversion.factor);
+			return `1 ${fromLabel} = ${Number.isInteger(inverse) ? inverse : inverse.toFixed(4)} ${toLabel}`;
+		}
+
+		return `No conversion to ${toLabel}`;
+	}
+
+	function getEditConversionHint(): string | undefined {
+		if (!editIngredient.quantityUnitId || !editIngredient.productId) return;
+		const product = products?.find((p) => p.id === editIngredient.productId);
+		if (!product?.defaultQuantityUnitId) return;
+		if (editIngredient.quantityUnitId === product.defaultQuantityUnitId) return;
+
+		const fromId = editIngredient.quantityUnitId;
+		const toId = product.defaultQuantityUnitId;
+		const fromUnit = quantityUnits?.find((u) => u.id === fromId);
+		const toUnit = quantityUnits?.find((u) => u.id === toId);
+		if (!fromUnit || !toUnit) return;
+
+		const fromLabel = fromUnit.abbreviation ?? fromUnit.name;
+		const toLabel = toUnit.abbreviation ?? toUnit.name;
+
+		const productConversion = editProductConversions?.find(
 			(c) =>
 				(c.fromUnitId === fromId && c.toUnitId === toId) ||
 				(c.fromUnitId === toId && c.toUnitId === fromId),
@@ -283,357 +379,490 @@ function RecipeDetail() {
 				Back to recipes
 			</Link>
 
-			<Island as="section" className="animate-rise-in rounded-2xl p-6 sm:p-8">
-				{editing ? (
-					<form onSubmit={handleSave} className="flex flex-col gap-4">
-						<div className="flex items-center justify-between">
-							<h1 className="font-display text-2xl font-bold text-(--sea-ink)">
-								Edit recipe
-							</h1>
-							<button
-								type="button"
-								onClick={() => setEditing(false)}
-								className="rounded-lg p-2 text-(--sea-ink-soft) transition hover:bg-(--surface)"
-							>
-								<X size={18} />
-							</button>
-						</div>
+			<DetailColumns
+				main={
+					<Island
+						as="section"
+						className="animate-rise-in rounded-2xl p-6 sm:p-8"
+					>
+						{editing ? (
+							<form onSubmit={handleSave} className="flex flex-col gap-4">
+								<div className="flex items-center justify-between">
+									<h1 className="font-display text-2xl font-bold text-(--sea-ink)">
+										Edit recipe
+									</h1>
+									<button
+										type="button"
+										onClick={() => setEditing(false)}
+										className="rounded-lg p-2 text-(--sea-ink-soft) transition hover:bg-(--surface)"
+									>
+										<X size={18} />
+									</button>
+								</div>
 
-						<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
-							Name
-							<input
-								type="text"
-								required
-								value={form.name}
-								onChange={(e) => setForm({ ...form, name: e.target.value })}
-								className={inputClass}
-							/>
-						</label>
+								<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
+									Name
+									<input
+										type="text"
+										required
+										value={form.name}
+										onChange={(e) => setForm({ ...form, name: e.target.value })}
+										className={inputClass}
+									/>
+								</label>
 
-						<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
-							Description
-							<textarea
-								value={form.description}
-								onChange={(e) =>
-									setForm({ ...form, description: e.target.value })
-								}
-								rows={3}
-								className={cn(inputClass, "h-auto py-2")}
-							/>
-						</label>
+								<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
+									Description
+									<textarea
+										value={form.description}
+										onChange={(e) =>
+											setForm({ ...form, description: e.target.value })
+										}
+										rows={3}
+										className={cn(inputClass, "h-auto py-2")}
+									/>
+								</label>
 
-						<ImageInput
-							value={form.image}
-							onChange={(url) => setForm({ ...form, image: url })}
-						/>
+								<ImageInput
+									value={form.image}
+									onChange={(url) => setForm({ ...form, image: url })}
+								/>
 
-						<div className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
-							Categories
-							<MultiCombobox
-								value={form.categoryIds}
-								onChange={(v) => setForm({ ...form, categoryIds: v })}
-								options={categoryOptions}
-								placeholder="None"
-							/>
-						</div>
+								<div className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
+									Categories
+									<MultiCombobox
+										value={form.categoryIds}
+										onChange={(v) => setForm({ ...form, categoryIds: v })}
+										options={categoryOptions}
+										placeholder="None"
+									/>
+								</div>
 
-						<div className="flex flex-col gap-1.5">
-							<label
-								htmlFor={`${htmlId}-servings`}
-								className="text-sm font-medium text-(--sea-ink)"
-							>
-								Servings
-							</label>
-							<NumberInput
-								id={`${htmlId}-servings`}
-								min="1"
-								value={form.servings}
-								onChange={(e) => setForm({ ...form, servings: e.target.value })}
-								className="w-full"
-							/>
-						</div>
+								<div className="flex flex-col gap-1.5">
+									<label
+										htmlFor={`${htmlId}-servings`}
+										className="text-sm font-medium text-(--sea-ink)"
+									>
+										Servings
+									</label>
+									<NumberInput
+										id={`${htmlId}-servings`}
+										min="1"
+										value={form.servings}
+										onChange={(e) =>
+											setForm({ ...form, servings: e.target.value })
+										}
+										className="w-full"
+									/>
+								</div>
 
-						<div className="flex flex-col gap-1.5">
-							<label
-								htmlFor={`${htmlId}-prepTime`}
-								className="text-sm font-medium text-(--sea-ink)"
-							>
-								Prep Time (minutes)
-							</label>
-							<NumberInput
-								id={`${htmlId}-prepTime`}
-								min="0"
-								value={form.prepTime}
-								onChange={(e) => setForm({ ...form, prepTime: e.target.value })}
-								className="w-full"
-							/>
-						</div>
+								<div className="flex flex-col gap-1.5">
+									<label
+										htmlFor={`${htmlId}-prepTime`}
+										className="text-sm font-medium text-(--sea-ink)"
+									>
+										Prep Time (minutes)
+									</label>
+									<NumberInput
+										id={`${htmlId}-prepTime`}
+										min="0"
+										value={form.prepTime}
+										onChange={(e) =>
+											setForm({ ...form, prepTime: e.target.value })
+										}
+										className="w-full"
+									/>
+								</div>
 
-						<div className="flex flex-col gap-1.5">
-							<label
-								htmlFor={`${htmlId}-cookTime`}
-								className="text-sm font-medium text-(--sea-ink)"
-							>
-								Cook Time (minutes)
-							</label>
-							<NumberInput
-								id={`${htmlId}-cookTime`}
-								min="0"
-								value={form.cookTime}
-								onChange={(e) => setForm({ ...form, cookTime: e.target.value })}
-								className="w-full"
-							/>
-						</div>
+								<div className="flex flex-col gap-1.5">
+									<label
+										htmlFor={`${htmlId}-cookTime`}
+										className="text-sm font-medium text-(--sea-ink)"
+									>
+										Cook Time (minutes)
+									</label>
+									<NumberInput
+										id={`${htmlId}-cookTime`}
+										min="0"
+										value={form.cookTime}
+										onChange={(e) =>
+											setForm({ ...form, cookTime: e.target.value })
+										}
+										className="w-full"
+									/>
+								</div>
 
-						<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
-							Instructions
-							<textarea
-								value={form.instructions}
-								onChange={(e) =>
-									setForm({ ...form, instructions: e.target.value })
-								}
-								rows={6}
-								className={cn(inputClass, "h-auto py-2")}
-							/>
-						</label>
+								<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
+									Instructions
+									<textarea
+										value={form.instructions}
+										onChange={(e) =>
+											setForm({ ...form, instructions: e.target.value })
+										}
+										rows={6}
+										className={cn(inputClass, "h-auto py-2")}
+									/>
+								</label>
 
-						<button
-							type="submit"
-							disabled={updateRecipe.isPending}
-							className="mt-2 h-10 rounded-full bg-(--lagoon) text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
-						>
-							{updateRecipe.isPending ? "Saving…" : "Save changes"}
-						</button>
-					</form>
-				) : (
-					<>
-						<div className="mb-6 flex items-start justify-between gap-4">
-							<div>
-								<h1 className="font-display text-2xl font-bold text-(--sea-ink)">
-									{recipe.name}
-								</h1>
-								{categoryNames.length > 0 && (
-									<div className="mt-2 flex flex-wrap gap-1">
-										{categoryNames.map((name) => (
-											<span
-												key={name}
-												className="inline-block rounded-full bg-[rgba(79,184,178,0.14)] px-2.5 py-0.5 text-xs font-medium text-(--lagoon-deep)"
-											>
-												{name}
-											</span>
-										))}
+								<button
+									type="submit"
+									disabled={updateRecipe.isPending}
+									className="mt-2 h-10 rounded-full bg-(--lagoon) text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
+								>
+									{updateRecipe.isPending ? "Saving…" : "Save changes"}
+								</button>
+							</form>
+						) : (
+							<>
+								<div className="mb-6 flex items-start justify-between gap-4">
+									<div>
+										<h1 className="font-display text-2xl font-bold text-(--sea-ink)">
+											{recipe.name}
+										</h1>
+										{categoryNames.length > 0 && (
+											<div className="mt-2 flex flex-wrap gap-1">
+												{categoryNames.map((name) => (
+													<span
+														key={name}
+														className="inline-block rounded-full bg-[rgba(79,184,178,0.14)] px-2.5 py-0.5 text-xs font-medium text-(--lagoon-deep)"
+													>
+														{name}
+													</span>
+												))}
+											</div>
+										)}
 									</div>
+									<div className="flex gap-1">
+										<button
+											type="button"
+											onClick={startEditing}
+											className="rounded-lg p-2 text-(--sea-ink-soft) transition hover:bg-(--surface) hover:text-(--sea-ink)"
+											title="Edit"
+										>
+											<Pencil size={18} />
+										</button>
+										<button
+											type="button"
+											onClick={() => setConfirmDelete(true)}
+											className="rounded-lg p-2 text-(--sea-ink-soft) transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950"
+											title="Delete"
+										>
+											<Trash2 size={18} />
+										</button>
+									</div>
+								</div>
+
+								{recipe.description && (
+									<p className="mb-4 text-sm text-(--sea-ink-soft)">
+										{recipe.description}
+									</p>
 								)}
-							</div>
-							<div className="flex gap-1">
-								<button
-									type="button"
-									onClick={startEditing}
-									className="rounded-lg p-2 text-(--sea-ink-soft) transition hover:bg-(--surface) hover:text-(--sea-ink)"
-									title="Edit"
-								>
-									<Pencil size={18} />
-								</button>
-								<button
-									type="button"
-									onClick={() => setConfirmDelete(true)}
-									className="rounded-lg p-2 text-(--sea-ink-soft) transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950"
-									title="Delete"
-								>
-									<Trash2 size={18} />
-								</button>
-							</div>
-						</div>
 
-						{recipe.description && (
-							<p className="mb-4 text-sm text-(--sea-ink-soft)">
-								{recipe.description}
-							</p>
-						)}
+								{recipe.image && (
+									<img
+										src={recipe.image}
+										alt={recipe.name}
+										className="mb-4 h-40 w-40 rounded-lg border border-(--line) object-cover"
+									/>
+								)}
 
-						{recipe.image && (
-							<img
-								src={recipe.image}
-								alt={recipe.name}
-								className="mb-4 h-40 w-40 rounded-lg border border-(--line) object-cover"
-							/>
-						)}
-
-						<dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-3">
-							<div>
-								<dt className="font-medium text-(--sea-ink-soft)">Servings</dt>
-								<dd className="mt-0.5 text-(--sea-ink)">
-									{recipe.servings != null
-										? (() => {
-												const base = recipe.servings;
-												return (
-													<span className="inline-flex items-center gap-1.5">
-														<button
-															type="button"
-															onClick={() =>
-																setAdjustedServings(
-																	Math.max(1, (currentServings ?? base) - 1),
-																)
-															}
-															className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-(--line) text-(--sea-ink-soft) transition hover:bg-(--surface)"
-															aria-label="Decrease servings"
-														>
-															<Minus size={12} />
-														</button>
-														<span data-testid="adjusted-servings">
-															{currentServings}
-														</span>
-														<button
-															type="button"
-															onClick={() =>
-																setAdjustedServings(
-																	(currentServings ?? base) + 1,
-																)
-															}
-															className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-(--line) text-(--sea-ink-soft) transition hover:bg-(--surface)"
-															aria-label="Increase servings"
-														>
-															<Plus size={12} />
-														</button>
-														{adjustedServings != null &&
-															adjustedServings !== base && (
+								<dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-3">
+									<div>
+										<dt className="font-medium text-(--sea-ink-soft)">
+											Servings
+										</dt>
+										<dd className="mt-0.5 text-(--sea-ink)">
+											{recipe.servings != null
+												? (() => {
+														const base = recipe.servings;
+														return (
+															<span className="inline-flex items-center gap-1.5">
 																<button
 																	type="button"
-																	onClick={() => setAdjustedServings(null)}
-																	className="ml-1 text-xs font-medium text-(--lagoon-deep) hover:underline"
+																	onClick={() =>
+																		setAdjustedServings(
+																			Math.max(
+																				1,
+																				(currentServings ?? base) - 1,
+																			),
+																		)
+																	}
+																	className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-(--line) text-(--sea-ink-soft) transition hover:bg-(--surface)"
+																	aria-label="Decrease servings"
 																>
-																	Reset
+																	<Minus size={12} />
 																</button>
-															)}
+																<span data-testid="adjusted-servings">
+																	{currentServings}
+																</span>
+																<button
+																	type="button"
+																	onClick={() =>
+																		setAdjustedServings(
+																			(currentServings ?? base) + 1,
+																		)
+																	}
+																	className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-(--line) text-(--sea-ink-soft) transition hover:bg-(--surface)"
+																	aria-label="Increase servings"
+																>
+																	<Plus size={12} />
+																</button>
+																{adjustedServings != null &&
+																	adjustedServings !== base && (
+																		<button
+																			type="button"
+																			onClick={() => setAdjustedServings(null)}
+																			className="ml-1 text-xs font-medium text-(--lagoon-deep) hover:underline"
+																		>
+																			Reset
+																		</button>
+																	)}
+															</span>
+														);
+													})()
+												: "—"}
+										</dd>
+									</div>
+									<div>
+										<dt className="font-medium text-(--sea-ink-soft)">
+											Prep Time
+										</dt>
+										<dd className="mt-0.5 text-(--sea-ink)">
+											{recipe.prepTime != null ? `${recipe.prepTime} min` : "—"}
+										</dd>
+									</div>
+									<div>
+										<dt className="font-medium text-(--sea-ink-soft)">
+											Cook Time
+										</dt>
+										<dd className="mt-0.5 text-(--sea-ink)">
+											{recipe.cookTime != null ? `${recipe.cookTime} min` : "—"}
+										</dd>
+									</div>
+									<div>
+										<dt className="font-medium text-(--sea-ink-soft)">
+											Created
+										</dt>
+										<dd className="mt-0.5 text-(--sea-ink)">
+											{formatDate(recipe.createdAt)}
+										</dd>
+									</div>
+									<div>
+										<dt className="font-medium text-(--sea-ink-soft)">
+											Updated
+										</dt>
+										<dd className="mt-0.5 text-(--sea-ink)">
+											{formatDate(recipe.updatedAt)}
+										</dd>
+									</div>
+								</dl>
+
+								{recipe.instructions && (
+									<div className="mt-4">
+										<h2 className="mb-2 text-sm font-semibold text-(--sea-ink)">
+											Instructions
+										</h2>
+										<p className="whitespace-pre-wrap text-sm text-(--sea-ink-soft)">
+											{recipe.instructions}
+										</p>
+									</div>
+								)}
+
+								{confirmDelete && (
+									<div className="mt-6 flex items-center gap-3 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900 dark:bg-red-950/50">
+										<p className="flex-1 text-sm text-red-700 dark:text-red-300">
+											Delete this recipe? This cannot be undone.
+										</p>
+										<button
+											type="button"
+											onClick={() => setConfirmDelete(false)}
+											className="rounded-lg px-3 py-1.5 text-sm font-medium text-(--sea-ink-soft) transition hover:bg-(--surface)"
+										>
+											Cancel
+										</button>
+										<button
+											type="button"
+											onClick={handleDelete}
+											disabled={deleteRecipe.isPending}
+											className="rounded-lg bg-red-600 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-red-700 disabled:opacity-50"
+										>
+											{deleteRecipe.isPending ? "Deleting…" : "Delete"}
+										</button>
+									</div>
+								)}
+							</>
+						)}
+					</Island>
+				}
+				side={
+					<Island
+						as="section"
+						className="animate-rise-in rounded-2xl p-6 sm:p-8"
+					>
+						<h2 className="mb-4 text-lg font-semibold text-(--sea-ink)">
+							Ingredients
+						</h2>
+
+						{!ingredients?.length && !editing ? (
+							<p className="mb-4 text-sm text-(--sea-ink-soft)">
+								No ingredients yet.
+							</p>
+						) : (
+							<div className="mb-4 flex flex-col gap-2">
+								{(ingredients ?? []).map((ing) =>
+									editingIngredientId === ing.id ? (
+										<div
+											key={ing.id}
+											className="flex flex-col gap-3 rounded-lg border border-(--lagoon) p-3"
+										>
+											<div className="grid grid-cols-[1fr_1fr] gap-2 sm:grid-cols-[2fr_5rem_1fr_1fr]">
+												<Combobox
+													value={editIngredient.productId}
+													onChange={(v) => {
+														setEditIngredient({
+															...editIngredient,
+															productId: v,
+														});
+														handleEditProductChange(v);
+													}}
+													options={productOptions}
+													placeholder="Product"
+													className="col-span-full sm:col-span-1"
+													onCreateNew={async (name) => {
+														const newId = await handleCreateProduct(name);
+														setEditIngredient({
+															...editIngredient,
+															productId: newId,
+														});
+													}}
+												/>
+												<NumberInput
+													step="any"
+													min="0"
+													placeholder="Qty"
+													value={editIngredient.quantity}
+													onChange={(e) =>
+														setEditIngredient({
+															...editIngredient,
+															quantity: e.target.value,
+														})
+													}
+												/>
+												<Combobox
+													value={editIngredient.quantityUnitId}
+													onChange={(v) =>
+														setEditIngredient({
+															...editIngredient,
+															quantityUnitId: v,
+														})
+													}
+													options={unitOptions}
+													placeholder="Unit"
+												/>
+												<input
+													type="text"
+													placeholder="Notes"
+													value={editIngredient.notes}
+													onChange={(e) =>
+														setEditIngredient({
+															...editIngredient,
+															notes: e.target.value,
+														})
+													}
+													className={inputClass}
+												/>
+											</div>
+											{(() => {
+												const hint = getEditConversionHint();
+												return hint ? (
+													<p
+														className={`text-xs ${hint.includes("No conversion") ? "text-amber-600 dark:text-amber-400" : "text-(--sea-ink-soft)"}`}
+													>
+														{hint}
+													</p>
+												) : null;
+											})()}
+											<div className="flex gap-2">
+												<button
+													type="button"
+													onClick={handleSaveIngredient}
+													disabled={
+														updateIngredient.isPending ||
+														!editIngredient.quantity
+													}
+													className="flex h-8 items-center gap-1 rounded-full bg-(--lagoon) px-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
+												>
+													<Check size={14} />
+													{updateIngredient.isPending ? "Saving…" : "Save"}
+												</button>
+												<button
+													type="button"
+													onClick={() => setEditingIngredientId(null)}
+													className="flex h-8 items-center rounded-full px-3 text-sm font-medium text-(--sea-ink-soft) transition hover:bg-(--surface)"
+												>
+													Cancel
+												</button>
+											</div>
+										</div>
+									) : (
+										<div
+											key={ing.id}
+											className="flex items-center justify-between rounded-lg border border-(--line) px-3 py-2"
+										>
+											<div className="flex-1 text-sm text-(--sea-ink)">
+												<span className="font-medium">
+													{getProductName(ing.productId)}
+												</span>
+												<span className="ml-2 text-(--sea-ink-soft)">
+													{formatScaled(ing.quantity)}
+													{getUnitLabel(ing.quantityUnitId)
+														? ` ${getUnitLabel(ing.quantityUnitId)}`
+														: ""}
+												</span>
+												{ing.notes && (
+													<span className="ml-2 text-xs text-(--sea-ink-soft)">
+														({ing.notes})
 													</span>
-												);
-											})()
-										: "—"}
-								</dd>
-							</div>
-							<div>
-								<dt className="font-medium text-(--sea-ink-soft)">Prep Time</dt>
-								<dd className="mt-0.5 text-(--sea-ink)">
-									{recipe.prepTime != null ? `${recipe.prepTime} min` : "—"}
-								</dd>
-							</div>
-							<div>
-								<dt className="font-medium text-(--sea-ink-soft)">Cook Time</dt>
-								<dd className="mt-0.5 text-(--sea-ink)">
-									{recipe.cookTime != null ? `${recipe.cookTime} min` : "—"}
-								</dd>
-							</div>
-							<div>
-								<dt className="font-medium text-(--sea-ink-soft)">Created</dt>
-								<dd className="mt-0.5 text-(--sea-ink)">
-									{formatDate(recipe.createdAt)}
-								</dd>
-							</div>
-							<div>
-								<dt className="font-medium text-(--sea-ink-soft)">Updated</dt>
-								<dd className="mt-0.5 text-(--sea-ink)">
-									{formatDate(recipe.updatedAt)}
-								</dd>
-							</div>
-						</dl>
-
-						{recipe.instructions && (
-							<div className="mt-4">
-								<h2 className="mb-2 text-sm font-semibold text-(--sea-ink)">
-									Instructions
-								</h2>
-								<p className="whitespace-pre-wrap text-sm text-(--sea-ink-soft)">
-									{recipe.instructions}
-								</p>
+												)}
+											</div>
+											<div className="flex gap-0.5">
+												<button
+													type="button"
+													onClick={() => startEditingIngredient(ing)}
+													className="rounded-lg p-1.5 text-(--sea-ink-soft) transition hover:bg-(--surface) hover:text-(--sea-ink)"
+													title="Edit ingredient"
+												>
+													<Pencil size={14} />
+												</button>
+												<button
+													type="button"
+													onClick={() => handleDeleteIngredient(ing.id)}
+													className="rounded-lg p-1.5 text-(--sea-ink-soft) transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950"
+													title="Delete ingredient"
+												>
+													<Trash2 size={14} />
+												</button>
+											</div>
+										</div>
+									),
+								)}
 							</div>
 						)}
 
-						{confirmDelete && (
-							<div className="mt-6 flex items-center gap-3 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900 dark:bg-red-950/50">
-								<p className="flex-1 text-sm text-red-700 dark:text-red-300">
-									Delete this recipe? This cannot be undone.
-								</p>
-								<button
-									type="button"
-									onClick={() => setConfirmDelete(false)}
-									className="rounded-lg px-3 py-1.5 text-sm font-medium text-(--sea-ink-soft) transition hover:bg-(--surface)"
-								>
-									Cancel
-								</button>
-								<button
-									type="button"
-									onClick={handleDelete}
-									disabled={deleteRecipe.isPending}
-									className="rounded-lg bg-red-600 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-red-700 disabled:opacity-50"
-								>
-									{deleteRecipe.isPending ? "Deleting…" : "Delete"}
-								</button>
-							</div>
-						)}
-					</>
-				)}
-			</Island>
-
-			<Island
-				as="section"
-				className="mt-6 animate-rise-in rounded-2xl p-6 sm:p-8"
-			>
-				<h2 className="mb-4 text-lg font-semibold text-(--sea-ink)">
-					Ingredients
-				</h2>
-
-				{!ingredients?.length && !editing ? (
-					<p className="mb-4 text-sm text-(--sea-ink-soft)">
-						No ingredients yet.
-					</p>
-				) : (
-					<div className="mb-4 flex flex-col gap-2">
-						{(ingredients ?? []).map((ing) => (
-							<div
-								key={ing.id}
-								className="flex items-center justify-between rounded-lg border border-(--line) px-3 py-2"
-							>
-								<div className="flex-1 text-sm text-(--sea-ink)">
-									<span className="font-medium">
-										{getProductName(ing.productId)}
-									</span>
-									<span className="ml-2 text-(--sea-ink-soft)">
-										{formatScaled(ing.quantity)}
-										{getUnitLabel(ing.quantityUnitId)
-											? ` ${getUnitLabel(ing.quantityUnitId)}`
-											: ""}
-									</span>
-									{ing.notes && (
-										<span className="ml-2 text-xs text-(--sea-ink-soft)">
-											({ing.notes})
-										</span>
-									)}
-								</div>
-								<button
-									type="button"
-									onClick={() => handleDeleteIngredient(ing.id)}
-									className="rounded-lg p-1.5 text-(--sea-ink-soft) transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950"
-									title="Delete ingredient"
-								>
-									<Trash2 size={14} />
-								</button>
-							</div>
-						))}
-					</div>
-				)}
-
-				<AddIngredientForm
-					productOptions={productOptions}
-					unitOptions={unitOptions}
-					onAdd={handleAddIngredient}
-					isPending={createIngredient.isPending}
-					newIngredient={newIngredient}
-					setNewIngredient={setNewIngredient}
-					onCreateProduct={handleCreateProduct}
-					onProductChange={handleProductChange}
-					unitHint={getConversionHint()}
-				/>
-			</Island>
+						<AddIngredientForm
+							productOptions={productOptions}
+							unitOptions={unitOptions}
+							onAdd={handleAddIngredient}
+							isPending={createIngredient.isPending}
+							newIngredient={newIngredient}
+							setNewIngredient={setNewIngredient}
+							onCreateProduct={handleCreateProduct}
+							onProductChange={handleProductChange}
+							unitHint={getConversionHint()}
+						/>
+					</Island>
+				}
+			/>
 		</Page>
 	);
 }

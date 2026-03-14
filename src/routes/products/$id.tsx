@@ -5,6 +5,7 @@ import { Combobox } from "#src/components/Combobox";
 import { ImageInput } from "#src/components/ImageInput";
 import InventorySubNav from "#src/components/InventorySubNav";
 import { Island } from "#src/components/Island";
+import { DetailColumns } from "#src/components/layouts/DetailColumns";
 import { MultiCombobox } from "#src/components/MultiCombobox";
 import { NumberInput } from "#src/components/NumberInput";
 import { Page } from "#src/components/Page";
@@ -228,441 +229,467 @@ function ProductDetail() {
 
 			<InventorySubNav />
 
-			<Island as="section" className="animate-rise-in rounded-2xl p-6 sm:p-8">
-				{editing ? (
-					<form onSubmit={handleSave} className="flex flex-col gap-4">
-						<div className="flex items-center justify-between">
-							<h1 className="font-display text-2xl font-bold text-(--sea-ink)">
-								Edit product
-							</h1>
-							<button
-								type="button"
-								onClick={() => setEditing(false)}
-								className="rounded-lg p-2 text-(--sea-ink-soft) transition hover:bg-(--surface)"
-							>
-								<X size={18} />
-							</button>
-						</div>
-
-						<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
-							Name
-							<input
-								type="text"
-								required
-								value={form.name}
-								onChange={(e) => setForm({ ...form, name: e.target.value })}
-								className={inputClass}
-							/>
-						</label>
-
-						<div className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
-							Categories
-							<MultiCombobox
-								value={form.categoryIds}
-								onChange={(v) => setForm({ ...form, categoryIds: v })}
-								options={(categories ?? []).map((c) => ({
-									value: c.id,
-									label: c.name,
-								}))}
-								placeholder="None"
-							/>
-						</div>
-
-						<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
-							Description
-							<textarea
-								value={form.description}
-								onChange={(e) =>
-									setForm({ ...form, description: e.target.value })
-								}
-								rows={3}
-								className={cn(inputClass, "h-auto py-2")}
-							/>
-						</label>
-
-						<ImageInput
-							value={form.image}
-							onChange={(url) => setForm({ ...form, image: url })}
-						/>
-
-						<div className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
-							Default Quantity Unit
-							<Combobox
-								value={form.defaultQuantityUnitId}
-								onChange={(v) => setForm({ ...form, defaultQuantityUnitId: v })}
-								options={(quantityUnits ?? []).map((u) => ({
-									value: u.id,
-									label: u.abbreviation
-										? `${u.name} (${u.abbreviation})`
-										: u.name,
-								}))}
-								placeholder="None"
-							/>
-						</div>
-
-						<div className="flex flex-col gap-1.5">
-							<label
-								htmlFor={`${htmlId}-minStockAmount`}
-								className="text-sm font-medium text-(--sea-ink)"
-							>
-								Min Stock Amount
-							</label>
-							<NumberInput
-								id={`${htmlId}-minStockAmount`}
-								step="any"
-								min="0"
-								value={form.minStockAmount}
-								onChange={(e) =>
-									setForm({ ...form, minStockAmount: e.target.value })
-								}
-								className="w-full"
-							/>
-						</div>
-
-						<div className="flex flex-col gap-1.5">
-							<label
-								htmlFor={`${htmlId}-defaultExpirationDays`}
-								className="text-sm font-medium text-(--sea-ink)"
-							>
-								Default Expiration Days
-							</label>
-							<NumberInput
-								id={`${htmlId}-defaultExpirationDays`}
-								min="1"
-								value={form.defaultExpirationDays}
-								onChange={(e) =>
-									setForm({ ...form, defaultExpirationDays: e.target.value })
-								}
-								className="w-full"
-							/>
-						</div>
-
-						<button
-							type="submit"
-							disabled={updateProduct.isPending}
-							className="mt-2 h-10 rounded-full bg-(--lagoon) text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
-						>
-							{updateProduct.isPending ? "Saving…" : "Save changes"}
-						</button>
-					</form>
-				) : (
-					<>
-						<div className="mb-6 flex items-start justify-between gap-4">
-							<div>
-								<h1 className="font-display text-2xl font-bold text-(--sea-ink)">
-									{product.name}
-								</h1>
-								{categoryNames.length > 0 && (
-									<div className="mt-2 flex flex-wrap gap-1">
-										{categoryNames.map((name) => (
-											<span
-												key={name}
-												className="inline-block rounded-full bg-[rgba(79,184,178,0.14)] px-2.5 py-0.5 text-xs font-medium text-(--lagoon-deep)"
-											>
-												{name}
-											</span>
-										))}
-									</div>
-								)}
-							</div>
-							<div className="flex gap-1">
-								<button
-									type="button"
-									onClick={startEditing}
-									className="rounded-lg p-2 text-(--sea-ink-soft) transition hover:bg-(--surface) hover:text-(--sea-ink)"
-									title="Edit"
-								>
-									<Pencil size={18} />
-								</button>
-								<button
-									type="button"
-									onClick={() => setConfirmDelete(true)}
-									className="rounded-lg p-2 text-(--sea-ink-soft) transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950"
-									title="Delete"
-								>
-									<Trash2 size={18} />
-								</button>
-							</div>
-						</div>
-
-						{product.description && (
-							<p className="mb-4 text-sm text-(--sea-ink-soft)">
-								{product.description}
-							</p>
-						)}
-
-						{product.image && (
-							<img
-								src={product.image}
-								alt={product.name}
-								className="mb-4 h-40 w-40 rounded-lg border border-(--line) object-cover"
-							/>
-						)}
-
-						<dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-3">
-							{unitName && (
-								<div>
-									<dt className="font-medium text-(--sea-ink-soft)">
-										Default Unit
-									</dt>
-									<dd className="mt-0.5 text-(--sea-ink)">{unitName}</dd>
+			<DetailColumns
+				main={
+					<Island
+						as="section"
+						className="animate-rise-in rounded-2xl p-6 sm:p-8"
+					>
+						{editing ? (
+							<form onSubmit={handleSave} className="flex flex-col gap-4">
+								<div className="flex items-center justify-between">
+									<h1 className="font-display text-2xl font-bold text-(--sea-ink)">
+										Edit product
+									</h1>
+									<button
+										type="button"
+										onClick={() => setEditing(false)}
+										className="rounded-lg p-2 text-(--sea-ink-soft) transition hover:bg-(--surface)"
+									>
+										<X size={18} />
+									</button>
 								</div>
-							)}
-							<div>
-								<dt className="font-medium text-(--sea-ink-soft)">Min Stock</dt>
-								<dd className="mt-0.5 text-(--sea-ink)">
-									{Number.parseFloat(product.minStockAmount) > 0
-										? product.minStockAmount
-										: "—"}
-								</dd>
-							</div>
-							<div>
-								<dt className="font-medium text-(--sea-ink-soft)">
-									Default Exp. Days
-								</dt>
-								<dd className="mt-0.5 text-(--sea-ink)">
-									{product.defaultExpirationDays ?? "—"}
-								</dd>
-							</div>
-							<div>
-								<dt className="font-medium text-(--sea-ink-soft)">Created</dt>
-								<dd className="mt-0.5 text-(--sea-ink)">
-									{formatDate(product.createdAt)}
-								</dd>
-							</div>
-							<div>
-								<dt className="font-medium text-(--sea-ink-soft)">Updated</dt>
-								<dd className="mt-0.5 text-(--sea-ink)">
-									{formatDate(product.updatedAt)}
-								</dd>
-							</div>
-						</dl>
 
-						{confirmDelete && (
-							<div className="mt-6 flex items-center gap-3 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900 dark:bg-red-950/50">
-								<p className="flex-1 text-sm text-red-700 dark:text-red-300">
-									Delete this product? This cannot be undone.
-								</p>
-								<button
-									type="button"
-									onClick={() => setConfirmDelete(false)}
-									className="rounded-lg px-3 py-1.5 text-sm font-medium text-(--sea-ink-soft) transition hover:bg-(--surface)"
-								>
-									Cancel
-								</button>
-								<button
-									type="button"
-									onClick={handleDelete}
-									disabled={deleteProduct.isPending}
-									className="rounded-lg bg-red-600 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-red-700 disabled:opacity-50"
-								>
-									{deleteProduct.isPending ? "Deleting…" : "Delete"}
-								</button>
-							</div>
-						)}
-					</>
-				)}
-			</Island>
+								<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
+									Name
+									<input
+										type="text"
+										required
+										value={form.name}
+										onChange={(e) => setForm({ ...form, name: e.target.value })}
+										className={inputClass}
+									/>
+								</label>
 
-			<Island
-				as="section"
-				className="mt-6 animate-rise-in rounded-2xl p-6 sm:p-8"
-			>
-				<h2 className="mb-4 text-lg font-semibold text-(--sea-ink)">
-					Product-Specific Conversions
-				</h2>
-
-				{!productConversions?.length ? (
-					<p className="mb-4 text-sm text-(--sea-ink-soft)">
-						No product-specific conversions yet.
-					</p>
-				) : (
-					<div className="mb-4 flex flex-col gap-2">
-						{productConversions.map((conv) =>
-							editingConversionId === conv.id ? (
-								<div
-									key={conv.id}
-									className="flex flex-col gap-3 rounded-lg border border-(--lagoon) p-3"
-								>
-									<div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-										<div className="flex flex-col gap-1">
-											<span className="text-xs text-(--sea-ink-soft)">
-												From
-											</span>
-											<Combobox
-												value={editConversion.fromUnitId}
-												onChange={(v) =>
-													setEditConversion({
-														...editConversion,
-														fromUnitId: v,
-													})
-												}
-												options={(quantityUnits ?? []).map((u) => ({
-													value: u.id,
-													label: u.abbreviation
-														? `${u.name} (${u.abbreviation})`
-														: u.name,
-												}))}
-												placeholder="Unit"
-											/>
-										</div>
-										<div className="flex flex-col gap-1">
-											<span className="text-xs text-(--sea-ink-soft)">To</span>
-											<Combobox
-												value={editConversion.toUnitId}
-												onChange={(v) =>
-													setEditConversion({
-														...editConversion,
-														toUnitId: v,
-													})
-												}
-												options={(quantityUnits ?? []).map((u) => ({
-													value: u.id,
-													label: u.abbreviation
-														? `${u.name} (${u.abbreviation})`
-														: u.name,
-												}))}
-												placeholder="Unit"
-											/>
-										</div>
-										<div className="flex flex-col gap-1">
-											<span className="text-xs text-(--sea-ink-soft)">
-												Factor
-											</span>
-											<NumberInput
-												step="any"
-												min="0"
-												value={editConversion.factor}
-												onChange={(e) =>
-													setEditConversion({
-														...editConversion,
-														factor: e.target.value,
-													})
-												}
-												className="w-full"
-											/>
-										</div>
-									</div>
-									<div className="flex gap-2">
-										<button
-											type="button"
-											onClick={handleSaveConversion}
-											disabled={
-												!editConversion.fromUnitId ||
-												!editConversion.toUnitId ||
-												!editConversion.factor ||
-												updateConversion.isPending
-											}
-											className="h-8 rounded-full bg-(--lagoon) px-4 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
-										>
-											{updateConversion.isPending ? "Saving…" : "Save"}
-										</button>
-										<button
-											type="button"
-											onClick={() => setEditingConversionId(null)}
-											className="h-8 rounded-full px-4 text-sm font-medium text-(--sea-ink-soft) transition hover:bg-(--surface)"
-										>
-											Cancel
-										</button>
-									</div>
+								<div className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
+									Categories
+									<MultiCombobox
+										value={form.categoryIds}
+										onChange={(v) => setForm({ ...form, categoryIds: v })}
+										options={(categories ?? []).map((c) => ({
+											value: c.id,
+											label: c.name,
+										}))}
+										placeholder="None"
+									/>
 								</div>
-							) : (
-								<div
-									key={conv.id}
-									className="flex items-center justify-between rounded-lg border border-(--line) px-3 py-2"
+
+								<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
+									Description
+									<textarea
+										value={form.description}
+										onChange={(e) =>
+											setForm({ ...form, description: e.target.value })
+										}
+										rows={3}
+										className={cn(inputClass, "h-auto py-2")}
+									/>
+								</label>
+
+								<ImageInput
+									value={form.image}
+									onChange={(url) => setForm({ ...form, image: url })}
+								/>
+
+								<div className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
+									Default Quantity Unit
+									<Combobox
+										value={form.defaultQuantityUnitId}
+										onChange={(v) =>
+											setForm({ ...form, defaultQuantityUnitId: v })
+										}
+										options={(quantityUnits ?? []).map((u) => ({
+											value: u.id,
+											label: u.abbreviation
+												? `${u.name} (${u.abbreviation})`
+												: u.name,
+										}))}
+										placeholder="None"
+									/>
+								</div>
+
+								<div className="flex flex-col gap-1.5">
+									<label
+										htmlFor={`${htmlId}-minStockAmount`}
+										className="text-sm font-medium text-(--sea-ink)"
+									>
+										Min Stock Amount
+									</label>
+									<NumberInput
+										id={`${htmlId}-minStockAmount`}
+										step="any"
+										min="0"
+										value={form.minStockAmount}
+										onChange={(e) =>
+											setForm({ ...form, minStockAmount: e.target.value })
+										}
+										className="w-full"
+									/>
+								</div>
+
+								<div className="flex flex-col gap-1.5">
+									<label
+										htmlFor={`${htmlId}-defaultExpirationDays`}
+										className="text-sm font-medium text-(--sea-ink)"
+									>
+										Default Expiration Days
+									</label>
+									<NumberInput
+										id={`${htmlId}-defaultExpirationDays`}
+										min="1"
+										value={form.defaultExpirationDays}
+										onChange={(e) =>
+											setForm({
+												...form,
+												defaultExpirationDays: e.target.value,
+											})
+										}
+										className="w-full"
+									/>
+								</div>
+
+								<button
+									type="submit"
+									disabled={updateProduct.isPending}
+									className="mt-2 h-10 rounded-full bg-(--lagoon) text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
 								>
-									<span className="text-sm text-(--sea-ink)">
-										1 {getUnitName(conv.fromUnitId) ?? "?"} = {conv.factor}{" "}
-										{getUnitName(conv.toUnitId) ?? "?"}
-									</span>
+									{updateProduct.isPending ? "Saving…" : "Save changes"}
+								</button>
+							</form>
+						) : (
+							<>
+								<div className="mb-6 flex items-start justify-between gap-4">
+									<div>
+										<h1 className="font-display text-2xl font-bold text-(--sea-ink)">
+											{product.name}
+										</h1>
+										{categoryNames.length > 0 && (
+											<div className="mt-2 flex flex-wrap gap-1">
+												{categoryNames.map((name) => (
+													<span
+														key={name}
+														className="inline-block rounded-full bg-[rgba(79,184,178,0.14)] px-2.5 py-0.5 text-xs font-medium text-(--lagoon-deep)"
+													>
+														{name}
+													</span>
+												))}
+											</div>
+										)}
+									</div>
 									<div className="flex gap-1">
 										<button
 											type="button"
-											onClick={() => startEditingConversion(conv)}
-											className="rounded-lg p-1.5 text-(--sea-ink-soft) transition hover:bg-(--surface) hover:text-(--sea-ink)"
-											title="Edit conversion"
+											onClick={startEditing}
+											className="rounded-lg p-2 text-(--sea-ink-soft) transition hover:bg-(--surface) hover:text-(--sea-ink)"
+											title="Edit"
 										>
-											<Pencil size={14} />
+											<Pencil size={18} />
 										</button>
 										<button
 											type="button"
-											onClick={() => handleDeleteConversion(conv.id)}
-											className="rounded-lg p-1.5 text-(--sea-ink-soft) transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950"
-											title="Delete conversion"
+											onClick={() => setConfirmDelete(true)}
+											className="rounded-lg p-2 text-(--sea-ink-soft) transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950"
+											title="Delete"
 										>
-											<Trash2 size={14} />
+											<Trash2 size={18} />
 										</button>
 									</div>
 								</div>
-							),
-						)}
-					</div>
-				)}
 
-				<div className="flex flex-col gap-3 rounded-lg border border-(--line) p-4">
-					<p className="text-sm font-medium text-(--sea-ink)">Add conversion</p>
-					<div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-						<div className="flex flex-col gap-1">
-							<span className="text-xs text-(--sea-ink-soft)">From</span>
-							<Combobox
-								value={newConversion.fromUnitId}
-								onChange={(v) =>
-									setNewConversion({ ...newConversion, fromUnitId: v })
-								}
-								options={(quantityUnits ?? []).map((u) => ({
-									value: u.id,
-									label: u.abbreviation
-										? `${u.name} (${u.abbreviation})`
-										: u.name,
-								}))}
-								placeholder="Unit"
-							/>
-						</div>
-						<div className="flex flex-col gap-1">
-							<span className="text-xs text-(--sea-ink-soft)">To</span>
-							<Combobox
-								value={newConversion.toUnitId}
-								onChange={(v) =>
-									setNewConversion({ ...newConversion, toUnitId: v })
-								}
-								options={(quantityUnits ?? []).map((u) => ({
-									value: u.id,
-									label: u.abbreviation
-										? `${u.name} (${u.abbreviation})`
-										: u.name,
-								}))}
-								placeholder="Unit"
-							/>
-						</div>
-						<div className="flex flex-col gap-1">
-							<span className="text-xs text-(--sea-ink-soft)">Factor</span>
-							<NumberInput
-								step="any"
-								min="0"
-								value={newConversion.factor}
-								onChange={(e) =>
-									setNewConversion({ ...newConversion, factor: e.target.value })
-								}
-								className="w-full"
-								placeholder="e.g. 120"
-							/>
-						</div>
-					</div>
-					<button
-						type="button"
-						onClick={handleAddConversion}
-						disabled={
-							!newConversion.fromUnitId ||
-							!newConversion.toUnitId ||
-							!newConversion.factor ||
-							createConversion.isPending
-						}
-						className="mt-1 h-9 rounded-full bg-(--lagoon) text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
+								{product.description && (
+									<p className="mb-4 text-sm text-(--sea-ink-soft)">
+										{product.description}
+									</p>
+								)}
+
+								{product.image && (
+									<img
+										src={product.image}
+										alt={product.name}
+										className="mb-4 h-40 w-40 rounded-lg border border-(--line) object-cover"
+									/>
+								)}
+
+								<dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-3">
+									{unitName && (
+										<div>
+											<dt className="font-medium text-(--sea-ink-soft)">
+												Default Unit
+											</dt>
+											<dd className="mt-0.5 text-(--sea-ink)">{unitName}</dd>
+										</div>
+									)}
+									<div>
+										<dt className="font-medium text-(--sea-ink-soft)">
+											Min Stock
+										</dt>
+										<dd className="mt-0.5 text-(--sea-ink)">
+											{Number.parseFloat(product.minStockAmount) > 0
+												? product.minStockAmount
+												: "—"}
+										</dd>
+									</div>
+									<div>
+										<dt className="font-medium text-(--sea-ink-soft)">
+											Default Exp. Days
+										</dt>
+										<dd className="mt-0.5 text-(--sea-ink)">
+											{product.defaultExpirationDays ?? "—"}
+										</dd>
+									</div>
+									<div>
+										<dt className="font-medium text-(--sea-ink-soft)">
+											Created
+										</dt>
+										<dd className="mt-0.5 text-(--sea-ink)">
+											{formatDate(product.createdAt)}
+										</dd>
+									</div>
+									<div>
+										<dt className="font-medium text-(--sea-ink-soft)">
+											Updated
+										</dt>
+										<dd className="mt-0.5 text-(--sea-ink)">
+											{formatDate(product.updatedAt)}
+										</dd>
+									</div>
+								</dl>
+
+								{confirmDelete && (
+									<div className="mt-6 flex items-center gap-3 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900 dark:bg-red-950/50">
+										<p className="flex-1 text-sm text-red-700 dark:text-red-300">
+											Delete this product? This cannot be undone.
+										</p>
+										<button
+											type="button"
+											onClick={() => setConfirmDelete(false)}
+											className="rounded-lg px-3 py-1.5 text-sm font-medium text-(--sea-ink-soft) transition hover:bg-(--surface)"
+										>
+											Cancel
+										</button>
+										<button
+											type="button"
+											onClick={handleDelete}
+											disabled={deleteProduct.isPending}
+											className="rounded-lg bg-red-600 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-red-700 disabled:opacity-50"
+										>
+											{deleteProduct.isPending ? "Deleting…" : "Delete"}
+										</button>
+									</div>
+								)}
+							</>
+						)}
+					</Island>
+				}
+				side={
+					<Island
+						as="section"
+						className="animate-rise-in rounded-2xl p-6 sm:p-8"
 					>
-						{createConversion.isPending ? "Adding…" : "Add conversion"}
-					</button>
-				</div>
-			</Island>
+						<h2 className="mb-4 text-lg font-semibold text-(--sea-ink)">
+							Product-Specific Conversions
+						</h2>
+
+						{!productConversions?.length ? (
+							<p className="mb-4 text-sm text-(--sea-ink-soft)">
+								No product-specific conversions yet.
+							</p>
+						) : (
+							<div className="mb-4 flex flex-col gap-2">
+								{productConversions.map((conv) =>
+									editingConversionId === conv.id ? (
+										<div
+											key={conv.id}
+											className="flex flex-col gap-3 rounded-lg border border-(--lagoon) p-3"
+										>
+											<div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+												<div className="flex flex-col gap-1">
+													<span className="text-xs text-(--sea-ink-soft)">
+														From
+													</span>
+													<Combobox
+														value={editConversion.fromUnitId}
+														onChange={(v) =>
+															setEditConversion({
+																...editConversion,
+																fromUnitId: v,
+															})
+														}
+														options={(quantityUnits ?? []).map((u) => ({
+															value: u.id,
+															label: u.abbreviation
+																? `${u.name} (${u.abbreviation})`
+																: u.name,
+														}))}
+														placeholder="Unit"
+													/>
+												</div>
+												<div className="flex flex-col gap-1">
+													<span className="text-xs text-(--sea-ink-soft)">
+														To
+													</span>
+													<Combobox
+														value={editConversion.toUnitId}
+														onChange={(v) =>
+															setEditConversion({
+																...editConversion,
+																toUnitId: v,
+															})
+														}
+														options={(quantityUnits ?? []).map((u) => ({
+															value: u.id,
+															label: u.abbreviation
+																? `${u.name} (${u.abbreviation})`
+																: u.name,
+														}))}
+														placeholder="Unit"
+													/>
+												</div>
+												<div className="flex flex-col gap-1">
+													<span className="text-xs text-(--sea-ink-soft)">
+														Factor
+													</span>
+													<NumberInput
+														step="any"
+														min="0"
+														value={editConversion.factor}
+														onChange={(e) =>
+															setEditConversion({
+																...editConversion,
+																factor: e.target.value,
+															})
+														}
+														className="w-full"
+													/>
+												</div>
+											</div>
+											<div className="flex gap-2">
+												<button
+													type="button"
+													onClick={handleSaveConversion}
+													disabled={
+														!editConversion.fromUnitId ||
+														!editConversion.toUnitId ||
+														!editConversion.factor ||
+														updateConversion.isPending
+													}
+													className="h-8 rounded-full bg-(--lagoon) px-4 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
+												>
+													{updateConversion.isPending ? "Saving…" : "Save"}
+												</button>
+												<button
+													type="button"
+													onClick={() => setEditingConversionId(null)}
+													className="h-8 rounded-full px-4 text-sm font-medium text-(--sea-ink-soft) transition hover:bg-(--surface)"
+												>
+													Cancel
+												</button>
+											</div>
+										</div>
+									) : (
+										<div
+											key={conv.id}
+											className="flex items-center justify-between rounded-lg border border-(--line) px-3 py-2"
+										>
+											<span className="text-sm text-(--sea-ink)">
+												1 {getUnitName(conv.fromUnitId) ?? "?"} = {conv.factor}{" "}
+												{getUnitName(conv.toUnitId) ?? "?"}
+											</span>
+											<div className="flex gap-1">
+												<button
+													type="button"
+													onClick={() => startEditingConversion(conv)}
+													className="rounded-lg p-1.5 text-(--sea-ink-soft) transition hover:bg-(--surface) hover:text-(--sea-ink)"
+													title="Edit conversion"
+												>
+													<Pencil size={14} />
+												</button>
+												<button
+													type="button"
+													onClick={() => handleDeleteConversion(conv.id)}
+													className="rounded-lg p-1.5 text-(--sea-ink-soft) transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950"
+													title="Delete conversion"
+												>
+													<Trash2 size={14} />
+												</button>
+											</div>
+										</div>
+									),
+								)}
+							</div>
+						)}
+
+						<div className="flex flex-col gap-3 rounded-lg border border-(--line) p-4">
+							<p className="text-sm font-medium text-(--sea-ink)">
+								Add conversion
+							</p>
+							<div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+								<div className="flex flex-col gap-1">
+									<span className="text-xs text-(--sea-ink-soft)">From</span>
+									<Combobox
+										value={newConversion.fromUnitId}
+										onChange={(v) =>
+											setNewConversion({ ...newConversion, fromUnitId: v })
+										}
+										options={(quantityUnits ?? []).map((u) => ({
+											value: u.id,
+											label: u.abbreviation
+												? `${u.name} (${u.abbreviation})`
+												: u.name,
+										}))}
+										placeholder="Unit"
+									/>
+								</div>
+								<div className="flex flex-col gap-1">
+									<span className="text-xs text-(--sea-ink-soft)">To</span>
+									<Combobox
+										value={newConversion.toUnitId}
+										onChange={(v) =>
+											setNewConversion({ ...newConversion, toUnitId: v })
+										}
+										options={(quantityUnits ?? []).map((u) => ({
+											value: u.id,
+											label: u.abbreviation
+												? `${u.name} (${u.abbreviation})`
+												: u.name,
+										}))}
+										placeholder="Unit"
+									/>
+								</div>
+								<div className="flex flex-col gap-1">
+									<span className="text-xs text-(--sea-ink-soft)">Factor</span>
+									<NumberInput
+										step="any"
+										min="0"
+										value={newConversion.factor}
+										onChange={(e) =>
+											setNewConversion({
+												...newConversion,
+												factor: e.target.value,
+											})
+										}
+										className="w-full"
+										placeholder="e.g. 120"
+									/>
+								</div>
+							</div>
+							<button
+								type="button"
+								onClick={handleAddConversion}
+								disabled={
+									!newConversion.fromUnitId ||
+									!newConversion.toUnitId ||
+									!newConversion.factor ||
+									createConversion.isPending
+								}
+								className="mt-1 h-9 rounded-full bg-(--lagoon) text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
+							>
+								{createConversion.isPending ? "Adding…" : "Add conversion"}
+							</button>
+						</div>
+					</Island>
+				}
+			/>
 		</Page>
 	);
 }
