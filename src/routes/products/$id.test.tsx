@@ -50,6 +50,21 @@ vi.mock("#src/lib/hooks/use-quantity-units", () => ({
 	useQuantityUnits: (...args: unknown[]) => mockUseQuantityUnits(...args),
 }));
 
+const mockUseProductUnitConversions = vi.fn();
+const mockUseCreateProductUnitConversion = vi.fn();
+const mockUseUpdateProductUnitConversion = vi.fn();
+const mockUseDeleteProductUnitConversion = vi.fn();
+vi.mock("#src/lib/hooks/use-product-unit-conversions", () => ({
+	useProductUnitConversions: (...args: unknown[]) =>
+		mockUseProductUnitConversions(...args),
+	useCreateProductUnitConversion: (...args: unknown[]) =>
+		mockUseCreateProductUnitConversion(...args),
+	useUpdateProductUnitConversion: (...args: unknown[]) =>
+		mockUseUpdateProductUnitConversion(...args),
+	useDeleteProductUnitConversion: (...args: unknown[]) =>
+		mockUseDeleteProductUnitConversion(...args),
+}));
+
 vi.mock("#src/lib/utils", () => ({
 	cn: (...args: string[]) => args.filter(Boolean).join(" "),
 }));
@@ -131,7 +146,23 @@ beforeEach(() => {
 		data: [{ id: "c1", name: "Vegetables" }],
 	});
 	mockUseQuantityUnits.mockReturnValue({
-		data: [{ id: "qu1", name: "Kilograms", abbreviation: "kg" }],
+		data: [
+			{ id: "qu1", name: "Kilograms", abbreviation: "kg" },
+			{ id: "qu2", name: "Cups", abbreviation: "cup" },
+		],
+	});
+	mockUseProductUnitConversions.mockReturnValue({ data: [] });
+	mockUseCreateProductUnitConversion.mockReturnValue({
+		mutateAsync: vi.fn().mockResolvedValue({}),
+		isPending: false,
+	});
+	mockUseUpdateProductUnitConversion.mockReturnValue({
+		mutateAsync: vi.fn().mockResolvedValue({}),
+		isPending: false,
+	});
+	mockUseDeleteProductUnitConversion.mockReturnValue({
+		mutateAsync: vi.fn().mockResolvedValue({}),
+		isPending: false,
 	});
 });
 
@@ -243,6 +274,38 @@ describe("ProductDetail", () => {
 			await waitFor(() => {
 				expect(mockNavigate).toHaveBeenCalledWith({ to: "/products" });
 			});
+		});
+	});
+
+	describe("product-specific conversions", () => {
+		it("shows empty state when no conversions", () => {
+			renderPage();
+
+			expect(screen.getByText("Product-Specific Conversions")).toBeDefined();
+			expect(
+				screen.getByText("No product-specific conversions yet."),
+			).toBeDefined();
+		});
+
+		it("displays existing conversions", () => {
+			mockUseProductUnitConversions.mockReturnValue({
+				data: [
+					{
+						id: "puc-1",
+						productId: "1",
+						fromUnitId: "qu2",
+						toUnitId: "qu1",
+						factor: "0.12",
+						userId: "u1",
+						createdAt: "2026-03-01T00:00:00Z",
+						updatedAt: "2026-03-01T00:00:00Z",
+					},
+				],
+			});
+
+			renderPage();
+
+			expect(screen.getByText(/1 cup = 0.12 kg/)).toBeDefined();
 		});
 	});
 });

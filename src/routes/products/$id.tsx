@@ -11,6 +11,12 @@ import { Page } from "#src/components/Page";
 import { authClient } from "#src/lib/auth-client";
 import { useProductCategories } from "#src/lib/hooks/use-categories";
 import {
+	useCreateProductUnitConversion,
+	useDeleteProductUnitConversion,
+	useProductUnitConversions,
+	useUpdateProductUnitConversion,
+} from "#src/lib/hooks/use-product-unit-conversions";
+import {
 	useDeleteProduct,
 	useProduct,
 	useUpdateProduct,
@@ -30,6 +36,21 @@ function ProductDetail() {
 	const { data: product, isLoading, error } = useProduct(id);
 	const { data: categories } = useProductCategories();
 	const { data: quantityUnits } = useQuantityUnits();
+	const { data: productConversions } = useProductUnitConversions(id);
+	const createConversion = useCreateProductUnitConversion(id);
+	const deleteConversion = useDeleteProductUnitConversion(id);
+	const [editingConversionId, setEditingConversionId] = useState<string | null>(
+		null,
+	);
+	const [editConversion, setEditConversion] = useState({
+		fromUnitId: "",
+		toUnitId: "",
+		factor: "",
+	});
+	const updateConversion = useUpdateProductUnitConversion(
+		id,
+		editingConversionId ?? "",
+	);
 	const updateProduct = useUpdateProduct(id);
 	const deleteProduct = useDeleteProduct();
 
@@ -44,6 +65,11 @@ function ProductDetail() {
 		defaultQuantityUnitId: "",
 		minStockAmount: "",
 		defaultExpirationDays: "",
+	});
+	const [newConversion, setNewConversion] = useState({
+		fromUnitId: "",
+		toUnitId: "",
+		factor: "",
 	});
 
 	if (sessionLoading) return null;
@@ -129,6 +155,54 @@ function ProductDetail() {
 	async function handleDelete() {
 		await deleteProduct.mutateAsync(id);
 		navigate({ to: "/products" });
+	}
+
+	async function handleAddConversion() {
+		if (
+			!newConversion.fromUnitId ||
+			!newConversion.toUnitId ||
+			!newConversion.factor
+		)
+			return;
+		await createConversion.mutateAsync({
+			fromUnitId: newConversion.fromUnitId,
+			toUnitId: newConversion.toUnitId,
+			factor: newConversion.factor,
+		});
+		setNewConversion({ fromUnitId: "", toUnitId: "", factor: "" });
+	}
+
+	function startEditingConversion(conv: {
+		id: string;
+		fromUnitId: string;
+		toUnitId: string;
+		factor: string;
+	}) {
+		setEditingConversionId(conv.id);
+		setEditConversion({
+			fromUnitId: conv.fromUnitId,
+			toUnitId: conv.toUnitId,
+			factor: conv.factor,
+		});
+	}
+
+	async function handleSaveConversion() {
+		if (
+			!editConversion.fromUnitId ||
+			!editConversion.toUnitId ||
+			!editConversion.factor
+		)
+			return;
+		await updateConversion.mutateAsync({
+			fromUnitId: editConversion.fromUnitId,
+			toUnitId: editConversion.toUnitId,
+			factor: editConversion.factor,
+		});
+		setEditingConversionId(null);
+	}
+
+	async function handleDeleteConversion(conversionId: string) {
+		await deleteConversion.mutateAsync(conversionId);
 	}
 
 	const inputClass =
@@ -388,6 +462,206 @@ function ProductDetail() {
 						)}
 					</>
 				)}
+			</Island>
+
+			<Island
+				as="section"
+				className="mt-6 animate-rise-in rounded-2xl p-6 sm:p-8"
+			>
+				<h2 className="mb-4 text-lg font-semibold text-(--sea-ink)">
+					Product-Specific Conversions
+				</h2>
+
+				{!productConversions?.length ? (
+					<p className="mb-4 text-sm text-(--sea-ink-soft)">
+						No product-specific conversions yet.
+					</p>
+				) : (
+					<div className="mb-4 flex flex-col gap-2">
+						{productConversions.map((conv) =>
+							editingConversionId === conv.id ? (
+								<div
+									key={conv.id}
+									className="flex flex-col gap-3 rounded-lg border border-(--lagoon) p-3"
+								>
+									<div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+										<div className="flex flex-col gap-1">
+											<span className="text-xs text-(--sea-ink-soft)">
+												From
+											</span>
+											<Combobox
+												value={editConversion.fromUnitId}
+												onChange={(v) =>
+													setEditConversion({
+														...editConversion,
+														fromUnitId: v,
+													})
+												}
+												options={(quantityUnits ?? []).map((u) => ({
+													value: u.id,
+													label: u.abbreviation
+														? `${u.name} (${u.abbreviation})`
+														: u.name,
+												}))}
+												placeholder="Unit"
+											/>
+										</div>
+										<div className="flex flex-col gap-1">
+											<span className="text-xs text-(--sea-ink-soft)">To</span>
+											<Combobox
+												value={editConversion.toUnitId}
+												onChange={(v) =>
+													setEditConversion({
+														...editConversion,
+														toUnitId: v,
+													})
+												}
+												options={(quantityUnits ?? []).map((u) => ({
+													value: u.id,
+													label: u.abbreviation
+														? `${u.name} (${u.abbreviation})`
+														: u.name,
+												}))}
+												placeholder="Unit"
+											/>
+										</div>
+										<div className="flex flex-col gap-1">
+											<span className="text-xs text-(--sea-ink-soft)">
+												Factor
+											</span>
+											<NumberInput
+												step="any"
+												min="0"
+												value={editConversion.factor}
+												onChange={(e) =>
+													setEditConversion({
+														...editConversion,
+														factor: e.target.value,
+													})
+												}
+												className="w-full"
+											/>
+										</div>
+									</div>
+									<div className="flex gap-2">
+										<button
+											type="button"
+											onClick={handleSaveConversion}
+											disabled={
+												!editConversion.fromUnitId ||
+												!editConversion.toUnitId ||
+												!editConversion.factor ||
+												updateConversion.isPending
+											}
+											className="h-8 rounded-full bg-(--lagoon) px-4 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
+										>
+											{updateConversion.isPending ? "Saving…" : "Save"}
+										</button>
+										<button
+											type="button"
+											onClick={() => setEditingConversionId(null)}
+											className="h-8 rounded-full px-4 text-sm font-medium text-(--sea-ink-soft) transition hover:bg-(--surface)"
+										>
+											Cancel
+										</button>
+									</div>
+								</div>
+							) : (
+								<div
+									key={conv.id}
+									className="flex items-center justify-between rounded-lg border border-(--line) px-3 py-2"
+								>
+									<span className="text-sm text-(--sea-ink)">
+										1 {getUnitName(conv.fromUnitId) ?? "?"} = {conv.factor}{" "}
+										{getUnitName(conv.toUnitId) ?? "?"}
+									</span>
+									<div className="flex gap-1">
+										<button
+											type="button"
+											onClick={() => startEditingConversion(conv)}
+											className="rounded-lg p-1.5 text-(--sea-ink-soft) transition hover:bg-(--surface) hover:text-(--sea-ink)"
+											title="Edit conversion"
+										>
+											<Pencil size={14} />
+										</button>
+										<button
+											type="button"
+											onClick={() => handleDeleteConversion(conv.id)}
+											className="rounded-lg p-1.5 text-(--sea-ink-soft) transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950"
+											title="Delete conversion"
+										>
+											<Trash2 size={14} />
+										</button>
+									</div>
+								</div>
+							),
+						)}
+					</div>
+				)}
+
+				<div className="flex flex-col gap-3 rounded-lg border border-(--line) p-4">
+					<p className="text-sm font-medium text-(--sea-ink)">Add conversion</p>
+					<div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+						<div className="flex flex-col gap-1">
+							<span className="text-xs text-(--sea-ink-soft)">From</span>
+							<Combobox
+								value={newConversion.fromUnitId}
+								onChange={(v) =>
+									setNewConversion({ ...newConversion, fromUnitId: v })
+								}
+								options={(quantityUnits ?? []).map((u) => ({
+									value: u.id,
+									label: u.abbreviation
+										? `${u.name} (${u.abbreviation})`
+										: u.name,
+								}))}
+								placeholder="Unit"
+							/>
+						</div>
+						<div className="flex flex-col gap-1">
+							<span className="text-xs text-(--sea-ink-soft)">To</span>
+							<Combobox
+								value={newConversion.toUnitId}
+								onChange={(v) =>
+									setNewConversion({ ...newConversion, toUnitId: v })
+								}
+								options={(quantityUnits ?? []).map((u) => ({
+									value: u.id,
+									label: u.abbreviation
+										? `${u.name} (${u.abbreviation})`
+										: u.name,
+								}))}
+								placeholder="Unit"
+							/>
+						</div>
+						<div className="flex flex-col gap-1">
+							<span className="text-xs text-(--sea-ink-soft)">Factor</span>
+							<NumberInput
+								step="any"
+								min="0"
+								value={newConversion.factor}
+								onChange={(e) =>
+									setNewConversion({ ...newConversion, factor: e.target.value })
+								}
+								className="w-full"
+								placeholder="e.g. 120"
+							/>
+						</div>
+					</div>
+					<button
+						type="button"
+						onClick={handleAddConversion}
+						disabled={
+							!newConversion.fromUnitId ||
+							!newConversion.toUnitId ||
+							!newConversion.factor ||
+							createConversion.isPending
+						}
+						className="mt-1 h-9 rounded-full bg-(--lagoon) text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
+					>
+						{createConversion.isPending ? "Adding…" : "Add conversion"}
+					</button>
+				</div>
 			</Island>
 		</Page>
 	);

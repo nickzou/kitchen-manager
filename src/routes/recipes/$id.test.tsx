@@ -56,6 +56,12 @@ vi.mock("#src/lib/hooks/use-quantity-units", () => ({
 	useQuantityUnits: (...args: unknown[]) => mockUseQuantityUnits(...args),
 }));
 
+const mockUseProductUnitConversions = vi.fn();
+vi.mock("#src/lib/hooks/use-product-unit-conversions", () => ({
+	useProductUnitConversions: (...args: unknown[]) =>
+		mockUseProductUnitConversions(...args),
+}));
+
 const mockUseUnitConversions = vi.fn();
 vi.mock("#src/lib/hooks/use-unit-conversions", () => ({
 	useUnitConversions: (...args: unknown[]) => mockUseUnitConversions(...args),
@@ -183,6 +189,7 @@ beforeEach(() => {
 			{ id: "qu3", name: "Cups", abbreviation: "cup" },
 		],
 	});
+	mockUseProductUnitConversions.mockReturnValue({ data: [] });
 	mockUseUnitConversions.mockReturnValue({
 		data: [
 			{
@@ -407,6 +414,47 @@ describe("RecipeDetail", () => {
 
 			await waitFor(() => {
 				expect(screen.getByText("1 cup = 250 ml")).toBeDefined();
+			});
+		});
+
+		it("prioritizes product-specific conversion over global", async () => {
+			mockUseProductUnitConversions.mockReturnValue({
+				data: [
+					{
+						id: "puc1",
+						productId: "p2",
+						fromUnitId: "qu3",
+						toUnitId: "qu2",
+						factor: "180",
+						userId: "u1",
+						createdAt: "2026-03-01T00:00:00Z",
+						updatedAt: "2026-03-01T00:00:00Z",
+					},
+				],
+			});
+
+			renderPage();
+
+			const comboboxes = screen.getAllByRole("combobox");
+
+			// Select Olive Oil (default unit: ml / qu2)
+			fireEvent.focus(comboboxes[0]);
+			await waitFor(() => {
+				expect(screen.getByText("Olive Oil")).toBeDefined();
+			});
+			fireEvent.mouseDown(screen.getByText("Olive Oil"));
+
+			// Change unit to Cups (qu3)
+			const unitCombobox = screen.getAllByRole("combobox")[1];
+			fireEvent.focus(unitCombobox);
+			await waitFor(() => {
+				expect(screen.getByText("Cups (cup)")).toBeDefined();
+			});
+			fireEvent.mouseDown(screen.getByText("Cups (cup)"));
+
+			// Should show product-specific factor (180) instead of global (250)
+			await waitFor(() => {
+				expect(screen.getByText("1 cup = 180 ml")).toBeDefined();
 			});
 		});
 
