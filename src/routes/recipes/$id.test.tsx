@@ -127,6 +127,9 @@ const mockRecipe: Recipe = {
 	prepTime: 15,
 	cookTime: 45,
 	instructions: "Cook pasta. Make sauce.",
+	producedProductId: null,
+	producedQuantity: null,
+	producedQuantityUnitId: null,
 	categoryIds: ["c1"],
 	userId: "u1",
 	createdAt: "2026-03-01T00:00:00Z",
@@ -304,11 +307,15 @@ describe("RecipeDetail", () => {
 				expect(mockUpdateMutateAsync).toHaveBeenCalledWith({
 					name: "Penne Bolognese",
 					description: "Classic Italian pasta",
+					image: undefined,
 					categoryIds: ["c1"],
 					servings: 4,
 					prepTime: 15,
 					cookTime: 45,
 					instructions: "Cook pasta. Make sauce.",
+					producedProductId: null,
+					producedQuantity: null,
+					producedQuantityUnitId: null,
 				});
 			});
 		});

@@ -69,6 +69,9 @@ export const Route = createFileRoute("/api/recipes/")({
 						prepTime: body.prepTime,
 						cookTime: body.cookTime,
 						instructions: body.instructions,
+						producedProductId: body.producedProductId,
+						producedQuantity: body.producedQuantity,
+						producedQuantityUnitId: body.producedQuantityUnitId,
 						userId: session.user.id,
 					})
 					.returning();

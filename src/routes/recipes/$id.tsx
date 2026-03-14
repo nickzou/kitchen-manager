@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Check, Minus, Pencil, Plus, Trash2, X } from "lucide-react";
-import { type FormEvent, useId, useState } from "react";
+import { type FormEvent, useId, useRef, useState } from "react";
 import {
 	AddIngredientForm,
 	type IngredientFormState,
@@ -14,6 +14,7 @@ import { NumberInput } from "#src/components/NumberInput";
 import { Page } from "#src/components/Page";
 import { authClient } from "#src/lib/auth-client";
 import { useRecipeCategories } from "#src/lib/hooks/use-categories";
+import { useCookRecipe } from "#src/lib/hooks/use-cook-recipe";
 import { useProductUnitConversions } from "#src/lib/hooks/use-product-unit-conversions";
 import { useCreateProduct, useProducts } from "#src/lib/hooks/use-products";
 import { useQuantityUnits } from "#src/lib/hooks/use-quantity-units";
@@ -52,10 +53,17 @@ function RecipeDetail() {
 	const updateIngredient = useUpdateRecipeIngredient(id);
 	const deleteIngredient = useDeleteRecipeIngredient(id);
 	const createProduct = useCreateProduct();
+	const cookRecipe = useCookRecipe();
 
 	const [editing, setEditing] = useState(false);
 	const [confirmDelete, setConfirmDelete] = useState(false);
 	const [adjustedServings, setAdjustedServings] = useState<number | null>(null);
+	const [cookResult, setCookResult] = useState<{
+		deductions: { productId: string; needed: number; deducted: number }[];
+		warnings: string[];
+		produced?: { productId: string; quantity: number };
+	} | null>(null);
+	const cookResultRef = useRef<HTMLDivElement>(null);
 	const htmlId = useId();
 	const [form, setForm] = useState({
 		name: "",
@@ -66,6 +74,9 @@ function RecipeDetail() {
 		prepTime: "",
 		cookTime: "",
 		instructions: "",
+		producedProductId: "" as string,
+		producedQuantity: "" as string,
+		producedQuantityUnitId: "" as string,
 	});
 
 	const [newIngredient, setNewIngredient] = useState<IngredientFormState>({
@@ -150,6 +161,9 @@ function RecipeDetail() {
 			prepTime: recipe.prepTime != null ? String(recipe.prepTime) : "",
 			cookTime: recipe.cookTime != null ? String(recipe.cookTime) : "",
 			instructions: recipe.instructions || "",
+			producedProductId: recipe.producedProductId || "",
+			producedQuantity: recipe.producedQuantity || "",
+			producedQuantityUnitId: recipe.producedQuantityUnitId || "",
 		});
 		setEditing(true);
 	}
@@ -165,8 +179,24 @@ function RecipeDetail() {
 			prepTime: form.prepTime ? Number.parseInt(form.prepTime, 10) : undefined,
 			cookTime: form.cookTime ? Number.parseInt(form.cookTime, 10) : undefined,
 			instructions: form.instructions || undefined,
+			producedProductId: form.producedProductId || null,
+			producedQuantity: form.producedQuantity || null,
+			producedQuantityUnitId: form.producedQuantityUnitId || null,
 		});
 		setEditing(false);
+	}
+
+	async function handleCook() {
+		if (!recipe) return;
+		const result = await cookRecipe.mutateAsync({
+			recipeId: recipe.id,
+			servings: currentServings ?? undefined,
+		});
+		setCookResult(result);
+		setTimeout(
+			() => cookResultRef.current?.scrollIntoView({ behavior: "smooth" }),
+			100,
+		);
 	}
 
 	async function handleDelete() {
@@ -504,6 +534,58 @@ function RecipeDetail() {
 									/>
 								</label>
 
+								<fieldset className="flex flex-col gap-3 rounded-lg border border-(--line) p-4">
+									<legend className="px-1 text-sm font-medium text-(--sea-ink)">
+										Produced Product
+									</legend>
+									<div className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
+										Product
+										<Combobox
+											value={form.producedProductId}
+											onChange={(v) =>
+												setForm({ ...form, producedProductId: v })
+											}
+											options={productOptions}
+											placeholder="None"
+										/>
+									</div>
+									<div className="flex flex-col gap-1.5">
+										<label
+											htmlFor={`${htmlId}-producedQty`}
+											className="text-sm font-medium text-(--sea-ink)"
+										>
+											Quantity
+										</label>
+										<NumberInput
+											id={`${htmlId}-producedQty`}
+											step="any"
+											min="0"
+											value={form.producedQuantity}
+											onChange={(e) =>
+												setForm({
+													...form,
+													producedQuantity: e.target.value,
+												})
+											}
+											className="w-full"
+										/>
+									</div>
+									<div className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
+										Unit
+										<Combobox
+											value={form.producedQuantityUnitId}
+											onChange={(v) =>
+												setForm({
+													...form,
+													producedQuantityUnitId: v,
+												})
+											}
+											options={unitOptions}
+											placeholder="None"
+										/>
+									</div>
+								</fieldset>
+
 								<button
 									type="submit"
 									disabled={updateRecipe.isPending}
@@ -665,6 +747,83 @@ function RecipeDetail() {
 										<p className="whitespace-pre-wrap text-sm text-(--sea-ink-soft)">
 											{recipe.instructions}
 										</p>
+									</div>
+								)}
+
+								{recipe.producedProductId && (
+									<div className="mt-4 rounded-lg border border-(--line) p-3">
+										<h2 className="mb-1 text-sm font-semibold text-(--sea-ink)">
+											Produces
+										</h2>
+										<p className="text-sm text-(--sea-ink-soft)">
+											{getProductName(recipe.producedProductId)}
+											{recipe.producedQuantity && (
+												<>
+													{" — "}
+													{recipe.producedQuantity}
+													{getUnitLabel(recipe.producedQuantityUnitId)
+														? ` ${getUnitLabel(recipe.producedQuantityUnitId)}`
+														: ""}
+												</>
+											)}
+										</p>
+									</div>
+								)}
+
+								{ingredients && ingredients.length > 0 && (
+									<div className="mt-4">
+										<button
+											type="button"
+											onClick={handleCook}
+											disabled={cookRecipe.isPending}
+											className="h-10 rounded-full bg-(--lagoon) px-6 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
+										>
+											{cookRecipe.isPending ? "Cooking…" : "Cook"}
+										</button>
+									</div>
+								)}
+
+								{cookResult && (
+									<div
+										ref={cookResultRef}
+										className="mt-4 rounded-lg border border-(--line) p-4"
+									>
+										<div className="mb-2 flex items-center justify-between">
+											<h2 className="text-sm font-semibold text-(--sea-ink)">
+												Cook Result
+											</h2>
+											<button
+												type="button"
+												onClick={() => setCookResult(null)}
+												className="rounded-lg p-1 text-(--sea-ink-soft) transition hover:bg-(--surface)"
+											>
+												<X size={14} />
+											</button>
+										</div>
+										{cookResult.deductions.length > 0 && (
+											<ul className="mb-2 flex flex-col gap-1 text-sm text-(--sea-ink-soft)">
+												{cookResult.deductions.map((d) => (
+													<li key={d.productId}>
+														{getProductName(d.productId)}: deducted {d.deducted}{" "}
+														of {d.needed}
+													</li>
+												))}
+											</ul>
+										)}
+										{cookResult.warnings.length > 0 && (
+											<ul className="mb-2 flex flex-col gap-1 text-sm text-amber-600 dark:text-amber-400">
+												{cookResult.warnings.map((w) => (
+													<li key={w}>{w}</li>
+												))}
+											</ul>
+										)}
+										{cookResult.produced && (
+											<p className="text-sm font-medium text-(--lagoon-deep)">
+												Produced:{" "}
+												{getProductName(cookResult.produced.productId)} (
+												{cookResult.produced.quantity})
+											</p>
+										)}
 									</div>
 								)}
 

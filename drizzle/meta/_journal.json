@@ -120,6 +120,13 @@
       "when": 1773461456955,
       "tag": "0016_add_product_unit_conversions",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1773724800000,
+      "tag": "0017_add-recipe-produced-product",
+      "breakpoints": true
     }
   ]
 }

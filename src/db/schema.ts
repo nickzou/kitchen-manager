@@ -455,6 +455,15 @@ export const recipe = pgTable(
 		prepTime: integer("prep_time"),
 		cookTime: integer("cook_time"),
 		instructions: text("instructions"),
+		producedProductId: text("produced_product_id").references(
+			() => product.id,
+			{ onDelete: "set null" },
+		),
+		producedQuantity: numeric("produced_quantity"),
+		producedQuantityUnitId: text("produced_quantity_unit_id").references(
+			() => quantityUnit.id,
+			{ onDelete: "set null" },
+		),
 		userId: text("user_id")
 			.notNull()
 			.references(() => user.id, { onDelete: "cascade" }),
@@ -474,6 +483,14 @@ export const recipeRelations = relations(recipe, ({ one, many }) => ({
 	}),
 	categories: many(recipeCategory),
 	ingredients: many(recipeIngredient),
+	producedProduct: one(product, {
+		fields: [recipe.producedProductId],
+		references: [product.id],
+	}),
+	producedQuantityUnit: one(quantityUnit, {
+		fields: [recipe.producedQuantityUnitId],
+		references: [quantityUnit.id],
+	}),
 }));
 
 export const recipeIngredient = pgTable(
