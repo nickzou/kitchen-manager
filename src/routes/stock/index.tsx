@@ -12,7 +12,7 @@ import { SearchInput } from "#src/components/SearchInput";
 import { StockProductContent } from "#src/components/stock/StockProductContent";
 import { StockProductTrigger } from "#src/components/stock/StockProductTrigger";
 import { authClient } from "#src/lib/auth-client";
-import { useCategories } from "#src/lib/hooks/use-categories";
+import { useProductCategories } from "#src/lib/hooks/use-categories";
 import { useProducts } from "#src/lib/hooks/use-products";
 import { useQuantityUnits } from "#src/lib/hooks/use-quantity-units";
 import {
@@ -33,7 +33,7 @@ function StockPage() {
 	const navigate = useNavigate();
 
 	const { data: products } = useProducts();
-	const { data: categories } = useCategories();
+	const { data: categories } = useProductCategories();
 	const { data: stores } = useStores();
 	const { data: quantityUnits } = useQuantityUnits();
 	const { data: stockEntries, isLoading: entriesLoading } = useStockEntries();
@@ -91,9 +91,11 @@ function StockPage() {
 		return unit?.abbreviation ?? unit?.name ?? "";
 	}
 
-	function getCategoryName(categoryId: string | null) {
-		if (!categoryId) return null;
-		return categories?.find((c) => c.id === categoryId)?.name ?? null;
+	function getCategoryName(categoryIds: string[]) {
+		const names = categoryIds
+			.map((id) => categories?.find((c) => c.id === id)?.name)
+			.filter(Boolean) as string[];
+		return names.length > 0 ? names.join(", ") : null;
 	}
 
 	// Group stock entries by product
@@ -263,7 +265,7 @@ function StockPage() {
 										product={item.product}
 										totalStock={item.totalStock}
 										unitAbbr={getUnitAbbr(item.product.defaultQuantityUnitId)}
-										categoryName={getCategoryName(item.product.categoryId)}
+										categoryName={getCategoryName(item.product.categoryIds)}
 									/>
 								)}
 								renderContent={(item) => (

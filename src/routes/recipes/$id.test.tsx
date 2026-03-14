@@ -39,9 +39,9 @@ vi.mock("#src/lib/hooks/use-recipes", () => ({
 	useDeleteRecipe: (...args: unknown[]) => mockUseDeleteRecipe(...args),
 }));
 
-const mockUseCategories = vi.fn();
+const mockUseRecipeCategories = vi.fn();
 vi.mock("#src/lib/hooks/use-categories", () => ({
-	useCategories: (...args: unknown[]) => mockUseCategories(...args),
+	useRecipeCategories: (...args: unknown[]) => mockUseRecipeCategories(...args),
 }));
 
 const mockUseProducts = vi.fn();
@@ -80,6 +80,36 @@ vi.mock("#src/lib/utils", () => ({
 	cn: (...args: string[]) => args.filter(Boolean).join(" "),
 }));
 
+vi.mock("#src/components/MultiCombobox", () => ({
+	MultiCombobox: ({
+		value,
+		onChange,
+		options,
+		placeholder,
+	}: {
+		value: string[];
+		onChange: (v: string[]) => void;
+		options: { value: string; label: string }[];
+		placeholder?: string;
+	}) => (
+		<select
+			multiple
+			value={value}
+			onChange={(e) => {
+				const selected = Array.from(e.target.selectedOptions, (o) => o.value);
+				onChange(selected);
+			}}
+			aria-label={placeholder}
+		>
+			{options.map((o) => (
+				<option key={o.value} value={o.value}>
+					{o.label}
+				</option>
+			))}
+		</select>
+	),
+}));
+
 import { Route } from "./$id";
 
 const mockRecipe: Recipe = {
@@ -91,7 +121,7 @@ const mockRecipe: Recipe = {
 	prepTime: 15,
 	cookTime: 45,
 	instructions: "Cook pasta. Make sauce.",
-	categoryId: "c1",
+	categoryIds: ["c1"],
 	userId: "u1",
 	createdAt: "2026-03-01T00:00:00Z",
 	updatedAt: "2026-03-02T00:00:00Z",
@@ -123,13 +153,23 @@ beforeEach(() => {
 		mutateAsync: mockDeleteMutateAsync,
 		isPending: false,
 	});
-	mockUseCategories.mockReturnValue({
+	mockUseRecipeCategories.mockReturnValue({
 		data: [{ id: "c1", name: "Italian" }],
 	});
 	mockUseProducts.mockReturnValue({
 		data: [
-			{ id: "p1", name: "Spaghetti", defaultQuantityUnitId: "qu1" },
-			{ id: "p2", name: "Olive Oil", defaultQuantityUnitId: "qu2" },
+			{
+				id: "p1",
+				name: "Spaghetti",
+				defaultQuantityUnitId: "qu1",
+				categoryIds: [],
+			},
+			{
+				id: "p2",
+				name: "Olive Oil",
+				defaultQuantityUnitId: "qu2",
+				categoryIds: [],
+			},
 		],
 	});
 	mockUseCreateProduct.mockReturnValue({
@@ -257,7 +297,7 @@ describe("RecipeDetail", () => {
 				expect(mockUpdateMutateAsync).toHaveBeenCalledWith({
 					name: "Penne Bolognese",
 					description: "Classic Italian pasta",
-					categoryId: "c1",
+					categoryIds: ["c1"],
 					servings: 4,
 					prepTime: 15,
 					cookTime: 45,

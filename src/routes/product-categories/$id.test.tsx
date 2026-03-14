@@ -12,9 +12,9 @@ import { createTestWrapper } from "#src/tests/helpers/test-wrapper";
 
 const mockNavigate = vi.fn();
 const mockUseSession = vi.fn();
-const mockUseCategory = vi.fn();
-const mockUseUpdateCategory = vi.fn();
-const mockUseDeleteCategory = vi.fn();
+const mockUseProductCategory = vi.fn();
+const mockUseUpdateProductCategory = vi.fn();
+const mockUseDeleteProductCategory = vi.fn();
 
 vi.mock("@tanstack/react-router", () => ({
 	createFileRoute: () => (opts: { component: ComponentType }) => ({
@@ -34,9 +34,11 @@ vi.mock("#src/lib/auth-client", () => ({
 }));
 
 vi.mock("#src/lib/hooks/use-categories", () => ({
-	useCategory: (...args: unknown[]) => mockUseCategory(...args),
-	useUpdateCategory: (...args: unknown[]) => mockUseUpdateCategory(...args),
-	useDeleteCategory: (...args: unknown[]) => mockUseDeleteCategory(...args),
+	useProductCategory: (...args: unknown[]) => mockUseProductCategory(...args),
+	useUpdateProductCategory: (...args: unknown[]) =>
+		mockUseUpdateProductCategory(...args),
+	useDeleteProductCategory: (...args: unknown[]) =>
+		mockUseDeleteProductCategory(...args),
 }));
 
 vi.mock("#src/lib/utils", () => ({
@@ -68,16 +70,16 @@ beforeEach(() => {
 		data: { user: { id: "u1" }, session: { id: "s1" } },
 		isPending: false,
 	});
-	mockUseCategory.mockReturnValue({
+	mockUseProductCategory.mockReturnValue({
 		data: mockCategory,
 		isLoading: false,
 		error: null,
 	});
-	mockUseUpdateCategory.mockReturnValue({
+	mockUseUpdateProductCategory.mockReturnValue({
 		mutateAsync: mockUpdateMutateAsync,
 		isPending: false,
 	});
-	mockUseDeleteCategory.mockReturnValue({
+	mockUseDeleteProductCategory.mockReturnValue({
 		mutateAsync: mockDeleteMutateAsync,
 		isPending: false,
 	});
@@ -94,7 +96,7 @@ function renderPage() {
 	return render(<Component />, { wrapper: Wrapper });
 }
 
-describe("CategoryDetail", () => {
+describe("ProductCategoryDetail", () => {
 	describe("authentication", () => {
 		it("redirects to /sign-in when session is null", () => {
 			mockUseSession.mockReturnValue({ data: null, isPending: false });
@@ -107,7 +109,7 @@ describe("CategoryDetail", () => {
 
 	describe("error states", () => {
 		it("shows 'Category not found' on error", () => {
-			mockUseCategory.mockReturnValue({
+			mockUseProductCategory.mockReturnValue({
 				data: null,
 				isLoading: false,
 				error: new Error("Not found"),
@@ -183,7 +185,9 @@ describe("CategoryDetail", () => {
 			});
 
 			await waitFor(() => {
-				expect(mockNavigate).toHaveBeenCalledWith({ to: "/categories" });
+				expect(mockNavigate).toHaveBeenCalledWith({
+					to: "/product-categories",
+				});
 			});
 		});
 	});

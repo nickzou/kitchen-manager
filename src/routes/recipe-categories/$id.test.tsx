@@ -7,14 +7,14 @@ import {
 } from "@testing-library/react";
 import type { ComponentType, ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { Product } from "#src/lib/hooks/use-products";
+import type { Category } from "#src/lib/hooks/use-categories";
 import { createTestWrapper } from "#src/tests/helpers/test-wrapper";
 
 const mockNavigate = vi.fn();
 const mockUseSession = vi.fn();
-const mockUseProduct = vi.fn();
-const mockUseUpdateProduct = vi.fn();
-const mockUseDeleteProduct = vi.fn();
+const mockUseRecipeCategory = vi.fn();
+const mockUseUpdateRecipeCategory = vi.fn();
+const mockUseDeleteRecipeCategory = vi.fn();
 
 vi.mock("@tanstack/react-router", () => ({
 	createFileRoute: () => (opts: { component: ComponentType }) => ({
@@ -33,72 +33,28 @@ vi.mock("#src/lib/auth-client", () => ({
 	authClient: { useSession: (...args: unknown[]) => mockUseSession(...args) },
 }));
 
-vi.mock("#src/lib/hooks/use-products", () => ({
-	useProduct: (...args: unknown[]) => mockUseProduct(...args),
-	useUpdateProduct: (...args: unknown[]) => mockUseUpdateProduct(...args),
-	useDeleteProduct: (...args: unknown[]) => mockUseDeleteProduct(...args),
-}));
-
-const mockUseProductCategories = vi.fn();
 vi.mock("#src/lib/hooks/use-categories", () => ({
-	useProductCategories: (...args: unknown[]) =>
-		mockUseProductCategories(...args),
-}));
-
-const mockUseQuantityUnits = vi.fn();
-vi.mock("#src/lib/hooks/use-quantity-units", () => ({
-	useQuantityUnits: (...args: unknown[]) => mockUseQuantityUnits(...args),
+	useRecipeCategory: (...args: unknown[]) => mockUseRecipeCategory(...args),
+	useUpdateRecipeCategory: (...args: unknown[]) =>
+		mockUseUpdateRecipeCategory(...args),
+	useDeleteRecipeCategory: (...args: unknown[]) =>
+		mockUseDeleteRecipeCategory(...args),
 }));
 
 vi.mock("#src/lib/utils", () => ({
 	cn: (...args: string[]) => args.filter(Boolean).join(" "),
 }));
 
-vi.mock("#src/components/InventorySubNav", () => ({
-	default: () => <nav data-testid="inventory-sub-nav" />,
-}));
-
-vi.mock("#src/components/MultiCombobox", () => ({
-	MultiCombobox: ({
-		value,
-		onChange,
-		options,
-		placeholder,
-	}: {
-		value: string[];
-		onChange: (v: string[]) => void;
-		options: { value: string; label: string }[];
-		placeholder?: string;
-	}) => (
-		<select
-			multiple
-			value={value}
-			onChange={(e) => {
-				const selected = Array.from(e.target.selectedOptions, (o) => o.value);
-				onChange(selected);
-			}}
-			aria-label={placeholder}
-		>
-			{options.map((o) => (
-				<option key={o.value} value={o.value}>
-					{o.label}
-				</option>
-			))}
-		</select>
-	),
+vi.mock("#src/components/CookingSubNav", () => ({
+	default: () => <nav data-testid="cooking-sub-nav" />,
 }));
 
 import { Route } from "./$id";
 
-const mockProduct: Product = {
+const mockCategory: Category = {
 	id: "1",
-	name: "Tomatoes",
-	categoryIds: ["c1"],
-	description: "Fresh red tomatoes",
-	image: null,
-	defaultQuantityUnitId: null,
-	minStockAmount: "0",
-	defaultExpirationDays: null,
+	name: "Quick Meals",
+	description: "Fast recipes",
 	userId: "u1",
 	createdAt: "2026-03-01T00:00:00Z",
 	updatedAt: "2026-03-02T00:00:00Z",
@@ -114,24 +70,18 @@ beforeEach(() => {
 		data: { user: { id: "u1" }, session: { id: "s1" } },
 		isPending: false,
 	});
-	mockUseProduct.mockReturnValue({
-		data: mockProduct,
+	mockUseRecipeCategory.mockReturnValue({
+		data: mockCategory,
 		isLoading: false,
 		error: null,
 	});
-	mockUseUpdateProduct.mockReturnValue({
+	mockUseUpdateRecipeCategory.mockReturnValue({
 		mutateAsync: mockUpdateMutateAsync,
 		isPending: false,
 	});
-	mockUseDeleteProduct.mockReturnValue({
+	mockUseDeleteRecipeCategory.mockReturnValue({
 		mutateAsync: mockDeleteMutateAsync,
 		isPending: false,
-	});
-	mockUseProductCategories.mockReturnValue({
-		data: [{ id: "c1", name: "Vegetables" }],
-	});
-	mockUseQuantityUnits.mockReturnValue({
-		data: [{ id: "qu1", name: "Kilograms", abbreviation: "kg" }],
 	});
 });
 
@@ -146,7 +96,7 @@ function renderPage() {
 	return render(<Component />, { wrapper: Wrapper });
 }
 
-describe("ProductDetail", () => {
+describe("RecipeCategoryDetail", () => {
 	describe("authentication", () => {
 		it("redirects to /sign-in when session is null", () => {
 			mockUseSession.mockReturnValue({ data: null, isPending: false });
@@ -158,8 +108,8 @@ describe("ProductDetail", () => {
 	});
 
 	describe("error states", () => {
-		it("shows 'Product not found' on error", () => {
-			mockUseProduct.mockReturnValue({
+		it("shows 'Category not found' on error", () => {
+			mockUseRecipeCategory.mockReturnValue({
 				data: null,
 				isLoading: false,
 				error: new Error("Not found"),
@@ -167,17 +117,16 @@ describe("ProductDetail", () => {
 
 			renderPage();
 
-			expect(screen.getByText("Product not found")).toBeDefined();
+			expect(screen.getByText("Category not found")).toBeDefined();
 		});
 	});
 
 	describe("view mode", () => {
-		it("displays product details", () => {
+		it("displays category details", () => {
 			renderPage();
 
-			expect(screen.getByText("Tomatoes")).toBeDefined();
-			expect(screen.getByText("Vegetables")).toBeDefined();
-			expect(screen.getByText("Fresh red tomatoes")).toBeDefined();
+			expect(screen.getByText("Quick Meals")).toBeDefined();
+			expect(screen.getByText("Fast recipes")).toBeDefined();
 		});
 	});
 
@@ -187,21 +136,17 @@ describe("ProductDetail", () => {
 
 			fireEvent.click(screen.getByTitle("Edit"));
 
-			expect(screen.getByText("Edit product")).toBeDefined();
+			expect(screen.getByText("Edit category")).toBeDefined();
 
-			const nameInput = screen.getByDisplayValue("Tomatoes");
-			fireEvent.change(nameInput, { target: { value: "Cherry Tomatoes" } });
+			const nameInput = screen.getByDisplayValue("Quick Meals");
+			fireEvent.change(nameInput, { target: { value: "Weeknight Dinners" } });
 
 			fireEvent.click(screen.getByText("Save changes"));
 
 			await waitFor(() => {
 				expect(mockUpdateMutateAsync).toHaveBeenCalledWith({
-					name: "Cherry Tomatoes",
-					description: "Fresh red tomatoes",
-					categoryIds: ["c1"],
-					defaultQuantityUnitId: undefined,
-					minStockAmount: undefined,
-					defaultExpirationDays: undefined,
+					name: "Weeknight Dinners",
+					description: "Fast recipes",
 				});
 			});
 		});
@@ -214,13 +159,13 @@ describe("ProductDetail", () => {
 			fireEvent.click(screen.getByTitle("Delete"));
 
 			expect(
-				screen.getByText("Delete this product? This cannot be undone."),
+				screen.getByText("Delete this category? This cannot be undone."),
 			).toBeDefined();
 
 			fireEvent.click(screen.getByText("Cancel"));
 
 			expect(
-				screen.queryByText("Delete this product? This cannot be undone."),
+				screen.queryByText("Delete this category? This cannot be undone."),
 			).toBeNull();
 		});
 
@@ -229,7 +174,6 @@ describe("ProductDetail", () => {
 
 			fireEvent.click(screen.getByTitle("Delete"));
 
-			// Click the confirm "Delete" button (inside the confirmation dialog)
 			const buttons = screen.getAllByText("Delete");
 			const confirmButton = buttons.find((b) =>
 				b.className.includes("bg-red-600"),
@@ -241,7 +185,9 @@ describe("ProductDetail", () => {
 			});
 
 			await waitFor(() => {
-				expect(mockNavigate).toHaveBeenCalledWith({ to: "/products" });
+				expect(mockNavigate).toHaveBeenCalledWith({
+					to: "/recipe-categories",
+				});
 			});
 		});
 	});

@@ -2,8 +2,8 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
 import { type FormEvent, useMemo, useState } from "react";
 import { CompactView } from "#src/components/CompactView";
+import CookingSubNav from "#src/components/CookingSubNav";
 import { GridView } from "#src/components/GridView";
-import InventorySubNav from "#src/components/InventorySubNav";
 import { Island } from "#src/components/Island";
 import { Page } from "#src/components/Page";
 import { SearchInput } from "#src/components/SearchInput";
@@ -12,21 +12,21 @@ import { type ViewMode, ViewSwitcher } from "#src/components/ViewSwitcher";
 import { authClient } from "#src/lib/auth-client";
 import { formatDate } from "#src/lib/format-date";
 import {
-	useCategories,
-	useCreateCategory,
+	useCreateRecipeCategory,
+	useRecipeCategories,
 } from "#src/lib/hooks/use-categories";
 import { cn } from "#src/lib/utils";
 
-export const Route = createFileRoute("/categories/")({
-	component: CategoriesPage,
+export const Route = createFileRoute("/recipe-categories/")({
+	component: RecipeCategoriesPage,
 });
 
-function CategoriesPage() {
+function RecipeCategoriesPage() {
 	const { data: session, isPending: sessionLoading } = authClient.useSession();
 	const navigate = useNavigate();
 
-	const { data: categories, isLoading } = useCategories();
-	const createCategory = useCreateCategory();
+	const { data: categories, isLoading } = useRecipeCategories();
+	const createCategory = useCreateRecipeCategory();
 
 	const [view, setView] = useState<ViewMode>("grid");
 	const [name, setName] = useState("");
@@ -67,13 +67,13 @@ function CategoriesPage() {
 		<Page as="main" className="pb-8 pt-14">
 			<Island as="section" className="animate-rise-in rounded-2xl p-6 sm:p-8">
 				<p className="mb-2 text-[0.69rem] font-bold uppercase tracking-[0.16em] text-(--kicker)">
-					Organization
+					Cooking
 				</p>
 				<h1 className="font-display mb-6 text-3xl font-bold text-(--sea-ink)">
 					Categories
 				</h1>
 
-				<InventorySubNav />
+				<CookingSubNav />
 
 				<form
 					onSubmit={handleSubmit}
@@ -128,7 +128,7 @@ function CategoriesPage() {
 						items={filteredCategories}
 						getKey={(c) => c.id}
 						getLink={(c) => ({
-							to: "/categories/$id",
+							to: "/recipe-categories/$id",
 							params: { id: c.id },
 						})}
 						renderCard={(c) => (
@@ -157,7 +157,7 @@ function CategoriesPage() {
 							<>
 								<td className="py-2.5 pr-4">
 									<Link
-										to="/categories/$id"
+										to="/recipe-categories/$id"
 										params={{ id: c.id }}
 										className="font-medium text-(--lagoon-deep) no-underline hover:underline"
 									>
@@ -178,7 +178,7 @@ function CategoriesPage() {
 						items={filteredCategories}
 						getKey={(c) => c.id}
 						getLink={(c) => ({
-							to: "/categories/$id",
+							to: "/recipe-categories/$id",
 							params: { id: c.id },
 						})}
 						getName={(c) => c.name}

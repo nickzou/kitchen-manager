@@ -2,15 +2,17 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
 import { type FormEvent, useMemo, useState } from "react";
 import { CompactView } from "#src/components/CompactView";
+import CookingSubNav from "#src/components/CookingSubNav";
 import { GridView } from "#src/components/GridView";
 import { Island } from "#src/components/Island";
+import { MultiCombobox } from "#src/components/MultiCombobox";
 import { Page } from "#src/components/Page";
 import { SearchInput } from "#src/components/SearchInput";
 import { TableView } from "#src/components/TableView";
 import { type ViewMode, ViewSwitcher } from "#src/components/ViewSwitcher";
 import { authClient } from "#src/lib/auth-client";
 import { formatDate } from "#src/lib/format-date";
-import { useCategories } from "#src/lib/hooks/use-categories";
+import { useRecipeCategories } from "#src/lib/hooks/use-categories";
 import { useCreateRecipe, useRecipes } from "#src/lib/hooks/use-recipes";
 import { cn } from "#src/lib/utils";
 
@@ -29,11 +31,12 @@ function RecipesPage() {
 	const navigate = useNavigate();
 
 	const { data: recipes, isLoading } = useRecipes();
-	const { data: categories } = useCategories();
+	const { data: categories } = useRecipeCategories();
 	const createRecipe = useCreateRecipe();
 
 	const [view, setView] = useState<ViewMode>("grid");
 	const [name, setName] = useState("");
+	const [categoryIds, setCategoryIds] = useState<string[]>([]);
 	const [search, setSearch] = useState("");
 
 	const filteredRecipes = useMemo(() => {
@@ -51,13 +54,18 @@ function RecipesPage() {
 	async function handleSubmit(e: FormEvent) {
 		e.preventDefault();
 		if (!name.trim()) return;
-		await createRecipe.mutateAsync({ name: name.trim() });
+		await createRecipe.mutateAsync({
+			name: name.trim(),
+			categoryIds: categoryIds.length > 0 ? categoryIds : undefined,
+		});
 		setName("");
+		setCategoryIds([]);
 	}
 
-	function getCategoryName(catId: string | null) {
-		if (!catId) return null;
-		return categories?.find((c) => c.id === catId)?.name ?? null;
+	function getCategoryNames(catIds: string[]) {
+		return catIds
+			.map((id) => categories?.find((c) => c.id === id)?.name)
+			.filter(Boolean) as string[];
 	}
 
 	const inputClass =
@@ -73,6 +81,8 @@ function RecipesPage() {
 					Recipes
 				</h1>
 
+				<CookingSubNav />
+
 				<form
 					onSubmit={handleSubmit}
 					className="mb-6 flex flex-wrap gap-3 border-b border-(--line) pb-6"
@@ -84,6 +94,16 @@ function RecipesPage() {
 						value={name}
 						onChange={(e) => setName(e.target.value)}
 						className={cn(inputClass, "flex-1 min-w-[160px]")}
+					/>
+					<MultiCombobox
+						value={categoryIds}
+						onChange={setCategoryIds}
+						options={(categories ?? []).map((c) => ({
+							value: c.id,
+							label: c.name,
+						}))}
+						placeholder="Categories"
+						className="w-48"
 					/>
 					<button
 						type="submit"
@@ -122,16 +142,23 @@ function RecipesPage() {
 						getImage={(r) => r.image}
 						getImageAlt={(r) => r.name}
 						renderCard={(r) => {
-							const catName = getCategoryName(r.categoryId);
+							const catNames = getCategoryNames(r.categoryIds);
 							return (
 								<>
 									<h3 className="mb-1 text-sm font-semibold text-(--sea-ink)">
 										{r.name}
 									</h3>
-									{catName && (
-										<span className="mb-2 inline-block rounded-full bg-[rgba(79,184,178,0.14)] px-2 py-0.5 text-xs font-medium text-(--lagoon-deep)">
-											{catName}
-										</span>
+									{catNames.length > 0 && (
+										<div className="mb-2 flex flex-wrap gap-1">
+											{catNames.map((name) => (
+												<span
+													key={name}
+													className="inline-block rounded-full bg-[rgba(79,184,178,0.14)] px-2 py-0.5 text-xs font-medium text-(--lagoon-deep)"
+												>
+													{name}
+												</span>
+											))}
+										</div>
 									)}
 									<div className="flex gap-3 text-xs text-(--sea-ink-soft)">
 										{r.servings != null && <span>{r.servings} servings</span>}
@@ -169,7 +196,7 @@ function RecipesPage() {
 									</Link>
 								</td>
 								<td className="py-2.5 pr-4 text-(--sea-ink-soft)">
-									{getCategoryName(r.categoryId) || "—"}
+									{getCategoryNames(r.categoryIds).join(", ") || "—"}
 								</td>
 								<td className="py-2.5 pr-4 text-(--sea-ink-soft)">
 									{r.servings ?? "—"}
@@ -191,7 +218,9 @@ function RecipesPage() {
 						getKey={(r) => r.id}
 						getLink={(r) => ({ to: "/recipes/$id", params: { id: r.id } })}
 						getName={(r) => r.name}
-						getSecondary={(r) => getCategoryName(r.categoryId) || "—"}
+						getSecondary={(r) =>
+							getCategoryNames(r.categoryIds).join(", ") || "—"
+						}
 					/>
 				)}
 			</Island>

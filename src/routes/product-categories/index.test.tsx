@@ -7,13 +7,13 @@ import {
 } from "@testing-library/react";
 import type { ComponentType, ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { Recipe } from "#src/lib/hooks/use-recipes";
+import type { Category } from "#src/lib/hooks/use-categories";
 import { createTestWrapper } from "#src/tests/helpers/test-wrapper";
 
 const mockNavigate = vi.fn();
 const mockUseSession = vi.fn();
-const mockUseRecipes = vi.fn();
-const mockUseCreateRecipe = vi.fn();
+const mockUseProductCategories = vi.fn();
+const mockUseCreateProductCategory = vi.fn();
 
 vi.mock("@tanstack/react-router", () => ({
 	createFileRoute: () => (opts: { component: ComponentType }) => ({
@@ -31,32 +31,27 @@ vi.mock("#src/lib/auth-client", () => ({
 	authClient: { useSession: (...args: unknown[]) => mockUseSession(...args) },
 }));
 
-vi.mock("#src/lib/hooks/use-recipes", () => ({
-	useRecipes: (...args: unknown[]) => mockUseRecipes(...args),
-	useCreateRecipe: (...args: unknown[]) => mockUseCreateRecipe(...args),
-}));
-
-const mockUseRecipeCategories = vi.fn();
 vi.mock("#src/lib/hooks/use-categories", () => ({
-	useRecipeCategories: (...args: unknown[]) => mockUseRecipeCategories(...args),
+	useProductCategories: (...args: unknown[]) =>
+		mockUseProductCategories(...args),
+	useCreateProductCategory: (...args: unknown[]) =>
+		mockUseCreateProductCategory(...args),
 }));
 
 vi.mock("#src/lib/utils", () => ({
 	cn: (...args: string[]) => args.filter(Boolean).join(" "),
 }));
 
+vi.mock("#src/components/InventorySubNav", () => ({
+	default: () => <nav data-testid="inventory-sub-nav" />,
+}));
+
 import { Route } from "./index";
 
-const mockRecipe: Recipe = {
+const mockCategory: Category = {
 	id: "1",
-	name: "Pasta Bolognese",
-	description: null,
-	image: null,
-	servings: 4,
-	prepTime: 15,
-	cookTime: 45,
-	instructions: null,
-	categoryIds: ["c1"],
+	name: "Vegetables",
+	description: "Fresh vegetables",
 	userId: "u1",
 	createdAt: "2026-03-01T00:00:00Z",
 	updatedAt: "2026-03-01T00:00:00Z",
@@ -71,16 +66,13 @@ beforeEach(() => {
 		data: { user: { id: "u1" }, session: { id: "s1" } },
 		isPending: false,
 	});
-	mockUseRecipes.mockReturnValue({
-		data: [mockRecipe],
+	mockUseProductCategories.mockReturnValue({
+		data: [mockCategory],
 		isLoading: false,
 	});
-	mockUseCreateRecipe.mockReturnValue({
+	mockUseCreateProductCategory.mockReturnValue({
 		mutateAsync: mockMutateAsync,
 		isPending: false,
-	});
-	mockUseRecipeCategories.mockReturnValue({
-		data: [{ id: "c1", name: "Italian" }],
 	});
 });
 
@@ -95,7 +87,7 @@ function renderPage() {
 	return render(<Component />, { wrapper: Wrapper });
 }
 
-describe("RecipesPage", () => {
+describe("ProductCategoriesPage", () => {
 	describe("authentication", () => {
 		it("redirects to /sign-in when session is null", () => {
 			mockUseSession.mockReturnValue({ data: null, isPending: false });
@@ -115,8 +107,8 @@ describe("RecipesPage", () => {
 	});
 
 	describe("loading and empty states", () => {
-		it("shows loading state when recipes are loading", () => {
-			mockUseRecipes.mockReturnValue({
+		it("shows loading state when categories are loading", () => {
+			mockUseProductCategories.mockReturnValue({
 				data: undefined,
 				isLoading: true,
 			});
@@ -126,24 +118,26 @@ describe("RecipesPage", () => {
 			expect(screen.getByText("Loading…")).toBeDefined();
 		});
 
-		it("shows empty state when no recipes", () => {
-			mockUseRecipes.mockReturnValue({
+		it("shows empty state when no categories", () => {
+			mockUseProductCategories.mockReturnValue({
 				data: [],
 				isLoading: false,
 			});
 
 			renderPage();
 
-			expect(screen.getByText("No recipes yet. Add one above!")).toBeDefined();
+			expect(
+				screen.getByText("No categories yet. Add one above!"),
+			).toBeDefined();
 		});
 	});
 
 	describe("view modes", () => {
-		it("renders recipe cards in grid view by default", () => {
+		it("renders category cards in grid view by default", () => {
 			renderPage();
 
-			expect(screen.getByText("Pasta Bolognese")).toBeDefined();
-			expect(screen.getAllByText("Italian").length).toBeGreaterThan(0);
+			expect(screen.getByText("Vegetables")).toBeDefined();
+			expect(screen.getByText("Fresh vegetables")).toBeDefined();
 		});
 
 		it("switches to table view", () => {
@@ -152,7 +146,7 @@ describe("RecipesPage", () => {
 			fireEvent.click(screen.getByTitle("table view"));
 
 			expect(screen.getByRole("table")).toBeDefined();
-			expect(screen.getByText("Pasta Bolognese")).toBeDefined();
+			expect(screen.getByText("Vegetables")).toBeDefined();
 		});
 
 		it("switches to compact view", () => {
@@ -160,8 +154,8 @@ describe("RecipesPage", () => {
 
 			fireEvent.click(screen.getByTitle("compact view"));
 
-			expect(screen.getByText("Pasta Bolognese")).toBeDefined();
-			expect(screen.getAllByText("Italian").length).toBeGreaterThan(0);
+			expect(screen.getByText("Vegetables")).toBeDefined();
+			expect(screen.getByText("Fresh vegetables")).toBeDefined();
 		});
 	});
 
@@ -172,11 +166,16 @@ describe("RecipesPage", () => {
 			expect(screen.getByPlaceholderText("Search...")).toBeDefined();
 		});
 
-		it("filters recipes by name", () => {
-			mockUseRecipes.mockReturnValue({
+		it("filters categories by name", () => {
+			mockUseProductCategories.mockReturnValue({
 				data: [
-					mockRecipe,
-					{ ...mockRecipe, id: "2", name: "Caesar Salad", categoryIds: [] },
+					mockCategory,
+					{
+						...mockCategory,
+						id: "2",
+						name: "Fruits",
+						description: "Fresh fruits",
+					},
 				],
 				isLoading: false,
 			});
@@ -184,11 +183,35 @@ describe("RecipesPage", () => {
 			renderPage();
 
 			fireEvent.change(screen.getByPlaceholderText("Search..."), {
-				target: { value: "pasta" },
+				target: { value: "veg" },
 			});
 
-			expect(screen.getByText("Pasta Bolognese")).toBeDefined();
-			expect(screen.queryByText("Caesar Salad")).toBeNull();
+			expect(screen.getByText("Vegetables")).toBeDefined();
+			expect(screen.queryByText("Fruits")).toBeNull();
+		});
+
+		it("filters categories by description", () => {
+			mockUseProductCategories.mockReturnValue({
+				data: [
+					mockCategory,
+					{
+						...mockCategory,
+						id: "2",
+						name: "Fruits",
+						description: "Tropical fruits",
+					},
+				],
+				isLoading: false,
+			});
+
+			renderPage();
+
+			fireEvent.change(screen.getByPlaceholderText("Search..."), {
+				target: { value: "tropical" },
+			});
+
+			expect(screen.getByText("Fruits")).toBeDefined();
+			expect(screen.queryByText("Vegetables")).toBeNull();
 		});
 
 		it("shows no results message when search matches nothing", () => {
@@ -198,32 +221,38 @@ describe("RecipesPage", () => {
 				target: { value: "xyz" },
 			});
 
-			expect(screen.getByText("No recipes match your search.")).toBeDefined();
+			expect(
+				screen.getByText("No categories match your search."),
+			).toBeDefined();
 		});
 
 		it("is case-insensitive", () => {
 			renderPage();
 
 			fireEvent.change(screen.getByPlaceholderText("Search..."), {
-				target: { value: "PASTA" },
+				target: { value: "VEGETABLES" },
 			});
 
-			expect(screen.getByText("Pasta Bolognese")).toBeDefined();
+			expect(screen.getByText("Vegetables")).toBeDefined();
 		});
 	});
 
 	describe("quick-add form", () => {
-		it("submits form with name", async () => {
+		it("submits form with name and description", async () => {
 			renderPage();
 
-			fireEvent.change(screen.getByPlaceholderText("Recipe name *"), {
-				target: { value: "New Recipe" },
+			fireEvent.change(screen.getByPlaceholderText("Category name *"), {
+				target: { value: "Fruits" },
+			});
+			fireEvent.change(screen.getByPlaceholderText("Description"), {
+				target: { value: "Fresh fruits" },
 			});
 			fireEvent.click(screen.getByText("Add"));
 
 			await waitFor(() => {
 				expect(mockMutateAsync).toHaveBeenCalledWith({
-					name: "New Recipe",
+					name: "Fruits",
+					description: "Fresh fruits",
 				});
 			});
 		});

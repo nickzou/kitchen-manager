@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { and, eq } from "drizzle-orm";
 import { db } from "#src/db";
-import { product } from "#src/db/schema";
+import { product, productCategory } from "#src/db/schema";
 import { getAuthSession } from "#src/lib/auth-session";
 
 function json(data: unknown, init?: { status?: number }) {
@@ -31,7 +31,15 @@ export const Route = createFileRoute("/api/products/$id")({
 					return json({ error: "Not found" }, { status: 404 });
 				}
 
-				return json(found);
+				const categoryRows = await db
+					.select()
+					.from(productCategory)
+					.where(eq(productCategory.productId, found.id));
+
+				return json({
+					...found,
+					categoryIds: categoryRows.map((r) => r.categoryId),
+				});
 			},
 			PUT: async ({ request, params }) => {
 				const session = await getAuthSession(request);
@@ -46,7 +54,6 @@ export const Route = createFileRoute("/api/products/$id")({
 				if (body.description !== undefined)
 					updates.description = body.description;
 				if (body.image !== undefined) updates.image = body.image;
-				if (body.categoryId !== undefined) updates.categoryId = body.categoryId;
 				if (body.defaultQuantityUnitId !== undefined)
 					updates.defaultQuantityUnitId = body.defaultQuantityUnitId;
 				if (body.minStockAmount !== undefined)
@@ -66,7 +73,30 @@ export const Route = createFileRoute("/api/products/$id")({
 					return json({ error: "Not found" }, { status: 404 });
 				}
 
-				return json(updated);
+				if (body.categoryIds !== undefined) {
+					await db
+						.delete(productCategory)
+						.where(eq(productCategory.productId, updated.id));
+					const categoryIds: string[] = body.categoryIds;
+					if (categoryIds.length > 0) {
+						await db.insert(productCategory).values(
+							categoryIds.map((categoryId: string) => ({
+								productId: updated.id,
+								categoryId,
+							})),
+						);
+					}
+				}
+
+				const categoryRows = await db
+					.select()
+					.from(productCategory)
+					.where(eq(productCategory.productId, updated.id));
+
+				return json({
+					...updated,
+					categoryIds: categoryRows.map((r) => r.categoryId),
+				});
 			},
 			DELETE: async ({ request, params }) => {
 				const session = await getAuthSession(request);

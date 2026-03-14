@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { makeCategory, makeSession } from "#src/tests/helpers/factories";
+import { makeRecipeCategory, makeSession } from "#src/tests/helpers/factories";
 import {
 	makeGetRequest,
 	makePostRequest,
@@ -10,7 +10,7 @@ vi.mock("#src/lib/auth-session", () => ({
 }));
 
 vi.mock("#src/db/schema", () => ({
-	category: {},
+	recipeCategoryType: {},
 }));
 
 const mockWhere = vi.fn();
@@ -33,7 +33,7 @@ vi.mock("#src/db", () => ({
 
 // Import after mocks are set up
 const { getAuthSession } = await import("#src/lib/auth-session");
-const { Route } = await import("#src/routes/api/categories/index");
+const { Route } = await import("#src/routes/api/recipe-categories/index");
 
 type Handler = (ctx: never) => Promise<Response>;
 
@@ -43,7 +43,7 @@ const { GET, POST } = Route.options.server!.handlers! as Record<
 	Handler
 >;
 
-describe("GET /api/categories/", () => {
+describe("GET /api/recipe-categories/", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 	});
@@ -72,8 +72,8 @@ describe("GET /api/categories/", () => {
 	it("returns 200 with the user's categories", async () => {
 		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
 		const categories = [
-			makeCategory(),
-			makeCategory({ id: "category-2", name: "Produce" }),
+			makeRecipeCategory(),
+			makeRecipeCategory({ id: "category-2", name: "Dinner" }),
 		];
 		mockWhere.mockResolvedValue(categories);
 		const request = makeGetRequest();
@@ -83,19 +83,21 @@ describe("GET /api/categories/", () => {
 		expect(response.status).toBe(200);
 		const data = await response.json();
 		expect(data).toHaveLength(2);
-		expect(data[0].name).toBe("Dairy");
-		expect(data[1].name).toBe("Produce");
+		expect(data[0].name).toBe("Quick Meals");
+		expect(data[1].name).toBe("Dinner");
 	});
 });
 
-describe("POST /api/categories/", () => {
+describe("POST /api/recipe-categories/", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 	});
 
 	it("returns 401 when not authenticated", async () => {
 		vi.mocked(getAuthSession).mockResolvedValue(null);
-		const request = makePostRequest("/api/categories", { name: "Dairy" });
+		const request = makePostRequest("/api/recipe-categories", {
+			name: "Quick Meals",
+		});
 
 		const response = await POST({ request } as never);
 
@@ -105,7 +107,7 @@ describe("POST /api/categories/", () => {
 
 	it("returns 400 when name is missing", async () => {
 		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
-		const request = makePostRequest("/api/categories", {});
+		const request = makePostRequest("/api/recipe-categories", {});
 
 		const response = await POST({ request } as never);
 
@@ -115,26 +117,26 @@ describe("POST /api/categories/", () => {
 
 	it("returns 201 with the created category", async () => {
 		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
-		const created = makeCategory();
+		const created = makeRecipeCategory();
 		mockReturning.mockResolvedValue([created]);
-		const request = makePostRequest("/api/categories", {
-			name: "Dairy",
+		const request = makePostRequest("/api/recipe-categories", {
+			name: "Quick Meals",
 		});
 
 		const response = await POST({ request } as never);
 
 		expect(response.status).toBe(201);
 		const data = await response.json();
-		expect(data.name).toBe("Dairy");
+		expect(data.name).toBe("Quick Meals");
 	});
 
 	it("sets userId from session, not from request body", async () => {
 		const session = makeSession();
 		vi.mocked(getAuthSession).mockResolvedValue(session as never);
-		const created = makeCategory({ userId: session.user.id });
+		const created = makeRecipeCategory({ userId: session.user.id });
 		mockReturning.mockResolvedValue([created]);
-		const request = makePostRequest("/api/categories", {
-			name: "Dairy",
+		const request = makePostRequest("/api/recipe-categories", {
+			name: "Quick Meals",
 			userId: "attacker-id",
 		});
 

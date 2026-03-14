@@ -5,13 +5,13 @@ import {
 	AddIngredientForm,
 	type IngredientFormState,
 } from "#src/components/AddIngredientForm";
-import { Combobox } from "#src/components/Combobox";
 import { ImageInput } from "#src/components/ImageInput";
 import { Island } from "#src/components/Island";
+import { MultiCombobox } from "#src/components/MultiCombobox";
 import { NumberInput } from "#src/components/NumberInput";
 import { Page } from "#src/components/Page";
 import { authClient } from "#src/lib/auth-client";
-import { useCategories } from "#src/lib/hooks/use-categories";
+import { useRecipeCategories } from "#src/lib/hooks/use-categories";
 import { useCreateProduct, useProducts } from "#src/lib/hooks/use-products";
 import { useQuantityUnits } from "#src/lib/hooks/use-quantity-units";
 import {
@@ -37,7 +37,7 @@ function RecipeDetail() {
 	const { data: session, isPending: sessionLoading } = authClient.useSession();
 
 	const { data: recipe, isLoading, error } = useRecipe(id);
-	const { data: categories } = useCategories();
+	const { data: categories } = useRecipeCategories();
 	const { data: products } = useProducts();
 	const { data: quantityUnits } = useQuantityUnits();
 	const { data: ingredients } = useRecipeIngredients(id);
@@ -55,7 +55,7 @@ function RecipeDetail() {
 		name: "",
 		description: "",
 		image: null as string | null,
-		categoryId: "",
+		categoryIds: [] as string[],
 		servings: "",
 		prepTime: "",
 		cookTime: "",
@@ -101,9 +101,10 @@ function RecipeDetail() {
 		);
 	}
 
-	function getCategoryName(catId: string | null) {
-		if (!catId) return null;
-		return categories?.find((c) => c.id === catId)?.name ?? null;
+	function getCategoryNames(catIds: string[]) {
+		return catIds
+			.map((id) => categories?.find((c) => c.id === id)?.name)
+			.filter(Boolean) as string[];
 	}
 
 	function getProductName(productId: string | null) {
@@ -123,7 +124,7 @@ function RecipeDetail() {
 			name: recipe.name,
 			description: recipe.description || "",
 			image: recipe.image,
-			categoryId: recipe.categoryId || "",
+			categoryIds: [...recipe.categoryIds],
 			servings: recipe.servings != null ? String(recipe.servings) : "",
 			prepTime: recipe.prepTime != null ? String(recipe.prepTime) : "",
 			cookTime: recipe.cookTime != null ? String(recipe.cookTime) : "",
@@ -138,7 +139,7 @@ function RecipeDetail() {
 			name: form.name,
 			description: form.description || undefined,
 			image: form.image || undefined,
-			categoryId: form.categoryId || undefined,
+			categoryIds: form.categoryIds,
 			servings: form.servings ? Number.parseInt(form.servings, 10) : undefined,
 			prepTime: form.prepTime ? Number.parseInt(form.prepTime, 10) : undefined,
 			cookTime: form.cookTime ? Number.parseInt(form.cookTime, 10) : undefined,
@@ -229,7 +230,7 @@ function RecipeDetail() {
 		return new Date(dateStr).toLocaleDateString();
 	}
 
-	const categoryName = getCategoryName(recipe.categoryId);
+	const categoryNames = getCategoryNames(recipe.categoryIds);
 
 	const categoryOptions = (categories ?? []).map((c) => ({
 		value: c.id,
@@ -301,10 +302,10 @@ function RecipeDetail() {
 						/>
 
 						<div className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
-							Category
-							<Combobox
-								value={form.categoryId}
-								onChange={(v) => setForm({ ...form, categoryId: v })}
+							Categories
+							<MultiCombobox
+								value={form.categoryIds}
+								onChange={(v) => setForm({ ...form, categoryIds: v })}
 								options={categoryOptions}
 								placeholder="None"
 							/>
@@ -385,10 +386,17 @@ function RecipeDetail() {
 								<h1 className="font-display text-2xl font-bold text-(--sea-ink)">
 									{recipe.name}
 								</h1>
-								{categoryName && (
-									<span className="mt-2 inline-block rounded-full bg-[rgba(79,184,178,0.14)] px-2.5 py-0.5 text-xs font-medium text-(--lagoon-deep)">
-										{categoryName}
-									</span>
+								{categoryNames.length > 0 && (
+									<div className="mt-2 flex flex-wrap gap-1">
+										{categoryNames.map((name) => (
+											<span
+												key={name}
+												className="inline-block rounded-full bg-[rgba(79,184,178,0.14)] px-2.5 py-0.5 text-xs font-medium text-(--lagoon-deep)"
+											>
+												{name}
+											</span>
+										))}
+									</div>
 								)}
 							</div>
 							<div className="flex gap-1">

@@ -41,7 +41,7 @@ vi.mock("#src/lib/hooks/use-products", () => ({
 }));
 
 vi.mock("#src/lib/hooks/use-categories", () => ({
-	useCategories: (...args: unknown[]) => mockUseCategories(...args),
+	useProductCategories: (...args: unknown[]) => mockUseCategories(...args),
 }));
 
 vi.mock("#src/lib/hooks/use-quantity-units", () => ({
@@ -121,7 +121,7 @@ import { Route } from "./index";
 const mockProduct = {
 	id: "p1",
 	name: "Tomatoes",
-	categoryId: "c1",
+	categoryIds: ["c1"],
 	description: null,
 	image: null,
 	defaultQuantityUnitId: "qu1",
@@ -266,7 +266,7 @@ describe("StockPage", () => {
 				...mockProduct,
 				id: "p2",
 				name: "Carrots",
-				categoryId: null,
+				categoryIds: [],
 			};
 			mockUseProducts.mockReturnValue({ data: [mockProduct, mockProduct2] });
 			mockUseStockEntries.mockReturnValue({
