@@ -286,7 +286,7 @@ function RecipeDetail() {
 			<div className="flex flex-col lg:flex-row lg:gap-6 lg:items-start">
 				<Island
 					as="section"
-					className="animate-rise-in rounded-2xl p-6 sm:p-8 lg:flex-1"
+					className="animate-rise-in rounded-2xl p-6 sm:p-8 lg:flex-1 2xl:flex-[1_1_0%]"
 				>
 					{editing ? (
 						<form onSubmit={handleSave} className="flex flex-col gap-4">
@@ -592,7 +592,7 @@ function RecipeDetail() {
 
 				<Island
 					as="section"
-					className="mt-6 lg:mt-0 lg:w-96 lg:shrink-0 lg:sticky lg:top-16 animate-rise-in rounded-2xl p-6 sm:p-8"
+					className="mt-6 lg:mt-0 lg:flex-1 lg:sticky lg:top-16 2xl:flex-none 2xl:w-96 2xl:shrink-0 animate-rise-in rounded-2xl p-6 sm:p-8"
 				>
 					<h2 className="mb-4 text-lg font-semibold text-(--sea-ink)">
 						Ingredients
