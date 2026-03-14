@@ -485,4 +485,51 @@ describe("RecipeDetail", () => {
 			});
 		});
 	});
+
+	describe("serving scaler", () => {
+		it("scales ingredient quantities when servings are adjusted", () => {
+			renderPage();
+
+			// Original: 500g for 4 servings
+			expect(screen.getByText(/500/)).toBeDefined();
+
+			// Increase servings to 8 (double)
+			const increaseBtn = screen.getByLabelText("Increase servings");
+			fireEvent.click(increaseBtn);
+			fireEvent.click(increaseBtn);
+			fireEvent.click(increaseBtn);
+			fireEvent.click(increaseBtn);
+
+			// Should show 1000
+			expect(screen.getByText(/1000/)).toBeDefined();
+		});
+
+		it("resets to original servings when reset is clicked", () => {
+			renderPage();
+
+			const increaseBtn = screen.getByLabelText("Increase servings");
+			fireEvent.click(increaseBtn);
+
+			expect(screen.getByText("Reset")).toBeDefined();
+
+			fireEvent.click(screen.getByText("Reset"));
+
+			// Back to original servings of 4
+			expect(screen.getByTestId("adjusted-servings").textContent).toBe("4");
+			expect(screen.queryByText("Reset")).toBeNull();
+		});
+
+		it("does not show scaler when recipe has no servings", () => {
+			mockUseRecipe.mockReturnValue({
+				data: { ...mockRecipe, servings: null },
+				isLoading: false,
+				error: null,
+			});
+
+			renderPage();
+
+			expect(screen.queryByLabelText("Increase servings")).toBeNull();
+			expect(screen.queryByLabelText("Decrease servings")).toBeNull();
+		});
+	});
 });

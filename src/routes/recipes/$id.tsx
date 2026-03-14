@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, Pencil, Trash2, X } from "lucide-react";
+import { ArrowLeft, Minus, Pencil, Plus, Trash2, X } from "lucide-react";
 import { type FormEvent, useId, useState } from "react";
 import {
 	AddIngredientForm,
@@ -51,6 +51,7 @@ function RecipeDetail() {
 
 	const [editing, setEditing] = useState(false);
 	const [confirmDelete, setConfirmDelete] = useState(false);
+	const [adjustedServings, setAdjustedServings] = useState<number | null>(null);
 	const htmlId = useId();
 	const [form, setForm] = useState({
 		name: "",
@@ -232,6 +233,19 @@ function RecipeDetail() {
 		}
 
 		return `No conversion to ${toLabel}`;
+	}
+
+	const currentServings = adjustedServings ?? recipe?.servings ?? null;
+	const scaleFactor =
+		currentServings != null && recipe?.servings
+			? currentServings / recipe.servings
+			: 1;
+
+	function formatScaled(quantity: string): string {
+		const num = Number(quantity);
+		if (Number.isNaN(num)) return quantity;
+		const scaled = num * scaleFactor;
+		return Number.parseFloat(scaled.toFixed(2)).toString();
 	}
 
 	const inputClass =
@@ -449,7 +463,52 @@ function RecipeDetail() {
 							<div>
 								<dt className="font-medium text-(--sea-ink-soft)">Servings</dt>
 								<dd className="mt-0.5 text-(--sea-ink)">
-									{recipe.servings ?? "—"}
+									{recipe.servings != null
+										? (() => {
+												const base = recipe.servings;
+												return (
+													<span className="inline-flex items-center gap-1.5">
+														<button
+															type="button"
+															onClick={() =>
+																setAdjustedServings(
+																	Math.max(1, (currentServings ?? base) - 1),
+																)
+															}
+															className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-(--line) text-(--sea-ink-soft) transition hover:bg-(--surface)"
+															aria-label="Decrease servings"
+														>
+															<Minus size={12} />
+														</button>
+														<span data-testid="adjusted-servings">
+															{currentServings}
+														</span>
+														<button
+															type="button"
+															onClick={() =>
+																setAdjustedServings(
+																	(currentServings ?? base) + 1,
+																)
+															}
+															className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-(--line) text-(--sea-ink-soft) transition hover:bg-(--surface)"
+															aria-label="Increase servings"
+														>
+															<Plus size={12} />
+														</button>
+														{adjustedServings != null &&
+															adjustedServings !== base && (
+																<button
+																	type="button"
+																	onClick={() => setAdjustedServings(null)}
+																	className="ml-1 text-xs font-medium text-(--lagoon-deep) hover:underline"
+																>
+																	Reset
+																</button>
+															)}
+													</span>
+												);
+											})()
+										: "—"}
 								</dd>
 							</div>
 							<div>
@@ -539,7 +598,7 @@ function RecipeDetail() {
 										{getProductName(ing.productId)}
 									</span>
 									<span className="ml-2 text-(--sea-ink-soft)">
-										{ing.quantity}
+										{formatScaled(ing.quantity)}
 										{getUnitLabel(ing.quantityUnitId)
 											? ` ${getUnitLabel(ing.quantityUnitId)}`
 											: ""}
