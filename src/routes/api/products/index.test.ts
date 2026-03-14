@@ -157,7 +157,7 @@ describe("POST /api/products/", () => {
 		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
 		const created = makeProduct({
 			categoryId: "category-1",
-			quantityUnitId: "unit-1",
+			defaultQuantityUnitId: "unit-1",
 			minStockAmount: "5",
 			defaultExpirationDays: 7,
 		});
@@ -165,7 +165,7 @@ describe("POST /api/products/", () => {
 		const request = makePostRequest("/api/products", {
 			name: "Milk",
 			categoryId: "category-1",
-			quantityUnitId: "unit-1",
+			defaultQuantityUnitId: "unit-1",
 			minStockAmount: "5",
 			defaultExpirationDays: 7,
 		});
@@ -175,7 +175,7 @@ describe("POST /api/products/", () => {
 		expect(response.status).toBe(201);
 		const data = await response.json();
 		expect(data.categoryId).toBe("category-1");
-		expect(data.quantityUnitId).toBe("unit-1");
+		expect(data.defaultQuantityUnitId).toBe("unit-1");
 		expect(data.minStockAmount).toBe("5");
 		expect(data.defaultExpirationDays).toBe(7);
 	});

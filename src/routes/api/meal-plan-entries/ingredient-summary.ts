@@ -204,11 +204,14 @@ export const Route = createFileRoute(
 					let neededInStockUnit = tryConvert(
 						agg.quantity,
 						agg.unitId,
-						p.quantityUnitId,
+						p.defaultQuantityUnitId,
 					);
 
 					let status: AggregatedIngredient["status"];
-					if (agg.unitId !== p.quantityUnitId && neededInStockUnit === null) {
+					if (
+						agg.unitId !== p.defaultQuantityUnitId &&
+						neededInStockUnit === null
+					) {
 						status = "unknown_unit";
 						neededInStockUnit = agg.quantity;
 					} else {

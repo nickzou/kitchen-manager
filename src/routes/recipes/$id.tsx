@@ -24,6 +24,7 @@ import {
 	useRecipe,
 	useUpdateRecipe,
 } from "#src/lib/hooks/use-recipes";
+import { useUnitConversions } from "#src/lib/hooks/use-unit-conversions";
 import { cn } from "#src/lib/utils";
 
 export const Route = createFileRoute("/recipes/$id")({
@@ -40,6 +41,7 @@ function RecipeDetail() {
 	const { data: products } = useProducts();
 	const { data: quantityUnits } = useQuantityUnits();
 	const { data: ingredients } = useRecipeIngredients(id);
+	const { data: unitConversions } = useUnitConversions();
 	const updateRecipe = useUpdateRecipe(id);
 	const deleteRecipe = useDeleteRecipe();
 	const createIngredient = useCreateRecipeIngredient(id);
@@ -173,6 +175,50 @@ function RecipeDetail() {
 
 	async function handleDeleteIngredient(ingredientId: string) {
 		await deleteIngredient.mutateAsync(ingredientId);
+	}
+
+	function handleProductChange(selectedProductId: string) {
+		if (newIngredient.quantityUnitId) return;
+		const product = products?.find((p) => p.id === selectedProductId);
+		if (product?.defaultQuantityUnitId) {
+			setNewIngredient({
+				...newIngredient,
+				productId: selectedProductId,
+				quantityUnitId: product.defaultQuantityUnitId,
+			});
+		}
+	}
+
+	function getConversionHint(): string | undefined {
+		if (!newIngredient.quantityUnitId || !newIngredient.productId) return;
+		const product = products?.find((p) => p.id === newIngredient.productId);
+		if (!product?.defaultQuantityUnitId) return;
+		if (newIngredient.quantityUnitId === product.defaultQuantityUnitId) return;
+
+		const fromId = newIngredient.quantityUnitId;
+		const toId = product.defaultQuantityUnitId;
+		const fromUnit = quantityUnits?.find((u) => u.id === fromId);
+		const toUnit = quantityUnits?.find((u) => u.id === toId);
+		if (!fromUnit || !toUnit) return;
+
+		const fromLabel = fromUnit.abbreviation ?? fromUnit.name;
+		const toLabel = toUnit.abbreviation ?? toUnit.name;
+
+		const conversion = unitConversions?.find(
+			(c) =>
+				(c.fromUnitId === fromId && c.toUnitId === toId) ||
+				(c.fromUnitId === toId && c.toUnitId === fromId),
+		);
+
+		if (conversion) {
+			if (conversion.fromUnitId === fromId) {
+				return `1 ${fromLabel} = ${conversion.factor} ${toLabel}`;
+			}
+			const inverse = 1 / Number(conversion.factor);
+			return `1 ${fromLabel} = ${Number.isInteger(inverse) ? inverse : inverse.toFixed(4)} ${toLabel}`;
+		}
+
+		return `No conversion to ${toLabel}`;
 	}
 
 	const inputClass =
@@ -505,6 +551,8 @@ function RecipeDetail() {
 					newIngredient={newIngredient}
 					setNewIngredient={setNewIngredient}
 					onCreateProduct={handleCreateProduct}
+					onProductChange={handleProductChange}
+					unitHint={getConversionHint()}
 				/>
 			</Island>
 		</Page>
