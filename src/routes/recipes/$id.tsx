@@ -1,10 +1,11 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, Minus, Pencil, Plus, Trash2, X } from "lucide-react";
+import { ArrowLeft, Check, Minus, Pencil, Plus, Trash2, X } from "lucide-react";
 import { type FormEvent, useId, useState } from "react";
 import {
 	AddIngredientForm,
 	type IngredientFormState,
 } from "#src/components/AddIngredientForm";
+import { Combobox } from "#src/components/Combobox";
 import { ImageInput } from "#src/components/ImageInput";
 import { Island } from "#src/components/Island";
 import { DetailColumns } from "#src/components/layouts/DetailColumns";
@@ -20,6 +21,7 @@ import {
 	useCreateRecipeIngredient,
 	useDeleteRecipeIngredient,
 	useRecipeIngredients,
+	useUpdateRecipeIngredient,
 } from "#src/lib/hooks/use-recipe-ingredients";
 import {
 	useDeleteRecipe,
@@ -47,6 +49,7 @@ function RecipeDetail() {
 	const updateRecipe = useUpdateRecipe(id);
 	const deleteRecipe = useDeleteRecipe();
 	const createIngredient = useCreateRecipeIngredient(id);
+	const updateIngredient = useUpdateRecipeIngredient(id);
 	const deleteIngredient = useDeleteRecipeIngredient(id);
 	const createProduct = useCreateProduct();
 
@@ -71,8 +74,20 @@ function RecipeDetail() {
 		quantityUnitId: "",
 		notes: "",
 	});
+	const [editingIngredientId, setEditingIngredientId] = useState<string | null>(
+		null,
+	);
+	const [editIngredient, setEditIngredient] = useState<IngredientFormState>({
+		productId: "",
+		quantity: "",
+		quantityUnitId: "",
+		notes: "",
+	});
 	const { data: productConversions } = useProductUnitConversions(
 		newIngredient.productId,
+	);
+	const { data: editProductConversions } = useProductUnitConversions(
+		editIngredient.productId,
 	);
 
 	if (sessionLoading) return null;
@@ -184,6 +199,46 @@ function RecipeDetail() {
 		await deleteIngredient.mutateAsync(ingredientId);
 	}
 
+	function startEditingIngredient(ing: {
+		id: string;
+		productId: string | null;
+		quantity: string;
+		quantityUnitId: string | null;
+		notes: string | null;
+	}) {
+		setEditIngredient({
+			productId: ing.productId ?? "",
+			quantity: ing.quantity,
+			quantityUnitId: ing.quantityUnitId ?? "",
+			notes: ing.notes ?? "",
+		});
+		setEditingIngredientId(ing.id);
+	}
+
+	async function handleSaveIngredient() {
+		if (!editingIngredientId || !editIngredient.quantity) return;
+		await updateIngredient.mutateAsync({
+			id: editingIngredientId,
+			productId: editIngredient.productId || undefined,
+			quantity: editIngredient.quantity,
+			quantityUnitId: editIngredient.quantityUnitId || undefined,
+			notes: editIngredient.notes || undefined,
+		});
+		setEditingIngredientId(null);
+	}
+
+	function handleEditProductChange(selectedProductId: string) {
+		if (editIngredient.quantityUnitId) return;
+		const product = products?.find((p) => p.id === selectedProductId);
+		if (product?.defaultQuantityUnitId) {
+			setEditIngredient({
+				...editIngredient,
+				productId: selectedProductId,
+				quantityUnitId: product.defaultQuantityUnitId,
+			});
+		}
+	}
+
 	function handleProductChange(selectedProductId: string) {
 		if (newIngredient.quantityUnitId) return;
 		const product = products?.find((p) => p.id === selectedProductId);
@@ -212,6 +267,46 @@ function RecipeDetail() {
 		const toLabel = toUnit.abbreviation ?? toUnit.name;
 
 		const productConversion = productConversions?.find(
+			(c) =>
+				(c.fromUnitId === fromId && c.toUnitId === toId) ||
+				(c.fromUnitId === toId && c.toUnitId === fromId),
+		);
+
+		const conversion =
+			productConversion ??
+			unitConversions?.find(
+				(c) =>
+					(c.fromUnitId === fromId && c.toUnitId === toId) ||
+					(c.fromUnitId === toId && c.toUnitId === fromId),
+			);
+
+		if (conversion) {
+			if (conversion.fromUnitId === fromId) {
+				return `1 ${fromLabel} = ${conversion.factor} ${toLabel}`;
+			}
+			const inverse = 1 / Number(conversion.factor);
+			return `1 ${fromLabel} = ${Number.isInteger(inverse) ? inverse : inverse.toFixed(4)} ${toLabel}`;
+		}
+
+		return `No conversion to ${toLabel}`;
+	}
+
+	function getEditConversionHint(): string | undefined {
+		if (!editIngredient.quantityUnitId || !editIngredient.productId) return;
+		const product = products?.find((p) => p.id === editIngredient.productId);
+		if (!product?.defaultQuantityUnitId) return;
+		if (editIngredient.quantityUnitId === product.defaultQuantityUnitId) return;
+
+		const fromId = editIngredient.quantityUnitId;
+		const toId = product.defaultQuantityUnitId;
+		const fromUnit = quantityUnits?.find((u) => u.id === fromId);
+		const toUnit = quantityUnits?.find((u) => u.id === toId);
+		if (!fromUnit || !toUnit) return;
+
+		const fromLabel = fromUnit.abbreviation ?? fromUnit.name;
+		const toLabel = toUnit.abbreviation ?? toUnit.name;
+
+		const productConversion = editProductConversions?.find(
 			(c) =>
 				(c.fromUnitId === fromId && c.toUnitId === toId) ||
 				(c.fromUnitId === toId && c.toUnitId === fromId),
@@ -614,37 +709,143 @@ function RecipeDetail() {
 							</p>
 						) : (
 							<div className="mb-4 flex flex-col gap-2">
-								{(ingredients ?? []).map((ing) => (
-									<div
-										key={ing.id}
-										className="flex items-center justify-between rounded-lg border border-(--line) px-3 py-2"
-									>
-										<div className="flex-1 text-sm text-(--sea-ink)">
-											<span className="font-medium">
-												{getProductName(ing.productId)}
-											</span>
-											<span className="ml-2 text-(--sea-ink-soft)">
-												{formatScaled(ing.quantity)}
-												{getUnitLabel(ing.quantityUnitId)
-													? ` ${getUnitLabel(ing.quantityUnitId)}`
-													: ""}
-											</span>
-											{ing.notes && (
-												<span className="ml-2 text-xs text-(--sea-ink-soft)">
-													({ing.notes})
-												</span>
-											)}
-										</div>
-										<button
-											type="button"
-											onClick={() => handleDeleteIngredient(ing.id)}
-											className="rounded-lg p-1.5 text-(--sea-ink-soft) transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950"
-											title="Delete ingredient"
+								{(ingredients ?? []).map((ing) =>
+									editingIngredientId === ing.id ? (
+										<div
+											key={ing.id}
+											className="flex flex-col gap-3 rounded-lg border border-(--lagoon) p-3"
 										>
-											<Trash2 size={14} />
-										</button>
-									</div>
-								))}
+											<div className="grid grid-cols-[1fr_1fr] gap-2 sm:grid-cols-[2fr_5rem_1fr_1fr]">
+												<Combobox
+													value={editIngredient.productId}
+													onChange={(v) => {
+														setEditIngredient({
+															...editIngredient,
+															productId: v,
+														});
+														handleEditProductChange(v);
+													}}
+													options={productOptions}
+													placeholder="Product"
+													className="col-span-full sm:col-span-1"
+													onCreateNew={async (name) => {
+														const newId = await handleCreateProduct(name);
+														setEditIngredient({
+															...editIngredient,
+															productId: newId,
+														});
+													}}
+												/>
+												<NumberInput
+													step="any"
+													min="0"
+													placeholder="Qty"
+													value={editIngredient.quantity}
+													onChange={(e) =>
+														setEditIngredient({
+															...editIngredient,
+															quantity: e.target.value,
+														})
+													}
+												/>
+												<Combobox
+													value={editIngredient.quantityUnitId}
+													onChange={(v) =>
+														setEditIngredient({
+															...editIngredient,
+															quantityUnitId: v,
+														})
+													}
+													options={unitOptions}
+													placeholder="Unit"
+												/>
+												<input
+													type="text"
+													placeholder="Notes"
+													value={editIngredient.notes}
+													onChange={(e) =>
+														setEditIngredient({
+															...editIngredient,
+															notes: e.target.value,
+														})
+													}
+													className={inputClass}
+												/>
+											</div>
+											{(() => {
+												const hint = getEditConversionHint();
+												return hint ? (
+													<p
+														className={`text-xs ${hint.includes("No conversion") ? "text-amber-600 dark:text-amber-400" : "text-(--sea-ink-soft)"}`}
+													>
+														{hint}
+													</p>
+												) : null;
+											})()}
+											<div className="flex gap-2">
+												<button
+													type="button"
+													onClick={handleSaveIngredient}
+													disabled={
+														updateIngredient.isPending ||
+														!editIngredient.quantity
+													}
+													className="flex h-8 items-center gap-1 rounded-full bg-(--lagoon) px-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
+												>
+													<Check size={14} />
+													{updateIngredient.isPending ? "Saving…" : "Save"}
+												</button>
+												<button
+													type="button"
+													onClick={() => setEditingIngredientId(null)}
+													className="flex h-8 items-center rounded-full px-3 text-sm font-medium text-(--sea-ink-soft) transition hover:bg-(--surface)"
+												>
+													Cancel
+												</button>
+											</div>
+										</div>
+									) : (
+										<div
+											key={ing.id}
+											className="flex items-center justify-between rounded-lg border border-(--line) px-3 py-2"
+										>
+											<div className="flex-1 text-sm text-(--sea-ink)">
+												<span className="font-medium">
+													{getProductName(ing.productId)}
+												</span>
+												<span className="ml-2 text-(--sea-ink-soft)">
+													{formatScaled(ing.quantity)}
+													{getUnitLabel(ing.quantityUnitId)
+														? ` ${getUnitLabel(ing.quantityUnitId)}`
+														: ""}
+												</span>
+												{ing.notes && (
+													<span className="ml-2 text-xs text-(--sea-ink-soft)">
+														({ing.notes})
+													</span>
+												)}
+											</div>
+											<div className="flex gap-0.5">
+												<button
+													type="button"
+													onClick={() => startEditingIngredient(ing)}
+													className="rounded-lg p-1.5 text-(--sea-ink-soft) transition hover:bg-(--surface) hover:text-(--sea-ink)"
+													title="Edit ingredient"
+												>
+													<Pencil size={14} />
+												</button>
+												<button
+													type="button"
+													onClick={() => handleDeleteIngredient(ing.id)}
+													className="rounded-lg p-1.5 text-(--sea-ink-soft) transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950"
+													title="Delete ingredient"
+												>
+													<Trash2 size={14} />
+												</button>
+											</div>
+										</div>
+									),
+								)}
 							</div>
 						)}
 
