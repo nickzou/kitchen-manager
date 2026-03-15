@@ -1,5 +1,14 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, Check, Minus, Pencil, Plus, Trash2, X } from "lucide-react";
+import {
+	ArrowLeft,
+	Check,
+	CookingPot,
+	Minus,
+	Pencil,
+	Plus,
+	Trash2,
+	X,
+} from "lucide-react";
 import { type FormEvent, useId, useRef, useState } from "react";
 import {
 	AddIngredientForm,
@@ -863,6 +872,17 @@ function RecipeDetail() {
 										)}
 									</div>
 									<div className="flex gap-1">
+										{ingredients && ingredients.length > 0 && (
+											<button
+												type="button"
+												onClick={handleCook}
+												disabled={cookRecipe.isPending}
+												className="flex items-center gap-1.5 rounded-full bg-(--lagoon) px-4 py-2 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
+											>
+												<CookingPot size={16} />
+												{cookRecipe.isPending ? "Cooking…" : "Cook"}
+											</button>
+										)}
 										<button
 											type="button"
 											onClick={startEditing}
@@ -1037,19 +1057,6 @@ function RecipeDetail() {
 												</>
 											)}
 										</p>
-									</div>
-								)}
-
-								{ingredients && ingredients.length > 0 && (
-									<div className="mt-4">
-										<button
-											type="button"
-											onClick={handleCook}
-											disabled={cookRecipe.isPending}
-											className="h-10 rounded-full bg-(--lagoon) px-6 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
-										>
-											{cookRecipe.isPending ? "Cooking…" : "Cook"}
-										</button>
 									</div>
 								)}
 
