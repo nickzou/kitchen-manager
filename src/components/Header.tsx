@@ -27,10 +27,10 @@ export default function Header() {
 					<Link to="/" activeOptions={{ exact: true }}>
 						Home
 					</Link>
+					<Link to="/stock">Stock</Link>
 					<Link to="/products">Products</Link>
 					<Link to="/recipes">Recipes</Link>
 					<Link to="/meal-plan">Meal Plan</Link>
-					<Link to="/stock">Stock</Link>
 				</div>
 
 				<div className="ml-auto hidden items-center gap-2 sm:flex">
@@ -56,6 +56,9 @@ export default function Header() {
 						>
 							Home
 						</MobileNavLink>
+						<MobileNavLink to="/stock" onClick={() => setMenuOpen(false)}>
+							Stock
+						</MobileNavLink>
 						<MobileNavLink to="/products" onClick={() => setMenuOpen(false)}>
 							Products
 						</MobileNavLink>
@@ -64,9 +67,6 @@ export default function Header() {
 						</MobileNavLink>
 						<MobileNavLink to="/meal-plan" onClick={() => setMenuOpen(false)}>
 							Meal Plan
-						</MobileNavLink>
-						<MobileNavLink to="/stock" onClick={() => setMenuOpen(false)}>
-							Stock
 						</MobileNavLink>
 						<div className="flex items-center gap-2 border-t border-(--line) px-3 pt-3">
 							<ThemeToggle />
