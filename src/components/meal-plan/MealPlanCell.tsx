@@ -1,5 +1,5 @@
 import { Plus } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Combobox } from "#src/components/Combobox";
 import type { MealPlanEntry } from "#src/lib/hooks/use-meal-plan-entries";
 import { MealPlanEntryPopover } from "./MealPlanEntryPopover";
@@ -33,11 +33,18 @@ export function MealPlanCell({
 }: MealPlanCellProps) {
 	const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
 	const [showPicker, setShowPicker] = useState(false);
+	const cardRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
 	return (
 		<div className="flex min-h-[4rem] flex-col gap-1 p-1">
 			{entries.map((entry) => (
-				<div key={entry.id} className="relative">
+				<div
+					key={entry.id}
+					ref={(el) => {
+						if (el) cardRefs.current.set(entry.id, el);
+						else cardRefs.current.delete(entry.id);
+					}}
+				>
 					<MealPlanRecipeCard
 						entry={entry}
 						onClick={() =>
@@ -47,6 +54,9 @@ export function MealPlanCell({
 					{selectedEntryId === entry.id && (
 						<MealPlanEntryPopover
 							entry={entry}
+							anchorRef={{
+								current: cardRefs.current.get(entry.id) ?? null,
+							}}
 							onClose={() => setSelectedEntryId(null)}
 							onUpdateServings={(s) => onUpdateServings(entry.id, s)}
 							onDelete={() => {
