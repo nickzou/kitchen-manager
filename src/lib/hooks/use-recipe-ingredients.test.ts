@@ -16,6 +16,7 @@ const mockIngredients = [
 		quantity: "2",
 		quantityUnitId: null,
 		notes: null,
+		groupName: null,
 		sortOrder: 0,
 		userId: "u1",
 		createdAt: "2026-03-01T00:00:00Z",

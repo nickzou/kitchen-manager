@@ -9,6 +9,9 @@ export interface Recipe {
 	prepTime: number | null;
 	cookTime: number | null;
 	instructions: string | null;
+	producedProductId: string | null;
+	producedQuantity: string | null;
+	producedQuantityUnitId: string | null;
 	categoryIds: string[];
 	userId: string;
 	createdAt: string;
@@ -23,6 +26,9 @@ export type CreateRecipeInput = {
 	prepTime?: number;
 	cookTime?: number;
 	instructions?: string;
+	producedProductId?: string | null;
+	producedQuantity?: string | null;
+	producedQuantityUnitId?: string | null;
 	categoryIds?: string[];
 };
 

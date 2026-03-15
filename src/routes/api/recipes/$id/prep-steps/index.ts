@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { and, eq } from "drizzle-orm";
 import { db } from "#src/db";
-import { recipeIngredient } from "#src/db/schema";
+import { recipePrepStep } from "#src/db/schema";
 import { getAuthSession } from "#src/lib/auth-session";
 
 function json(data: unknown, init?: { status?: number }) {
@@ -11,7 +11,7 @@ function json(data: unknown, init?: { status?: number }) {
 	});
 }
 
-export const Route = createFileRoute("/api/recipes/$id/ingredients/")({
+export const Route = createFileRoute("/api/recipes/$id/prep-steps/")({
 	server: {
 		handlers: {
 			GET: async ({ request, params }) => {
@@ -20,17 +20,17 @@ export const Route = createFileRoute("/api/recipes/$id/ingredients/")({
 					return json({ error: "Unauthorized" }, { status: 401 });
 				}
 
-				const ingredients = await db
+				const steps = await db
 					.select()
-					.from(recipeIngredient)
+					.from(recipePrepStep)
 					.where(
 						and(
-							eq(recipeIngredient.recipeId, params.id),
-							eq(recipeIngredient.userId, session.user.id),
+							eq(recipePrepStep.recipeId, params.id),
+							eq(recipePrepStep.userId, session.user.id),
 						),
 					);
 
-				return json(ingredients);
+				return json(steps);
 			},
 			POST: async ({ request, params }) => {
 				const session = await getAuthSession(request);
@@ -40,19 +40,20 @@ export const Route = createFileRoute("/api/recipes/$id/ingredients/")({
 
 				const body = await request.json();
 
-				if (!body.quantity) {
-					return json({ error: "Quantity is required" }, { status: 400 });
+				if (!body.description) {
+					return json({ error: "Description is required" }, { status: 400 });
+				}
+
+				if (body.leadTimeMinutes == null) {
+					return json({ error: "Lead time is required" }, { status: 400 });
 				}
 
 				const [created] = await db
-					.insert(recipeIngredient)
+					.insert(recipePrepStep)
 					.values({
 						recipeId: params.id,
-						productId: body.productId,
-						quantity: body.quantity,
-						quantityUnitId: body.quantityUnitId,
-						notes: body.notes,
-						groupName: body.groupName,
+						description: body.description,
+						leadTimeMinutes: body.leadTimeMinutes,
 						sortOrder: body.sortOrder,
 						userId: session.user.id,
 					})

@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { and, eq } from "drizzle-orm";
 import { db } from "#src/db";
-import { recipeIngredient } from "#src/db/schema";
+import { recipePrepStep } from "#src/db/schema";
 import { getAuthSession } from "#src/lib/auth-session";
 
 function json(data: unknown, init?: { status?: number }) {
@@ -11,9 +11,7 @@ function json(data: unknown, init?: { status?: number }) {
 	});
 }
 
-export const Route = createFileRoute(
-	"/api/recipes/$id/ingredients/$ingredientId",
-)({
+export const Route = createFileRoute("/api/recipes/$id/prep-steps/$stepId")({
 	server: {
 		handlers: {
 			PUT: async ({ request, params }) => {
@@ -25,22 +23,20 @@ export const Route = createFileRoute(
 				const body = await request.json();
 				const updates: Record<string, unknown> = {};
 
-				if (body.productId !== undefined) updates.productId = body.productId;
-				if (body.quantity !== undefined) updates.quantity = body.quantity;
-				if (body.quantityUnitId !== undefined)
-					updates.quantityUnitId = body.quantityUnitId;
-				if (body.notes !== undefined) updates.notes = body.notes;
-				if (body.groupName !== undefined) updates.groupName = body.groupName;
+				if (body.description !== undefined)
+					updates.description = body.description;
+				if (body.leadTimeMinutes !== undefined)
+					updates.leadTimeMinutes = body.leadTimeMinutes;
 				if (body.sortOrder !== undefined) updates.sortOrder = body.sortOrder;
 
 				const [updated] = await db
-					.update(recipeIngredient)
+					.update(recipePrepStep)
 					.set(updates)
 					.where(
 						and(
-							eq(recipeIngredient.id, params.ingredientId),
-							eq(recipeIngredient.recipeId, params.id),
-							eq(recipeIngredient.userId, session.user.id),
+							eq(recipePrepStep.id, params.stepId),
+							eq(recipePrepStep.recipeId, params.id),
+							eq(recipePrepStep.userId, session.user.id),
 						),
 					)
 					.returning();
@@ -58,12 +54,12 @@ export const Route = createFileRoute(
 				}
 
 				const [deleted] = await db
-					.delete(recipeIngredient)
+					.delete(recipePrepStep)
 					.where(
 						and(
-							eq(recipeIngredient.id, params.ingredientId),
-							eq(recipeIngredient.recipeId, params.id),
-							eq(recipeIngredient.userId, session.user.id),
+							eq(recipePrepStep.id, params.stepId),
+							eq(recipePrepStep.recipeId, params.id),
+							eq(recipePrepStep.userId, session.user.id),
 						),
 					)
 					.returning();

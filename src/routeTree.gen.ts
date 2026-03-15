@@ -54,6 +54,7 @@ import { Route as ApiStoresIdRouteImport } from './routes/api/stores/$id'
 import { Route as ApiStockLogsIdRouteImport } from './routes/api/stock-logs/$id'
 import { Route as ApiStockEntriesConsumeRouteImport } from './routes/api/stock-entries/consume'
 import { Route as ApiStockEntriesIdRouteImport } from './routes/api/stock-entries/$id'
+import { Route as ApiRecipesCookRouteImport } from './routes/api/recipes/cook'
 import { Route as ApiRecipesIdRouteImport } from './routes/api/recipes/$id'
 import { Route as ApiRecipeCategoriesIdRouteImport } from './routes/api/recipe-categories/$id'
 import { Route as ApiQuantityUnitsIdRouteImport } from './routes/api/quantity-units/$id'
@@ -66,8 +67,10 @@ import { Route as ApiMealPlanEntriesCookRouteImport } from './routes/api/meal-pl
 import { Route as ApiMealPlanEntriesIdRouteImport } from './routes/api/meal-plan-entries/$id'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as ApiApiKeysIdRouteImport } from './routes/api/api-keys/$id'
+import { Route as ApiRecipesIdPrepStepsIndexRouteImport } from './routes/api/recipes/$id/prep-steps/index'
 import { Route as ApiRecipesIdIngredientsIndexRouteImport } from './routes/api/recipes/$id/ingredients/index'
 import { Route as ApiProductsIdUnitConversionsIndexRouteImport } from './routes/api/products/$id/unit-conversions/index'
+import { Route as ApiRecipesIdPrepStepsStepIdRouteImport } from './routes/api/recipes/$id/prep-steps/$stepId'
 import { Route as ApiRecipesIdIngredientsIngredientIdRouteImport } from './routes/api/recipes/$id/ingredients/$ingredientId'
 import { Route as ApiProductsIdUnitConversionsConversionIdRouteImport } from './routes/api/products/$id/unit-conversions/$conversionId'
 
@@ -298,6 +301,11 @@ const ApiStockEntriesIdRoute = ApiStockEntriesIdRouteImport.update({
   path: '/api/stock-entries/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiRecipesCookRoute = ApiRecipesCookRouteImport.update({
+  id: '/api/recipes/cook',
+  path: '/api/recipes/cook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiRecipesIdRoute = ApiRecipesIdRouteImport.update({
   id: '/api/recipes/$id',
   path: '/api/recipes/$id',
@@ -359,6 +367,12 @@ const ApiApiKeysIdRoute = ApiApiKeysIdRouteImport.update({
   path: '/api/api-keys/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiRecipesIdPrepStepsIndexRoute =
+  ApiRecipesIdPrepStepsIndexRouteImport.update({
+    id: '/prep-steps/',
+    path: '/prep-steps/',
+    getParentRoute: () => ApiRecipesIdRoute,
+  } as any)
 const ApiRecipesIdIngredientsIndexRoute =
   ApiRecipesIdIngredientsIndexRouteImport.update({
     id: '/ingredients/',
@@ -370,6 +384,12 @@ const ApiProductsIdUnitConversionsIndexRoute =
     id: '/unit-conversions/',
     path: '/unit-conversions/',
     getParentRoute: () => ApiProductsIdRoute,
+  } as any)
+const ApiRecipesIdPrepStepsStepIdRoute =
+  ApiRecipesIdPrepStepsStepIdRouteImport.update({
+    id: '/prep-steps/$stepId',
+    path: '/prep-steps/$stepId',
+    getParentRoute: () => ApiRecipesIdRoute,
   } as any)
 const ApiRecipesIdIngredientsIngredientIdRoute =
   ApiRecipesIdIngredientsIngredientIdRouteImport.update({
@@ -420,6 +440,7 @@ export interface FileRoutesByFullPath {
   '/api/quantity-units/$id': typeof ApiQuantityUnitsIdRoute
   '/api/recipe-categories/$id': typeof ApiRecipeCategoriesIdRoute
   '/api/recipes/$id': typeof ApiRecipesIdRouteWithChildren
+  '/api/recipes/cook': typeof ApiRecipesCookRoute
   '/api/stock-entries/$id': typeof ApiStockEntriesIdRoute
   '/api/stock-entries/consume': typeof ApiStockEntriesConsumeRoute
   '/api/stock-logs/$id': typeof ApiStockLogsIdRoute
@@ -444,8 +465,10 @@ export interface FileRoutesByFullPath {
   '/api/webhooks/': typeof ApiWebhooksIndexRoute
   '/api/products/$id/unit-conversions/$conversionId': typeof ApiProductsIdUnitConversionsConversionIdRoute
   '/api/recipes/$id/ingredients/$ingredientId': typeof ApiRecipesIdIngredientsIngredientIdRoute
+  '/api/recipes/$id/prep-steps/$stepId': typeof ApiRecipesIdPrepStepsStepIdRoute
   '/api/products/$id/unit-conversions/': typeof ApiProductsIdUnitConversionsIndexRoute
   '/api/recipes/$id/ingredients/': typeof ApiRecipesIdIngredientsIndexRoute
+  '/api/recipes/$id/prep-steps/': typeof ApiRecipesIdPrepStepsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -483,6 +506,7 @@ export interface FileRoutesByTo {
   '/api/quantity-units/$id': typeof ApiQuantityUnitsIdRoute
   '/api/recipe-categories/$id': typeof ApiRecipeCategoriesIdRoute
   '/api/recipes/$id': typeof ApiRecipesIdRouteWithChildren
+  '/api/recipes/cook': typeof ApiRecipesCookRoute
   '/api/stock-entries/$id': typeof ApiStockEntriesIdRoute
   '/api/stock-entries/consume': typeof ApiStockEntriesConsumeRoute
   '/api/stock-logs/$id': typeof ApiStockLogsIdRoute
@@ -507,8 +531,10 @@ export interface FileRoutesByTo {
   '/api/webhooks': typeof ApiWebhooksIndexRoute
   '/api/products/$id/unit-conversions/$conversionId': typeof ApiProductsIdUnitConversionsConversionIdRoute
   '/api/recipes/$id/ingredients/$ingredientId': typeof ApiRecipesIdIngredientsIngredientIdRoute
+  '/api/recipes/$id/prep-steps/$stepId': typeof ApiRecipesIdPrepStepsStepIdRoute
   '/api/products/$id/unit-conversions': typeof ApiProductsIdUnitConversionsIndexRoute
   '/api/recipes/$id/ingredients': typeof ApiRecipesIdIngredientsIndexRoute
+  '/api/recipes/$id/prep-steps': typeof ApiRecipesIdPrepStepsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -547,6 +573,7 @@ export interface FileRoutesById {
   '/api/quantity-units/$id': typeof ApiQuantityUnitsIdRoute
   '/api/recipe-categories/$id': typeof ApiRecipeCategoriesIdRoute
   '/api/recipes/$id': typeof ApiRecipesIdRouteWithChildren
+  '/api/recipes/cook': typeof ApiRecipesCookRoute
   '/api/stock-entries/$id': typeof ApiStockEntriesIdRoute
   '/api/stock-entries/consume': typeof ApiStockEntriesConsumeRoute
   '/api/stock-logs/$id': typeof ApiStockLogsIdRoute
@@ -571,8 +598,10 @@ export interface FileRoutesById {
   '/api/webhooks/': typeof ApiWebhooksIndexRoute
   '/api/products/$id/unit-conversions/$conversionId': typeof ApiProductsIdUnitConversionsConversionIdRoute
   '/api/recipes/$id/ingredients/$ingredientId': typeof ApiRecipesIdIngredientsIngredientIdRoute
+  '/api/recipes/$id/prep-steps/$stepId': typeof ApiRecipesIdPrepStepsStepIdRoute
   '/api/products/$id/unit-conversions/': typeof ApiProductsIdUnitConversionsIndexRoute
   '/api/recipes/$id/ingredients/': typeof ApiRecipesIdIngredientsIndexRoute
+  '/api/recipes/$id/prep-steps/': typeof ApiRecipesIdPrepStepsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -612,6 +641,7 @@ export interface FileRouteTypes {
     | '/api/quantity-units/$id'
     | '/api/recipe-categories/$id'
     | '/api/recipes/$id'
+    | '/api/recipes/cook'
     | '/api/stock-entries/$id'
     | '/api/stock-entries/consume'
     | '/api/stock-logs/$id'
@@ -636,8 +666,10 @@ export interface FileRouteTypes {
     | '/api/webhooks/'
     | '/api/products/$id/unit-conversions/$conversionId'
     | '/api/recipes/$id/ingredients/$ingredientId'
+    | '/api/recipes/$id/prep-steps/$stepId'
     | '/api/products/$id/unit-conversions/'
     | '/api/recipes/$id/ingredients/'
+    | '/api/recipes/$id/prep-steps/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -675,6 +707,7 @@ export interface FileRouteTypes {
     | '/api/quantity-units/$id'
     | '/api/recipe-categories/$id'
     | '/api/recipes/$id'
+    | '/api/recipes/cook'
     | '/api/stock-entries/$id'
     | '/api/stock-entries/consume'
     | '/api/stock-logs/$id'
@@ -699,8 +732,10 @@ export interface FileRouteTypes {
     | '/api/webhooks'
     | '/api/products/$id/unit-conversions/$conversionId'
     | '/api/recipes/$id/ingredients/$ingredientId'
+    | '/api/recipes/$id/prep-steps/$stepId'
     | '/api/products/$id/unit-conversions'
     | '/api/recipes/$id/ingredients'
+    | '/api/recipes/$id/prep-steps'
   id:
     | '__root__'
     | '/'
@@ -738,6 +773,7 @@ export interface FileRouteTypes {
     | '/api/quantity-units/$id'
     | '/api/recipe-categories/$id'
     | '/api/recipes/$id'
+    | '/api/recipes/cook'
     | '/api/stock-entries/$id'
     | '/api/stock-entries/consume'
     | '/api/stock-logs/$id'
@@ -762,8 +798,10 @@ export interface FileRouteTypes {
     | '/api/webhooks/'
     | '/api/products/$id/unit-conversions/$conversionId'
     | '/api/recipes/$id/ingredients/$ingredientId'
+    | '/api/recipes/$id/prep-steps/$stepId'
     | '/api/products/$id/unit-conversions/'
     | '/api/recipes/$id/ingredients/'
+    | '/api/recipes/$id/prep-steps/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -802,6 +840,7 @@ export interface RootRouteChildren {
   ApiQuantityUnitsIdRoute: typeof ApiQuantityUnitsIdRoute
   ApiRecipeCategoriesIdRoute: typeof ApiRecipeCategoriesIdRoute
   ApiRecipesIdRoute: typeof ApiRecipesIdRouteWithChildren
+  ApiRecipesCookRoute: typeof ApiRecipesCookRoute
   ApiStockEntriesIdRoute: typeof ApiStockEntriesIdRoute
   ApiStockEntriesConsumeRoute: typeof ApiStockEntriesConsumeRoute
   ApiStockLogsIdRoute: typeof ApiStockLogsIdRoute
@@ -1143,6 +1182,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiStockEntriesIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/recipes/cook': {
+      id: '/api/recipes/cook'
+      path: '/api/recipes/cook'
+      fullPath: '/api/recipes/cook'
+      preLoaderRoute: typeof ApiRecipesCookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/recipes/$id': {
       id: '/api/recipes/$id'
       path: '/api/recipes/$id'
@@ -1227,6 +1273,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiApiKeysIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/recipes/$id/prep-steps/': {
+      id: '/api/recipes/$id/prep-steps/'
+      path: '/prep-steps'
+      fullPath: '/api/recipes/$id/prep-steps/'
+      preLoaderRoute: typeof ApiRecipesIdPrepStepsIndexRouteImport
+      parentRoute: typeof ApiRecipesIdRoute
+    }
     '/api/recipes/$id/ingredients/': {
       id: '/api/recipes/$id/ingredients/'
       path: '/ingredients'
@@ -1240,6 +1293,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/products/$id/unit-conversions/'
       preLoaderRoute: typeof ApiProductsIdUnitConversionsIndexRouteImport
       parentRoute: typeof ApiProductsIdRoute
+    }
+    '/api/recipes/$id/prep-steps/$stepId': {
+      id: '/api/recipes/$id/prep-steps/$stepId'
+      path: '/prep-steps/$stepId'
+      fullPath: '/api/recipes/$id/prep-steps/$stepId'
+      preLoaderRoute: typeof ApiRecipesIdPrepStepsStepIdRouteImport
+      parentRoute: typeof ApiRecipesIdRoute
     }
     '/api/recipes/$id/ingredients/$ingredientId': {
       id: '/api/recipes/$id/ingredients/$ingredientId'
@@ -1276,13 +1336,17 @@ const ApiProductsIdRouteWithChildren = ApiProductsIdRoute._addFileChildren(
 
 interface ApiRecipesIdRouteChildren {
   ApiRecipesIdIngredientsIngredientIdRoute: typeof ApiRecipesIdIngredientsIngredientIdRoute
+  ApiRecipesIdPrepStepsStepIdRoute: typeof ApiRecipesIdPrepStepsStepIdRoute
   ApiRecipesIdIngredientsIndexRoute: typeof ApiRecipesIdIngredientsIndexRoute
+  ApiRecipesIdPrepStepsIndexRoute: typeof ApiRecipesIdPrepStepsIndexRoute
 }
 
 const ApiRecipesIdRouteChildren: ApiRecipesIdRouteChildren = {
   ApiRecipesIdIngredientsIngredientIdRoute:
     ApiRecipesIdIngredientsIngredientIdRoute,
+  ApiRecipesIdPrepStepsStepIdRoute: ApiRecipesIdPrepStepsStepIdRoute,
   ApiRecipesIdIngredientsIndexRoute: ApiRecipesIdIngredientsIndexRoute,
+  ApiRecipesIdPrepStepsIndexRoute: ApiRecipesIdPrepStepsIndexRoute,
 }
 
 const ApiRecipesIdRouteWithChildren = ApiRecipesIdRoute._addFileChildren(
@@ -1326,6 +1390,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiQuantityUnitsIdRoute: ApiQuantityUnitsIdRoute,
   ApiRecipeCategoriesIdRoute: ApiRecipeCategoriesIdRoute,
   ApiRecipesIdRoute: ApiRecipesIdRouteWithChildren,
+  ApiRecipesCookRoute: ApiRecipesCookRoute,
   ApiStockEntriesIdRoute: ApiStockEntriesIdRoute,
   ApiStockEntriesConsumeRoute: ApiStockEntriesConsumeRoute,
   ApiStockLogsIdRoute: ApiStockLogsIdRoute,

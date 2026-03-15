@@ -455,6 +455,15 @@ export const recipe = pgTable(
 		prepTime: integer("prep_time"),
 		cookTime: integer("cook_time"),
 		instructions: text("instructions"),
+		producedProductId: text("produced_product_id").references(
+			() => product.id,
+			{ onDelete: "set null" },
+		),
+		producedQuantity: numeric("produced_quantity"),
+		producedQuantityUnitId: text("produced_quantity_unit_id").references(
+			() => quantityUnit.id,
+			{ onDelete: "set null" },
+		),
 		userId: text("user_id")
 			.notNull()
 			.references(() => user.id, { onDelete: "cascade" }),
@@ -474,6 +483,15 @@ export const recipeRelations = relations(recipe, ({ one, many }) => ({
 	}),
 	categories: many(recipeCategory),
 	ingredients: many(recipeIngredient),
+	prepSteps: many(recipePrepStep),
+	producedProduct: one(product, {
+		fields: [recipe.producedProductId],
+		references: [product.id],
+	}),
+	producedQuantityUnit: one(quantityUnit, {
+		fields: [recipe.producedQuantityUnitId],
+		references: [quantityUnit.id],
+	}),
 }));
 
 export const recipeIngredient = pgTable(
@@ -493,6 +511,7 @@ export const recipeIngredient = pgTable(
 			onDelete: "set null",
 		}),
 		notes: text("notes"),
+		groupName: text("group_name"),
 		sortOrder: integer("sort_order").default(0).notNull(),
 		userId: text("user_id")
 			.notNull()
@@ -530,6 +549,44 @@ export const recipeIngredientRelations = relations(
 		}),
 	}),
 );
+
+export const recipePrepStep = pgTable(
+	"recipe_prep_step",
+	{
+		id: text("id")
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		recipeId: text("recipe_id")
+			.notNull()
+			.references(() => recipe.id, { onDelete: "cascade" }),
+		description: text("description").notNull(),
+		leadTimeMinutes: integer("lead_time_minutes").notNull(),
+		sortOrder: integer("sort_order").default(0).notNull(),
+		userId: text("user_id")
+			.notNull()
+			.references(() => user.id, { onDelete: "cascade" }),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+		updatedAt: timestamp("updated_at")
+			.defaultNow()
+			.$onUpdate(() => new Date())
+			.notNull(),
+	},
+	(table) => [
+		index("recipePrepStep_userId_idx").on(table.userId),
+		index("recipePrepStep_recipeId_idx").on(table.recipeId),
+	],
+);
+
+export const recipePrepStepRelations = relations(recipePrepStep, ({ one }) => ({
+	user: one(user, {
+		fields: [recipePrepStep.userId],
+		references: [user.id],
+	}),
+	recipe: one(recipe, {
+		fields: [recipePrepStep.recipeId],
+		references: [recipe.id],
+	}),
+}));
 
 export const mealSlot = pgTable(
 	"meal_slot",

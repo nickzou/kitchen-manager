@@ -130,6 +130,62 @@ export const Route = createFileRoute("/api/meal-plan-entries/cook")({
 						}
 					}
 
+					// Reverse production: if recipe produces a product, remove the produced stock
+					if (rec.producedProductId && rec.producedQuantity) {
+						const producedQty = Number(rec.producedQuantity) * scaleFactor;
+
+						// Find the add log created around cookedAt for the produced product
+						const addLogs = await tx
+							.select()
+							.from(stockLog)
+							.where(
+								and(
+									eq(stockLog.productId, rec.producedProductId),
+									eq(stockLog.userId, session.user.id),
+									eq(stockLog.transactionType, "add"),
+									sql`${stockLog.createdAt} >= ${entry.cookedAt}`,
+								),
+							)
+							.orderBy(desc(stockLog.createdAt))
+							.limit(5);
+
+						let toRemove = producedQty;
+						for (const log of addLogs) {
+							if (toRemove <= 0) break;
+
+							const logQty = Number(log.quantity);
+							const remove = Math.min(logQty, toRemove);
+
+							if (log.stockEntryId) {
+								const [stock] = await tx
+									.select()
+									.from(stockEntry)
+									.where(eq(stockEntry.id, log.stockEntryId));
+
+								if (stock) {
+									const newQty = Math.max(
+										0,
+										Number(stock.quantity) - remove,
+									).toString();
+									await tx
+										.update(stockEntry)
+										.set({ quantity: newQty })
+										.where(eq(stockEntry.id, stock.id));
+								}
+							}
+
+							await tx.insert(stockLog).values({
+								stockEntryId: log.stockEntryId,
+								productId: rec.producedProductId,
+								transactionType: "remove",
+								quantity: remove.toString(),
+								userId: session.user.id,
+							});
+
+							toRemove -= remove;
+						}
+					}
+
 					// Clear cookedAt
 					await tx
 						.update(mealPlanEntry)
@@ -158,7 +214,7 @@ export const Route = createFileRoute("/api/meal-plan-entries/cook")({
 				}
 
 				const body = await request.json();
-				const { mealPlanEntryId } = body;
+				const { mealPlanEntryId, groupSelections } = body;
 
 				if (!mealPlanEntryId) {
 					return json(
@@ -206,6 +262,33 @@ export const Route = createFileRoute("/api/meal-plan-entries/cook")({
 					const scaleFactor =
 						(entry.servings ?? rec.servings ?? 1) / (rec.servings ?? 1);
 
+					// Build set of ingredient IDs to skip based on group selections
+					const skipIds = new Set<string>();
+					const groups = new Map<string, typeof ingredients>();
+					for (const ing of ingredients) {
+						if (ing.groupName) {
+							if (!groups.has(ing.groupName)) {
+								groups.set(ing.groupName, []);
+							}
+							groups.get(ing.groupName)?.push(ing);
+						}
+					}
+
+					for (const [groupName, groupIngredients] of groups) {
+						const selectedId = groupSelections?.[groupName];
+						if (!selectedId) {
+							return {
+								error: `Missing selection for group "${groupName}"`,
+								status: 400,
+							};
+						}
+						for (const ing of groupIngredients) {
+							if (ing.id !== selectedId) {
+								skipIds.add(ing.id);
+							}
+						}
+					}
+
 					const warnings: string[] = [];
 					const deductions: {
 						productId: string;
@@ -216,6 +299,7 @@ export const Route = createFileRoute("/api/meal-plan-entries/cook")({
 					// FIFO deduction for each linked ingredient
 					for (const ingredient of ingredients) {
 						if (!ingredient.productId) continue;
+						if (skipIds.has(ingredient.id)) continue;
 
 						const needed = Number(ingredient.quantity) * scaleFactor;
 
@@ -272,12 +356,41 @@ export const Route = createFileRoute("/api/meal-plan-entries/cook")({
 						}
 					}
 
+					// Production: if recipe produces a product, add to stock
+					let produced: { productId: string; quantity: number } | undefined;
+
+					if (rec.producedProductId && rec.producedQuantity) {
+						const producedQty = Number(rec.producedQuantity) * scaleFactor;
+
+						const [newEntry] = await tx
+							.insert(stockEntry)
+							.values({
+								productId: rec.producedProductId,
+								quantity: producedQty.toString(),
+								userId: session.user.id,
+							})
+							.returning();
+
+						await tx.insert(stockLog).values({
+							stockEntryId: newEntry.id,
+							productId: rec.producedProductId,
+							transactionType: "add",
+							quantity: producedQty.toString(),
+							userId: session.user.id,
+						});
+
+						produced = {
+							productId: rec.producedProductId,
+							quantity: producedQty,
+						};
+					}
+
 					await tx
 						.update(mealPlanEntry)
 						.set({ cookedAt: new Date() })
 						.where(eq(mealPlanEntry.id, mealPlanEntryId));
 
-					return { deductions, warnings, status: 200 };
+					return { deductions, warnings, produced, status: 200 };
 				});
 
 				if ("error" in result) {
@@ -291,11 +404,13 @@ export const Route = createFileRoute("/api/meal-plan-entries/cook")({
 					mealPlanEntryId: body.mealPlanEntryId,
 					deductions: result.deductions,
 					warnings: result.warnings,
+					produced: result.produced,
 				});
 				return json({
 					success: true,
 					deductions: result.deductions,
 					warnings: result.warnings,
+					produced: result.produced,
 				});
 			},
 		},
