@@ -9,7 +9,6 @@ export type IngredientFormState = {
 	quantity: string;
 	quantityUnitId: string;
 	notes: string;
-	groupName: string;
 };
 
 type ComboboxOption = { value: string; label: string };
@@ -19,11 +18,16 @@ export function AddIngredientForm({
 	unitOptions,
 	onAdd,
 	isPending,
-	newIngredient: { productId, quantity, quantityUnitId, notes, groupName },
+	newIngredient: { productId, quantity, quantityUnitId, notes },
 	setNewIngredient,
 	onCreateProduct,
 	onProductChange,
 	unitHint,
+	mode = "ingredient",
+	onModeChange,
+	groupName,
+	onGroupNameChange,
+	addButtonLabel,
 }: {
 	productOptions: ComboboxOption[];
 	unitOptions: ComboboxOption[];
@@ -34,6 +38,11 @@ export function AddIngredientForm({
 	onCreateProduct?: (name: string) => Promise<string>;
 	onProductChange?: (productId: string) => void;
 	unitHint?: string;
+	mode?: "ingredient" | "group";
+	onModeChange?: (mode: "ingredient" | "group") => void;
+	groupName?: string;
+	onGroupNameChange?: (name: string) => void;
+	addButtonLabel?: string;
 }) {
 	const htmlId = useId();
 	const inputClass =
@@ -45,7 +54,6 @@ export function AddIngredientForm({
 			quantity,
 			quantityUnitId,
 			notes,
-			groupName,
 			...partial,
 		});
 	}
@@ -53,7 +61,45 @@ export function AddIngredientForm({
 	return (
 		<div className="border-t border-(--line) pt-4">
 			<SectionHeading>Add ingredient</SectionHeading>
-			<div className="grid grid-cols-[1fr_1fr] gap-2 sm:grid-cols-[2fr_5rem_1fr_1fr_1fr_auto]">
+
+			{onModeChange && (
+				<div className="mb-3 inline-flex rounded-lg border border-(--line) p-0.5">
+					<button
+						type="button"
+						onClick={() => onModeChange("ingredient")}
+						className={`rounded-md px-3 py-1.5 text-sm font-medium transition ${
+							mode === "ingredient"
+								? "bg-(--lagoon) text-white"
+								: "text-(--sea-ink-soft) hover:text-(--sea-ink)"
+						}`}
+					>
+						Ingredient
+					</button>
+					<button
+						type="button"
+						onClick={() => onModeChange("group")}
+						className={`rounded-md px-3 py-1.5 text-sm font-medium transition ${
+							mode === "group"
+								? "bg-(--lagoon) text-white"
+								: "text-(--sea-ink-soft) hover:text-(--sea-ink)"
+						}`}
+					>
+						Group
+					</button>
+				</div>
+			)}
+
+			{mode === "group" && onGroupNameChange && (
+				<input
+					type="text"
+					placeholder="Group name, e.g. 'Protein' (optional)"
+					value={groupName ?? ""}
+					onChange={(e) => onGroupNameChange(e.target.value)}
+					className={`${inputClass} mb-2`}
+				/>
+			)}
+
+			<div className="grid grid-cols-[1fr_1fr] gap-2 sm:grid-cols-[2fr_5rem_1fr_1fr_auto]">
 				<Combobox
 					value={productId}
 					onChange={(v) => {
@@ -93,13 +139,6 @@ export function AddIngredientForm({
 					onChange={(e) => update({ notes: e.target.value })}
 					className={inputClass}
 				/>
-				<input
-					type="text"
-					placeholder="Group"
-					value={groupName}
-					onChange={(e) => update({ groupName: e.target.value })}
-					className={inputClass}
-				/>
 				<button
 					type="button"
 					onClick={onAdd}
@@ -107,7 +146,7 @@ export function AddIngredientForm({
 					className="flex h-10 items-center gap-1 rounded-full bg-(--lagoon) px-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
 				>
 					<Plus size={14} />
-					Add
+					{addButtonLabel ?? "Add"}
 				</button>
 			</div>
 			{unitHint && (

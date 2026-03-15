@@ -2,6 +2,8 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
 	ArrowLeft,
 	Check,
+	ChevronDown,
+	ChevronLeft,
 	CookingPot,
 	Minus,
 	Pencil,
@@ -105,12 +107,28 @@ function RecipeDetail() {
 		quantity: "",
 		quantityUnitId: "",
 		notes: "",
-		groupName: "",
 	});
+	const [addMode, setAddMode] = useState<"ingredient" | "group">("ingredient");
+	const [pendingGroupName, setPendingGroupName] = useState("");
+	const [pendingGroupItems, setPendingGroupItems] = useState<
+		Array<{
+			productId: string;
+			quantity: string;
+			quantityUnitId: string;
+			notes: string;
+		}>
+	>([]);
+	const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(
+		new Set(),
+	);
+	const [editingGroupName, setEditingGroupName] = useState<string | null>(null);
+	const [editGroupNameValue, setEditGroupNameValue] = useState("");
 	const [editingIngredientId, setEditingIngredientId] = useState<string | null>(
 		null,
 	);
-	const [editIngredient, setEditIngredient] = useState<IngredientFormState>({
+	const [editIngredient, setEditIngredient] = useState<
+		IngredientFormState & { groupName: string }
+	>({
 		productId: "",
 		quantity: "",
 		quantityUnitId: "",
@@ -271,20 +289,84 @@ function RecipeDetail() {
 
 	async function handleAddIngredient() {
 		if (!newIngredient.quantity) return;
+		if (addMode === "group") {
+			setPendingGroupItems([
+				...pendingGroupItems,
+				{
+					productId: newIngredient.productId,
+					quantity: newIngredient.quantity,
+					quantityUnitId: newIngredient.quantityUnitId,
+					notes: newIngredient.notes,
+				},
+			]);
+			setNewIngredient({
+				productId: "",
+				quantity: "",
+				quantityUnitId: "",
+				notes: "",
+			});
+			return;
+		}
 		await createIngredient.mutateAsync({
 			productId: newIngredient.productId || undefined,
 			quantity: newIngredient.quantity,
 			quantityUnitId: newIngredient.quantityUnitId || undefined,
 			notes: newIngredient.notes || undefined,
-			groupName: newIngredient.groupName || undefined,
 		});
 		setNewIngredient({
 			productId: "",
 			quantity: "",
 			quantityUnitId: "",
 			notes: "",
-			groupName: "",
 		});
+	}
+
+	async function handleRenameGroup(
+		oldName: string,
+		newName: string,
+		groupIngs: { id: string }[],
+	) {
+		const trimmed = newName.trim();
+		if (trimmed === oldName) {
+			setEditingGroupName(null);
+			return;
+		}
+		for (const ing of groupIngs) {
+			await updateIngredient.mutateAsync({
+				id: ing.id,
+				groupName: trimmed || undefined,
+			});
+		}
+		setEditingGroupName(null);
+	}
+
+	function toggleGroupCollapse(groupName: string) {
+		setCollapsedGroups((prev) => {
+			const next = new Set(prev);
+			if (next.has(groupName)) {
+				next.delete(groupName);
+			} else {
+				next.add(groupName);
+			}
+			return next;
+		});
+	}
+
+	async function handleSaveGroup() {
+		if (pendingGroupItems.length === 0) return;
+		const groupName = pendingGroupName.trim() || undefined;
+		for (const item of pendingGroupItems) {
+			await createIngredient.mutateAsync({
+				productId: item.productId || undefined,
+				quantity: item.quantity,
+				quantityUnitId: item.quantityUnitId || undefined,
+				notes: item.notes || undefined,
+				groupName,
+			});
+		}
+		setPendingGroupItems([]);
+		setPendingGroupName("");
+		setAddMode("ingredient");
 	}
 
 	async function handleCreateProduct(name: string) {
@@ -1447,23 +1529,132 @@ function RecipeDetail() {
 										return (
 											<>
 												{ungrouped.map(renderIngredient)}
-												{[...groups].map(([groupName, groupIngs]) => (
-													<div key={groupName}>
-														<p className="mb-1 mt-2 text-xs font-medium uppercase tracking-wide text-(--sea-ink-soft)">
-															{groupName}
-														</p>
-														{groupIngs.map((ing, i) => (
-															<div key={ing.id}>
-																{i > 0 && (
-																	<p className="py-0.5 text-center text-xs italic text-(--sea-ink-soft)">
-																		or
-																	</p>
+												{[...groups].map(([groupName, groupIngs]) => {
+													const isCollapsed = collapsedGroups.has(groupName);
+													return (
+														<div
+															key={groupName}
+															className="rounded-lg border border-(--line) overflow-hidden"
+														>
+															<div className="flex items-center px-3 py-2">
+																{editingGroupName === groupName ? (
+																	<form
+																		className="flex flex-1 items-center gap-2"
+																		onSubmit={(e) => {
+																			e.preventDefault();
+																			handleRenameGroup(
+																				groupName,
+																				editGroupNameValue,
+																				groupIngs,
+																			);
+																		}}
+																	>
+																		<input
+																			type="text"
+																			value={editGroupNameValue}
+																			onChange={(e) =>
+																				setEditGroupNameValue(e.target.value)
+																			}
+																			className={`${inputClass} !h-8`}
+																			ref={(el) => el?.focus()}
+																			onKeyDown={(e) => {
+																				if (e.key === "Escape") {
+																					setEditingGroupName(null);
+																				}
+																			}}
+																		/>
+																		<button
+																			type="submit"
+																			disabled={updateIngredient.isPending}
+																			className="rounded-lg p-1.5 text-(--lagoon) transition hover:bg-(--surface)"
+																			title="Save"
+																		>
+																			<Check size={14} />
+																		</button>
+																		<button
+																			type="button"
+																			onClick={() => setEditingGroupName(null)}
+																			className="rounded-lg p-1.5 text-(--sea-ink-soft) transition hover:bg-(--surface)"
+																			title="Cancel"
+																		>
+																			<X size={14} />
+																		</button>
+																	</form>
+																) : (
+																	<>
+																		<div className="flex flex-1 items-center gap-2">
+																			<span className="text-sm font-medium text-(--sea-ink)">
+																				{groupName || "Unnamed group"}
+																			</span>
+																			<span className="rounded-full bg-(--surface) px-1.5 py-0.5 text-xs text-(--sea-ink-soft)">
+																				{groupIngs.length}
+																			</span>
+																		</div>
+																		<div className="flex gap-0.5">
+																			<button
+																				type="button"
+																				onClick={() =>
+																					toggleGroupCollapse(groupName)
+																				}
+																				className="rounded-lg p-1.5 text-(--sea-ink-soft) transition hover:bg-(--surface) hover:text-(--sea-ink)"
+																				title={
+																					isCollapsed
+																						? "Expand group"
+																						: "Collapse group"
+																				}
+																			>
+																				{isCollapsed ? (
+																					<ChevronLeft size={14} />
+																				) : (
+																					<ChevronDown size={14} />
+																				)}
+																			</button>
+																			<button
+																				type="button"
+																				onClick={() => {
+																					setEditingGroupName(groupName);
+																					setEditGroupNameValue(groupName);
+																				}}
+																				className="rounded-lg p-1.5 text-(--sea-ink-soft) transition hover:bg-(--surface) hover:text-(--sea-ink)"
+																				title="Rename group"
+																			>
+																				<Pencil size={14} />
+																			</button>
+																			<button
+																				type="button"
+																				onClick={async () => {
+																					for (const ing of groupIngs) {
+																						await deleteIngredient.mutateAsync(
+																							ing.id,
+																						);
+																					}
+																				}}
+																				className="rounded-lg p-1.5 text-(--sea-ink-soft) transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950"
+																				title="Delete group"
+																			>
+																				<Trash2 size={14} />
+																			</button>
+																		</div>
+																	</>
 																)}
-																{renderIngredient(ing)}
 															</div>
-														))}
-													</div>
-												))}
+															{!isCollapsed && (
+																<div className="border-t border-(--line) px-3 py-2 flex flex-col gap-1">
+																	{groupIngs.map((ing, i) => (
+																		<div key={ing.id}>
+																			{i > 0 && (
+																				<p className="py-0.5 text-center text-xs italic text-(--sea-ink-soft)">
+																					or
+																				</p>
+																			)}
+																			{renderIngredient(ing)}
+																		</div>
+																	))}
+																</div>
+															)}
+														</div>
+													);
+												})}
 											</>
 										);
 									})()}
@@ -1474,13 +1665,73 @@ function RecipeDetail() {
 								productOptions={productOptions}
 								unitOptions={unitOptions}
 								onAdd={handleAddIngredient}
-								isPending={createIngredient.isPending}
+								isPending={
+									addMode === "ingredient" ? createIngredient.isPending : false
+								}
 								newIngredient={newIngredient}
 								setNewIngredient={setNewIngredient}
 								onCreateProduct={handleCreateProduct}
 								onProductChange={handleProductChange}
 								unitHint={getConversionHint()}
+								mode={addMode}
+								onModeChange={setAddMode}
+								groupName={pendingGroupName}
+								onGroupNameChange={setPendingGroupName}
+								addButtonLabel={addMode === "group" ? "Add to group" : "Add"}
 							/>
+
+							{addMode === "group" && pendingGroupItems.length > 0 && (
+								<div className="mt-3 rounded-lg border border-dashed border-(--line) p-3">
+									<p className="mb-2 text-xs font-medium uppercase tracking-wide text-(--sea-ink-soft)">
+										Pending group items
+									</p>
+									<div className="flex flex-col gap-1">
+										{pendingGroupItems.map((item, i) => (
+											<div
+												key={`${item.productId}-${item.quantity}-${i}`}
+												className="flex items-center justify-between rounded-lg bg-(--surface) px-3 py-1.5 text-sm"
+											>
+												<span className="text-(--sea-ink)">
+													<span className="font-medium">
+														{getProductName(item.productId)}
+													</span>
+													<span className="ml-2 text-(--sea-ink-soft)">
+														{item.quantity}
+														{getUnitLabel(item.quantityUnitId)
+															? ` ${getUnitLabel(item.quantityUnitId)}`
+															: ""}
+													</span>
+													{item.notes && (
+														<span className="ml-2 text-xs text-(--sea-ink-soft)">
+															({item.notes})
+														</span>
+													)}
+												</span>
+												<button
+													type="button"
+													onClick={() =>
+														setPendingGroupItems(
+															pendingGroupItems.filter((_, j) => j !== i),
+														)
+													}
+													className="rounded-lg p-1 text-(--sea-ink-soft) transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950"
+												>
+													<X size={14} />
+												</button>
+											</div>
+										))}
+									</div>
+									<button
+										type="button"
+										onClick={handleSaveGroup}
+										disabled={createIngredient.isPending}
+										className="mt-2 flex h-8 items-center gap-1.5 rounded-full bg-(--lagoon) px-4 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
+									>
+										<Check size={14} />
+										{createIngredient.isPending ? "Saving…" : "Save group"}
+									</button>
+								</div>
+							)}
 						</Island>
 					</div>
 				}
