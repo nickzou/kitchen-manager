@@ -9,6 +9,7 @@ export type IngredientFormState = {
 	quantity: string;
 	quantityUnitId: string;
 	notes: string;
+	groupName: string;
 };
 
 type ComboboxOption = { value: string; label: string };
@@ -18,7 +19,7 @@ export function AddIngredientForm({
 	unitOptions,
 	onAdd,
 	isPending,
-	newIngredient: { productId, quantity, quantityUnitId, notes },
+	newIngredient: { productId, quantity, quantityUnitId, notes, groupName },
 	setNewIngredient,
 	onCreateProduct,
 	onProductChange,
@@ -44,6 +45,7 @@ export function AddIngredientForm({
 			quantity,
 			quantityUnitId,
 			notes,
+			groupName,
 			...partial,
 		});
 	}
@@ -51,7 +53,7 @@ export function AddIngredientForm({
 	return (
 		<div className="border-t border-(--line) pt-4">
 			<SectionHeading>Add ingredient</SectionHeading>
-			<div className="grid grid-cols-[1fr_1fr] gap-2 sm:grid-cols-[2fr_5rem_1fr_1fr_auto]">
+			<div className="grid grid-cols-[1fr_1fr] gap-2 sm:grid-cols-[2fr_5rem_1fr_1fr_1fr_auto]">
 				<Combobox
 					value={productId}
 					onChange={(v) => {
@@ -89,6 +91,13 @@ export function AddIngredientForm({
 					placeholder="Notes"
 					value={notes}
 					onChange={(e) => update({ notes: e.target.value })}
+					className={inputClass}
+				/>
+				<input
+					type="text"
+					placeholder="Group"
+					value={groupName}
+					onChange={(e) => update({ groupName: e.target.value })}
 					className={inputClass}
 				/>
 				<button

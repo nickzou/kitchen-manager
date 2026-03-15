@@ -7,6 +7,7 @@ export interface RecipeIngredient {
 	quantity: string;
 	quantityUnitId: string | null;
 	notes: string | null;
+	groupName: string | null;
 	sortOrder: number;
 	userId: string;
 	createdAt: string;
@@ -18,6 +19,7 @@ export type CreateRecipeIngredientInput = {
 	quantity: string;
 	quantityUnitId?: string;
 	notes?: string;
+	groupName?: string;
 	sortOrder?: number;
 };
 

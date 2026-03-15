@@ -52,6 +52,7 @@ export const Route = createFileRoute("/api/recipes/$id/ingredients/")({
 						quantity: body.quantity,
 						quantityUnitId: body.quantityUnitId,
 						notes: body.notes,
+						groupName: body.groupName,
 						sortOrder: body.sortOrder,
 						userId: session.user.id,
 					})

@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 interface CookRecipeInput {
 	recipeId: string;
 	servings?: number;
+	groupSelections?: Record<string, string>;
 }
 
 interface CookRecipeResult {

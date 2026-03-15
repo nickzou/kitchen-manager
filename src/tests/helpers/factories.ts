@@ -235,6 +235,7 @@ export function makeRecipeIngredient(overrides?: Record<string, unknown>) {
 		quantity: "2",
 		quantityUnitId: null,
 		notes: null,
+		groupName: null,
 		sortOrder: 0,
 		userId: "user-1",
 		createdAt: new Date("2025-01-01"),

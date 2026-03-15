@@ -105,6 +105,7 @@ function RecipeDetail() {
 		quantity: "",
 		quantityUnitId: "",
 		notes: "",
+		groupName: "",
 	});
 	const [editingIngredientId, setEditingIngredientId] = useState<string | null>(
 		null,
@@ -114,7 +115,12 @@ function RecipeDetail() {
 		quantity: "",
 		quantityUnitId: "",
 		notes: "",
+		groupName: "",
 	});
+	const [showCookPicker, setShowCookPicker] = useState(false);
+	const [groupSelections, setGroupSelections] = useState<
+		Record<string, string>
+	>({});
 	const [newPrepStep, setNewPrepStep] = useState({
 		description: "",
 		leadTimeMinutes: "",
@@ -219,13 +225,39 @@ function RecipeDetail() {
 		setEditing(false);
 	}
 
-	async function handleCook() {
+	function handleCookClick() {
+		if (!recipe || !ingredients) return;
+		const groups = new Map<string, typeof ingredients>();
+		for (const ing of ingredients) {
+			if (ing.groupName) {
+				if (!groups.has(ing.groupName)) {
+					groups.set(ing.groupName, []);
+				}
+				groups.get(ing.groupName)?.push(ing);
+			}
+		}
+		if (groups.size > 0) {
+			// Pre-select first ingredient in each group
+			const defaults: Record<string, string> = {};
+			for (const [name, ings] of groups) {
+				defaults[name] = ings[0].id;
+			}
+			setGroupSelections(defaults);
+			setShowCookPicker(true);
+		} else {
+			handleCook();
+		}
+	}
+
+	async function handleCook(selections?: Record<string, string>) {
 		if (!recipe) return;
 		const result = await cookRecipe.mutateAsync({
 			recipeId: recipe.id,
 			servings: currentServings ?? undefined,
+			groupSelections: selections,
 		});
 		setCookResult(result);
+		setShowCookPicker(false);
 		setTimeout(
 			() => cookResultRef.current?.scrollIntoView({ behavior: "smooth" }),
 			100,
@@ -244,12 +276,14 @@ function RecipeDetail() {
 			quantity: newIngredient.quantity,
 			quantityUnitId: newIngredient.quantityUnitId || undefined,
 			notes: newIngredient.notes || undefined,
+			groupName: newIngredient.groupName || undefined,
 		});
 		setNewIngredient({
 			productId: "",
 			quantity: "",
 			quantityUnitId: "",
 			notes: "",
+			groupName: "",
 		});
 	}
 
@@ -268,12 +302,14 @@ function RecipeDetail() {
 		quantity: string;
 		quantityUnitId: string | null;
 		notes: string | null;
+		groupName: string | null;
 	}) {
 		setEditIngredient({
 			productId: ing.productId ?? "",
 			quantity: ing.quantity,
 			quantityUnitId: ing.quantityUnitId ?? "",
 			notes: ing.notes ?? "",
+			groupName: ing.groupName ?? "",
 		});
 		setEditingIngredientId(ing.id);
 	}
@@ -286,6 +322,7 @@ function RecipeDetail() {
 			quantity: editIngredient.quantity,
 			quantityUnitId: editIngredient.quantityUnitId || undefined,
 			notes: editIngredient.notes || undefined,
+			groupName: editIngredient.groupName || undefined,
 		});
 		setEditingIngredientId(null);
 	}
@@ -865,7 +902,7 @@ function RecipeDetail() {
 										{ingredients && ingredients.length > 0 && (
 											<button
 												type="button"
-												onClick={handleCook}
+												onClick={handleCookClick}
 												disabled={cookRecipe.isPending}
 												className="flex items-center gap-1.5 rounded-full bg-(--lagoon) px-4 py-2 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
 											>
@@ -1156,149 +1193,280 @@ function RecipeDetail() {
 								Ingredients
 							</h2>
 
+							{showCookPicker && (
+								<div className="mb-4 rounded-lg border border-(--lagoon) bg-(--surface) p-4">
+									<h3 className="mb-3 text-sm font-semibold text-(--sea-ink)">
+										Choose ingredients
+									</h3>
+									{(() => {
+										const groups = new Map<
+											string,
+											NonNullable<typeof ingredients>
+										>();
+										for (const ing of ingredients ?? []) {
+											if (ing.groupName) {
+												if (!groups.has(ing.groupName)) {
+													groups.set(ing.groupName, []);
+												}
+												groups.get(ing.groupName)?.push(ing);
+											}
+										}
+										return [...groups].map(([groupName, groupIngs]) => (
+											<div key={groupName} className="mb-3">
+												<p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-(--sea-ink-soft)">
+													{groupName}
+												</p>
+												<div className="flex flex-col gap-1">
+													{groupIngs.map((ing) => (
+														<label
+															key={ing.id}
+															className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-(--sea-ink) hover:bg-(--line)"
+														>
+															<input
+																type="radio"
+																name={`group-${groupName}`}
+																checked={groupSelections[groupName] === ing.id}
+																onChange={() =>
+																	setGroupSelections({
+																		...groupSelections,
+																		[groupName]: ing.id,
+																	})
+																}
+																className="accent-(--lagoon)"
+															/>
+															<span className="font-medium">
+																{getProductName(ing.productId)}
+															</span>
+															<span className="text-(--sea-ink-soft)">
+																{formatScaled(ing.quantity)}
+																{getUnitLabel(ing.quantityUnitId)
+																	? ` ${getUnitLabel(ing.quantityUnitId)}`
+																	: ""}
+															</span>
+														</label>
+													))}
+												</div>
+											</div>
+										));
+									})()}
+									<div className="flex gap-2">
+										<button
+											type="button"
+											onClick={() => handleCook(groupSelections)}
+											disabled={cookRecipe.isPending}
+											className="flex h-8 items-center gap-1.5 rounded-full bg-(--lagoon) px-4 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
+										>
+											<CookingPot size={14} />
+											{cookRecipe.isPending ? "Cooking…" : "Cook"}
+										</button>
+										<button
+											type="button"
+											onClick={() => setShowCookPicker(false)}
+											className="flex h-8 items-center rounded-full px-3 text-sm font-medium text-(--sea-ink-soft) transition hover:bg-(--surface)"
+										>
+											Cancel
+										</button>
+									</div>
+								</div>
+							)}
+
 							{!ingredients?.length && !editing ? (
 								<p className="mb-4 text-sm text-(--sea-ink-soft)">
 									No ingredients yet.
 								</p>
 							) : (
 								<div className="mb-4 flex flex-col gap-2">
-									{(ingredients ?? []).map((ing) =>
-										editingIngredientId === ing.id ? (
-											<div
-												key={ing.id}
-												className="flex flex-col gap-3 rounded-lg border border-(--lagoon) p-3"
-											>
-												<div className="grid grid-cols-[1fr_1fr] gap-2 sm:grid-cols-[2fr_5rem_1fr_1fr]">
-													<Combobox
-														value={editIngredient.productId}
-														onChange={(v) => {
-															setEditIngredient({
-																...editIngredient,
-																productId: v,
-															});
-															handleEditProductChange(v);
-														}}
-														options={productOptions}
-														placeholder="Product"
-														className="col-span-full sm:col-span-1"
-														onCreateNew={async (name) => {
-															const newId = await handleCreateProduct(name);
-															setEditIngredient({
-																...editIngredient,
-																productId: newId,
-															});
-														}}
-													/>
-													<NumberInput
-														step="any"
-														min="0"
-														placeholder="Qty"
-														value={editIngredient.quantity}
-														onChange={(e) =>
-															setEditIngredient({
-																...editIngredient,
-																quantity: e.target.value,
-															})
-														}
-													/>
-													<Combobox
-														value={editIngredient.quantityUnitId}
-														onChange={(v) =>
-															setEditIngredient({
-																...editIngredient,
-																quantityUnitId: v,
-															})
-														}
-														options={unitOptions}
-														placeholder="Unit"
-													/>
-													<input
-														type="text"
-														placeholder="Notes"
-														value={editIngredient.notes}
-														onChange={(e) =>
-															setEditIngredient({
-																...editIngredient,
-																notes: e.target.value,
-															})
-														}
-														className={inputClass}
-													/>
-												</div>
-												{(() => {
-													const hint = getEditConversionHint();
-													return hint ? (
-														<p
-															className={`text-xs ${hint.includes("No conversion") ? "text-amber-600 dark:text-amber-400" : "text-(--sea-ink-soft)"}`}
-														>
-															{hint}
-														</p>
-													) : null;
-												})()}
-												<div className="flex gap-2">
-													<button
-														type="button"
-														onClick={handleSaveIngredient}
-														disabled={
-															updateIngredient.isPending ||
-															!editIngredient.quantity
-														}
-														className="flex h-8 items-center gap-1 rounded-full bg-(--lagoon) px-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
+									{(() => {
+										const allIngs = ingredients ?? [];
+										const ungrouped = allIngs.filter((i) => !i.groupName);
+										const groups = new Map<string, typeof allIngs>();
+										for (const ing of allIngs) {
+											if (ing.groupName) {
+												if (!groups.has(ing.groupName)) {
+													groups.set(ing.groupName, []);
+												}
+												groups.get(ing.groupName)?.push(ing);
+											}
+										}
+
+										function renderIngredient(ing: (typeof allIngs)[number]) {
+											if (editingIngredientId === ing.id) {
+												return (
+													<div
+														key={ing.id}
+														className="flex flex-col gap-3 rounded-lg border border-(--lagoon) p-3"
 													>
-														<Check size={14} />
-														{updateIngredient.isPending ? "Saving…" : "Save"}
-													</button>
-													<button
-														type="button"
-														onClick={() => setEditingIngredientId(null)}
-														className="flex h-8 items-center rounded-full px-3 text-sm font-medium text-(--sea-ink-soft) transition hover:bg-(--surface)"
-													>
-														Cancel
-													</button>
-												</div>
-											</div>
-										) : (
-											<div
-												key={ing.id}
-												className="flex items-center justify-between rounded-lg border border-(--line) px-3 py-2"
-											>
-												<div className="flex-1 text-sm text-(--sea-ink)">
-													<span className="font-medium">
-														{getProductName(ing.productId)}
-													</span>
-													<span className="ml-2 text-(--sea-ink-soft)">
-														{formatScaled(ing.quantity)}
-														{getUnitLabel(ing.quantityUnitId)
-															? ` ${getUnitLabel(ing.quantityUnitId)}`
-															: ""}
-													</span>
-													{ing.notes && (
-														<span className="ml-2 text-xs text-(--sea-ink-soft)">
-															({ing.notes})
+														<div className="grid grid-cols-[1fr_1fr] gap-2 sm:grid-cols-[2fr_5rem_1fr_1fr_1fr]">
+															<Combobox
+																value={editIngredient.productId}
+																onChange={(v) => {
+																	setEditIngredient({
+																		...editIngredient,
+																		productId: v,
+																	});
+																	handleEditProductChange(v);
+																}}
+																options={productOptions}
+																placeholder="Product"
+																className="col-span-full sm:col-span-1"
+																onCreateNew={async (name) => {
+																	const newId = await handleCreateProduct(name);
+																	setEditIngredient({
+																		...editIngredient,
+																		productId: newId,
+																	});
+																}}
+															/>
+															<NumberInput
+																step="any"
+																min="0"
+																placeholder="Qty"
+																value={editIngredient.quantity}
+																onChange={(e) =>
+																	setEditIngredient({
+																		...editIngredient,
+																		quantity: e.target.value,
+																	})
+																}
+															/>
+															<Combobox
+																value={editIngredient.quantityUnitId}
+																onChange={(v) =>
+																	setEditIngredient({
+																		...editIngredient,
+																		quantityUnitId: v,
+																	})
+																}
+																options={unitOptions}
+																placeholder="Unit"
+															/>
+															<input
+																type="text"
+																placeholder="Notes"
+																value={editIngredient.notes}
+																onChange={(e) =>
+																	setEditIngredient({
+																		...editIngredient,
+																		notes: e.target.value,
+																	})
+																}
+																className={inputClass}
+															/>
+															<input
+																type="text"
+																placeholder="Group"
+																value={editIngredient.groupName}
+																onChange={(e) =>
+																	setEditIngredient({
+																		...editIngredient,
+																		groupName: e.target.value,
+																	})
+																}
+																className={inputClass}
+															/>
+														</div>
+														{(() => {
+															const hint = getEditConversionHint();
+															return hint ? (
+																<p
+																	className={`text-xs ${hint.includes("No conversion") ? "text-amber-600 dark:text-amber-400" : "text-(--sea-ink-soft)"}`}
+																>
+																	{hint}
+																</p>
+															) : null;
+														})()}
+														<div className="flex gap-2">
+															<button
+																type="button"
+																onClick={handleSaveIngredient}
+																disabled={
+																	updateIngredient.isPending ||
+																	!editIngredient.quantity
+																}
+																className="flex h-8 items-center gap-1 rounded-full bg-(--lagoon) px-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
+															>
+																<Check size={14} />
+																{updateIngredient.isPending
+																	? "Saving…"
+																	: "Save"}
+															</button>
+															<button
+																type="button"
+																onClick={() => setEditingIngredientId(null)}
+																className="flex h-8 items-center rounded-full px-3 text-sm font-medium text-(--sea-ink-soft) transition hover:bg-(--surface)"
+															>
+																Cancel
+															</button>
+														</div>
+													</div>
+												);
+											}
+											return (
+												<div
+													key={ing.id}
+													className="flex items-center justify-between rounded-lg border border-(--line) px-3 py-2"
+												>
+													<div className="flex-1 text-sm text-(--sea-ink)">
+														<span className="font-medium">
+															{getProductName(ing.productId)}
 														</span>
-													)}
+														<span className="ml-2 text-(--sea-ink-soft)">
+															{formatScaled(ing.quantity)}
+															{getUnitLabel(ing.quantityUnitId)
+																? ` ${getUnitLabel(ing.quantityUnitId)}`
+																: ""}
+														</span>
+														{ing.notes && (
+															<span className="ml-2 text-xs text-(--sea-ink-soft)">
+																({ing.notes})
+															</span>
+														)}
+													</div>
+													<div className="flex gap-0.5">
+														<button
+															type="button"
+															onClick={() => startEditingIngredient(ing)}
+															className="rounded-lg p-1.5 text-(--sea-ink-soft) transition hover:bg-(--surface) hover:text-(--sea-ink)"
+															title="Edit ingredient"
+														>
+															<Pencil size={14} />
+														</button>
+														<button
+															type="button"
+															onClick={() => handleDeleteIngredient(ing.id)}
+															className="rounded-lg p-1.5 text-(--sea-ink-soft) transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950"
+															title="Delete ingredient"
+														>
+															<Trash2 size={14} />
+														</button>
+													</div>
 												</div>
-												<div className="flex gap-0.5">
-													<button
-														type="button"
-														onClick={() => startEditingIngredient(ing)}
-														className="rounded-lg p-1.5 text-(--sea-ink-soft) transition hover:bg-(--surface) hover:text-(--sea-ink)"
-														title="Edit ingredient"
-													>
-														<Pencil size={14} />
-													</button>
-													<button
-														type="button"
-														onClick={() => handleDeleteIngredient(ing.id)}
-														className="rounded-lg p-1.5 text-(--sea-ink-soft) transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950"
-														title="Delete ingredient"
-													>
-														<Trash2 size={14} />
-													</button>
-												</div>
-											</div>
-										),
-									)}
+											);
+										}
+
+										return (
+											<>
+												{ungrouped.map(renderIngredient)}
+												{[...groups].map(([groupName, groupIngs]) => (
+													<div key={groupName}>
+														<p className="mb-1 mt-2 text-xs font-medium uppercase tracking-wide text-(--sea-ink-soft)">
+															{groupName}
+														</p>
+														{groupIngs.map((ing, i) => (
+															<div key={ing.id}>
+																{i > 0 && (
+																	<p className="py-0.5 text-center text-xs italic text-(--sea-ink-soft)">
+																		or
+																	</p>
+																)}
+																{renderIngredient(ing)}
+															</div>
+														))}
+													</div>
+												))}
+											</>
+										);
+									})()}
 								</div>
 							)}
 

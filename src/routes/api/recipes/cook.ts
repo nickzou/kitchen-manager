@@ -21,7 +21,7 @@ export const Route = createFileRoute("/api/recipes/cook")({
 				}
 
 				const body = await request.json();
-				const { recipeId, servings } = body;
+				const { recipeId, servings, groupSelections } = body;
 
 				if (!recipeId) {
 					return json({ error: "recipeId is required" }, { status: 400 });
@@ -47,6 +47,33 @@ export const Route = createFileRoute("/api/recipes/cook")({
 					const scaleFactor =
 						(servings ?? rec.servings ?? 1) / (rec.servings ?? 1);
 
+					// Build set of ingredient IDs to skip based on group selections
+					const skipIds = new Set<string>();
+					const groups = new Map<string, typeof ingredients>();
+					for (const ing of ingredients) {
+						if (ing.groupName) {
+							if (!groups.has(ing.groupName)) {
+								groups.set(ing.groupName, []);
+							}
+							groups.get(ing.groupName)?.push(ing);
+						}
+					}
+
+					for (const [groupName, groupIngredients] of groups) {
+						const selectedId = groupSelections?.[groupName];
+						if (!selectedId) {
+							return {
+								error: `Missing selection for group "${groupName}"`,
+								status: 400,
+							};
+						}
+						for (const ing of groupIngredients) {
+							if (ing.id !== selectedId) {
+								skipIds.add(ing.id);
+							}
+						}
+					}
+
 					const warnings: string[] = [];
 					const deductions: {
 						productId: string;
@@ -57,6 +84,7 @@ export const Route = createFileRoute("/api/recipes/cook")({
 					// FIFO deduction for each linked ingredient
 					for (const ingredient of ingredients) {
 						if (!ingredient.productId) continue;
+						if (skipIds.has(ingredient.id)) continue;
 
 						const needed = Number(ingredient.quantity) * scaleFactor;
 

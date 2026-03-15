@@ -511,6 +511,7 @@ export const recipeIngredient = pgTable(
 			onDelete: "set null",
 		}),
 		notes: text("notes"),
+		groupName: text("group_name"),
 		sortOrder: integer("sort_order").default(0).notNull(),
 		userId: text("user_id")
 			.notNull()

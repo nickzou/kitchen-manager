@@ -30,6 +30,7 @@ export const Route = createFileRoute(
 				if (body.quantityUnitId !== undefined)
 					updates.quantityUnitId = body.quantityUnitId;
 				if (body.notes !== undefined) updates.notes = body.notes;
+				if (body.groupName !== undefined) updates.groupName = body.groupName;
 				if (body.sortOrder !== undefined) updates.sortOrder = body.sortOrder;
 
 				const [updated] = await db
