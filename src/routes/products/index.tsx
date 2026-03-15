@@ -15,6 +15,7 @@ import { authClient } from "#src/lib/auth-client";
 import { formatDate } from "#src/lib/format-date";
 import { useProductCategories } from "#src/lib/hooks/use-categories";
 import { useCreateProduct, useProducts } from "#src/lib/hooks/use-products";
+import { useQuantityUnits } from "#src/lib/hooks/use-quantity-units";
 import { cn } from "#src/lib/utils";
 
 export const Route = createFileRoute("/products/")({ component: ProductsPage });
@@ -25,6 +26,7 @@ function ProductsPage() {
 
 	const { data: products, isLoading } = useProducts();
 	const { data: categories } = useProductCategories();
+	const { data: quantityUnits } = useQuantityUnits();
 	const createProduct = useCreateProduct();
 
 	const [view, setView] = useState<ViewMode>("grid");
@@ -54,6 +56,12 @@ function ProductsPage() {
 		});
 		setName("");
 		setCategoryIds([]);
+	}
+
+	function getUnitLabel(unitId: string | null) {
+		if (!unitId) return null;
+		const u = quantityUnits?.find((u) => u.id === unitId);
+		return u ? (u.abbreviation ?? u.name) : null;
 	}
 
 	function getCategoryNames(catIds: string[]) {
@@ -163,6 +171,9 @@ function ProductsPage() {
 									{Number.parseFloat(p.minStockAmount) > 0 && (
 										<p className="m-0 text-xs text-(--sea-ink-soft)">
 											Min stock: {p.minStockAmount}
+											{getUnitLabel(p.defaultQuantityUnitId)
+												? ` ${getUnitLabel(p.defaultQuantityUnitId)}`
+												: ""}
 										</p>
 									)}
 								</>
@@ -195,7 +206,7 @@ function ProductsPage() {
 								</td>
 								<td className="py-2.5 pr-4 text-(--sea-ink-soft)">
 									{Number.parseFloat(p.minStockAmount) > 0
-										? p.minStockAmount
+										? `${p.minStockAmount}${getUnitLabel(p.defaultQuantityUnitId) ? ` ${getUnitLabel(p.defaultQuantityUnitId)}` : ""}`
 										: "—"}
 								</td>
 								<td className="py-2.5 text-(--sea-ink-soft)">
