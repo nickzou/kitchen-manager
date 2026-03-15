@@ -55,6 +55,7 @@ import { Route as ApiStockLogsIdRouteImport } from './routes/api/stock-logs/$id'
 import { Route as ApiStockEntriesConsumeRouteImport } from './routes/api/stock-entries/consume'
 import { Route as ApiStockEntriesIdRouteImport } from './routes/api/stock-entries/$id'
 import { Route as ApiRecipesCookRouteImport } from './routes/api/recipes/cook'
+import { Route as ApiRecipesAvailabilityRouteImport } from './routes/api/recipes/availability'
 import { Route as ApiRecipesIdRouteImport } from './routes/api/recipes/$id'
 import { Route as ApiRecipeCategoriesIdRouteImport } from './routes/api/recipe-categories/$id'
 import { Route as ApiQuantityUnitsIdRouteImport } from './routes/api/quantity-units/$id'
@@ -306,6 +307,11 @@ const ApiRecipesCookRoute = ApiRecipesCookRouteImport.update({
   path: '/api/recipes/cook',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiRecipesAvailabilityRoute = ApiRecipesAvailabilityRouteImport.update({
+  id: '/api/recipes/availability',
+  path: '/api/recipes/availability',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiRecipesIdRoute = ApiRecipesIdRouteImport.update({
   id: '/api/recipes/$id',
   path: '/api/recipes/$id',
@@ -440,6 +446,7 @@ export interface FileRoutesByFullPath {
   '/api/quantity-units/$id': typeof ApiQuantityUnitsIdRoute
   '/api/recipe-categories/$id': typeof ApiRecipeCategoriesIdRoute
   '/api/recipes/$id': typeof ApiRecipesIdRouteWithChildren
+  '/api/recipes/availability': typeof ApiRecipesAvailabilityRoute
   '/api/recipes/cook': typeof ApiRecipesCookRoute
   '/api/stock-entries/$id': typeof ApiStockEntriesIdRoute
   '/api/stock-entries/consume': typeof ApiStockEntriesConsumeRoute
@@ -506,6 +513,7 @@ export interface FileRoutesByTo {
   '/api/quantity-units/$id': typeof ApiQuantityUnitsIdRoute
   '/api/recipe-categories/$id': typeof ApiRecipeCategoriesIdRoute
   '/api/recipes/$id': typeof ApiRecipesIdRouteWithChildren
+  '/api/recipes/availability': typeof ApiRecipesAvailabilityRoute
   '/api/recipes/cook': typeof ApiRecipesCookRoute
   '/api/stock-entries/$id': typeof ApiStockEntriesIdRoute
   '/api/stock-entries/consume': typeof ApiStockEntriesConsumeRoute
@@ -573,6 +581,7 @@ export interface FileRoutesById {
   '/api/quantity-units/$id': typeof ApiQuantityUnitsIdRoute
   '/api/recipe-categories/$id': typeof ApiRecipeCategoriesIdRoute
   '/api/recipes/$id': typeof ApiRecipesIdRouteWithChildren
+  '/api/recipes/availability': typeof ApiRecipesAvailabilityRoute
   '/api/recipes/cook': typeof ApiRecipesCookRoute
   '/api/stock-entries/$id': typeof ApiStockEntriesIdRoute
   '/api/stock-entries/consume': typeof ApiStockEntriesConsumeRoute
@@ -641,6 +650,7 @@ export interface FileRouteTypes {
     | '/api/quantity-units/$id'
     | '/api/recipe-categories/$id'
     | '/api/recipes/$id'
+    | '/api/recipes/availability'
     | '/api/recipes/cook'
     | '/api/stock-entries/$id'
     | '/api/stock-entries/consume'
@@ -707,6 +717,7 @@ export interface FileRouteTypes {
     | '/api/quantity-units/$id'
     | '/api/recipe-categories/$id'
     | '/api/recipes/$id'
+    | '/api/recipes/availability'
     | '/api/recipes/cook'
     | '/api/stock-entries/$id'
     | '/api/stock-entries/consume'
@@ -773,6 +784,7 @@ export interface FileRouteTypes {
     | '/api/quantity-units/$id'
     | '/api/recipe-categories/$id'
     | '/api/recipes/$id'
+    | '/api/recipes/availability'
     | '/api/recipes/cook'
     | '/api/stock-entries/$id'
     | '/api/stock-entries/consume'
@@ -840,6 +852,7 @@ export interface RootRouteChildren {
   ApiQuantityUnitsIdRoute: typeof ApiQuantityUnitsIdRoute
   ApiRecipeCategoriesIdRoute: typeof ApiRecipeCategoriesIdRoute
   ApiRecipesIdRoute: typeof ApiRecipesIdRouteWithChildren
+  ApiRecipesAvailabilityRoute: typeof ApiRecipesAvailabilityRoute
   ApiRecipesCookRoute: typeof ApiRecipesCookRoute
   ApiStockEntriesIdRoute: typeof ApiStockEntriesIdRoute
   ApiStockEntriesConsumeRoute: typeof ApiStockEntriesConsumeRoute
@@ -1189,6 +1202,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiRecipesCookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/recipes/availability': {
+      id: '/api/recipes/availability'
+      path: '/api/recipes/availability'
+      fullPath: '/api/recipes/availability'
+      preLoaderRoute: typeof ApiRecipesAvailabilityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/recipes/$id': {
       id: '/api/recipes/$id'
       path: '/api/recipes/$id'
@@ -1390,6 +1410,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiQuantityUnitsIdRoute: ApiQuantityUnitsIdRoute,
   ApiRecipeCategoriesIdRoute: ApiRecipeCategoriesIdRoute,
   ApiRecipesIdRoute: ApiRecipesIdRouteWithChildren,
+  ApiRecipesAvailabilityRoute: ApiRecipesAvailabilityRoute,
   ApiRecipesCookRoute: ApiRecipesCookRoute,
   ApiStockEntriesIdRoute: ApiStockEntriesIdRoute,
   ApiStockEntriesConsumeRoute: ApiStockEntriesConsumeRoute,
