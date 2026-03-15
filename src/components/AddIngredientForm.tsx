@@ -2,6 +2,7 @@ import { Plus } from "lucide-react";
 import { useId } from "react";
 import { Combobox } from "#src/components/Combobox";
 import { NumberInput } from "#src/components/NumberInput";
+import { SectionHeading } from "#src/components/SectionHeading";
 
 export type IngredientFormState = {
 	productId: string;
@@ -49,9 +50,7 @@ export function AddIngredientForm({
 
 	return (
 		<div className="border-t border-(--line) pt-4">
-			<h3 className="mb-3 text-sm font-semibold text-(--sea-ink)">
-				Add ingredient
-			</h3>
+			<SectionHeading>Add ingredient</SectionHeading>
 			<div className="grid grid-cols-[1fr_1fr] gap-2 sm:grid-cols-[2fr_5rem_1fr_1fr_auto]">
 				<Combobox
 					value={productId}

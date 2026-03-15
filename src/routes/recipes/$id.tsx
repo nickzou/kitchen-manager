@@ -13,6 +13,7 @@ import { MarkdownEditor } from "#src/components/MarkdownEditor";
 import { MultiCombobox } from "#src/components/MultiCombobox";
 import { NumberInput } from "#src/components/NumberInput";
 import { Page } from "#src/components/Page";
+import { SectionHeading } from "#src/components/SectionHeading";
 import { authClient } from "#src/lib/auth-client";
 import { useRecipeCategories } from "#src/lib/hooks/use-categories";
 import { useCookRecipe } from "#src/lib/hooks/use-cook-recipe";
@@ -988,9 +989,7 @@ function RecipeDetail() {
 
 								{recipe.instructions && (
 									<div className="mt-4">
-										<h2 className="mb-2 text-sm font-semibold text-(--sea-ink)">
-											Instructions
-										</h2>
+										<SectionHeading>Instructions</SectionHeading>
 										<MarkdownEditor value={recipe.instructions} />
 									</div>
 								)}
@@ -1001,9 +1000,7 @@ function RecipeDetail() {
 									);
 									return sorted.length > 0 ? (
 										<div className="mt-4">
-											<h2 className="mb-2 text-sm font-semibold text-(--sea-ink)">
-												Prep Steps
-											</h2>
+											<SectionHeading>Prep Steps</SectionHeading>
 											<div className="flex flex-col gap-2">
 												{sorted.map((step) => (
 													<div
@@ -1026,10 +1023,8 @@ function RecipeDetail() {
 								})()}
 
 								{recipe.producedProductId && (
-									<div className="mt-4 rounded-lg border border-(--line) p-3">
-										<h2 className="mb-1 text-sm font-semibold text-(--sea-ink)">
-											Produces
-										</h2>
+									<div className="mt-4">
+										<SectionHeading>Produces</SectionHeading>
 										<p className="text-sm text-(--sea-ink-soft)">
 											{getProductName(recipe.producedProductId)}
 											{recipe.producedQuantity && (
