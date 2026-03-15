@@ -26,6 +26,12 @@ import {
 	useUpdateRecipeIngredient,
 } from "#src/lib/hooks/use-recipe-ingredients";
 import {
+	useCreateRecipePrepStep,
+	useDeleteRecipePrepStep,
+	useRecipePrepSteps,
+	useUpdateRecipePrepStep,
+} from "#src/lib/hooks/use-recipe-prep-steps";
+import {
 	useDeleteRecipe,
 	useRecipe,
 	useUpdateRecipe,
@@ -55,6 +61,10 @@ function RecipeDetail() {
 	const deleteIngredient = useDeleteRecipeIngredient(id);
 	const createProduct = useCreateProduct();
 	const cookRecipe = useCookRecipe();
+	const { data: prepSteps } = useRecipePrepSteps(id);
+	const createPrepStep = useCreateRecipePrepStep(id);
+	const updatePrepStep = useUpdateRecipePrepStep(id);
+	const deletePrepStep = useDeleteRecipePrepStep(id);
 
 	const [editing, setEditing] = useState(false);
 	const [confirmDelete, setConfirmDelete] = useState(false);
@@ -95,6 +105,18 @@ function RecipeDetail() {
 		quantityUnitId: "",
 		notes: "",
 	});
+	const [newPrepStep, setNewPrepStep] = useState({
+		description: "",
+		leadTimeMinutes: "",
+	});
+	const [editingPrepStepId, setEditingPrepStepId] = useState<string | null>(
+		null,
+	);
+	const [editPrepStep, setEditPrepStep] = useState({
+		description: "",
+		leadTimeMinutes: "",
+	});
+
 	const { data: productConversions } = useProductUnitConversions(
 		newIngredient.productId,
 	);
@@ -258,6 +280,46 @@ function RecipeDetail() {
 		setEditingIngredientId(null);
 	}
 
+	async function handleAddPrepStep() {
+		if (!newPrepStep.description || !newPrepStep.leadTimeMinutes) return;
+		await createPrepStep.mutateAsync({
+			description: newPrepStep.description,
+			leadTimeMinutes: Number.parseInt(newPrepStep.leadTimeMinutes, 10),
+		});
+		setNewPrepStep({ description: "", leadTimeMinutes: "" });
+	}
+
+	async function handleDeletePrepStep(stepId: string) {
+		await deletePrepStep.mutateAsync(stepId);
+	}
+
+	function startEditingPrepStep(step: {
+		id: string;
+		description: string;
+		leadTimeMinutes: number;
+	}) {
+		setEditPrepStep({
+			description: step.description,
+			leadTimeMinutes: String(step.leadTimeMinutes),
+		});
+		setEditingPrepStepId(step.id);
+	}
+
+	async function handleSavePrepStep() {
+		if (
+			!editingPrepStepId ||
+			!editPrepStep.description ||
+			!editPrepStep.leadTimeMinutes
+		)
+			return;
+		await updatePrepStep.mutateAsync({
+			id: editingPrepStepId,
+			description: editPrepStep.description,
+			leadTimeMinutes: Number.parseInt(editPrepStep.leadTimeMinutes, 10),
+		});
+		setEditingPrepStepId(null);
+	}
+
 	function handleEditProductChange(selectedProductId: string) {
 		if (editIngredient.quantityUnitId) return;
 		const product = products?.find((p) => p.id === selectedProductId);
@@ -377,6 +439,24 @@ function RecipeDetail() {
 
 	const inputClass =
 		"h-10 w-full rounded-lg border border-(--line) bg-(--surface) px-3 text-sm text-(--sea-ink) outline-none focus:border-(--lagoon)";
+
+	function formatLeadTime(minutes: number): string {
+		if (minutes < 60) return `${minutes} minutes before`;
+		const hours = Math.floor(minutes / 60);
+		const remainingMinutes = minutes % 60;
+		if (minutes < 1440) {
+			if (remainingMinutes === 0) {
+				return `${hours} hour${hours > 1 ? "s" : ""} before`;
+			}
+			return `${hours}h ${remainingMinutes}m before`;
+		}
+		const days = Math.floor(minutes / 1440);
+		const remainingHours = Math.floor((minutes % 1440) / 60);
+		if (remainingHours === 0) {
+			return `${days} day${days > 1 ? "s" : ""} before`;
+		}
+		return `${days}d ${remainingHours}h before`;
+	}
 
 	function formatDate(dateStr: string | null) {
 		if (!dateStr) return "—";
@@ -585,6 +665,174 @@ function RecipeDetail() {
 									</div>
 								</fieldset>
 
+								<fieldset className="flex flex-col gap-3 rounded-lg border border-(--line) p-4">
+									<legend className="px-1 text-sm font-medium text-(--sea-ink)">
+										Prep Steps
+									</legend>
+									{(() => {
+										const sorted = [...(prepSteps ?? [])].sort(
+											(a, b) => b.leadTimeMinutes - a.leadTimeMinutes,
+										);
+										return sorted.length > 0 ? (
+											<div className="flex flex-col gap-2">
+												{sorted.map((step) =>
+													editingPrepStepId === step.id ? (
+														<div
+															key={step.id}
+															className="flex flex-col gap-3 rounded-lg border border-(--lagoon) p-3"
+														>
+															<input
+																type="text"
+																placeholder="Description"
+																value={editPrepStep.description}
+																onChange={(e) =>
+																	setEditPrepStep({
+																		...editPrepStep,
+																		description: e.target.value,
+																	})
+																}
+																className={inputClass}
+															/>
+															<div className="flex flex-col gap-1">
+																<NumberInput
+																	min="1"
+																	placeholder="Lead time (minutes)"
+																	value={editPrepStep.leadTimeMinutes}
+																	onChange={(e) =>
+																		setEditPrepStep({
+																			...editPrepStep,
+																			leadTimeMinutes: e.target.value,
+																		})
+																	}
+																	className="w-full"
+																/>
+																{editPrepStep.leadTimeMinutes && (
+																	<p className="text-xs text-(--sea-ink-soft)">
+																		{formatLeadTime(
+																			Number.parseInt(
+																				editPrepStep.leadTimeMinutes,
+																				10,
+																			),
+																		)}
+																	</p>
+																)}
+															</div>
+															<div className="flex gap-2">
+																<button
+																	type="button"
+																	onClick={handleSavePrepStep}
+																	disabled={
+																		updatePrepStep.isPending ||
+																		!editPrepStep.description ||
+																		!editPrepStep.leadTimeMinutes
+																	}
+																	className="flex h-8 items-center gap-1 rounded-full bg-(--lagoon) px-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
+																>
+																	<Check size={14} />
+																	{updatePrepStep.isPending
+																		? "Saving…"
+																		: "Save"}
+																</button>
+																<button
+																	type="button"
+																	onClick={() => setEditingPrepStepId(null)}
+																	className="flex h-8 items-center rounded-full px-3 text-sm font-medium text-(--sea-ink-soft) transition hover:bg-(--surface)"
+																>
+																	Cancel
+																</button>
+															</div>
+														</div>
+													) : (
+														<div
+															key={step.id}
+															className="flex items-center justify-between rounded-lg border border-(--line) px-3 py-2"
+														>
+															<div className="flex-1 text-sm text-(--sea-ink)">
+																<span className="font-medium">
+																	{step.description}
+																</span>
+																<span className="ml-2 text-(--sea-ink-soft)">
+																	{formatLeadTime(step.leadTimeMinutes)}
+																</span>
+															</div>
+															<div className="flex gap-0.5">
+																<button
+																	type="button"
+																	onClick={() => startEditingPrepStep(step)}
+																	className="rounded-lg p-1.5 text-(--sea-ink-soft) transition hover:bg-(--surface) hover:text-(--sea-ink)"
+																	title="Edit prep step"
+																>
+																	<Pencil size={14} />
+																</button>
+																<button
+																	type="button"
+																	onClick={() => handleDeletePrepStep(step.id)}
+																	className="rounded-lg p-1.5 text-(--sea-ink-soft) transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950"
+																	title="Delete prep step"
+																>
+																	<Trash2 size={14} />
+																</button>
+															</div>
+														</div>
+													),
+												)}
+											</div>
+										) : (
+											<p className="text-sm text-(--sea-ink-soft)">
+												No prep steps yet.
+											</p>
+										);
+									})()}
+
+									<div className="flex flex-col gap-2 rounded-lg border border-dashed border-(--line) p-3">
+										<input
+											type="text"
+											placeholder="e.g. Defrost chicken"
+											value={newPrepStep.description}
+											onChange={(e) =>
+												setNewPrepStep({
+													...newPrepStep,
+													description: e.target.value,
+												})
+											}
+											className={inputClass}
+										/>
+										<div className="flex flex-col gap-1">
+											<NumberInput
+												min="1"
+												placeholder="Lead time (minutes)"
+												value={newPrepStep.leadTimeMinutes}
+												onChange={(e) =>
+													setNewPrepStep({
+														...newPrepStep,
+														leadTimeMinutes: e.target.value,
+													})
+												}
+												className="w-full"
+											/>
+											{newPrepStep.leadTimeMinutes && (
+												<p className="text-xs text-(--sea-ink-soft)">
+													{formatLeadTime(
+														Number.parseInt(newPrepStep.leadTimeMinutes, 10),
+													)}
+												</p>
+											)}
+										</div>
+										<button
+											type="button"
+											onClick={handleAddPrepStep}
+											disabled={
+												createPrepStep.isPending ||
+												!newPrepStep.description ||
+												!newPrepStep.leadTimeMinutes
+											}
+											className="h-8 rounded-full bg-(--lagoon) px-4 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
+										>
+											{createPrepStep.isPending ? "Adding…" : "Add prep step"}
+										</button>
+									</div>
+								</fieldset>
+
 								<button
 									type="submit"
 									disabled={updateRecipe.isPending}
@@ -746,6 +994,36 @@ function RecipeDetail() {
 										<MarkdownEditor value={recipe.instructions} />
 									</div>
 								)}
+
+								{(() => {
+									const sorted = [...(prepSteps ?? [])].sort(
+										(a, b) => b.leadTimeMinutes - a.leadTimeMinutes,
+									);
+									return sorted.length > 0 ? (
+										<div className="mt-4">
+											<h2 className="mb-2 text-sm font-semibold text-(--sea-ink)">
+												Prep Steps
+											</h2>
+											<div className="flex flex-col gap-2">
+												{sorted.map((step) => (
+													<div
+														key={step.id}
+														className="flex items-center justify-between rounded-lg border border-(--line) px-3 py-2"
+													>
+														<div className="flex-1 text-sm text-(--sea-ink)">
+															<span className="font-medium">
+																{step.description}
+															</span>
+															<span className="ml-2 text-(--sea-ink-soft)">
+																{formatLeadTime(step.leadTimeMinutes)}
+															</span>
+														</div>
+													</div>
+												))}
+											</div>
+										</div>
+									) : null;
+								})()}
 
 								{recipe.producedProductId && (
 									<div className="mt-4 rounded-lg border border-(--line) p-3">

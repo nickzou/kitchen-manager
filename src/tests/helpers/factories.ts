@@ -242,3 +242,17 @@ export function makeRecipeIngredient(overrides?: Record<string, unknown>) {
 		...overrides,
 	};
 }
+
+export function makeRecipePrepStep(overrides?: Record<string, unknown>) {
+	return {
+		id: "prep-step-1",
+		recipeId: "recipe-1",
+		description: "Defrost chicken",
+		leadTimeMinutes: 480,
+		sortOrder: 0,
+		userId: "user-1",
+		createdAt: new Date("2025-01-01"),
+		updatedAt: new Date("2025-01-01"),
+		...overrides,
+	};
+}

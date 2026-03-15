@@ -127,6 +127,13 @@
       "when": 1773724800000,
       "tag": "0017_add-recipe-produced-product",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1773811200000,
+      "tag": "0018_add-recipe-prep-steps",
+      "breakpoints": true
     }
   ]
 }
