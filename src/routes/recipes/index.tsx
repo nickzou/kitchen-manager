@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Plus } from "lucide-react";
+import { CircleCheck, CircleX, Plus } from "lucide-react";
 import { type FormEvent, useMemo, useState } from "react";
 import { CompactView } from "#src/components/CompactView";
 import CookingSubNav from "#src/components/CookingSubNav";
@@ -14,6 +14,7 @@ import { type ViewMode, ViewSwitcher } from "#src/components/ViewSwitcher";
 import { authClient } from "#src/lib/auth-client";
 import { formatDate } from "#src/lib/format-date";
 import { useRecipeCategories } from "#src/lib/hooks/use-categories";
+import { useRecipeAvailability } from "#src/lib/hooks/use-recipe-availability";
 import { useCreateRecipe, useRecipes } from "#src/lib/hooks/use-recipes";
 import { cn } from "#src/lib/utils";
 
@@ -33,6 +34,7 @@ function RecipesPage() {
 
 	const { data: recipes, isLoading } = useRecipes();
 	const { data: categories } = useRecipeCategories();
+	const { data: availability } = useRecipeAvailability();
 	const createRecipe = useCreateRecipe();
 
 	const [view, setView] = useState<ViewMode>("grid");
@@ -168,7 +170,16 @@ function RecipesPage() {
 											))}
 										</div>
 									)}
-									<div className="flex gap-3 text-xs text-(--sea-ink-soft)">
+									<div className="flex items-center gap-3 text-xs text-(--sea-ink-soft)">
+										{availability?.[r.id] === "sufficient" && (
+											<CircleCheck
+												size={14}
+												className="shrink-0 text-emerald-500"
+											/>
+										)}
+										{availability?.[r.id] === "deficit" && (
+											<CircleX size={14} className="shrink-0 text-red-500" />
+										)}
 										{r.servings != null && <span>{r.servings} servings</span>}
 										{r.prepTime != null && (
 											<span>Prep {formatTime(r.prepTime)}</span>
@@ -185,6 +196,7 @@ function RecipesPage() {
 					<TableView
 						columns={[
 							{ label: "Name" },
+							{ label: "Stock" },
 							{ label: "Category" },
 							{ label: "Servings" },
 							{ label: "Time" },
@@ -202,6 +214,19 @@ function RecipesPage() {
 									>
 										{r.name}
 									</Link>
+								</td>
+								<td className="py-2.5 pr-4">
+									{availability?.[r.id] === "sufficient" && (
+										<CircleCheck size={16} className="text-emerald-500" />
+									)}
+									{availability?.[r.id] === "deficit" && (
+										<CircleX size={16} className="text-red-500" />
+									)}
+									{(!availability ||
+										availability[r.id] === "no-ingredients" ||
+										!(r.id in (availability ?? {}))) && (
+										<span className="text-(--sea-ink-soft)">—</span>
+									)}
 								</td>
 								<td className="py-2.5 pr-4 text-(--sea-ink-soft)">
 									{getCategoryNames(r.categoryIds).join(", ") || "—"}
@@ -228,6 +253,13 @@ function RecipesPage() {
 						getName={(r) => r.name}
 						getSecondary={(r) =>
 							getCategoryNames(r.categoryIds).join(", ") || "—"
+						}
+						renderExtra={(r) =>
+							availability?.[r.id] === "sufficient" ? (
+								<CircleCheck size={14} className="shrink-0 text-emerald-500" />
+							) : availability?.[r.id] === "deficit" ? (
+								<CircleX size={14} className="shrink-0 text-red-500" />
+							) : null
 						}
 					/>
 				)}

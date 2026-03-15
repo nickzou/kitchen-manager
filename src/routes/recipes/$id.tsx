@@ -4,6 +4,8 @@ import {
 	Check,
 	ChevronDown,
 	ChevronLeft,
+	CircleCheck,
+	CircleX,
 	CookingPot,
 	Minus,
 	Pencil,
@@ -11,7 +13,7 @@ import {
 	Trash2,
 	X,
 } from "lucide-react";
-import { type FormEvent, useId, useRef, useState } from "react";
+import { type FormEvent, useId, useMemo, useRef, useState } from "react";
 import {
 	AddIngredientForm,
 	type IngredientFormState,
@@ -31,6 +33,7 @@ import { useCookRecipe } from "#src/lib/hooks/use-cook-recipe";
 import { useProductUnitConversions } from "#src/lib/hooks/use-product-unit-conversions";
 import { useCreateProduct, useProducts } from "#src/lib/hooks/use-products";
 import { useQuantityUnits } from "#src/lib/hooks/use-quantity-units";
+import { useRecipeAvailability } from "#src/lib/hooks/use-recipe-availability";
 import {
 	useCreateRecipeIngredient,
 	useDeleteRecipeIngredient,
@@ -48,6 +51,7 @@ import {
 	useRecipe,
 	useUpdateRecipe,
 } from "#src/lib/hooks/use-recipes";
+import { useStockEntries } from "#src/lib/hooks/use-stock-entries";
 import { useUnitConversions } from "#src/lib/hooks/use-unit-conversions";
 import { cn } from "#src/lib/utils";
 
@@ -77,6 +81,8 @@ function RecipeDetail() {
 	const createPrepStep = useCreateRecipePrepStep(id);
 	const updatePrepStep = useUpdateRecipePrepStep(id);
 	const deletePrepStep = useDeleteRecipePrepStep(id);
+	const { data: stockEntries } = useStockEntries();
+	const { data: recipeAvailability } = useRecipeAvailability();
 
 	const [editing, setEditing] = useState(false);
 	const [confirmDelete, setConfirmDelete] = useState(false);
@@ -157,6 +163,78 @@ function RecipeDetail() {
 	const { data: editProductConversions } = useProductUnitConversions(
 		editIngredient.productId,
 	);
+
+	const currentServings = adjustedServings ?? recipe?.servings ?? null;
+	const scaleFactor =
+		currentServings != null && recipe?.servings
+			? currentServings / recipe.servings
+			: 1;
+
+	// Compute per-ingredient stock availability
+	const ingredientAvailability = useMemo(() => {
+		if (!ingredients || !products || !stockEntries)
+			return new Map<string, "sufficient" | "deficit" | "unknown">();
+		const result = new Map<string, "sufficient" | "deficit" | "unknown">();
+
+		// Build stock totals per product
+		const stockTotals = new Map<string, number>();
+		for (const entry of stockEntries) {
+			const prev = stockTotals.get(entry.productId) ?? 0;
+			stockTotals.set(entry.productId, prev + Number(entry.quantity));
+		}
+
+		// Build conversion graph
+		const conversionGraph = new Map<string, Map<string, number>>();
+		function addEdge(from: string, to: string, factor: number) {
+			if (!conversionGraph.has(from)) conversionGraph.set(from, new Map());
+			conversionGraph.get(from)?.set(to, factor);
+			if (!conversionGraph.has(to)) conversionGraph.set(to, new Map());
+			conversionGraph.get(to)?.set(from, 1 / factor);
+		}
+		for (const c of unitConversions ?? []) {
+			addEdge(c.fromUnitId, c.toUnitId, Number(c.factor));
+		}
+
+		function tryConvert(
+			qty: number,
+			fromUnitId: string | null,
+			toUnitId: string | null,
+		): number | null {
+			if (fromUnitId === toUnitId) return qty;
+			if (!fromUnitId || !toUnitId) return null;
+			const fromEdges = conversionGraph.get(fromUnitId);
+			if (!fromEdges) return null;
+			const factor = fromEdges.get(toUnitId);
+			if (factor !== undefined) return qty * factor;
+			return null;
+		}
+
+		for (const ing of ingredients) {
+			if (!ing.productId) continue;
+			const p = products.find((p) => p.id === ing.productId);
+			if (!p) continue;
+
+			const stockQty = stockTotals.get(ing.productId) ?? 0;
+			const needed = Number(ing.quantity) * scaleFactor;
+			const neededInStockUnit = tryConvert(
+				needed,
+				ing.quantityUnitId,
+				p.defaultQuantityUnitId,
+			);
+
+			if (
+				ing.quantityUnitId !== p.defaultQuantityUnitId &&
+				neededInStockUnit === null
+			) {
+				result.set(ing.id, "unknown");
+			} else {
+				const effective = neededInStockUnit ?? needed;
+				result.set(ing.id, stockQty >= effective ? "sufficient" : "deficit");
+			}
+		}
+
+		return result;
+	}, [ingredients, products, stockEntries, unitConversions, scaleFactor]);
 
 	if (sessionLoading) return null;
 	if (!session) {
@@ -552,12 +630,6 @@ function RecipeDetail() {
 
 		return `No conversion to ${toLabel}`;
 	}
-
-	const currentServings = adjustedServings ?? recipe?.servings ?? null;
-	const scaleFactor =
-		currentServings != null && recipe?.servings
-			? currentServings / recipe.servings
-			: 1;
 
 	function formatScaled(quantity: string): string {
 		const num = Number(quantity);
@@ -964,9 +1036,20 @@ function RecipeDetail() {
 							<>
 								<div className="mb-6 flex items-start justify-between gap-4">
 									<div>
-										<h1 className="font-display text-2xl font-bold text-(--sea-ink)">
-											{recipe.name}
-										</h1>
+										<div className="flex items-center gap-2">
+											<h1 className="font-display text-2xl font-bold text-(--sea-ink)">
+												{recipe.name}
+											</h1>
+											{recipeAvailability?.[recipe.id] === "sufficient" && (
+												<CircleCheck
+													size={20}
+													className="shrink-0 text-emerald-500"
+												/>
+											)}
+											{recipeAvailability?.[recipe.id] === "deficit" && (
+												<CircleX size={20} className="shrink-0 text-red-500" />
+											)}
+										</div>
 										{categoryNames.length > 0 && (
 											<div className="mt-2 flex flex-wrap gap-1">
 												{categoryNames.map((name) => (
@@ -1483,26 +1566,49 @@ function RecipeDetail() {
 													</div>
 												);
 											}
+											const status = ing.productId
+												? ingredientAvailability.get(ing.id)
+												: undefined;
 											return (
 												<div
 													key={ing.id}
 													className="flex items-center justify-between rounded-lg border border-(--line) px-3 py-2"
 												>
-													<div className="flex-1 text-sm text-(--sea-ink)">
-														<span className="font-medium">
-															{getProductName(ing.productId)}
-														</span>
-														<span className="ml-2 text-(--sea-ink-soft)">
-															{formatScaled(ing.quantity)}
-															{getUnitLabel(ing.quantityUnitId)
-																? ` ${getUnitLabel(ing.quantityUnitId)}`
-																: ""}
-														</span>
-														{ing.notes && (
-															<span className="ml-2 text-xs text-(--sea-ink-soft)">
-																({ing.notes})
-															</span>
+													<div className="flex flex-1 items-center gap-2 text-sm text-(--sea-ink)">
+														{status === "sufficient" && (
+															<CircleCheck
+																size={16}
+																className="shrink-0 text-emerald-500"
+															/>
 														)}
+														{status === "deficit" && (
+															<CircleX
+																size={16}
+																className="shrink-0 text-red-500"
+															/>
+														)}
+														{status === "unknown" && (
+															<CircleX
+																size={16}
+																className="shrink-0 text-amber-500"
+															/>
+														)}
+														<span>
+															<span className="font-medium">
+																{getProductName(ing.productId)}
+															</span>
+															<span className="ml-2 text-(--sea-ink-soft)">
+																{formatScaled(ing.quantity)}
+																{getUnitLabel(ing.quantityUnitId)
+																	? ` ${getUnitLabel(ing.quantityUnitId)}`
+																	: ""}
+															</span>
+															{ing.notes && (
+																<span className="ml-2 text-xs text-(--sea-ink-soft)">
+																	({ing.notes})
+																</span>
+															)}
+														</span>
 													</div>
 													<div className="flex gap-0.5">
 														<button

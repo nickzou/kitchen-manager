@@ -1,9 +1,11 @@
 import { CookingPot, Minus, Plus, Trash2, Undo2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import type { MealPlanEntry } from "#src/lib/hooks/use-meal-plan-entries";
 
 interface MealPlanEntryPopoverProps {
 	entry: MealPlanEntry;
+	anchorRef: React.RefObject<HTMLElement | null>;
 	onClose: () => void;
 	onUpdateServings: (servings: number | null) => void;
 	onDelete: () => void;
@@ -14,6 +16,7 @@ interface MealPlanEntryPopoverProps {
 
 export function MealPlanEntryPopover({
 	entry,
+	anchorRef,
 	onClose,
 	onUpdateServings,
 	onDelete,
@@ -24,6 +27,32 @@ export function MealPlanEntryPopover({
 	const servings = entry.servings ?? entry.recipeServings ?? 1;
 	const [localServings, setLocalServings] = useState(servings);
 	const ref = useRef<HTMLDivElement>(null);
+	const [position, setPosition] = useState<{ top: number; left: number }>({
+		top: 0,
+		left: 0,
+	});
+
+	useEffect(() => {
+		function updatePosition() {
+			if (!anchorRef.current) return;
+			const rect = anchorRef.current.getBoundingClientRect();
+			const popoverHeight = ref.current?.offsetHeight ?? 0;
+			const spaceBelow = window.innerHeight - rect.bottom;
+			// Show above if not enough space below
+			const top =
+				spaceBelow < popoverHeight + 8
+					? rect.top - popoverHeight - 4
+					: rect.bottom + 4;
+			setPosition({ top, left: rect.left });
+		}
+		updatePosition();
+		window.addEventListener("scroll", updatePosition, true);
+		window.addEventListener("resize", updatePosition);
+		return () => {
+			window.removeEventListener("scroll", updatePosition, true);
+			window.removeEventListener("resize", updatePosition);
+		};
+	}, [anchorRef]);
 
 	useEffect(() => {
 		function handleClickOutside(e: MouseEvent) {
@@ -41,10 +70,11 @@ export function MealPlanEntryPopover({
 		onUpdateServings(next);
 	}
 
-	return (
+	return createPortal(
 		<div
 			ref={ref}
-			className="absolute left-0 top-full z-50 mt-1 w-56 rounded-xl border border-(--line) bg-white p-3 shadow-lg dark:bg-[#1a2e30]"
+			style={{ top: position.top, left: position.left }}
+			className="fixed z-50 w-56 rounded-xl border border-(--line) bg-white p-3 shadow-lg dark:bg-[#1a2e30]"
 		>
 			<p className="mb-2 truncate text-sm font-semibold text-(--sea-ink)">
 				{entry.recipeName}
@@ -59,7 +89,7 @@ export function MealPlanEntryPopover({
 				>
 					<Minus size={12} />
 				</button>
-				<span className="min-w-[1.5rem] text-center text-sm font-semibold text-(--sea-ink)">
+				<span className="min-w-6 text-center text-sm font-semibold text-(--sea-ink)">
 					{localServings}
 				</span>
 				<button
@@ -101,6 +131,7 @@ export function MealPlanEntryPopover({
 					<Trash2 size={14} />
 				</button>
 			</div>
-		</div>
+		</div>,
+		document.body,
 	);
 }

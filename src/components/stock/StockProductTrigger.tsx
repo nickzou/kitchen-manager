@@ -31,9 +31,9 @@ export function StockProductTrigger({
 					isLow ? "text-red-600 dark:text-red-400" : "text-(--sea-ink)",
 				)}
 			>
+				{isLow && "⚠ "}
 				{totalStock}
 				{unitAbbr ? ` ${unitAbbr}` : ""}
-				{isLow && " ⚠"}
 			</span>
 		</>
 	);
