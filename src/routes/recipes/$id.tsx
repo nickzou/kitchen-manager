@@ -613,68 +613,6 @@ function RecipeDetail() {
 									/>
 								</div>
 
-								<div className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
-									Instructions
-									<MarkdownEditor
-										value={form.instructions}
-										onChange={(v) => setForm({ ...form, instructions: v })}
-										height={200}
-										placeholder="Write instructions using markdown…"
-									/>
-								</div>
-
-								<fieldset className="flex flex-col gap-3 rounded-lg border border-(--line) p-4">
-									<legend className="px-1 text-sm font-medium text-(--sea-ink)">
-										Produced Product
-									</legend>
-									<div className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
-										Product
-										<Combobox
-											value={form.producedProductId}
-											onChange={(v) =>
-												setForm({ ...form, producedProductId: v })
-											}
-											options={productOptions}
-											placeholder="None"
-										/>
-									</div>
-									<div className="flex flex-col gap-1.5">
-										<label
-											htmlFor={`${htmlId}-producedQty`}
-											className="text-sm font-medium text-(--sea-ink)"
-										>
-											Quantity
-										</label>
-										<NumberInput
-											id={`${htmlId}-producedQty`}
-											step="any"
-											min="0"
-											value={form.producedQuantity}
-											onChange={(e) =>
-												setForm({
-													...form,
-													producedQuantity: e.target.value,
-												})
-											}
-											className="w-full"
-										/>
-									</div>
-									<div className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
-										Unit
-										<Combobox
-											value={form.producedQuantityUnitId}
-											onChange={(v) =>
-												setForm({
-													...form,
-													producedQuantityUnitId: v,
-												})
-											}
-											options={unitOptions}
-											placeholder="None"
-										/>
-									</div>
-								</fieldset>
-
 								<fieldset className="flex flex-col gap-3 rounded-lg border border-(--line) p-4">
 									<legend className="px-1 text-sm font-medium text-(--sea-ink)">
 										Prep Steps
@@ -843,6 +781,58 @@ function RecipeDetail() {
 									</div>
 								</fieldset>
 
+								<fieldset className="flex flex-col gap-3 rounded-lg border border-(--line) p-4">
+									<legend className="px-1 text-sm font-medium text-(--sea-ink)">
+										Produced Product
+									</legend>
+									<div className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
+										Product
+										<Combobox
+											value={form.producedProductId}
+											onChange={(v) =>
+												setForm({ ...form, producedProductId: v })
+											}
+											options={productOptions}
+											placeholder="None"
+										/>
+									</div>
+									<div className="flex flex-col gap-1.5">
+										<label
+											htmlFor={`${htmlId}-producedQty`}
+											className="text-sm font-medium text-(--sea-ink)"
+										>
+											Quantity
+										</label>
+										<NumberInput
+											id={`${htmlId}-producedQty`}
+											step="any"
+											min="0"
+											value={form.producedQuantity}
+											onChange={(e) =>
+												setForm({
+													...form,
+													producedQuantity: e.target.value,
+												})
+											}
+											className="w-full"
+										/>
+									</div>
+									<div className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
+										Unit
+										<Combobox
+											value={form.producedQuantityUnitId}
+											onChange={(v) =>
+												setForm({
+													...form,
+													producedQuantityUnitId: v,
+												})
+											}
+											options={unitOptions}
+											placeholder="None"
+										/>
+									</div>
+								</fieldset>
+
 								<button
 									type="submit"
 									disabled={updateRecipe.isPending}
@@ -1007,13 +997,6 @@ function RecipeDetail() {
 									</div>
 								</dl>
 
-								{recipe.instructions && (
-									<div className="mt-4">
-										<SectionHeading>Instructions</SectionHeading>
-										<MarkdownEditor value={recipe.instructions} />
-									</div>
-								)}
-
 								{(() => {
 									const sorted = [...(prepSteps ?? [])].sort(
 										(a, b) => b.leadTimeMinutes - a.leadTimeMinutes,
@@ -1131,172 +1114,192 @@ function RecipeDetail() {
 					</Island>
 				}
 				side={
-					<Island
-						as="section"
-						className="animate-rise-in rounded-2xl p-6 sm:p-8"
-					>
-						<h2 className="mb-4 text-lg font-semibold text-(--sea-ink)">
-							Ingredients
-						</h2>
-
-						{!ingredients?.length && !editing ? (
-							<p className="mb-4 text-sm text-(--sea-ink-soft)">
-								No ingredients yet.
-							</p>
-						) : (
-							<div className="mb-4 flex flex-col gap-2">
-								{(ingredients ?? []).map((ing) =>
-									editingIngredientId === ing.id ? (
-										<div
-											key={ing.id}
-											className="flex flex-col gap-3 rounded-lg border border-(--lagoon) p-3"
-										>
-											<div className="grid grid-cols-[1fr_1fr] gap-2 sm:grid-cols-[2fr_5rem_1fr_1fr]">
-												<Combobox
-													value={editIngredient.productId}
-													onChange={(v) => {
-														setEditIngredient({
-															...editIngredient,
-															productId: v,
-														});
-														handleEditProductChange(v);
-													}}
-													options={productOptions}
-													placeholder="Product"
-													className="col-span-full sm:col-span-1"
-													onCreateNew={async (name) => {
-														const newId = await handleCreateProduct(name);
-														setEditIngredient({
-															...editIngredient,
-															productId: newId,
-														});
-													}}
-												/>
-												<NumberInput
-													step="any"
-													min="0"
-													placeholder="Qty"
-													value={editIngredient.quantity}
-													onChange={(e) =>
-														setEditIngredient({
-															...editIngredient,
-															quantity: e.target.value,
-														})
-													}
-												/>
-												<Combobox
-													value={editIngredient.quantityUnitId}
-													onChange={(v) =>
-														setEditIngredient({
-															...editIngredient,
-															quantityUnitId: v,
-														})
-													}
-													options={unitOptions}
-													placeholder="Unit"
-												/>
-												<input
-													type="text"
-													placeholder="Notes"
-													value={editIngredient.notes}
-													onChange={(e) =>
-														setEditIngredient({
-															...editIngredient,
-															notes: e.target.value,
-														})
-													}
-													className={inputClass}
-												/>
-											</div>
-											{(() => {
-												const hint = getEditConversionHint();
-												return hint ? (
-													<p
-														className={`text-xs ${hint.includes("No conversion") ? "text-amber-600 dark:text-amber-400" : "text-(--sea-ink-soft)"}`}
-													>
-														{hint}
-													</p>
-												) : null;
-											})()}
-											<div className="flex gap-2">
-												<button
-													type="button"
-													onClick={handleSaveIngredient}
-													disabled={
-														updateIngredient.isPending ||
-														!editIngredient.quantity
-													}
-													className="flex h-8 items-center gap-1 rounded-full bg-(--lagoon) px-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
-												>
-													<Check size={14} />
-													{updateIngredient.isPending ? "Saving…" : "Save"}
-												</button>
-												<button
-													type="button"
-													onClick={() => setEditingIngredientId(null)}
-													className="flex h-8 items-center rounded-full px-3 text-sm font-medium text-(--sea-ink-soft) transition hover:bg-(--surface)"
-												>
-													Cancel
-												</button>
-											</div>
-										</div>
-									) : (
-										<div
-											key={ing.id}
-											className="flex items-center justify-between rounded-lg border border-(--line) px-3 py-2"
-										>
-											<div className="flex-1 text-sm text-(--sea-ink)">
-												<span className="font-medium">
-													{getProductName(ing.productId)}
-												</span>
-												<span className="ml-2 text-(--sea-ink-soft)">
-													{formatScaled(ing.quantity)}
-													{getUnitLabel(ing.quantityUnitId)
-														? ` ${getUnitLabel(ing.quantityUnitId)}`
-														: ""}
-												</span>
-												{ing.notes && (
-													<span className="ml-2 text-xs text-(--sea-ink-soft)">
-														({ing.notes})
-													</span>
-												)}
-											</div>
-											<div className="flex gap-0.5">
-												<button
-													type="button"
-													onClick={() => startEditingIngredient(ing)}
-													className="rounded-lg p-1.5 text-(--sea-ink-soft) transition hover:bg-(--surface) hover:text-(--sea-ink)"
-													title="Edit ingredient"
-												>
-													<Pencil size={14} />
-												</button>
-												<button
-													type="button"
-													onClick={() => handleDeleteIngredient(ing.id)}
-													className="rounded-lg p-1.5 text-(--sea-ink-soft) transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950"
-													title="Delete ingredient"
-												>
-													<Trash2 size={14} />
-												</button>
-											</div>
-										</div>
-									),
+					<div className="flex flex-col gap-6">
+						{(editing || recipe?.instructions) && (
+							<Island
+								as="section"
+								className="animate-rise-in rounded-2xl p-6 sm:p-8"
+							>
+								<SectionHeading>Instructions</SectionHeading>
+								{editing ? (
+									<MarkdownEditor
+										value={form.instructions}
+										onChange={(v) => setForm({ ...form, instructions: v })}
+										height={200}
+										placeholder="Write instructions using markdown…"
+									/>
+								) : (
+									<MarkdownEditor value={recipe?.instructions ?? ""} />
 								)}
-							</div>
+							</Island>
 						)}
+						<Island
+							as="section"
+							className="animate-rise-in rounded-2xl p-6 sm:p-8"
+						>
+							<h2 className="mb-4 text-lg font-semibold text-(--sea-ink)">
+								Ingredients
+							</h2>
 
-						<AddIngredientForm
-							productOptions={productOptions}
-							unitOptions={unitOptions}
-							onAdd={handleAddIngredient}
-							isPending={createIngredient.isPending}
-							newIngredient={newIngredient}
-							setNewIngredient={setNewIngredient}
-							onCreateProduct={handleCreateProduct}
-							onProductChange={handleProductChange}
-							unitHint={getConversionHint()}
-						/>
-					</Island>
+							{!ingredients?.length && !editing ? (
+								<p className="mb-4 text-sm text-(--sea-ink-soft)">
+									No ingredients yet.
+								</p>
+							) : (
+								<div className="mb-4 flex flex-col gap-2">
+									{(ingredients ?? []).map((ing) =>
+										editingIngredientId === ing.id ? (
+											<div
+												key={ing.id}
+												className="flex flex-col gap-3 rounded-lg border border-(--lagoon) p-3"
+											>
+												<div className="grid grid-cols-[1fr_1fr] gap-2 sm:grid-cols-[2fr_5rem_1fr_1fr]">
+													<Combobox
+														value={editIngredient.productId}
+														onChange={(v) => {
+															setEditIngredient({
+																...editIngredient,
+																productId: v,
+															});
+															handleEditProductChange(v);
+														}}
+														options={productOptions}
+														placeholder="Product"
+														className="col-span-full sm:col-span-1"
+														onCreateNew={async (name) => {
+															const newId = await handleCreateProduct(name);
+															setEditIngredient({
+																...editIngredient,
+																productId: newId,
+															});
+														}}
+													/>
+													<NumberInput
+														step="any"
+														min="0"
+														placeholder="Qty"
+														value={editIngredient.quantity}
+														onChange={(e) =>
+															setEditIngredient({
+																...editIngredient,
+																quantity: e.target.value,
+															})
+														}
+													/>
+													<Combobox
+														value={editIngredient.quantityUnitId}
+														onChange={(v) =>
+															setEditIngredient({
+																...editIngredient,
+																quantityUnitId: v,
+															})
+														}
+														options={unitOptions}
+														placeholder="Unit"
+													/>
+													<input
+														type="text"
+														placeholder="Notes"
+														value={editIngredient.notes}
+														onChange={(e) =>
+															setEditIngredient({
+																...editIngredient,
+																notes: e.target.value,
+															})
+														}
+														className={inputClass}
+													/>
+												</div>
+												{(() => {
+													const hint = getEditConversionHint();
+													return hint ? (
+														<p
+															className={`text-xs ${hint.includes("No conversion") ? "text-amber-600 dark:text-amber-400" : "text-(--sea-ink-soft)"}`}
+														>
+															{hint}
+														</p>
+													) : null;
+												})()}
+												<div className="flex gap-2">
+													<button
+														type="button"
+														onClick={handleSaveIngredient}
+														disabled={
+															updateIngredient.isPending ||
+															!editIngredient.quantity
+														}
+														className="flex h-8 items-center gap-1 rounded-full bg-(--lagoon) px-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
+													>
+														<Check size={14} />
+														{updateIngredient.isPending ? "Saving…" : "Save"}
+													</button>
+													<button
+														type="button"
+														onClick={() => setEditingIngredientId(null)}
+														className="flex h-8 items-center rounded-full px-3 text-sm font-medium text-(--sea-ink-soft) transition hover:bg-(--surface)"
+													>
+														Cancel
+													</button>
+												</div>
+											</div>
+										) : (
+											<div
+												key={ing.id}
+												className="flex items-center justify-between rounded-lg border border-(--line) px-3 py-2"
+											>
+												<div className="flex-1 text-sm text-(--sea-ink)">
+													<span className="font-medium">
+														{getProductName(ing.productId)}
+													</span>
+													<span className="ml-2 text-(--sea-ink-soft)">
+														{formatScaled(ing.quantity)}
+														{getUnitLabel(ing.quantityUnitId)
+															? ` ${getUnitLabel(ing.quantityUnitId)}`
+															: ""}
+													</span>
+													{ing.notes && (
+														<span className="ml-2 text-xs text-(--sea-ink-soft)">
+															({ing.notes})
+														</span>
+													)}
+												</div>
+												<div className="flex gap-0.5">
+													<button
+														type="button"
+														onClick={() => startEditingIngredient(ing)}
+														className="rounded-lg p-1.5 text-(--sea-ink-soft) transition hover:bg-(--surface) hover:text-(--sea-ink)"
+														title="Edit ingredient"
+													>
+														<Pencil size={14} />
+													</button>
+													<button
+														type="button"
+														onClick={() => handleDeleteIngredient(ing.id)}
+														className="rounded-lg p-1.5 text-(--sea-ink-soft) transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950"
+														title="Delete ingredient"
+													>
+														<Trash2 size={14} />
+													</button>
+												</div>
+											</div>
+										),
+									)}
+								</div>
+							)}
+
+							<AddIngredientForm
+								productOptions={productOptions}
+								unitOptions={unitOptions}
+								onAdd={handleAddIngredient}
+								isPending={createIngredient.isPending}
+								newIngredient={newIngredient}
+								setNewIngredient={setNewIngredient}
+								onCreateProduct={handleCreateProduct}
+								onProductChange={handleProductChange}
+								unitHint={getConversionHint()}
+							/>
+						</Island>
+					</div>
 				}
 			/>
 		</Page>
