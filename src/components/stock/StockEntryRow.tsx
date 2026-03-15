@@ -36,6 +36,7 @@ export function StockEntryRow({
 				</span>
 			)}
 			{entry.price && <span>${entry.price}</span>}
+			{entry.brand && <span>{entry.brand}</span>}
 			{storeName && <span>{storeName}</span>}
 			<div className="ml-auto flex items-center gap-1.5">
 				<NumberInput

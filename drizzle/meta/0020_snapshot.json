@@ -1,6 +1,6 @@
 {
-  "id": "be4c5f4b-ac41-4da4-97f1-485a0238389c",
-  "prevId": "f82f3aa9-d8d0-4f0e-b0ef-2d5eed25d3dd",
+  "id": "e6b043ba-c556-49e1-b38c-ba8948db781a",
+  "prevId": "c7db88c9-017e-41e0-8c70-dddd9035a423",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -716,6 +716,24 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
+        },
+        "produced_product_id": {
+          "name": "produced_product_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "produced_quantity": {
+          "name": "produced_quantity",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "produced_quantity_unit_id": {
+          "name": "produced_quantity_unit_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {
@@ -747,6 +765,32 @@
             "id"
           ],
           "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "recipe_produced_product_id_product_id_fk": {
+          "name": "recipe_produced_product_id_product_id_fk",
+          "tableFrom": "recipe",
+          "tableTo": "product",
+          "columnsFrom": [
+            "produced_product_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "recipe_produced_quantity_unit_id_quantity_unit_id_fk": {
+          "name": "recipe_produced_quantity_unit_id_quantity_unit_id_fk",
+          "tableFrom": "recipe",
+          "tableTo": "quantity_unit",
+          "columnsFrom": [
+            "produced_quantity_unit_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
           "onUpdate": "no action"
         }
       },
@@ -911,6 +955,12 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
+        },
+        "group_name": {
+          "name": "group_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {
@@ -1070,6 +1120,12 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
+        },
+        "brand": {
+          "name": "brand",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {
@@ -2415,6 +2471,128 @@
         "product_unit_conversion_user_id_user_id_fk": {
           "name": "product_unit_conversion_user_id_user_id_fk",
           "tableFrom": "product_unit_conversion",
+          "tableTo": "user",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.recipe_prep_step": {
+      "name": "recipe_prep_step",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "recipe_id": {
+          "name": "recipe_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "lead_time_minutes": {
+          "name": "lead_time_minutes",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sort_order": {
+          "name": "sort_order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "recipePrepStep_userId_idx": {
+          "name": "recipePrepStep_userId_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "recipePrepStep_recipeId_idx": {
+          "name": "recipePrepStep_recipeId_idx",
+          "columns": [
+            {
+              "expression": "recipe_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "recipe_prep_step_recipe_id_recipe_id_fk": {
+          "name": "recipe_prep_step_recipe_id_recipe_id_fk",
+          "tableFrom": "recipe_prep_step",
+          "tableTo": "recipe",
+          "columnsFrom": [
+            "recipe_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "recipe_prep_step_user_id_user_id_fk": {
+          "name": "recipe_prep_step_user_id_user_id_fk",
+          "tableFrom": "recipe_prep_step",
           "tableTo": "user",
           "columnsFrom": [
             "user_id"

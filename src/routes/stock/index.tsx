@@ -46,6 +46,7 @@ function StockPage() {
 	const [expirationDate, setExpirationDate] = useState("");
 	const [price, setPrice] = useState("");
 	const [storeId, setStoreId] = useState("");
+	const [brand, setBrand] = useState("");
 	const [search, setSearch] = useState("");
 	const [consumeAmounts, setConsumeAmounts] = useState<Record<string, string>>(
 		{},
@@ -68,11 +69,13 @@ function StockPage() {
 			expirationDate: expirationDate || undefined,
 			price: price || undefined,
 			storeId: storeId || undefined,
+			brand: brand || undefined,
 		});
 		setQuantity("");
 		setExpirationDate("");
 		setPrice("");
 		setStoreId("");
+		setBrand("");
 	}
 
 	async function handleConsume(stockEntryId: string) {
@@ -194,6 +197,13 @@ function StockPage() {
 						}))}
 						placeholder="Store"
 						className="w-40"
+					/>
+					<input
+						type="text"
+						placeholder="Brand"
+						value={brand}
+						onChange={(e) => setBrand(e.target.value)}
+						className="h-10 w-36 rounded-xl border border-(--line) bg-(--surface) px-3 text-sm text-(--sea-ink) placeholder:text-(--sea-ink-soft) focus:outline-none focus:ring-2 focus:ring-(--lagoon)"
 					/>
 					<button
 						type="submit"
@@ -368,6 +378,7 @@ function EditStockModal({
 	);
 	const [price, setPrice] = useState(entry.price ?? "");
 	const [storeId, setStoreId] = useState(entry.storeId ?? "");
+	const [brand, setBrand] = useState(entry.brand ?? "");
 
 	async function handleSubmit(e: FormEvent) {
 		e.preventDefault();
@@ -377,6 +388,7 @@ function EditStockModal({
 			purchaseDate: purchaseDate || undefined,
 			price: price || undefined,
 			storeId: storeId || undefined,
+			brand: brand || undefined,
 		});
 		onClose();
 	}
@@ -440,6 +452,16 @@ function EditStockModal({
 							label: s.name,
 						}))}
 						placeholder="Select store"
+					/>
+				</label>
+				<label className="flex flex-col gap-1 text-sm font-medium text-(--sea-ink)">
+					Brand
+					<input
+						type="text"
+						value={brand}
+						onChange={(e) => setBrand(e.target.value)}
+						placeholder="Brand"
+						className="h-10 rounded-xl border border-(--line) bg-(--surface) px-3 text-sm text-(--sea-ink) placeholder:text-(--sea-ink-soft) focus:outline-none focus:ring-2 focus:ring-(--lagoon)"
 					/>
 				</label>
 				<div className="flex justify-end gap-2 pt-2">

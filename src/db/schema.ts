@@ -366,6 +366,7 @@ export const stockEntry = pgTable(
 		storeId: text("store_id").references(() => store.id, {
 			onDelete: "set null",
 		}),
+		brand: text("brand"),
 		userId: text("user_id")
 			.notNull()
 			.references(() => user.id, { onDelete: "cascade" }),
