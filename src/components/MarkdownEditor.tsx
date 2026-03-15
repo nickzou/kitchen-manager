@@ -17,18 +17,13 @@ interface MarkdownEditorProps {
 
 function useColorMode(): "light" | "dark" {
 	const [mode, setMode] = useState<"light" | "dark">(() =>
-		typeof document !== "undefined" &&
-		document.documentElement.classList.contains("dark")
-			? "dark"
-			: "light",
+		document?.documentElement.classList.contains("dark") ? "dark" : "light",
 	);
 
 	useEffect(() => {
 		const observer = new MutationObserver(() => {
 			setMode(
-				document.documentElement.classList.contains("dark")
-					? "dark"
-					: "light",
+				document.documentElement.classList.contains("dark") ? "dark" : "light",
 			);
 		});
 		observer.observe(document.documentElement, {
