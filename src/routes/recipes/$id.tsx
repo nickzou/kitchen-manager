@@ -1025,23 +1025,38 @@ function RecipeDetail() {
 									) : null;
 								})()}
 
-								{recipe.producedProductId && (
-									<div className="mt-4">
-										<SectionHeading>Produces</SectionHeading>
-										<p className="text-sm text-(--sea-ink-soft)">
-											{getProductName(recipe.producedProductId)}
-											{recipe.producedQuantity && (
-												<>
-													{" — "}
-													{recipe.producedQuantity}
-													{getUnitLabel(recipe.producedQuantityUnitId)
-														? ` ${getUnitLabel(recipe.producedQuantityUnitId)}`
-														: ""}
-												</>
-											)}
-										</p>
-									</div>
-								)}
+								{recipe.producedProductId &&
+									(() => {
+										const producedProduct = products?.find(
+											(p) => p.id === recipe.producedProductId,
+										);
+										return (
+											<div className="mt-4">
+												<SectionHeading>Produces</SectionHeading>
+												<div className="flex items-center gap-3">
+													{producedProduct?.image && (
+														<img
+															src={producedProduct.image}
+															alt={producedProduct.name}
+															className="h-10 w-10 rounded-lg border border-(--line) object-cover"
+														/>
+													)}
+													<p className="text-sm text-(--sea-ink-soft)">
+														{producedProduct?.name ?? "Unknown product"}
+														{recipe.producedQuantity && (
+															<>
+																{" — "}
+																{recipe.producedQuantity}
+																{getUnitLabel(recipe.producedQuantityUnitId)
+																	? ` ${getUnitLabel(recipe.producedQuantityUnitId)}`
+																	: ""}
+															</>
+														)}
+													</p>
+												</div>
+											</div>
+										);
+									})()}
 
 								{cookResult && (
 									<div
