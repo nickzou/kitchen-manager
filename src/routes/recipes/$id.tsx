@@ -9,6 +9,7 @@ import { Combobox } from "#src/components/Combobox";
 import { ImageInput } from "#src/components/ImageInput";
 import { Island } from "#src/components/Island";
 import { DetailColumns } from "#src/components/layouts/DetailColumns";
+import { MarkdownEditor } from "#src/components/MarkdownEditor";
 import { MultiCombobox } from "#src/components/MultiCombobox";
 import { NumberInput } from "#src/components/NumberInput";
 import { Page } from "#src/components/Page";
@@ -522,17 +523,15 @@ function RecipeDetail() {
 									/>
 								</div>
 
-								<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
+								<div className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
 									Instructions
-									<textarea
+									<MarkdownEditor
 										value={form.instructions}
-										onChange={(e) =>
-											setForm({ ...form, instructions: e.target.value })
-										}
-										rows={6}
-										className={cn(inputClass, "h-auto py-2")}
+										onChange={(v) => setForm({ ...form, instructions: v })}
+										height={200}
+										placeholder="Write instructions using markdown…"
 									/>
-								</label>
+								</div>
 
 								<fieldset className="flex flex-col gap-3 rounded-lg border border-(--line) p-4">
 									<legend className="px-1 text-sm font-medium text-(--sea-ink)">
@@ -744,9 +743,7 @@ function RecipeDetail() {
 										<h2 className="mb-2 text-sm font-semibold text-(--sea-ink)">
 											Instructions
 										</h2>
-										<p className="whitespace-pre-wrap text-sm text-(--sea-ink-soft)">
-											{recipe.instructions}
-										</p>
+										<MarkdownEditor value={recipe.instructions} />
 									</div>
 								)}
 
