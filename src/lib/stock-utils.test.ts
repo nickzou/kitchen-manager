@@ -170,31 +170,65 @@ describe("getLatestUnitCost", () => {
 
 	it("returns unit cost of the single priced entry", () => {
 		const entries = [
-			makeEntry({ price: "15", quantity: "3", purchaseDate: "2026-01-01T00:00:00Z" }),
+			makeEntry({
+				price: "15",
+				quantity: "3",
+				purchaseDate: "2026-01-01T00:00:00Z",
+			}),
 		];
 		expect(getLatestUnitCost(entries)).toBe(5);
 	});
 
 	it("returns unit cost from the most recent entry by purchaseDate", () => {
 		const entries = [
-			makeEntry({ id: "e1", price: "10", quantity: "2", purchaseDate: "2026-01-01T00:00:00Z" }), // 5
-			makeEntry({ id: "e2", price: "12", quantity: "4", purchaseDate: "2026-03-01T00:00:00Z" }), // 3
-			makeEntry({ id: "e3", price: "8", quantity: "2", purchaseDate: "2026-02-01T00:00:00Z" }),   // 4
+			makeEntry({
+				id: "e1",
+				price: "10",
+				quantity: "2",
+				purchaseDate: "2026-01-01T00:00:00Z",
+			}), // 5
+			makeEntry({
+				id: "e2",
+				price: "12",
+				quantity: "4",
+				purchaseDate: "2026-03-01T00:00:00Z",
+			}), // 3
+			makeEntry({
+				id: "e3",
+				price: "8",
+				quantity: "2",
+				purchaseDate: "2026-02-01T00:00:00Z",
+			}), // 4
 		];
 		expect(getLatestUnitCost(entries)).toBe(3);
 	});
 
 	it("skips entries without a price when finding latest", () => {
 		const entries = [
-			makeEntry({ id: "e1", price: "10", quantity: "5", purchaseDate: "2026-01-01T00:00:00Z" }), // 2
-			makeEntry({ id: "e2", price: null, quantity: "3", purchaseDate: "2026-03-01T00:00:00Z" }),
+			makeEntry({
+				id: "e1",
+				price: "10",
+				quantity: "5",
+				purchaseDate: "2026-01-01T00:00:00Z",
+			}), // 2
+			makeEntry({
+				id: "e2",
+				price: null,
+				quantity: "3",
+				purchaseDate: "2026-03-01T00:00:00Z",
+			}),
 		];
 		expect(getLatestUnitCost(entries)).toBe(2);
 	});
 
 	it("handles entries with null purchaseDate", () => {
 		const entries = [
-			makeEntry({ id: "e1", price: "10", quantity: "2", purchaseDate: "2026-02-01T00:00:00Z" }), // 5
+			makeEntry({
+				id: "e1",
+				price: "10",
+				quantity: "2",
+				purchaseDate: "2026-02-01T00:00:00Z",
+			}), // 5
 			makeEntry({ id: "e2", price: "6", quantity: "3", purchaseDate: null }), // 2
 		];
 		// e1 has a real date which is newer than epoch (null → 0)

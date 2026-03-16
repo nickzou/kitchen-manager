@@ -31,7 +31,10 @@ export function getAvgUnitCost(
 ): number | null {
 	const costs = entries
 		.filter((e) => e.price && Number.parseFloat(e.quantity) > 0)
-		.map((e) => Number.parseFloat(e.price!) / Number.parseFloat(e.quantity));
+		.map(
+			(e) =>
+				Number.parseFloat(e.price as string) / Number.parseFloat(e.quantity),
+		);
 	if (costs.length === 0) return null;
 	return costs.reduce((sum, c) => sum + c, 0) / costs.length;
 }
@@ -48,5 +51,8 @@ export function getLatestUnitCost(
 			new Date(b.purchaseDate ?? 0).getTime() -
 			new Date(a.purchaseDate ?? 0).getTime(),
 	)[0];
-	return Number.parseFloat(latest.price!) / Number.parseFloat(latest.quantity);
+	return (
+		Number.parseFloat(latest.price as string) /
+		Number.parseFloat(latest.quantity)
+	);
 }

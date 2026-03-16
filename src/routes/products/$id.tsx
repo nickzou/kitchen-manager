@@ -10,7 +10,6 @@ import { MultiCombobox } from "#src/components/MultiCombobox";
 import { NumberInput } from "#src/components/NumberInput";
 import { Page } from "#src/components/Page";
 import { PricingHistoryChart } from "#src/components/stock/PricingHistoryChart";
-import { getAvgUnitCost, getLatestUnitCost } from "#src/lib/stock-utils";
 import { authClient } from "#src/lib/auth-client";
 import { useBrands } from "#src/lib/hooks/use-brands";
 import { useProductCategories } from "#src/lib/hooks/use-categories";
@@ -28,6 +27,7 @@ import {
 import { useQuantityUnits } from "#src/lib/hooks/use-quantity-units";
 import { useStockEntries } from "#src/lib/hooks/use-stock-entries";
 import { useStores } from "#src/lib/hooks/use-stores";
+import { getAvgUnitCost, getLatestUnitCost } from "#src/lib/stock-utils";
 import { cn } from "#src/lib/utils";
 
 export const Route = createFileRoute("/products/$id")({
