@@ -27,6 +27,7 @@ import {
 import { useQuantityUnits } from "#src/lib/hooks/use-quantity-units";
 import { useStockEntries } from "#src/lib/hooks/use-stock-entries";
 import { useStores } from "#src/lib/hooks/use-stores";
+import { getAvgUnitCost, getLatestUnitCost } from "#src/lib/stock-utils";
 import { cn } from "#src/lib/utils";
 
 export const Route = createFileRoute("/products/$id")({
@@ -78,6 +79,7 @@ function ProductDetail() {
 		defaultQuantityUnitId: "",
 		minStockAmount: "",
 		defaultExpirationDays: "",
+		defaultConsumeAmount: "",
 	});
 	const [newConversion, setNewConversion] = useState({
 		fromUnitId: "",
@@ -145,6 +147,7 @@ function ProductDetail() {
 				product.defaultExpirationDays != null
 					? String(product.defaultExpirationDays)
 					: "",
+			defaultConsumeAmount: product.defaultConsumeAmount ?? "",
 		});
 		setEditing(true);
 	}
@@ -161,6 +164,7 @@ function ProductDetail() {
 			defaultExpirationDays: form.defaultExpirationDays
 				? Number.parseInt(form.defaultExpirationDays, 10)
 				: undefined,
+			defaultConsumeAmount: form.defaultConsumeAmount || undefined,
 		});
 		setEditing(false);
 	}
@@ -228,6 +232,9 @@ function ProductDetail() {
 
 	const categoryNames = getCategoryNames(product.categoryIds);
 	const unitName = getUnitName(product.defaultQuantityUnitId);
+	const avgUnitCost = getAvgUnitCost(stockEntries ?? []);
+	const latestUnitCost = getLatestUnitCost(stockEntries ?? []);
+	const unitLabel = unitName ?? "unit";
 
 	return (
 		<Page as="main" className="pb-8 pt-14">
@@ -341,6 +348,25 @@ function ProductDetail() {
 
 								<div className="flex flex-col gap-1.5">
 									<label
+										htmlFor={`${htmlId}-defaultConsumeAmount`}
+										className="text-sm font-medium text-(--sea-ink)"
+									>
+										Default Consume Amount
+									</label>
+									<NumberInput
+										id={`${htmlId}-defaultConsumeAmount`}
+										step="any"
+										min="0"
+										value={form.defaultConsumeAmount}
+										onChange={(e) =>
+											setForm({ ...form, defaultConsumeAmount: e.target.value })
+										}
+										className="w-full"
+									/>
+								</div>
+
+								<div className="flex flex-col gap-1.5">
+									<label
 										htmlFor={`${htmlId}-defaultExpirationDays`}
 										className="text-sm font-medium text-(--sea-ink)"
 									>
@@ -443,6 +469,16 @@ function ProductDetail() {
 									</div>
 									<div>
 										<dt className="font-medium text-(--sea-ink-soft)">
+											Default Consume
+										</dt>
+										<dd className="mt-0.5 text-(--sea-ink)">
+											{product.defaultConsumeAmount
+												? Number.parseFloat(product.defaultConsumeAmount)
+												: "—"}
+										</dd>
+									</div>
+									<div>
+										<dt className="font-medium text-(--sea-ink-soft)">
 											Default Exp. Days
 										</dt>
 										<dd className="mt-0.5 text-(--sea-ink)">
@@ -500,8 +536,28 @@ function ProductDetail() {
 							className="animate-rise-in rounded-2xl p-6 sm:p-8"
 						>
 							<h2 className="mb-4 text-lg font-semibold text-(--sea-ink)">
-								Pricing History
+								Price Information
 							</h2>
+							{avgUnitCost != null && latestUnitCost != null && (
+								<dl className="mb-4 grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+									<div>
+										<dt className="font-medium text-(--sea-ink-soft)">
+											Avg. Unit Cost
+										</dt>
+										<dd className="mt-0.5 text-(--sea-ink)">
+											${avgUnitCost.toFixed(2)} / {unitLabel}
+										</dd>
+									</div>
+									<div>
+										<dt className="font-medium text-(--sea-ink-soft)">
+											Latest Unit Cost
+										</dt>
+										<dd className="mt-0.5 text-(--sea-ink)">
+											${latestUnitCost.toFixed(2)} / {unitLabel}
+										</dd>
+									</div>
+								</dl>
+							)}
 							<PricingHistoryChart
 								stockEntries={stockEntries ?? []}
 								storeNames={storeNames}

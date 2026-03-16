@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Plus } from "lucide-react";
+import { Minus, Plus } from "lucide-react";
 import { type FormEvent, useState } from "react";
 import { Accordion } from "#src/components/Accordion";
 import { Combobox } from "#src/components/Combobox";
@@ -26,6 +26,7 @@ import {
 } from "#src/lib/hooks/use-stock-entries";
 import { useStockLogs } from "#src/lib/hooks/use-stock-logs";
 import { useStores } from "#src/lib/hooks/use-stores";
+import { pickBestEntry } from "#src/lib/stock-utils";
 import { cn } from "#src/lib/utils";
 
 export const Route = createFileRoute("/stock/")({ component: StockPage });
@@ -88,6 +89,15 @@ function StockPage() {
 		const amount = consumeAmounts[stockEntryId] ?? "1";
 		if (!amount) return;
 		await consumeStock.mutateAsync({ stockEntryId, quantity: amount });
+	}
+
+	async function handleQuickConsume(entries: StockEntry[], amount: number) {
+		const best = pickBestEntry(entries);
+		if (!best) return;
+		await consumeStock.mutateAsync({
+			stockEntryId: best.id,
+			quantity: amount.toString(),
+		});
 	}
 
 	function getProductName(id: string) {
@@ -291,6 +301,23 @@ function StockPage() {
 										categoryName={getCategoryName(item.product.categoryIds)}
 									/>
 								)}
+								renderAction={(item) => {
+									const amount = item.product.defaultConsumeAmount
+										? Number.parseFloat(item.product.defaultConsumeAmount)
+										: 1;
+									return (
+										<button
+											type="button"
+											onClick={() => handleQuickConsume(item.entries, amount)}
+											disabled={consumeStock.isPending || item.totalStock <= 0}
+											title={`Consume ${amount}`}
+											className="flex h-7 shrink-0 items-center gap-1 rounded-full bg-amber-600 px-2.5 text-xs font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
+										>
+											<Minus size={12} />
+											Consume {amount}
+										</button>
+									);
+								}}
 								renderContent={(item) => (
 									<StockProductContent
 										entries={item.entries}
