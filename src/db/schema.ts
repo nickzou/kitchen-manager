@@ -244,6 +244,7 @@ export const product = pgTable(
 		),
 		minStockAmount: numeric("min_stock_amount").default("0").notNull(),
 		defaultExpirationDays: integer("default_expiration_days"),
+		defaultConsumeAmount: numeric("default_consume_amount"),
 		userId: text("user_id")
 			.notNull()
 			.references(() => user.id, { onDelete: "cascade" }),

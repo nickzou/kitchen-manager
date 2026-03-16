@@ -9,6 +9,7 @@ export interface Product {
 	defaultQuantityUnitId: string | null;
 	minStockAmount: string;
 	defaultExpirationDays: number | null;
+	defaultConsumeAmount: string | null;
 	userId: string;
 	createdAt: string;
 	updatedAt: string;
@@ -22,6 +23,7 @@ export type CreateProductInput = {
 	defaultQuantityUnitId?: string;
 	minStockAmount?: string;
 	defaultExpirationDays?: number;
+	defaultConsumeAmount?: string;
 };
 
 export type UpdateProductInput = Partial<CreateProductInput>;

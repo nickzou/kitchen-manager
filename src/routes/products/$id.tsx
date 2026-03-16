@@ -78,6 +78,7 @@ function ProductDetail() {
 		defaultQuantityUnitId: "",
 		minStockAmount: "",
 		defaultExpirationDays: "",
+		defaultConsumeAmount: "",
 	});
 	const [newConversion, setNewConversion] = useState({
 		fromUnitId: "",
@@ -145,6 +146,7 @@ function ProductDetail() {
 				product.defaultExpirationDays != null
 					? String(product.defaultExpirationDays)
 					: "",
+			defaultConsumeAmount: product.defaultConsumeAmount ?? "",
 		});
 		setEditing(true);
 	}
@@ -161,6 +163,7 @@ function ProductDetail() {
 			defaultExpirationDays: form.defaultExpirationDays
 				? Number.parseInt(form.defaultExpirationDays, 10)
 				: undefined,
+			defaultConsumeAmount: form.defaultConsumeAmount || undefined,
 		});
 		setEditing(false);
 	}
@@ -341,6 +344,25 @@ function ProductDetail() {
 
 								<div className="flex flex-col gap-1.5">
 									<label
+										htmlFor={`${htmlId}-defaultConsumeAmount`}
+										className="text-sm font-medium text-(--sea-ink)"
+									>
+										Default Consume Amount
+									</label>
+									<NumberInput
+										id={`${htmlId}-defaultConsumeAmount`}
+										step="any"
+										min="0"
+										value={form.defaultConsumeAmount}
+										onChange={(e) =>
+											setForm({ ...form, defaultConsumeAmount: e.target.value })
+										}
+										className="w-full"
+									/>
+								</div>
+
+								<div className="flex flex-col gap-1.5">
+									<label
 										htmlFor={`${htmlId}-defaultExpirationDays`}
 										className="text-sm font-medium text-(--sea-ink)"
 									>
@@ -438,6 +460,16 @@ function ProductDetail() {
 										<dd className="mt-0.5 text-(--sea-ink)">
 											{Number.parseFloat(product.minStockAmount) > 0
 												? product.minStockAmount
+												: "—"}
+										</dd>
+									</div>
+									<div>
+										<dt className="font-medium text-(--sea-ink-soft)">
+											Default Consume
+										</dt>
+										<dd className="mt-0.5 text-(--sea-ink)">
+											{product.defaultConsumeAmount
+												? Number.parseFloat(product.defaultConsumeAmount)
 												: "—"}
 										</dd>
 									</div>

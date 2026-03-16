@@ -64,6 +64,7 @@ export const Route = createFileRoute("/api/products/")({
 						defaultQuantityUnitId: body.defaultQuantityUnitId ?? null,
 						minStockAmount: body.minStockAmount ?? "0",
 						defaultExpirationDays: body.defaultExpirationDays ?? null,
+						defaultConsumeAmount: body.defaultConsumeAmount ?? null,
 						userId: session.user.id,
 					})
 					.returning();

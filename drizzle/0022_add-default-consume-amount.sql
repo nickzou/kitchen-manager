@@ -1,0 +1,1 @@
+ALTER TABLE "product" ADD COLUMN "default_consume_amount" numeric;

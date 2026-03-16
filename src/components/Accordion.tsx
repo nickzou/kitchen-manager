@@ -9,6 +9,7 @@ interface AccordionProps<T extends AccordionItem> {
 	items: T[];
 	renderTrigger: (item: T, isExpanded: boolean) => ReactNode;
 	renderContent: (item: T) => ReactNode;
+	renderAction?: (item: T) => ReactNode;
 	type?: "single" | "multi";
 }
 
@@ -16,6 +17,7 @@ export function Accordion<T extends AccordionItem>({
 	items,
 	renderTrigger,
 	renderContent,
+	renderAction,
 	type = "single",
 }: AccordionProps<T>) {
 	const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set());
@@ -42,23 +44,26 @@ export function Accordion<T extends AccordionItem>({
 
 				return (
 					<div key={item.key}>
-						<button
-							type="button"
-							onClick={() => toggle(item.key)}
-							className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition hover:bg-(--surface)"
-						>
-							{type === "multi" ? (
-								<ChevronDown
-									size={16}
-									className={`text-(--sea-ink-soft) transition-transform ${isExpanded ? "" : "-rotate-90"}`}
-								/>
-							) : isExpanded ? (
-								<ChevronDown size={16} className="text-(--sea-ink-soft)" />
-							) : (
-								<ChevronRight size={16} className="text-(--sea-ink-soft)" />
-							)}
-							{renderTrigger(item, isExpanded)}
-						</button>
+						<div className="flex items-center gap-1">
+							<button
+								type="button"
+								onClick={() => toggle(item.key)}
+								className="flex min-w-0 flex-1 items-center gap-3 rounded-lg px-3 py-2.5 text-left transition hover:bg-(--surface)"
+							>
+								{type === "multi" ? (
+									<ChevronDown
+										size={16}
+										className={`text-(--sea-ink-soft) transition-transform ${isExpanded ? "" : "-rotate-90"}`}
+									/>
+								) : isExpanded ? (
+									<ChevronDown size={16} className="text-(--sea-ink-soft)" />
+								) : (
+									<ChevronRight size={16} className="text-(--sea-ink-soft)" />
+								)}
+								{renderTrigger(item, isExpanded)}
+							</button>
+							{renderAction?.(item)}
+						</div>
 
 						{isExpanded && (
 							<div className="ml-8 mb-2">{renderContent(item)}</div>

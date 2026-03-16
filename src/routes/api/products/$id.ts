@@ -60,6 +60,8 @@ export const Route = createFileRoute("/api/products/$id")({
 					updates.minStockAmount = body.minStockAmount;
 				if (body.defaultExpirationDays !== undefined)
 					updates.defaultExpirationDays = body.defaultExpirationDays;
+				if (body.defaultConsumeAmount !== undefined)
+					updates.defaultConsumeAmount = body.defaultConsumeAmount;
 
 				const [updated] = await db
 					.update(product)
