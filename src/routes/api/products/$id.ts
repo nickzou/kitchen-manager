@@ -63,13 +63,31 @@ export const Route = createFileRoute("/api/products/$id")({
 				if (body.defaultConsumeAmount !== undefined)
 					updates.defaultConsumeAmount = body.defaultConsumeAmount;
 
-				const [updated] = await db
-					.update(product)
-					.set(updates)
-					.where(
-						and(eq(product.id, params.id), eq(product.userId, session.user.id)),
-					)
-					.returning();
+				let updated: typeof product.$inferSelect | undefined;
+				try {
+					[updated] = await db
+						.update(product)
+						.set(updates)
+						.where(
+							and(
+								eq(product.id, params.id),
+								eq(product.userId, session.user.id),
+							),
+						)
+						.returning();
+				} catch (err: unknown) {
+					if (
+						err instanceof Error &&
+						"code" in err &&
+						(err as { code: string }).code === "23505"
+					) {
+						return json(
+							{ error: "A product with this name already exists" },
+							{ status: 409 },
+						);
+					}
+					throw err;
+				}
 
 				if (!updated) {
 					return json({ error: "Not found" }, { status: 404 });

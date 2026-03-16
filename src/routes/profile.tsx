@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { type FormEvent, useCallback, useEffect, useState } from "react";
+import { AlertBox } from "#src/components/AlertBox";
+import { AlertText } from "#src/components/AlertText";
 import { ImageInput } from "#src/components/ImageInput";
 import { Island } from "#src/components/Island";
 import { Page } from "#src/components/Page";
@@ -279,15 +281,9 @@ function Profile() {
 
 						<ImageInput value={image} onChange={setImage} />
 
-						{profileError && (
-							<p className="text-sm text-red-600 dark:text-red-400">
-								{profileError}
-							</p>
-						)}
+						{profileError && <AlertText>{profileError}</AlertText>}
 						{profileSaved && (
-							<p className="text-sm text-green-600 dark:text-green-400">
-								Profile updated
-							</p>
+							<AlertText variant="success">Profile updated</AlertText>
 						)}
 
 						<button
@@ -329,15 +325,9 @@ function Profile() {
 							onChange={(e) => setConfirmPassword(e.target.value)}
 						/>
 
-						{passwordError && (
-							<p className="text-sm text-red-600 dark:text-red-400">
-								{passwordError}
-							</p>
-						)}
+						{passwordError && <AlertText>{passwordError}</AlertText>}
 						{passwordSaved && (
-							<p className="text-sm text-green-600 dark:text-green-400">
-								Password changed
-							</p>
+							<AlertText variant="success">Password changed</AlertText>
 						)}
 
 						<button
@@ -388,8 +378,8 @@ function Profile() {
 					)}
 
 					{generatedKey && (
-						<div className="mb-6 rounded-lg border border-amber-300 bg-amber-50 p-3 dark:border-amber-700 dark:bg-amber-950">
-							<p className="mb-1 text-xs font-semibold text-amber-800 dark:text-amber-200">
+						<AlertBox variant="warning" className="mb-6 p-3">
+							<p className="mb-1 text-xs font-semibold">
 								Copy your key now — it won't be shown again
 							</p>
 							<div className="flex items-center gap-2">
@@ -404,7 +394,7 @@ function Profile() {
 									{keyCopied ? "Copied!" : "Copy"}
 								</button>
 							</div>
-						</div>
+						</AlertBox>
 					)}
 
 					<form onSubmit={handleGenerateKey} className="flex flex-col gap-4">
@@ -420,11 +410,7 @@ function Profile() {
 							/>
 						</label>
 
-						{apiKeyError && (
-							<p className="text-sm text-red-600 dark:text-red-400">
-								{apiKeyError}
-							</p>
-						)}
+						{apiKeyError && <AlertText>{apiKeyError}</AlertText>}
 
 						<button
 							type="submit"
@@ -495,8 +481,8 @@ function Profile() {
 					)}
 
 					{webhookSecret && (
-						<div className="mb-6 rounded-lg border border-amber-300 bg-amber-50 p-3 dark:border-amber-700 dark:bg-amber-950">
-							<p className="mb-1 text-xs font-semibold text-amber-800 dark:text-amber-200">
+						<AlertBox variant="warning" className="mb-6 p-3">
+							<p className="mb-1 text-xs font-semibold">
 								Copy your signing secret now — it won't be shown again
 							</p>
 							<div className="flex items-center gap-2">
@@ -511,7 +497,7 @@ function Profile() {
 									{secretCopied ? "Copied!" : "Copy"}
 								</button>
 							</div>
-						</div>
+						</AlertBox>
 					)}
 
 					<form onSubmit={handleCreateWebhook} className="flex flex-col gap-4">
@@ -568,11 +554,7 @@ function Profile() {
 							))}
 						</fieldset>
 
-						{webhookError && (
-							<p className="text-sm text-red-600 dark:text-red-400">
-								{webhookError}
-							</p>
-						)}
+						{webhookError && <AlertText>{webhookError}</AlertText>}
 
 						<button
 							type="submit"

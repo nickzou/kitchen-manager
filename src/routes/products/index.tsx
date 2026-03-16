@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
 import { type FormEvent, useMemo, useState } from "react";
+import { AlertText } from "#src/components/AlertText";
 import { CompactView } from "#src/components/CompactView";
 import { GridView } from "#src/components/GridView";
 import { ImageToggle } from "#src/components/ImageToggle";
@@ -50,12 +51,16 @@ function ProductsPage() {
 	async function handleSubmit(e: FormEvent) {
 		e.preventDefault();
 		if (!name.trim()) return;
-		await createProduct.mutateAsync({
-			name: name.trim(),
-			categoryIds: categoryIds.length > 0 ? categoryIds : undefined,
-		});
-		setName("");
-		setCategoryIds([]);
+		try {
+			await createProduct.mutateAsync({
+				name: name.trim(),
+				categoryIds: categoryIds.length > 0 ? categoryIds : undefined,
+			});
+			setName("");
+			setCategoryIds([]);
+		} catch {
+			// error is captured by the mutation and displayed in the UI
+		}
 	}
 
 	function getUnitLabel(unitId: string | null) {
@@ -95,7 +100,7 @@ function ProductsPage() {
 						required
 						value={name}
 						onChange={(e) => setName(e.target.value)}
-						className={cn(inputClass, "flex-1 min-w-[160px]")}
+						className={cn(inputClass, "flex-1 min-w-40")}
 					/>
 					<MultiCombobox
 						value={categoryIds}
@@ -115,6 +120,11 @@ function ProductsPage() {
 						<Plus size={16} />
 						Add
 					</button>
+					{createProduct.error && (
+						<AlertText className="w-full">
+							{createProduct.error.message}
+						</AlertText>
+					)}
 				</form>
 
 				<div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">

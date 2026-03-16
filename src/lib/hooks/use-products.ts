@@ -59,7 +59,10 @@ export function useCreateProduct() {
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify(input),
 			});
-			if (!res.ok) throw new Error("Failed to create product");
+			if (!res.ok) {
+				const body = await res.json();
+				throw new Error(body.error || "Failed to create product");
+			}
 			return res.json();
 		},
 		onSuccess: () => {
@@ -77,7 +80,10 @@ export function useUpdateProduct(id: string) {
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify(input),
 			});
-			if (!res.ok) throw new Error("Failed to update product");
+			if (!res.ok) {
+				const body = await res.json();
+				throw new Error(body.error || "Failed to update product");
+			}
 			return res.json();
 		},
 		onSuccess: () => {

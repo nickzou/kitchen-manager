@@ -1,6 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Pencil, Trash2, X } from "lucide-react";
 import { type FormEvent, useId, useState } from "react";
+import { AlertBox } from "#src/components/AlertBox";
+import { AlertText } from "#src/components/AlertText";
 import { Combobox } from "#src/components/Combobox";
 import { ImageInput } from "#src/components/ImageInput";
 import InventorySubNav from "#src/components/InventorySubNav";
@@ -154,19 +156,23 @@ function ProductDetail() {
 
 	async function handleSave(e: FormEvent) {
 		e.preventDefault();
-		await updateProduct.mutateAsync({
-			name: form.name,
-			categoryIds: form.categoryIds,
-			description: form.description || undefined,
-			image: form.image || undefined,
-			defaultQuantityUnitId: form.defaultQuantityUnitId || undefined,
-			minStockAmount: form.minStockAmount || undefined,
-			defaultExpirationDays: form.defaultExpirationDays
-				? Number.parseInt(form.defaultExpirationDays, 10)
-				: undefined,
-			defaultConsumeAmount: form.defaultConsumeAmount || undefined,
-		});
-		setEditing(false);
+		try {
+			await updateProduct.mutateAsync({
+				name: form.name,
+				categoryIds: form.categoryIds,
+				description: form.description || undefined,
+				image: form.image || undefined,
+				defaultQuantityUnitId: form.defaultQuantityUnitId || undefined,
+				minStockAmount: form.minStockAmount || undefined,
+				defaultExpirationDays: form.defaultExpirationDays
+					? Number.parseInt(form.defaultExpirationDays, 10)
+					: undefined,
+				defaultConsumeAmount: form.defaultConsumeAmount || undefined,
+			});
+			setEditing(false);
+		} catch {
+			// error is captured by the mutation and displayed in the UI
+		}
 	}
 
 	async function handleDelete() {
@@ -386,6 +392,9 @@ function ProductDetail() {
 									/>
 								</div>
 
+								{updateProduct.error && (
+									<AlertText>{updateProduct.error.message}</AlertText>
+								)}
 								<button
 									type="submit"
 									disabled={updateProduct.isPending}
@@ -504,8 +513,8 @@ function ProductDetail() {
 								</dl>
 
 								{confirmDelete && (
-									<div className="mt-6 flex items-center gap-3 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900 dark:bg-red-950/50">
-										<p className="flex-1 text-sm text-red-700 dark:text-red-300">
+									<AlertBox className="mt-6 flex items-center gap-3">
+										<p className="flex-1 text-sm">
 											Delete this product? This cannot be undone.
 										</p>
 										<button
@@ -523,7 +532,7 @@ function ProductDetail() {
 										>
 											{deleteProduct.isPending ? "Deleting…" : "Delete"}
 										</button>
-									</div>
+									</AlertBox>
 								)}
 							</>
 						)}

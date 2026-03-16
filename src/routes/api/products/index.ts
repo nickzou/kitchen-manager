@@ -55,19 +55,34 @@ export const Route = createFileRoute("/api/products/")({
 
 				const body = await request.json();
 
-				const [created] = await db
-					.insert(product)
-					.values({
-						name: body.name,
-						description: body.description,
-						image: body.image,
-						defaultQuantityUnitId: body.defaultQuantityUnitId ?? null,
-						minStockAmount: body.minStockAmount ?? "0",
-						defaultExpirationDays: body.defaultExpirationDays ?? null,
-						defaultConsumeAmount: body.defaultConsumeAmount ?? null,
-						userId: session.user.id,
-					})
-					.returning();
+				let created: typeof product.$inferSelect;
+				try {
+					[created] = await db
+						.insert(product)
+						.values({
+							name: body.name,
+							description: body.description,
+							image: body.image,
+							defaultQuantityUnitId: body.defaultQuantityUnitId ?? null,
+							minStockAmount: body.minStockAmount ?? "0",
+							defaultExpirationDays: body.defaultExpirationDays ?? null,
+							defaultConsumeAmount: body.defaultConsumeAmount ?? null,
+							userId: session.user.id,
+						})
+						.returning();
+				} catch (err: unknown) {
+					if (
+						err instanceof Error &&
+						"code" in err &&
+						(err as { code: string }).code === "23505"
+					) {
+						return json(
+							{ error: "A product with this name already exists" },
+							{ status: 409 },
+						);
+					}
+					throw err;
+				}
 
 				const categoryIds: string[] = body.categoryIds ?? [];
 				if (categoryIds.length > 0) {

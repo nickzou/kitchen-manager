@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Check, Pencil, Plus, Trash2, X } from "lucide-react";
 import { type FormEvent, useState } from "react";
+import { AlertBox } from "#src/components/AlertBox";
 import { Combobox } from "#src/components/Combobox";
 import InventorySubNav from "#src/components/InventorySubNav";
 import { Island } from "#src/components/Island";
@@ -349,8 +350,8 @@ function QuantityUnitDetail() {
 						</div>
 
 						{confirmDelete && (
-							<div className="mt-6 flex items-center gap-3 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900 dark:bg-red-950/50">
-								<p className="flex-1 text-sm text-red-700 dark:text-red-300">
+							<AlertBox className="mt-6 flex items-center gap-3">
+								<p className="flex-1 text-sm">
 									Delete this quantity unit? This cannot be undone.
 								</p>
 								<button
@@ -368,7 +369,7 @@ function QuantityUnitDetail() {
 								>
 									{deleteQuantityUnit.isPending ? "Deleting…" : "Delete"}
 								</button>
-							</div>
+							</AlertBox>
 						)}
 					</>
 				)}

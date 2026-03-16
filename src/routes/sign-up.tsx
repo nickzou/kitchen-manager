@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { type FormEvent, useState } from "react";
+import { AlertText } from "#src/components/AlertText";
 import { Island } from "#src/components/Island";
 import { MobileLink } from "#src/components/MobileLink";
 import { Page } from "#src/components/Page";
@@ -79,9 +80,7 @@ function SignUp() {
 						onChange={(e) => setPassword(e.target.value)}
 					/>
 
-					{error && (
-						<p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-					)}
+					{error && <AlertText>{error}</AlertText>}
 
 					<button
 						type="submit"
