@@ -154,19 +154,23 @@ function ProductDetail() {
 
 	async function handleSave(e: FormEvent) {
 		e.preventDefault();
-		await updateProduct.mutateAsync({
-			name: form.name,
-			categoryIds: form.categoryIds,
-			description: form.description || undefined,
-			image: form.image || undefined,
-			defaultQuantityUnitId: form.defaultQuantityUnitId || undefined,
-			minStockAmount: form.minStockAmount || undefined,
-			defaultExpirationDays: form.defaultExpirationDays
-				? Number.parseInt(form.defaultExpirationDays, 10)
-				: undefined,
-			defaultConsumeAmount: form.defaultConsumeAmount || undefined,
-		});
-		setEditing(false);
+		try {
+			await updateProduct.mutateAsync({
+				name: form.name,
+				categoryIds: form.categoryIds,
+				description: form.description || undefined,
+				image: form.image || undefined,
+				defaultQuantityUnitId: form.defaultQuantityUnitId || undefined,
+				minStockAmount: form.minStockAmount || undefined,
+				defaultExpirationDays: form.defaultExpirationDays
+					? Number.parseInt(form.defaultExpirationDays, 10)
+					: undefined,
+				defaultConsumeAmount: form.defaultConsumeAmount || undefined,
+			});
+			setEditing(false);
+		} catch {
+			// error is captured by the mutation and displayed in the UI
+		}
 	}
 
 	async function handleDelete() {
@@ -386,6 +390,11 @@ function ProductDetail() {
 									/>
 								</div>
 
+								{updateProduct.error && (
+									<p className="text-sm text-red-600 dark:text-red-400">
+										{updateProduct.error.message}
+									</p>
+								)}
 								<button
 									type="submit"
 									disabled={updateProduct.isPending}

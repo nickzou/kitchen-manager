@@ -8,6 +8,7 @@ import {
 	pgTable,
 	text,
 	timestamp,
+	unique,
 } from "drizzle-orm/pg-core";
 import { user } from "./auth-schema";
 
@@ -254,7 +255,10 @@ export const product = pgTable(
 			.$onUpdate(() => new Date())
 			.notNull(),
 	},
-	(table) => [index("product_userId_idx").on(table.userId)],
+	(table) => [
+		index("product_userId_idx").on(table.userId),
+		unique("product_userId_name_unique").on(table.userId, table.name),
+	],
 );
 
 export const productRelations = relations(product, ({ one, many }) => ({

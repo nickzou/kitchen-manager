@@ -50,12 +50,16 @@ function ProductsPage() {
 	async function handleSubmit(e: FormEvent) {
 		e.preventDefault();
 		if (!name.trim()) return;
-		await createProduct.mutateAsync({
-			name: name.trim(),
-			categoryIds: categoryIds.length > 0 ? categoryIds : undefined,
-		});
-		setName("");
-		setCategoryIds([]);
+		try {
+			await createProduct.mutateAsync({
+				name: name.trim(),
+				categoryIds: categoryIds.length > 0 ? categoryIds : undefined,
+			});
+			setName("");
+			setCategoryIds([]);
+		} catch {
+			// error is captured by the mutation and displayed in the UI
+		}
 	}
 
 	function getUnitLabel(unitId: string | null) {
@@ -115,6 +119,11 @@ function ProductsPage() {
 						<Plus size={16} />
 						Add
 					</button>
+					{createProduct.error && (
+						<p className="w-full text-sm text-red-600 dark:text-red-400">
+							{createProduct.error.message}
+						</p>
+					)}
 				</form>
 
 				<div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
