@@ -76,7 +76,7 @@ export function StockEntryRow({
 					className="flex h-7 items-center gap-1 rounded-full bg-amber-600 px-2.5 text-xs font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
 				>
 					<Minus size={12} />
-					Use
+					Consume
 				</button>
 			</div>
 		</div>
