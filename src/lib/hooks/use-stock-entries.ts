@@ -8,7 +8,7 @@ export interface StockEntry {
 	purchaseDate: string | null;
 	price: string | null;
 	storeId: string | null;
-	brand: string | null;
+	brandId: string | null;
 	userId: string;
 	createdAt: string;
 	updatedAt: string;
@@ -21,7 +21,7 @@ export type CreateStockEntryInput = {
 	purchaseDate?: string;
 	price?: string;
 	storeId?: string;
-	brand?: string;
+	brandId?: string;
 };
 
 export type UpdateStockEntryInput = {
@@ -30,7 +30,7 @@ export type UpdateStockEntryInput = {
 	purchaseDate?: string;
 	price?: string;
 	storeId?: string;
-	brand?: string;
+	brandId?: string;
 };
 
 export type ConsumeStockInput = {

@@ -25,6 +25,7 @@ import { Route as QuantityUnitsIndexRouteImport } from './routes/quantity-units/
 import { Route as ProductsIndexRouteImport } from './routes/products/index'
 import { Route as ProductCategoriesIndexRouteImport } from './routes/product-categories/index'
 import { Route as MealPlanIndexRouteImport } from './routes/meal-plan/index'
+import { Route as BrandsIndexRouteImport } from './routes/brands/index'
 import { Route as StoresIdRouteImport } from './routes/stores/$id'
 import { Route as RecipesIdRouteImport } from './routes/recipes/$id'
 import { Route as RecipeCategoriesIdRouteImport } from './routes/recipe-categories/$id'
@@ -32,6 +33,7 @@ import { Route as QuantityUnitsIdRouteImport } from './routes/quantity-units/$id
 import { Route as ProductsIdRouteImport } from './routes/products/$id'
 import { Route as ProductCategoriesIdRouteImport } from './routes/product-categories/$id'
 import { Route as MealPlanShoppingListRouteImport } from './routes/meal-plan/shopping-list'
+import { Route as BrandsIdRouteImport } from './routes/brands/$id'
 import { Route as ApiWebhooksIndexRouteImport } from './routes/api/webhooks/index'
 import { Route as ApiUploadsIndexRouteImport } from './routes/api/uploads/index'
 import { Route as ApiUnitConversionsIndexRouteImport } from './routes/api/unit-conversions/index'
@@ -45,6 +47,7 @@ import { Route as ApiProductsIndexRouteImport } from './routes/api/products/inde
 import { Route as ApiProductCategoriesIndexRouteImport } from './routes/api/product-categories/index'
 import { Route as ApiMealSlotsIndexRouteImport } from './routes/api/meal-slots/index'
 import { Route as ApiMealPlanEntriesIndexRouteImport } from './routes/api/meal-plan-entries/index'
+import { Route as ApiBrandsIndexRouteImport } from './routes/api/brands/index'
 import { Route as ApiApiKeysIndexRouteImport } from './routes/api/api-keys/index'
 import { Route as ApiWebhooksRetryRouteImport } from './routes/api/webhooks/retry'
 import { Route as ApiWebhooksIdRouteImport } from './routes/api/webhooks/$id'
@@ -66,6 +69,7 @@ import { Route as ApiMealSlotsIdRouteImport } from './routes/api/meal-slots/$id'
 import { Route as ApiMealPlanEntriesIngredientSummaryRouteImport } from './routes/api/meal-plan-entries/ingredient-summary'
 import { Route as ApiMealPlanEntriesCookRouteImport } from './routes/api/meal-plan-entries/cook'
 import { Route as ApiMealPlanEntriesIdRouteImport } from './routes/api/meal-plan-entries/$id'
+import { Route as ApiBrandsIdRouteImport } from './routes/api/brands/$id'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as ApiApiKeysIdRouteImport } from './routes/api/api-keys/$id'
 import { Route as ApiRecipesIdPrepStepsIndexRouteImport } from './routes/api/recipes/$id/prep-steps/index'
@@ -155,6 +159,11 @@ const MealPlanIndexRoute = MealPlanIndexRouteImport.update({
   path: '/meal-plan/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BrandsIndexRoute = BrandsIndexRouteImport.update({
+  id: '/brands/',
+  path: '/brands/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const StoresIdRoute = StoresIdRouteImport.update({
   id: '/stores/$id',
   path: '/stores/$id',
@@ -188,6 +197,11 @@ const ProductCategoriesIdRoute = ProductCategoriesIdRouteImport.update({
 const MealPlanShoppingListRoute = MealPlanShoppingListRouteImport.update({
   id: '/meal-plan/shopping-list',
   path: '/meal-plan/shopping-list',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BrandsIdRoute = BrandsIdRouteImport.update({
+  id: '/brands/$id',
+  path: '/brands/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiWebhooksIndexRoute = ApiWebhooksIndexRouteImport.update({
@@ -255,6 +269,11 @@ const ApiMealSlotsIndexRoute = ApiMealSlotsIndexRouteImport.update({
 const ApiMealPlanEntriesIndexRoute = ApiMealPlanEntriesIndexRouteImport.update({
   id: '/api/meal-plan-entries/',
   path: '/api/meal-plan-entries/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiBrandsIndexRoute = ApiBrandsIndexRouteImport.update({
+  id: '/api/brands/',
+  path: '/api/brands/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiApiKeysIndexRoute = ApiApiKeysIndexRouteImport.update({
@@ -363,6 +382,11 @@ const ApiMealPlanEntriesIdRoute = ApiMealPlanEntriesIdRouteImport.update({
   path: '/api/meal-plan-entries/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiBrandsIdRoute = ApiBrandsIdRouteImport.update({
+  id: '/api/brands/$id',
+  path: '/api/brands/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -419,6 +443,7 @@ export interface FileRoutesByFullPath {
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
   '/verify-email': typeof VerifyEmailRoute
+  '/brands/$id': typeof BrandsIdRoute
   '/meal-plan/shopping-list': typeof MealPlanShoppingListRoute
   '/product-categories/$id': typeof ProductCategoriesIdRoute
   '/products/$id': typeof ProductsIdRoute
@@ -426,6 +451,7 @@ export interface FileRoutesByFullPath {
   '/recipe-categories/$id': typeof RecipeCategoriesIdRoute
   '/recipes/$id': typeof RecipesIdRoute
   '/stores/$id': typeof StoresIdRoute
+  '/brands/': typeof BrandsIndexRoute
   '/meal-plan/': typeof MealPlanIndexRoute
   '/product-categories/': typeof ProductCategoriesIndexRoute
   '/products/': typeof ProductsIndexRoute
@@ -436,6 +462,7 @@ export interface FileRoutesByFullPath {
   '/stores/': typeof StoresIndexRoute
   '/api/api-keys/$id': typeof ApiApiKeysIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/brands/$id': typeof ApiBrandsIdRoute
   '/api/meal-plan-entries/$id': typeof ApiMealPlanEntriesIdRoute
   '/api/meal-plan-entries/cook': typeof ApiMealPlanEntriesCookRoute
   '/api/meal-plan-entries/ingredient-summary': typeof ApiMealPlanEntriesIngredientSummaryRoute
@@ -457,6 +484,7 @@ export interface FileRoutesByFullPath {
   '/api/webhooks/$id': typeof ApiWebhooksIdRoute
   '/api/webhooks/retry': typeof ApiWebhooksRetryRoute
   '/api/api-keys/': typeof ApiApiKeysIndexRoute
+  '/api/brands/': typeof ApiBrandsIndexRoute
   '/api/meal-plan-entries/': typeof ApiMealPlanEntriesIndexRoute
   '/api/meal-slots/': typeof ApiMealSlotsIndexRoute
   '/api/product-categories/': typeof ApiProductCategoriesIndexRoute
@@ -486,6 +514,7 @@ export interface FileRoutesByTo {
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
   '/verify-email': typeof VerifyEmailRoute
+  '/brands/$id': typeof BrandsIdRoute
   '/meal-plan/shopping-list': typeof MealPlanShoppingListRoute
   '/product-categories/$id': typeof ProductCategoriesIdRoute
   '/products/$id': typeof ProductsIdRoute
@@ -493,6 +522,7 @@ export interface FileRoutesByTo {
   '/recipe-categories/$id': typeof RecipeCategoriesIdRoute
   '/recipes/$id': typeof RecipesIdRoute
   '/stores/$id': typeof StoresIdRoute
+  '/brands': typeof BrandsIndexRoute
   '/meal-plan': typeof MealPlanIndexRoute
   '/product-categories': typeof ProductCategoriesIndexRoute
   '/products': typeof ProductsIndexRoute
@@ -503,6 +533,7 @@ export interface FileRoutesByTo {
   '/stores': typeof StoresIndexRoute
   '/api/api-keys/$id': typeof ApiApiKeysIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/brands/$id': typeof ApiBrandsIdRoute
   '/api/meal-plan-entries/$id': typeof ApiMealPlanEntriesIdRoute
   '/api/meal-plan-entries/cook': typeof ApiMealPlanEntriesCookRoute
   '/api/meal-plan-entries/ingredient-summary': typeof ApiMealPlanEntriesIngredientSummaryRoute
@@ -524,6 +555,7 @@ export interface FileRoutesByTo {
   '/api/webhooks/$id': typeof ApiWebhooksIdRoute
   '/api/webhooks/retry': typeof ApiWebhooksRetryRoute
   '/api/api-keys': typeof ApiApiKeysIndexRoute
+  '/api/brands': typeof ApiBrandsIndexRoute
   '/api/meal-plan-entries': typeof ApiMealPlanEntriesIndexRoute
   '/api/meal-slots': typeof ApiMealSlotsIndexRoute
   '/api/product-categories': typeof ApiProductCategoriesIndexRoute
@@ -554,6 +586,7 @@ export interface FileRoutesById {
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
   '/verify-email': typeof VerifyEmailRoute
+  '/brands/$id': typeof BrandsIdRoute
   '/meal-plan/shopping-list': typeof MealPlanShoppingListRoute
   '/product-categories/$id': typeof ProductCategoriesIdRoute
   '/products/$id': typeof ProductsIdRoute
@@ -561,6 +594,7 @@ export interface FileRoutesById {
   '/recipe-categories/$id': typeof RecipeCategoriesIdRoute
   '/recipes/$id': typeof RecipesIdRoute
   '/stores/$id': typeof StoresIdRoute
+  '/brands/': typeof BrandsIndexRoute
   '/meal-plan/': typeof MealPlanIndexRoute
   '/product-categories/': typeof ProductCategoriesIndexRoute
   '/products/': typeof ProductsIndexRoute
@@ -571,6 +605,7 @@ export interface FileRoutesById {
   '/stores/': typeof StoresIndexRoute
   '/api/api-keys/$id': typeof ApiApiKeysIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/brands/$id': typeof ApiBrandsIdRoute
   '/api/meal-plan-entries/$id': typeof ApiMealPlanEntriesIdRoute
   '/api/meal-plan-entries/cook': typeof ApiMealPlanEntriesCookRoute
   '/api/meal-plan-entries/ingredient-summary': typeof ApiMealPlanEntriesIngredientSummaryRoute
@@ -592,6 +627,7 @@ export interface FileRoutesById {
   '/api/webhooks/$id': typeof ApiWebhooksIdRoute
   '/api/webhooks/retry': typeof ApiWebhooksRetryRoute
   '/api/api-keys/': typeof ApiApiKeysIndexRoute
+  '/api/brands/': typeof ApiBrandsIndexRoute
   '/api/meal-plan-entries/': typeof ApiMealPlanEntriesIndexRoute
   '/api/meal-slots/': typeof ApiMealSlotsIndexRoute
   '/api/product-categories/': typeof ApiProductCategoriesIndexRoute
@@ -623,6 +659,7 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/sign-up'
     | '/verify-email'
+    | '/brands/$id'
     | '/meal-plan/shopping-list'
     | '/product-categories/$id'
     | '/products/$id'
@@ -630,6 +667,7 @@ export interface FileRouteTypes {
     | '/recipe-categories/$id'
     | '/recipes/$id'
     | '/stores/$id'
+    | '/brands/'
     | '/meal-plan/'
     | '/product-categories/'
     | '/products/'
@@ -640,6 +678,7 @@ export interface FileRouteTypes {
     | '/stores/'
     | '/api/api-keys/$id'
     | '/api/auth/$'
+    | '/api/brands/$id'
     | '/api/meal-plan-entries/$id'
     | '/api/meal-plan-entries/cook'
     | '/api/meal-plan-entries/ingredient-summary'
@@ -661,6 +700,7 @@ export interface FileRouteTypes {
     | '/api/webhooks/$id'
     | '/api/webhooks/retry'
     | '/api/api-keys/'
+    | '/api/brands/'
     | '/api/meal-plan-entries/'
     | '/api/meal-slots/'
     | '/api/product-categories/'
@@ -690,6 +730,7 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/sign-up'
     | '/verify-email'
+    | '/brands/$id'
     | '/meal-plan/shopping-list'
     | '/product-categories/$id'
     | '/products/$id'
@@ -697,6 +738,7 @@ export interface FileRouteTypes {
     | '/recipe-categories/$id'
     | '/recipes/$id'
     | '/stores/$id'
+    | '/brands'
     | '/meal-plan'
     | '/product-categories'
     | '/products'
@@ -707,6 +749,7 @@ export interface FileRouteTypes {
     | '/stores'
     | '/api/api-keys/$id'
     | '/api/auth/$'
+    | '/api/brands/$id'
     | '/api/meal-plan-entries/$id'
     | '/api/meal-plan-entries/cook'
     | '/api/meal-plan-entries/ingredient-summary'
@@ -728,6 +771,7 @@ export interface FileRouteTypes {
     | '/api/webhooks/$id'
     | '/api/webhooks/retry'
     | '/api/api-keys'
+    | '/api/brands'
     | '/api/meal-plan-entries'
     | '/api/meal-slots'
     | '/api/product-categories'
@@ -757,6 +801,7 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/sign-up'
     | '/verify-email'
+    | '/brands/$id'
     | '/meal-plan/shopping-list'
     | '/product-categories/$id'
     | '/products/$id'
@@ -764,6 +809,7 @@ export interface FileRouteTypes {
     | '/recipe-categories/$id'
     | '/recipes/$id'
     | '/stores/$id'
+    | '/brands/'
     | '/meal-plan/'
     | '/product-categories/'
     | '/products/'
@@ -774,6 +820,7 @@ export interface FileRouteTypes {
     | '/stores/'
     | '/api/api-keys/$id'
     | '/api/auth/$'
+    | '/api/brands/$id'
     | '/api/meal-plan-entries/$id'
     | '/api/meal-plan-entries/cook'
     | '/api/meal-plan-entries/ingredient-summary'
@@ -795,6 +842,7 @@ export interface FileRouteTypes {
     | '/api/webhooks/$id'
     | '/api/webhooks/retry'
     | '/api/api-keys/'
+    | '/api/brands/'
     | '/api/meal-plan-entries/'
     | '/api/meal-slots/'
     | '/api/product-categories/'
@@ -825,6 +873,7 @@ export interface RootRouteChildren {
   SignInRoute: typeof SignInRoute
   SignUpRoute: typeof SignUpRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
+  BrandsIdRoute: typeof BrandsIdRoute
   MealPlanShoppingListRoute: typeof MealPlanShoppingListRoute
   ProductCategoriesIdRoute: typeof ProductCategoriesIdRoute
   ProductsIdRoute: typeof ProductsIdRoute
@@ -832,6 +881,7 @@ export interface RootRouteChildren {
   RecipeCategoriesIdRoute: typeof RecipeCategoriesIdRoute
   RecipesIdRoute: typeof RecipesIdRoute
   StoresIdRoute: typeof StoresIdRoute
+  BrandsIndexRoute: typeof BrandsIndexRoute
   MealPlanIndexRoute: typeof MealPlanIndexRoute
   ProductCategoriesIndexRoute: typeof ProductCategoriesIndexRoute
   ProductsIndexRoute: typeof ProductsIndexRoute
@@ -842,6 +892,7 @@ export interface RootRouteChildren {
   StoresIndexRoute: typeof StoresIndexRoute
   ApiApiKeysIdRoute: typeof ApiApiKeysIdRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  ApiBrandsIdRoute: typeof ApiBrandsIdRoute
   ApiMealPlanEntriesIdRoute: typeof ApiMealPlanEntriesIdRoute
   ApiMealPlanEntriesCookRoute: typeof ApiMealPlanEntriesCookRoute
   ApiMealPlanEntriesIngredientSummaryRoute: typeof ApiMealPlanEntriesIngredientSummaryRoute
@@ -863,6 +914,7 @@ export interface RootRouteChildren {
   ApiWebhooksIdRoute: typeof ApiWebhooksIdRoute
   ApiWebhooksRetryRoute: typeof ApiWebhooksRetryRoute
   ApiApiKeysIndexRoute: typeof ApiApiKeysIndexRoute
+  ApiBrandsIndexRoute: typeof ApiBrandsIndexRoute
   ApiMealPlanEntriesIndexRoute: typeof ApiMealPlanEntriesIndexRoute
   ApiMealSlotsIndexRoute: typeof ApiMealSlotsIndexRoute
   ApiProductCategoriesIndexRoute: typeof ApiProductCategoriesIndexRoute
@@ -992,6 +1044,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MealPlanIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/brands/': {
+      id: '/brands/'
+      path: '/brands'
+      fullPath: '/brands/'
+      preLoaderRoute: typeof BrandsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/stores/$id': {
       id: '/stores/$id'
       path: '/stores/$id'
@@ -1039,6 +1098,13 @@ declare module '@tanstack/react-router' {
       path: '/meal-plan/shopping-list'
       fullPath: '/meal-plan/shopping-list'
       preLoaderRoute: typeof MealPlanShoppingListRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/brands/$id': {
+      id: '/brands/$id'
+      path: '/brands/$id'
+      fullPath: '/brands/$id'
+      preLoaderRoute: typeof BrandsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/webhooks/': {
@@ -1130,6 +1196,13 @@ declare module '@tanstack/react-router' {
       path: '/api/meal-plan-entries'
       fullPath: '/api/meal-plan-entries/'
       preLoaderRoute: typeof ApiMealPlanEntriesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/brands/': {
+      id: '/api/brands/'
+      path: '/api/brands'
+      fullPath: '/api/brands/'
+      preLoaderRoute: typeof ApiBrandsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/api-keys/': {
@@ -1279,6 +1352,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiMealPlanEntriesIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/brands/$id': {
+      id: '/api/brands/$id'
+      path: '/api/brands/$id'
+      fullPath: '/api/brands/$id'
+      preLoaderRoute: typeof ApiBrandsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -1382,6 +1462,7 @@ const rootRouteChildren: RootRouteChildren = {
   SignInRoute: SignInRoute,
   SignUpRoute: SignUpRoute,
   VerifyEmailRoute: VerifyEmailRoute,
+  BrandsIdRoute: BrandsIdRoute,
   MealPlanShoppingListRoute: MealPlanShoppingListRoute,
   ProductCategoriesIdRoute: ProductCategoriesIdRoute,
   ProductsIdRoute: ProductsIdRoute,
@@ -1389,6 +1470,7 @@ const rootRouteChildren: RootRouteChildren = {
   RecipeCategoriesIdRoute: RecipeCategoriesIdRoute,
   RecipesIdRoute: RecipesIdRoute,
   StoresIdRoute: StoresIdRoute,
+  BrandsIndexRoute: BrandsIndexRoute,
   MealPlanIndexRoute: MealPlanIndexRoute,
   ProductCategoriesIndexRoute: ProductCategoriesIndexRoute,
   ProductsIndexRoute: ProductsIndexRoute,
@@ -1399,6 +1481,7 @@ const rootRouteChildren: RootRouteChildren = {
   StoresIndexRoute: StoresIndexRoute,
   ApiApiKeysIdRoute: ApiApiKeysIdRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
+  ApiBrandsIdRoute: ApiBrandsIdRoute,
   ApiMealPlanEntriesIdRoute: ApiMealPlanEntriesIdRoute,
   ApiMealPlanEntriesCookRoute: ApiMealPlanEntriesCookRoute,
   ApiMealPlanEntriesIngredientSummaryRoute:
@@ -1421,6 +1504,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiWebhooksIdRoute: ApiWebhooksIdRoute,
   ApiWebhooksRetryRoute: ApiWebhooksRetryRoute,
   ApiApiKeysIndexRoute: ApiApiKeysIndexRoute,
+  ApiBrandsIndexRoute: ApiBrandsIndexRoute,
   ApiMealPlanEntriesIndexRoute: ApiMealPlanEntriesIndexRoute,
   ApiMealSlotsIndexRoute: ApiMealSlotsIndexRoute,
   ApiProductCategoriesIndexRoute: ApiProductCategoriesIndexRoute,

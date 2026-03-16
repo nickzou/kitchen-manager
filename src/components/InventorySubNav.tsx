@@ -7,6 +7,7 @@ export default function InventorySubNav() {
 			<Link to="/product-categories">Categories</Link>
 			<Link to="/quantity-units">Units</Link>
 			<Link to="/stores">Stores</Link>
+			<Link to="/brands">Brands</Link>
 		</nav>
 	);
 }

@@ -12,6 +12,7 @@ import { SearchInput } from "#src/components/SearchInput";
 import { StockProductContent } from "#src/components/stock/StockProductContent";
 import { StockProductTrigger } from "#src/components/stock/StockProductTrigger";
 import { authClient } from "#src/lib/auth-client";
+import { useBrands, useCreateBrand } from "#src/lib/hooks/use-brands";
 import { useProductCategories } from "#src/lib/hooks/use-categories";
 import { useProducts } from "#src/lib/hooks/use-products";
 import { useQuantityUnits } from "#src/lib/hooks/use-quantity-units";
@@ -34,10 +35,12 @@ function StockPage() {
 
 	const { data: products } = useProducts();
 	const { data: categories } = useProductCategories();
+	const { data: brands } = useBrands();
 	const { data: stores } = useStores();
 	const { data: quantityUnits } = useQuantityUnits();
 	const { data: stockEntries, isLoading: entriesLoading } = useStockEntries();
 	const { data: stockLogs } = useStockLogs();
+	const createBrand = useCreateBrand();
 	const createStockEntry = useCreateStockEntry();
 	const consumeStock = useConsumeStock();
 
@@ -46,7 +49,7 @@ function StockPage() {
 	const [expirationDate, setExpirationDate] = useState("");
 	const [price, setPrice] = useState("");
 	const [storeId, setStoreId] = useState("");
-	const [brand, setBrand] = useState("");
+	const [brandId, setBrandId] = useState("");
 	const [search, setSearch] = useState("");
 	const [consumeAmounts, setConsumeAmounts] = useState<Record<string, string>>(
 		{},
@@ -69,13 +72,13 @@ function StockPage() {
 			expirationDate: expirationDate || undefined,
 			price: price || undefined,
 			storeId: storeId || undefined,
-			brand: brand || undefined,
+			brandId: brandId || undefined,
 		});
 		setQuantity("");
 		setExpirationDate("");
 		setPrice("");
 		setStoreId("");
-		setBrand("");
+		setBrandId("");
 	}
 
 	async function handleConsume(stockEntryId: string) {
@@ -198,12 +201,19 @@ function StockPage() {
 						placeholder="Store"
 						className="w-40"
 					/>
-					<input
-						type="text"
+					<Combobox
+						value={brandId}
+						onChange={setBrandId}
+						options={(brands ?? []).map((b) => ({
+							value: b.id,
+							label: b.name,
+						}))}
 						placeholder="Brand"
-						value={brand}
-						onChange={(e) => setBrand(e.target.value)}
-						className="h-10 w-36 rounded-xl border border-(--line) bg-(--surface) px-3 text-sm text-(--sea-ink) placeholder:text-(--sea-ink-soft) focus:outline-none focus:ring-2 focus:ring-(--lagoon)"
+						className="w-40"
+						onCreateNew={async (name) => {
+							const created = await createBrand.mutateAsync({ name });
+							setBrandId(created.id);
+						}}
 					/>
 					<button
 						type="submit"
@@ -295,6 +305,9 @@ function StockPage() {
 										storeNames={Object.fromEntries(
 											(stores ?? []).map((s) => [s.id, s.name]),
 										)}
+										brandNames={Object.fromEntries(
+											(brands ?? []).map((b) => [b.id, b.name]),
+										)}
 									/>
 								)}
 							/>
@@ -346,6 +359,7 @@ function StockPage() {
 				<EditStockModal
 					entry={editingEntry}
 					stores={stores ?? []}
+					brands={brands ?? []}
 					unitAbbr={getUnitAbbr(
 						products?.find((p) => p.id === editingEntry.productId)
 							?.defaultQuantityUnitId ?? null,
@@ -360,15 +374,18 @@ function StockPage() {
 function EditStockModal({
 	entry,
 	stores,
+	brands,
 	unitAbbr,
 	onClose,
 }: {
 	entry: StockEntry;
 	stores: { id: string; name: string }[];
+	brands: { id: string; name: string }[];
 	unitAbbr: string;
 	onClose: () => void;
 }) {
 	const updateStockEntry = useUpdateStockEntry(entry.id);
+	const createBrand = useCreateBrand();
 	const [quantity, setQuantity] = useState(entry.quantity);
 	const [expirationDate, setExpirationDate] = useState(
 		entry.expirationDate?.slice(0, 10) ?? "",
@@ -378,7 +395,7 @@ function EditStockModal({
 	);
 	const [price, setPrice] = useState(entry.price ?? "");
 	const [storeId, setStoreId] = useState(entry.storeId ?? "");
-	const [brand, setBrand] = useState(entry.brand ?? "");
+	const [brandId, setBrandId] = useState(entry.brandId ?? "");
 
 	async function handleSubmit(e: FormEvent) {
 		e.preventDefault();
@@ -388,7 +405,7 @@ function EditStockModal({
 			purchaseDate: purchaseDate || undefined,
 			price: price || undefined,
 			storeId: storeId || undefined,
-			brand: brand || undefined,
+			brandId: brandId || undefined,
 		});
 		onClose();
 	}
@@ -456,12 +473,18 @@ function EditStockModal({
 				</label>
 				<label className="flex flex-col gap-1 text-sm font-medium text-(--sea-ink)">
 					Brand
-					<input
-						type="text"
-						value={brand}
-						onChange={(e) => setBrand(e.target.value)}
-						placeholder="Brand"
-						className="h-10 rounded-xl border border-(--line) bg-(--surface) px-3 text-sm text-(--sea-ink) placeholder:text-(--sea-ink-soft) focus:outline-none focus:ring-2 focus:ring-(--lagoon)"
+					<Combobox
+						value={brandId}
+						onChange={setBrandId}
+						options={brands.map((b) => ({
+							value: b.id,
+							label: b.name,
+						}))}
+						placeholder="Select brand"
+						onCreateNew={async (name) => {
+							const created = await createBrand.mutateAsync({ name });
+							setBrandId(created.id);
+						}}
 					/>
 				</label>
 				<div className="flex justify-end gap-2 pt-2">

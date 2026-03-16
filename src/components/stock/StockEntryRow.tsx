@@ -11,6 +11,7 @@ export function StockEntryRow({
 	consumePending,
 	onEdit,
 	storeName,
+	brandName,
 }: {
 	entry: StockEntry;
 	unitAbbr: string;
@@ -20,6 +21,7 @@ export function StockEntryRow({
 	consumePending: boolean;
 	onEdit: () => void;
 	storeName: string | null;
+	brandName: string | null;
 }) {
 	return (
 		<div className="flex flex-wrap items-center gap-3 rounded-lg bg-(--surface) px-3 py-2 text-xs text-(--sea-ink-soft)">
@@ -36,7 +38,7 @@ export function StockEntryRow({
 				</span>
 			)}
 			{entry.price && <span>${entry.price}</span>}
-			{entry.brand && <span>{entry.brand}</span>}
+			{brandName && <span>{brandName}</span>}
 			{storeName && <span>{storeName}</span>}
 			<div className="ml-auto flex items-center gap-1.5">
 				<NumberInput
