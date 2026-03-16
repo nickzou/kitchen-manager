@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import type { StockEntry } from "#src/lib/hooks/use-stock-entries";
-import { pickBestEntry } from "#src/lib/stock-utils";
+import {
+	getAvgUnitCost,
+	getLatestUnitCost,
+	pickBestEntry,
+} from "#src/lib/stock-utils";
 
 function makeEntry(overrides: Partial<StockEntry> = {}): StockEntry {
 	return {
@@ -112,5 +116,88 @@ describe("pickBestEntry", () => {
 		];
 		// e3 expires soonest
 		expect(pickBestEntry(entries)?.id).toBe("e3");
+	});
+});
+
+describe("getAvgUnitCost", () => {
+	it("returns null for empty array", () => {
+		expect(getAvgUnitCost([])).toBeNull();
+	});
+
+	it("returns null when no entries have a price", () => {
+		const entries = [makeEntry({ price: null, quantity: "5" })];
+		expect(getAvgUnitCost(entries)).toBeNull();
+	});
+
+	it("returns null when all priced entries have zero quantity", () => {
+		const entries = [makeEntry({ price: "10", quantity: "0" })];
+		expect(getAvgUnitCost(entries)).toBeNull();
+	});
+
+	it("calculates unit cost for a single entry", () => {
+		const entries = [makeEntry({ price: "10", quantity: "4" })];
+		expect(getAvgUnitCost(entries)).toBe(2.5);
+	});
+
+	it("averages unit costs across multiple entries", () => {
+		const entries = [
+			makeEntry({ id: "e1", price: "10", quantity: "2" }), // 5
+			makeEntry({ id: "e2", price: "12", quantity: "4" }), // 3
+		];
+		expect(getAvgUnitCost(entries)).toBe(4);
+	});
+
+	it("skips entries without a price", () => {
+		const entries = [
+			makeEntry({ id: "e1", price: "10", quantity: "5" }), // 2
+			makeEntry({ id: "e2", price: null, quantity: "3" }),
+		];
+		expect(getAvgUnitCost(entries)).toBe(2);
+	});
+});
+
+describe("getLatestUnitCost", () => {
+	it("returns null for empty array", () => {
+		expect(getLatestUnitCost([])).toBeNull();
+	});
+
+	it("returns null when no entries have a price", () => {
+		const entries = [
+			makeEntry({ price: null, purchaseDate: "2026-01-01T00:00:00Z" }),
+		];
+		expect(getLatestUnitCost(entries)).toBeNull();
+	});
+
+	it("returns unit cost of the single priced entry", () => {
+		const entries = [
+			makeEntry({ price: "15", quantity: "3", purchaseDate: "2026-01-01T00:00:00Z" }),
+		];
+		expect(getLatestUnitCost(entries)).toBe(5);
+	});
+
+	it("returns unit cost from the most recent entry by purchaseDate", () => {
+		const entries = [
+			makeEntry({ id: "e1", price: "10", quantity: "2", purchaseDate: "2026-01-01T00:00:00Z" }), // 5
+			makeEntry({ id: "e2", price: "12", quantity: "4", purchaseDate: "2026-03-01T00:00:00Z" }), // 3
+			makeEntry({ id: "e3", price: "8", quantity: "2", purchaseDate: "2026-02-01T00:00:00Z" }),   // 4
+		];
+		expect(getLatestUnitCost(entries)).toBe(3);
+	});
+
+	it("skips entries without a price when finding latest", () => {
+		const entries = [
+			makeEntry({ id: "e1", price: "10", quantity: "5", purchaseDate: "2026-01-01T00:00:00Z" }), // 2
+			makeEntry({ id: "e2", price: null, quantity: "3", purchaseDate: "2026-03-01T00:00:00Z" }),
+		];
+		expect(getLatestUnitCost(entries)).toBe(2);
+	});
+
+	it("handles entries with null purchaseDate", () => {
+		const entries = [
+			makeEntry({ id: "e1", price: "10", quantity: "2", purchaseDate: "2026-02-01T00:00:00Z" }), // 5
+			makeEntry({ id: "e2", price: "6", quantity: "3", purchaseDate: null }), // 2
+		];
+		// e1 has a real date which is newer than epoch (null → 0)
+		expect(getLatestUnitCost(entries)).toBe(5);
 	});
 });

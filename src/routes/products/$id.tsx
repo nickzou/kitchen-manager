@@ -10,6 +10,7 @@ import { MultiCombobox } from "#src/components/MultiCombobox";
 import { NumberInput } from "#src/components/NumberInput";
 import { Page } from "#src/components/Page";
 import { PricingHistoryChart } from "#src/components/stock/PricingHistoryChart";
+import { getAvgUnitCost, getLatestUnitCost } from "#src/lib/stock-utils";
 import { authClient } from "#src/lib/auth-client";
 import { useBrands } from "#src/lib/hooks/use-brands";
 import { useProductCategories } from "#src/lib/hooks/use-categories";
@@ -231,6 +232,9 @@ function ProductDetail() {
 
 	const categoryNames = getCategoryNames(product.categoryIds);
 	const unitName = getUnitName(product.defaultQuantityUnitId);
+	const avgUnitCost = getAvgUnitCost(stockEntries ?? []);
+	const latestUnitCost = getLatestUnitCost(stockEntries ?? []);
+	const unitLabel = unitName ?? "unit";
 
 	return (
 		<Page as="main" className="pb-8 pt-14">
@@ -532,8 +536,28 @@ function ProductDetail() {
 							className="animate-rise-in rounded-2xl p-6 sm:p-8"
 						>
 							<h2 className="mb-4 text-lg font-semibold text-(--sea-ink)">
-								Pricing History
+								Price Information
 							</h2>
+							{avgUnitCost != null && latestUnitCost != null && (
+								<dl className="mb-4 grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+									<div>
+										<dt className="font-medium text-(--sea-ink-soft)">
+											Avg. Unit Cost
+										</dt>
+										<dd className="mt-0.5 text-(--sea-ink)">
+											${avgUnitCost.toFixed(2)} / {unitLabel}
+										</dd>
+									</div>
+									<div>
+										<dt className="font-medium text-(--sea-ink-soft)">
+											Latest Unit Cost
+										</dt>
+										<dd className="mt-0.5 text-(--sea-ink)">
+											${latestUnitCost.toFixed(2)} / {unitLabel}
+										</dd>
+									</div>
+								</dl>
+							)}
 							<PricingHistoryChart
 								stockEntries={stockEntries ?? []}
 								storeNames={storeNames}

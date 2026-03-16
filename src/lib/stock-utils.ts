@@ -25,3 +25,28 @@ export function pickBestEntry(entries: StockEntry[]): StockEntry | null {
 		return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
 	})[0];
 }
+
+export function getAvgUnitCost(
+	entries: Pick<StockEntry, "price" | "quantity">[],
+): number | null {
+	const costs = entries
+		.filter((e) => e.price && Number.parseFloat(e.quantity) > 0)
+		.map((e) => Number.parseFloat(e.price!) / Number.parseFloat(e.quantity));
+	if (costs.length === 0) return null;
+	return costs.reduce((sum, c) => sum + c, 0) / costs.length;
+}
+
+export function getLatestUnitCost(
+	entries: Pick<StockEntry, "price" | "quantity" | "purchaseDate">[],
+): number | null {
+	const priced = entries.filter(
+		(e) => e.price && Number.parseFloat(e.quantity) > 0,
+	);
+	if (priced.length === 0) return null;
+	const latest = [...priced].sort(
+		(a, b) =>
+			new Date(b.purchaseDate ?? 0).getTime() -
+			new Date(a.purchaseDate ?? 0).getTime(),
+	)[0];
+	return Number.parseFloat(latest.price!) / Number.parseFloat(latest.quantity);
+}
