@@ -159,7 +159,7 @@
     {
       "idx": 22,
       "version": "7",
-      "when": 1773632926206,
+      "when": 1774156800000,
       "tag": "0022_add-default-consume-amount",
       "breakpoints": true
     }
