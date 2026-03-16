@@ -10,6 +10,7 @@ export function StockProductContent({
 	consumePending,
 	onEdit,
 	storeNames,
+	brandNames,
 }: {
 	entries: StockEntry[];
 	unitAbbr: string;
@@ -19,6 +20,7 @@ export function StockProductContent({
 	consumePending: boolean;
 	onEdit: (entry: StockEntry) => void;
 	storeNames: Record<string, string>;
+	brandNames: Record<string, string>;
 }) {
 	if (entries.length === 0) {
 		return (
@@ -43,6 +45,7 @@ export function StockProductContent({
 					consumePending={consumePending}
 					onEdit={() => onEdit(entry)}
 					storeName={entry.storeId ? (storeNames[entry.storeId] ?? null) : null}
+					brandName={entry.brandId ? (brandNames[entry.brandId] ?? null) : null}
 				/>
 			))}
 		</div>

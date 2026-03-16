@@ -58,6 +58,7 @@ export const Route = createFileRoute("/api/stock-entries/")({
 								: null,
 							price: body.price ?? null,
 							storeId: body.storeId ?? null,
+							brandId: body.brandId ?? null,
 							userId: session.user.id,
 						})
 						.returning();

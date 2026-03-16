@@ -57,6 +57,7 @@ export const Route = createFileRoute("/api/stock-entries/$id")({
 						: null;
 				if (body.price !== undefined) updates.price = body.price;
 				if (body.storeId !== undefined) updates.storeId = body.storeId;
+				if (body.brandId !== undefined) updates.brandId = body.brandId;
 
 				const [updated] = await db
 					.update(stockEntry)

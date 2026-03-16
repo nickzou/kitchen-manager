@@ -324,6 +324,32 @@ export const productUnitConversionRelations = relations(
 	}),
 );
 
+export const brand = pgTable(
+	"brand",
+	{
+		id: text("id")
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		name: text("name").notNull(),
+		userId: text("user_id")
+			.notNull()
+			.references(() => user.id, { onDelete: "cascade" }),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+		updatedAt: timestamp("updated_at")
+			.defaultNow()
+			.$onUpdate(() => new Date())
+			.notNull(),
+	},
+	(table) => [index("brand_userId_idx").on(table.userId)],
+);
+
+export const brandRelations = relations(brand, ({ one }) => ({
+	user: one(user, {
+		fields: [brand.userId],
+		references: [user.id],
+	}),
+}));
+
 export const store = pgTable(
 	"store",
 	{
@@ -366,6 +392,9 @@ export const stockEntry = pgTable(
 		storeId: text("store_id").references(() => store.id, {
 			onDelete: "set null",
 		}),
+		brandId: text("brand_id").references(() => brand.id, {
+			onDelete: "set null",
+		}),
 		userId: text("user_id")
 			.notNull()
 			.references(() => user.id, { onDelete: "cascade" }),
@@ -379,6 +408,7 @@ export const stockEntry = pgTable(
 		index("stockEntry_userId_idx").on(table.userId),
 		index("stockEntry_productId_idx").on(table.productId),
 		index("stockEntry_storeId_idx").on(table.storeId),
+		index("stockEntry_brandId_idx").on(table.brandId),
 	],
 );
 
@@ -394,6 +424,10 @@ export const stockEntryRelations = relations(stockEntry, ({ one }) => ({
 	store: one(store, {
 		fields: [stockEntry.storeId],
 		references: [store.id],
+	}),
+	brand: one(brand, {
+		fields: [stockEntry.brandId],
+		references: [brand.id],
 	}),
 }));
 
