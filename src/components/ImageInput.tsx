@@ -1,5 +1,6 @@
 import { ImagePlus, Link, Loader2, Trash2, Upload } from "lucide-react";
 import { type ChangeEvent, useRef, useState } from "react";
+import { AlertText } from "#src/components/AlertText";
 
 interface ImageInputProps {
 	value: string | null;
@@ -159,7 +160,7 @@ export function ImageInput({ value, onChange }: ImageInputProps) {
 				</div>
 			)}
 
-			{error && <p className="text-xs text-red-600">{error}</p>}
+			{error && <AlertText className="text-xs">{error}</AlertText>}
 		</div>
 	);
 }

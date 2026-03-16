@@ -18,6 +18,7 @@ import {
 	AddIngredientForm,
 	type IngredientFormState,
 } from "#src/components/AddIngredientForm";
+import { AlertBox } from "#src/components/AlertBox";
 import { Combobox } from "#src/components/Combobox";
 import { ImageInput } from "#src/components/ImageInput";
 import { Island } from "#src/components/Island";
@@ -1305,8 +1306,8 @@ function RecipeDetail() {
 								)}
 
 								{confirmDelete && (
-									<div className="mt-6 flex items-center gap-3 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900 dark:bg-red-950/50">
-										<p className="flex-1 text-sm text-red-700 dark:text-red-300">
+									<AlertBox className="mt-6 flex items-center gap-3">
+										<p className="flex-1 text-sm">
 											Delete this recipe? This cannot be undone.
 										</p>
 										<button
@@ -1324,7 +1325,7 @@ function RecipeDetail() {
 										>
 											{deleteRecipe.isPending ? "Deleting…" : "Delete"}
 										</button>
-									</div>
+									</AlertBox>
 								)}
 							</>
 						)}
