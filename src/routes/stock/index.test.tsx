@@ -343,8 +343,10 @@ describe("StockPage", () => {
 					productId: "p1",
 					quantity: "5",
 					expirationDate: undefined,
+					purchaseDate: expect.any(String),
 					price: undefined,
 					storeId: undefined,
+					brandId: undefined,
 				});
 			});
 		});

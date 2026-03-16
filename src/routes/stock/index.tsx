@@ -72,6 +72,7 @@ function StockPage() {
 			productId,
 			quantity,
 			expirationDate: expirationDate || undefined,
+			purchaseDate: new Date().toISOString().slice(0, 10),
 			price: price || undefined,
 			storeId: storeId || undefined,
 			brandId: brandId || undefined,
