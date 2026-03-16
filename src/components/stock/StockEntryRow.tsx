@@ -1,4 +1,4 @@
-import { Minus, Pencil } from "lucide-react";
+import { Minus, Pencil, Trash2 } from "lucide-react";
 import { NumberInput } from "#src/components/NumberInput";
 import type { StockEntry } from "#src/lib/hooks/use-stock-entries";
 
@@ -10,6 +10,8 @@ export function StockEntryRow({
 	onConsume,
 	consumePending,
 	onEdit,
+	onDelete,
+	deletePending,
 	storeName,
 	brandName,
 }: {
@@ -20,6 +22,8 @@ export function StockEntryRow({
 	onConsume: () => void;
 	consumePending: boolean;
 	onEdit: () => void;
+	onDelete: () => void;
+	deletePending: boolean;
 	storeName: string | null;
 	brandName: string | null;
 }) {
@@ -56,6 +60,14 @@ export function StockEntryRow({
 					className="flex h-7 items-center gap-1 rounded-full border border-(--line) px-2.5 text-xs font-semibold text-(--sea-ink-soft) transition hover:bg-(--line)"
 				>
 					<Pencil size={12} />
+				</button>
+				<button
+					type="button"
+					onClick={onDelete}
+					disabled={deletePending}
+					className="flex h-7 items-center gap-1 rounded-full border border-red-200 px-2.5 text-xs font-semibold text-red-600 transition hover:bg-red-50 disabled:opacity-50 dark:border-red-900 dark:hover:bg-red-950"
+				>
+					<Trash2 size={12} />
 				</button>
 				<button
 					type="button"

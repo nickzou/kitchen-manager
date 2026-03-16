@@ -17,6 +17,7 @@ const mockUseQuantityUnits = vi.fn();
 const mockUseStockEntries = vi.fn();
 const mockUseStockLogs = vi.fn();
 const mockUseCreateStockEntry = vi.fn();
+const mockUseDeleteStockEntry = vi.fn();
 const mockUseConsumeStock = vi.fn();
 const mockUseStores = vi.fn();
 
@@ -51,6 +52,7 @@ vi.mock("#src/lib/hooks/use-quantity-units", () => ({
 vi.mock("#src/lib/hooks/use-stock-entries", () => ({
 	useStockEntries: (...args: unknown[]) => mockUseStockEntries(...args),
 	useCreateStockEntry: (...args: unknown[]) => mockUseCreateStockEntry(...args),
+	useDeleteStockEntry: (...args: unknown[]) => mockUseDeleteStockEntry(...args),
 	useConsumeStock: (...args: unknown[]) => mockUseConsumeStock(...args),
 }));
 
@@ -178,6 +180,11 @@ beforeEach(() => {
 	});
 	mockUseStockLogs.mockReturnValue({ data: [mockStockLog] });
 	mockUseCreateStockEntry.mockReturnValue({
+		mutateAsync: mockMutateAsync,
+		isPending: false,
+	});
+	mockUseDeleteStockEntry.mockReturnValue({
+		mutate: vi.fn(),
 		mutateAsync: mockMutateAsync,
 		isPending: false,
 	});

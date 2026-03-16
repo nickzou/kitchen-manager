@@ -9,6 +9,8 @@ export function StockProductContent({
 	onConsume,
 	consumePending,
 	onEdit,
+	onDelete,
+	deletePending,
 	storeNames,
 	brandNames,
 }: {
@@ -19,6 +21,8 @@ export function StockProductContent({
 	onConsume: (entryId: string) => void;
 	consumePending: boolean;
 	onEdit: (entry: StockEntry) => void;
+	onDelete: (entryId: string) => void;
+	deletePending: boolean;
 	storeNames: Record<string, string>;
 	brandNames: Record<string, string>;
 }) {
@@ -44,6 +48,8 @@ export function StockProductContent({
 					onConsume={() => onConsume(entry.id)}
 					consumePending={consumePending}
 					onEdit={() => onEdit(entry)}
+					onDelete={() => onDelete(entry.id)}
+					deletePending={deletePending}
 					storeName={entry.storeId ? (storeNames[entry.storeId] ?? null) : null}
 					brandName={entry.brandId ? (brandNames[entry.brandId] ?? null) : null}
 				/>
