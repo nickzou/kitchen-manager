@@ -20,6 +20,7 @@ import {
 	type StockEntry,
 	useConsumeStock,
 	useCreateStockEntry,
+	useDeleteStockEntry,
 	useStockEntries,
 	useUpdateStockEntry,
 } from "#src/lib/hooks/use-stock-entries";
@@ -42,6 +43,7 @@ function StockPage() {
 	const { data: stockLogs } = useStockLogs();
 	const createBrand = useCreateBrand();
 	const createStockEntry = useCreateStockEntry();
+	const deleteStockEntry = useDeleteStockEntry();
 	const consumeStock = useConsumeStock();
 
 	const [productId, setProductId] = useState("");
@@ -302,6 +304,8 @@ function StockPage() {
 										onConsume={handleConsume}
 										consumePending={consumeStock.isPending}
 										onEdit={setEditingEntry}
+										onDelete={(id) => deleteStockEntry.mutate(id)}
+										deletePending={deleteStockEntry.isPending}
 										storeNames={Object.fromEntries(
 											(stores ?? []).map((s) => [s.id, s.name]),
 										)}
@@ -385,6 +389,7 @@ function EditStockModal({
 	onClose: () => void;
 }) {
 	const updateStockEntry = useUpdateStockEntry(entry.id);
+	const deleteStockEntry = useDeleteStockEntry();
 	const createBrand = useCreateBrand();
 	const [quantity, setQuantity] = useState(entry.quantity);
 	const [expirationDate, setExpirationDate] = useState(
@@ -487,21 +492,34 @@ function EditStockModal({
 						}}
 					/>
 				</label>
-				<div className="flex justify-end gap-2 pt-2">
+				<div className="flex items-center gap-2 pt-2">
 					<button
 						type="button"
-						onClick={onClose}
-						className="h-10 rounded-full border border-(--line) px-4 text-sm font-semibold text-(--sea-ink-soft) transition hover:bg-(--line)"
+						onClick={async () => {
+							await deleteStockEntry.mutateAsync(entry.id);
+							onClose();
+						}}
+						disabled={deleteStockEntry.isPending}
+						className="h-10 rounded-full border border-red-200 px-4 text-sm font-semibold text-red-600 transition hover:bg-red-50 disabled:opacity-50 dark:border-red-900 dark:hover:bg-red-950"
 					>
-						Cancel
+						{deleteStockEntry.isPending ? "Deleting…" : "Delete"}
 					</button>
-					<button
-						type="submit"
-						disabled={updateStockEntry.isPending}
-						className="flex h-10 items-center gap-1.5 rounded-full bg-(--lagoon) px-4 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
-					>
-						Save Changes
-					</button>
+					<div className="ml-auto flex gap-2">
+						<button
+							type="button"
+							onClick={onClose}
+							className="h-10 rounded-full border border-(--line) px-4 text-sm font-semibold text-(--sea-ink-soft) transition hover:bg-(--line)"
+						>
+							Cancel
+						</button>
+						<button
+							type="submit"
+							disabled={updateStockEntry.isPending}
+							className="flex h-10 items-center gap-1.5 rounded-full bg-(--lagoon) px-4 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
+						>
+							Save Changes
+						</button>
+					</div>
 				</div>
 			</form>
 		</Modal>
