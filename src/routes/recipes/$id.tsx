@@ -54,7 +54,7 @@ import {
 } from "#src/lib/hooks/use-recipes";
 import { useStockEntries } from "#src/lib/hooks/use-stock-entries";
 import { useUnitConversions } from "#src/lib/hooks/use-unit-conversions";
-import { getRecipeCost } from "#src/lib/stock-utils";
+import { getRecipeCost } from "#src/lib/recipe-utils";
 import { cn } from "#src/lib/utils";
 
 export const Route = createFileRoute("/recipes/$id")({
