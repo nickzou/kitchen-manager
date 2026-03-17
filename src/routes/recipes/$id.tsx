@@ -28,6 +28,7 @@ import { MultiCombobox } from "#src/components/MultiCombobox";
 import { NumberInput } from "#src/components/NumberInput";
 import { Page } from "#src/components/Page";
 import { SectionHeading } from "#src/components/SectionHeading";
+import { StatusIcon } from "#src/components/StatusIcon";
 import { authClient } from "#src/lib/auth-client";
 import { useRecipeCategories } from "#src/lib/hooks/use-categories";
 import { useCookRecipe } from "#src/lib/hooks/use-cook-recipe";
@@ -1639,21 +1640,33 @@ function RecipeDetail() {
 												>
 													<div className="flex flex-1 items-center gap-2 text-sm text-(--sea-ink)">
 														{status === "sufficient" && (
-															<CircleCheck
-																size={16}
-																className="shrink-0 text-emerald-500"
+															<StatusIcon
+																icon={
+																	<CircleCheck
+																		size={16}
+																		className="text-emerald-500"
+																	/>
+																}
+																label="You have enough stock for this ingredient"
 															/>
 														)}
 														{status === "deficit" && (
-															<CircleX
-																size={16}
-																className="shrink-0 text-red-500"
+															<StatusIcon
+																icon={
+																	<CircleX size={16} className="text-red-500" />
+																}
+																label="Not enough stock for this ingredient"
 															/>
 														)}
 														{status === "unknown" && (
-															<CircleX
-																size={16}
-																className="shrink-0 text-amber-500"
+															<StatusIcon
+																icon={
+																	<CircleX
+																		size={16}
+																		className="text-amber-500"
+																	/>
+																}
+																label="Unable to check stock — no unit conversion available"
 															/>
 														)}
 														<span>
