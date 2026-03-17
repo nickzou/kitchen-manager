@@ -1,6 +1,7 @@
 import { Check, CircleCheck, CircleX, Pencil, Trash2 } from "lucide-react";
 import type { IngredientFormState } from "#src/components/AddIngredientForm";
 import { Combobox } from "#src/components/Combobox";
+import { Input } from "#src/components/Input";
 import { NumberInput } from "#src/components/NumberInput";
 import { StatusIcon } from "#src/components/StatusIcon";
 import type { RecipeIngredient } from "#src/lib/hooks/use-recipe-ingredients";
@@ -27,9 +28,6 @@ export interface IngredientRowProps {
 	productOptions: { value: string; label: string }[];
 	unitOptions: { value: string; label: string }[];
 }
-
-const inputClass =
-	"h-10 w-full rounded-lg border border-(--line) bg-(--surface) px-3 text-sm text-(--sea-ink) outline-none focus:border-(--lagoon)";
 
 export function IngredientRow({
 	ingredient,
@@ -98,7 +96,7 @@ export function IngredientRow({
 						options={unitOptions}
 						placeholder="Unit"
 					/>
-					<input
+					<Input
 						type="text"
 						placeholder="Notes"
 						value={editState.notes}
@@ -108,9 +106,8 @@ export function IngredientRow({
 								notes: e.target.value,
 							})
 						}
-						className={inputClass}
 					/>
-					<input
+					<Input
 						type="text"
 						placeholder="Group"
 						value={editState.groupName}
@@ -120,7 +117,6 @@ export function IngredientRow({
 								groupName: e.target.value,
 							})
 						}
-						className={inputClass}
 					/>
 				</div>
 				{conversionHint && (

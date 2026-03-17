@@ -6,6 +6,7 @@ import {
 	Trash2,
 	X,
 } from "lucide-react";
+import { Input } from "#src/components/Input";
 import { IngredientRow, type IngredientRowProps } from "./IngredientRow";
 
 export interface IngredientGroupProps {
@@ -23,9 +24,6 @@ export interface IngredientGroupProps {
 	isRenameSaving: boolean;
 	onDelete: () => void;
 }
-
-const inputClass =
-	"h-10 w-full rounded-lg border border-(--line) bg-(--surface) px-3 text-sm text-(--sea-ink) outline-none focus:border-(--lagoon)";
 
 export function IngredientGroup({
 	groupName,
@@ -53,11 +51,11 @@ export function IngredientGroup({
 							onRenameSubmit();
 						}}
 					>
-						<input
+						<Input
 							type="text"
 							value={renameValue}
 							onChange={(e) => onRenameValueChange(e.target.value)}
-							className={`${inputClass} !h-8`}
+							className="!h-8"
 							ref={(el) => el?.focus()}
 							onKeyDown={(e) => {
 								if (e.key === "Escape") {

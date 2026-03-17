@@ -1,4 +1,5 @@
 import { Check, Pencil, Trash2 } from "lucide-react";
+import { Input } from "#src/components/Input";
 import { NumberInput } from "#src/components/NumberInput";
 import type { RecipePrepStep } from "#src/lib/hooks/use-recipe-prep-steps";
 
@@ -21,9 +22,6 @@ export interface PrepStepRowProps {
 	readOnly?: boolean;
 }
 
-const inputClass =
-	"h-10 w-full rounded-lg border border-(--line) bg-(--surface) px-3 text-sm text-(--sea-ink) outline-none focus:border-(--lagoon)";
-
 export function PrepStepRow({
 	step,
 	isEditing,
@@ -40,7 +38,7 @@ export function PrepStepRow({
 	if (isEditing && !readOnly) {
 		return (
 			<div className="flex flex-col gap-3 rounded-lg border border-(--lagoon) p-3">
-				<input
+				<Input
 					type="text"
 					placeholder="Description"
 					value={editState.description}
@@ -50,7 +48,6 @@ export function PrepStepRow({
 							description: e.target.value,
 						})
 					}
-					className={inputClass}
 				/>
 				<div className="flex flex-col gap-1">
 					<NumberInput

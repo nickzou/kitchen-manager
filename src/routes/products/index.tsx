@@ -5,6 +5,7 @@ import { AlertText } from "#src/components/AlertText";
 import { CompactView } from "#src/components/CompactView";
 import { GridView } from "#src/components/GridView";
 import { ImageToggle } from "#src/components/ImageToggle";
+import { Input } from "#src/components/Input";
 import InventorySubNav from "#src/components/InventorySubNav";
 import { Island } from "#src/components/Island";
 import { MultiCombobox } from "#src/components/MultiCombobox";
@@ -17,7 +18,6 @@ import { formatDate } from "#src/lib/format-date";
 import { useProductCategories } from "#src/lib/hooks/use-categories";
 import { useCreateProduct, useProducts } from "#src/lib/hooks/use-products";
 import { useQuantityUnits } from "#src/lib/hooks/use-quantity-units";
-import { cn } from "#src/lib/utils";
 
 export const Route = createFileRoute("/products/")({ component: ProductsPage });
 
@@ -75,9 +75,6 @@ function ProductsPage() {
 			.filter(Boolean) as string[];
 	}
 
-	const inputClass =
-		"h-10 rounded-lg border border-(--line) bg-(--surface) px-3 text-sm text-(--sea-ink) outline-none focus:border-(--lagoon)";
-
 	return (
 		<Page as="main" className="pb-8 pt-14">
 			<Island as="section" className="animate-rise-in rounded-2xl p-6 sm:p-8">
@@ -94,13 +91,13 @@ function ProductsPage() {
 					onSubmit={handleSubmit}
 					className="mb-6 flex flex-wrap gap-3 border-b border-(--line) pb-6"
 				>
-					<input
+					<Input
 						type="text"
 						placeholder="Product name *"
 						required
 						value={name}
 						onChange={(e) => setName(e.target.value)}
-						className={cn(inputClass, "flex-1 min-w-40")}
+						className="flex-1 min-w-40"
 					/>
 					<MultiCombobox
 						value={categoryIds}

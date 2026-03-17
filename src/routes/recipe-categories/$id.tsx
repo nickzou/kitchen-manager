@@ -3,15 +3,16 @@ import { ArrowLeft, Pencil, Trash2, X } from "lucide-react";
 import { type FormEvent, useState } from "react";
 import { AlertBox } from "#src/components/AlertBox";
 import CookingSubNav from "#src/components/CookingSubNav";
+import { Input } from "#src/components/Input";
 import { Island } from "#src/components/Island";
 import { Page } from "#src/components/Page";
+import { Textarea } from "#src/components/Textarea";
 import { authClient } from "#src/lib/auth-client";
 import {
 	useDeleteRecipeCategory,
 	useRecipeCategory,
 	useUpdateRecipeCategory,
 } from "#src/lib/hooks/use-categories";
-import { cn } from "#src/lib/utils";
 
 export const Route = createFileRoute("/recipe-categories/$id")({
 	component: RecipeCategoryDetail,
@@ -88,9 +89,6 @@ function RecipeCategoryDetail() {
 		navigate({ to: "/recipe-categories" });
 	}
 
-	const inputClass =
-		"h-10 w-full rounded-lg border border-(--line) bg-(--surface) px-3 text-sm text-(--sea-ink) outline-none focus:border-(--lagoon)";
-
 	function formatDate(dateStr: string | null) {
 		if (!dateStr) return "—";
 		return new Date(dateStr).toLocaleDateString();
@@ -126,24 +124,22 @@ function RecipeCategoryDetail() {
 
 						<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
 							Name
-							<input
+							<Input
 								type="text"
 								required
 								value={form.name}
 								onChange={(e) => setForm({ ...form, name: e.target.value })}
-								className={inputClass}
 							/>
 						</label>
 
 						<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
 							Description
-							<textarea
+							<Textarea
 								value={form.description}
 								onChange={(e) =>
 									setForm({ ...form, description: e.target.value })
 								}
 								rows={3}
-								className={cn(inputClass, "h-auto py-2")}
 							/>
 						</label>
 

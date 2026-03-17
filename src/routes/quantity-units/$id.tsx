@@ -3,6 +3,7 @@ import { ArrowLeft, Check, Pencil, Plus, Trash2, X } from "lucide-react";
 import { type FormEvent, useState } from "react";
 import { AlertBox } from "#src/components/AlertBox";
 import { Combobox } from "#src/components/Combobox";
+import { Input } from "#src/components/Input";
 import InventorySubNav from "#src/components/InventorySubNav";
 import { Island } from "#src/components/Island";
 import { Page } from "#src/components/Page";
@@ -20,7 +21,6 @@ import {
 	useUnitConversions,
 	useUpdateUnitConversion,
 } from "#src/lib/hooks/use-unit-conversions";
-import { cn } from "#src/lib/utils";
 
 export const Route = createFileRoute("/quantity-units/$id")({
 	component: QuantityUnitDetail,
@@ -145,9 +145,6 @@ function QuantityUnitDetail() {
 		await deleteConversion.mutateAsync(conversionId);
 	}
 
-	const inputClass =
-		"h-10 w-full rounded-lg border border-(--line) bg-(--surface) px-3 text-sm text-(--sea-ink) outline-none focus:border-(--lagoon)";
-
 	function formatDate(dateStr: string | null) {
 		if (!dateStr) return "—";
 		return new Date(dateStr).toLocaleDateString();
@@ -183,24 +180,22 @@ function QuantityUnitDetail() {
 
 						<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
 							Name
-							<input
+							<Input
 								type="text"
 								required
 								value={form.name}
 								onChange={(e) => setForm({ ...form, name: e.target.value })}
-								className={inputClass}
 							/>
 						</label>
 
 						<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
 							Abbreviation
-							<input
+							<Input
 								type="text"
 								value={form.abbreviation}
 								onChange={(e) =>
 									setForm({ ...form, abbreviation: e.target.value })
 								}
-								className={cn(inputClass)}
 							/>
 						</label>
 
@@ -236,13 +231,13 @@ function QuantityUnitDetail() {
 										placeholder="Target unit"
 									/>
 								</div>
-								<input
+								<Input
 									type="number"
 									step="any"
 									placeholder="Factor"
 									value={newConvFactor}
 									onChange={(e) => setNewConvFactor(e.target.value)}
-									className={cn(inputClass, "w-28")}
+									className="w-28"
 								/>
 								<button
 									type="button"

@@ -1,6 +1,7 @@
 import { Plus } from "lucide-react";
 import { useId } from "react";
 import { Combobox } from "#src/components/Combobox";
+import { Input } from "#src/components/Input";
 import { NumberInput } from "#src/components/NumberInput";
 import { SectionHeading } from "#src/components/SectionHeading";
 
@@ -45,8 +46,6 @@ export function AddIngredientForm({
 	addButtonLabel?: string;
 }) {
 	const htmlId = useId();
-	const inputClass =
-		"h-10 w-full rounded-lg border border-(--line) bg-(--surface) px-3 text-sm text-(--sea-ink) outline-none focus:border-(--lagoon)";
 
 	function update(partial: Partial<IngredientFormState>) {
 		setNewIngredient({
@@ -90,12 +89,12 @@ export function AddIngredientForm({
 			)}
 
 			{mode === "group" && onGroupNameChange && (
-				<input
+				<Input
 					type="text"
 					placeholder="Group name, e.g. 'Protein' (optional)"
 					value={groupName ?? ""}
 					onChange={(e) => onGroupNameChange(e.target.value)}
-					className={`${inputClass} mb-2`}
+					className="mb-2"
 				/>
 			)}
 
@@ -132,12 +131,11 @@ export function AddIngredientForm({
 					options={unitOptions}
 					placeholder="Unit"
 				/>
-				<input
+				<Input
 					type="text"
 					placeholder="Notes"
 					value={notes}
 					onChange={(e) => update({ notes: e.target.value })}
-					className={inputClass}
 				/>
 				<button
 					type="button"

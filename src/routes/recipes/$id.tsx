@@ -19,6 +19,7 @@ import {
 import { AlertBox } from "#src/components/AlertBox";
 import { Combobox } from "#src/components/Combobox";
 import { ImageInput } from "#src/components/ImageInput";
+import { Input } from "#src/components/Input";
 import { Island } from "#src/components/Island";
 import { DetailColumns } from "#src/components/layouts/DetailColumns";
 import { MarkdownEditor } from "#src/components/MarkdownEditor";
@@ -30,6 +31,7 @@ import { IngredientGroup } from "#src/components/recipes/IngredientGroup";
 import { IngredientRow } from "#src/components/recipes/IngredientRow";
 import { PrepStepRow } from "#src/components/recipes/PrepStepRow";
 import { SectionHeading } from "#src/components/SectionHeading";
+import { Textarea } from "#src/components/Textarea";
 import { authClient } from "#src/lib/auth-client";
 import { useRecipeCategories } from "#src/lib/hooks/use-categories";
 import { useCookRecipe } from "#src/lib/hooks/use-cook-recipe";
@@ -57,7 +59,6 @@ import {
 import { useStockEntries } from "#src/lib/hooks/use-stock-entries";
 import { useUnitConversions } from "#src/lib/hooks/use-unit-conversions";
 import { getRecipeCost } from "#src/lib/recipe-utils";
-import { cn } from "#src/lib/utils";
 
 export const Route = createFileRoute("/recipes/$id")({
 	component: RecipeDetail,
@@ -700,9 +701,6 @@ function RecipeDetail() {
 		return Number.parseFloat(scaled.toFixed(2)).toString();
 	}
 
-	const inputClass =
-		"h-10 w-full rounded-lg border border-(--line) bg-(--surface) px-3 text-sm text-(--sea-ink) outline-none focus:border-(--lagoon)";
-
 	function formatLeadTime(minutes: number): string {
 		if (minutes < 60) return `${minutes} minutes before`;
 		const hours = Math.floor(minutes / 60);
@@ -777,26 +775,24 @@ function RecipeDetail() {
 
 									<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
 										Name
-										<input
+										<Input
 											type="text"
 											required
 											value={form.name}
 											onChange={(e) =>
 												setForm({ ...form, name: e.target.value })
 											}
-											className={inputClass}
 										/>
 									</label>
 
 									<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
 										Description
-										<textarea
+										<Textarea
 											value={form.description}
 											onChange={(e) =>
 												setForm({ ...form, description: e.target.value })
 											}
 											rows={3}
-											className={cn(inputClass, "h-auto py-2")}
 										/>
 									</label>
 
@@ -898,7 +894,7 @@ function RecipeDetail() {
 										)}
 
 										<div className="flex flex-col gap-2 rounded-lg border border-dashed border-(--line) p-3">
-											<input
+											<Input
 												type="text"
 												placeholder="e.g. Defrost chicken"
 												value={newPrepStep.description}
@@ -908,7 +904,6 @@ function RecipeDetail() {
 														description: e.target.value,
 													})
 												}
-												className={inputClass}
 											/>
 											<div className="flex flex-col gap-1">
 												<NumberInput
