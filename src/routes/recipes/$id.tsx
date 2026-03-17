@@ -54,6 +54,7 @@ import {
 } from "#src/lib/hooks/use-recipes";
 import { useStockEntries } from "#src/lib/hooks/use-stock-entries";
 import { useUnitConversions } from "#src/lib/hooks/use-unit-conversions";
+import { getRecipeCost } from "#src/lib/recipe-utils";
 import { cn } from "#src/lib/utils";
 
 export const Route = createFileRoute("/recipes/$id")({
@@ -235,6 +236,18 @@ function RecipeDetail() {
 		}
 
 		return result;
+	}, [ingredients, products, stockEntries, unitConversions, scaleFactor]);
+
+	const recipeCost = useMemo(() => {
+		if (!ingredients || !products || !stockEntries || !unitConversions)
+			return null;
+		return getRecipeCost({
+			ingredients,
+			products,
+			stockEntries,
+			unitConversions,
+			scaleFactor,
+		});
 	}, [ingredients, products, stockEntries, unitConversions, scaleFactor]);
 
 	if (sessionLoading) return null;
@@ -694,195 +707,535 @@ function RecipeDetail() {
 
 			<DetailColumns
 				main={
-					<Island
-						as="section"
-						className="animate-rise-in rounded-2xl p-6 sm:p-8"
-					>
-						{editing ? (
-							<form onSubmit={handleSave} className="flex flex-col gap-4">
-								<div className="flex items-center justify-between">
-									<h1 className="font-display text-2xl font-bold text-(--sea-ink)">
-										Edit recipe
-									</h1>
+					<>
+						<Island
+							as="section"
+							className="animate-rise-in rounded-2xl p-6 sm:p-8"
+						>
+							{editing ? (
+								<form onSubmit={handleSave} className="flex flex-col gap-4">
+									<div className="flex items-center justify-between">
+										<h1 className="font-display text-2xl font-bold text-(--sea-ink)">
+											Edit recipe
+										</h1>
+										<button
+											type="button"
+											onClick={() => setEditing(false)}
+											className="rounded-lg p-2 text-(--sea-ink-soft) transition hover:bg-(--surface)"
+										>
+											<X size={18} />
+										</button>
+									</div>
+
+									<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
+										Name
+										<input
+											type="text"
+											required
+											value={form.name}
+											onChange={(e) =>
+												setForm({ ...form, name: e.target.value })
+											}
+											className={inputClass}
+										/>
+									</label>
+
+									<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
+										Description
+										<textarea
+											value={form.description}
+											onChange={(e) =>
+												setForm({ ...form, description: e.target.value })
+											}
+											rows={3}
+											className={cn(inputClass, "h-auto py-2")}
+										/>
+									</label>
+
+									<ImageInput
+										value={form.image}
+										onChange={(url) => setForm({ ...form, image: url })}
+									/>
+
+									<div className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
+										Categories
+										<MultiCombobox
+											value={form.categoryIds}
+											onChange={(v) => setForm({ ...form, categoryIds: v })}
+											options={categoryOptions}
+											placeholder="None"
+										/>
+									</div>
+
+									<div className="flex flex-col gap-1.5">
+										<label
+											htmlFor={`${htmlId}-servings`}
+											className="text-sm font-medium text-(--sea-ink)"
+										>
+											Servings
+										</label>
+										<NumberInput
+											id={`${htmlId}-servings`}
+											min="1"
+											value={form.servings}
+											onChange={(e) =>
+												setForm({ ...form, servings: e.target.value })
+											}
+											className="w-full"
+										/>
+									</div>
+
+									<div className="flex flex-col gap-1.5">
+										<label
+											htmlFor={`${htmlId}-prepTime`}
+											className="text-sm font-medium text-(--sea-ink)"
+										>
+											Prep Time (minutes)
+										</label>
+										<NumberInput
+											id={`${htmlId}-prepTime`}
+											min="0"
+											value={form.prepTime}
+											onChange={(e) =>
+												setForm({ ...form, prepTime: e.target.value })
+											}
+											className="w-full"
+										/>
+									</div>
+
+									<div className="flex flex-col gap-1.5">
+										<label
+											htmlFor={`${htmlId}-cookTime`}
+											className="text-sm font-medium text-(--sea-ink)"
+										>
+											Cook Time (minutes)
+										</label>
+										<NumberInput
+											id={`${htmlId}-cookTime`}
+											min="0"
+											value={form.cookTime}
+											onChange={(e) =>
+												setForm({ ...form, cookTime: e.target.value })
+											}
+											className="w-full"
+										/>
+									</div>
+
+									<fieldset className="flex flex-col gap-3 rounded-lg border border-(--line) p-4">
+										<legend className="px-1 text-sm font-medium text-(--sea-ink)">
+											Prep Steps
+										</legend>
+										{(() => {
+											const sorted = [...(prepSteps ?? [])].sort(
+												(a, b) => b.leadTimeMinutes - a.leadTimeMinutes,
+											);
+											return sorted.length > 0 ? (
+												<div className="flex flex-col gap-2">
+													{sorted.map((step) =>
+														editingPrepStepId === step.id ? (
+															<div
+																key={step.id}
+																className="flex flex-col gap-3 rounded-lg border border-(--lagoon) p-3"
+															>
+																<input
+																	type="text"
+																	placeholder="Description"
+																	value={editPrepStep.description}
+																	onChange={(e) =>
+																		setEditPrepStep({
+																			...editPrepStep,
+																			description: e.target.value,
+																		})
+																	}
+																	className={inputClass}
+																/>
+																<div className="flex flex-col gap-1">
+																	<NumberInput
+																		min="1"
+																		placeholder="Lead time (minutes)"
+																		value={editPrepStep.leadTimeMinutes}
+																		onChange={(e) =>
+																			setEditPrepStep({
+																				...editPrepStep,
+																				leadTimeMinutes: e.target.value,
+																			})
+																		}
+																		className="w-full"
+																	/>
+																	{editPrepStep.leadTimeMinutes && (
+																		<p className="text-xs text-(--sea-ink-soft)">
+																			{formatLeadTime(
+																				Number.parseInt(
+																					editPrepStep.leadTimeMinutes,
+																					10,
+																				),
+																			)}
+																		</p>
+																	)}
+																</div>
+																<div className="flex gap-2">
+																	<button
+																		type="button"
+																		onClick={handleSavePrepStep}
+																		disabled={
+																			updatePrepStep.isPending ||
+																			!editPrepStep.description ||
+																			!editPrepStep.leadTimeMinutes
+																		}
+																		className="flex h-8 items-center gap-1 rounded-full bg-(--lagoon) px-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
+																	>
+																		<Check size={14} />
+																		{updatePrepStep.isPending
+																			? "Saving…"
+																			: "Save"}
+																	</button>
+																	<button
+																		type="button"
+																		onClick={() => setEditingPrepStepId(null)}
+																		className="flex h-8 items-center rounded-full px-3 text-sm font-medium text-(--sea-ink-soft) transition hover:bg-(--surface)"
+																	>
+																		Cancel
+																	</button>
+																</div>
+															</div>
+														) : (
+															<div
+																key={step.id}
+																className="flex items-center justify-between rounded-lg border border-(--line) px-3 py-2"
+															>
+																<div className="flex-1 text-sm text-(--sea-ink)">
+																	<span className="font-medium">
+																		{step.description}
+																	</span>
+																	<span className="ml-2 text-(--sea-ink-soft)">
+																		{formatLeadTime(step.leadTimeMinutes)}
+																	</span>
+																</div>
+																<div className="flex gap-0.5">
+																	<button
+																		type="button"
+																		onClick={() => startEditingPrepStep(step)}
+																		className="rounded-lg p-1.5 text-(--sea-ink-soft) transition hover:bg-(--surface) hover:text-(--sea-ink)"
+																		title="Edit prep step"
+																	>
+																		<Pencil size={14} />
+																	</button>
+																	<button
+																		type="button"
+																		onClick={() =>
+																			handleDeletePrepStep(step.id)
+																		}
+																		className="rounded-lg p-1.5 text-(--sea-ink-soft) transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950"
+																		title="Delete prep step"
+																	>
+																		<Trash2 size={14} />
+																	</button>
+																</div>
+															</div>
+														),
+													)}
+												</div>
+											) : (
+												<p className="text-sm text-(--sea-ink-soft)">
+													No prep steps yet.
+												</p>
+											);
+										})()}
+
+										<div className="flex flex-col gap-2 rounded-lg border border-dashed border-(--line) p-3">
+											<input
+												type="text"
+												placeholder="e.g. Defrost chicken"
+												value={newPrepStep.description}
+												onChange={(e) =>
+													setNewPrepStep({
+														...newPrepStep,
+														description: e.target.value,
+													})
+												}
+												className={inputClass}
+											/>
+											<div className="flex flex-col gap-1">
+												<NumberInput
+													min="1"
+													placeholder="Lead time (minutes)"
+													value={newPrepStep.leadTimeMinutes}
+													onChange={(e) =>
+														setNewPrepStep({
+															...newPrepStep,
+															leadTimeMinutes: e.target.value,
+														})
+													}
+													className="w-full"
+												/>
+												{newPrepStep.leadTimeMinutes && (
+													<p className="text-xs text-(--sea-ink-soft)">
+														{formatLeadTime(
+															Number.parseInt(newPrepStep.leadTimeMinutes, 10),
+														)}
+													</p>
+												)}
+											</div>
+											<button
+												type="button"
+												onClick={handleAddPrepStep}
+												disabled={
+													createPrepStep.isPending ||
+													!newPrepStep.description ||
+													!newPrepStep.leadTimeMinutes
+												}
+												className="h-8 rounded-full bg-(--lagoon) px-4 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
+											>
+												{createPrepStep.isPending ? "Adding…" : "Add prep step"}
+											</button>
+										</div>
+									</fieldset>
+
+									<fieldset className="flex flex-col gap-3 rounded-lg border border-(--line) p-4">
+										<legend className="px-1 text-sm font-medium text-(--sea-ink)">
+											Produced Product
+										</legend>
+										<div className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
+											Product
+											<Combobox
+												value={form.producedProductId}
+												onChange={(v) =>
+													setForm({ ...form, producedProductId: v })
+												}
+												options={productOptions}
+												placeholder="None"
+											/>
+										</div>
+										<div className="flex flex-col gap-1.5">
+											<label
+												htmlFor={`${htmlId}-producedQty`}
+												className="text-sm font-medium text-(--sea-ink)"
+											>
+												Quantity
+											</label>
+											<NumberInput
+												id={`${htmlId}-producedQty`}
+												step="any"
+												min="0"
+												value={form.producedQuantity}
+												onChange={(e) =>
+													setForm({
+														...form,
+														producedQuantity: e.target.value,
+													})
+												}
+												className="w-full"
+											/>
+										</div>
+										<div className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
+											Unit
+											<Combobox
+												value={form.producedQuantityUnitId}
+												onChange={(v) =>
+													setForm({
+														...form,
+														producedQuantityUnitId: v,
+													})
+												}
+												options={unitOptions}
+												placeholder="None"
+											/>
+										</div>
+									</fieldset>
+
 									<button
-										type="button"
-										onClick={() => setEditing(false)}
-										className="rounded-lg p-2 text-(--sea-ink-soft) transition hover:bg-(--surface)"
+										type="submit"
+										disabled={updateRecipe.isPending}
+										className="mt-2 h-10 rounded-full bg-(--lagoon) text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
 									>
-										<X size={18} />
+										{updateRecipe.isPending ? "Saving…" : "Save changes"}
 									</button>
-								</div>
+								</form>
+							) : (
+								<>
+									<div className="mb-6 flex items-start justify-between gap-4">
+										<div>
+											<div className="flex items-center gap-2">
+												<h1 className="font-display text-2xl font-bold text-(--sea-ink)">
+													{recipe.name}
+												</h1>
+												{recipeAvailability?.[recipe.id] === "sufficient" && (
+													<CircleCheck
+														size={20}
+														className="shrink-0 text-emerald-500"
+													/>
+												)}
+												{recipeAvailability?.[recipe.id] === "deficit" && (
+													<CircleX
+														size={20}
+														className="shrink-0 text-red-500"
+													/>
+												)}
+											</div>
+											{categoryNames.length > 0 && (
+												<div className="mt-2 flex flex-wrap gap-1">
+													{categoryNames.map((name) => (
+														<span
+															key={name}
+															className="inline-block rounded-full bg-[rgba(79,184,178,0.14)] px-2.5 py-0.5 text-xs font-medium text-(--lagoon-deep)"
+														>
+															{name}
+														</span>
+													))}
+												</div>
+											)}
+										</div>
+										<div className="flex gap-1">
+											{ingredients && ingredients.length > 0 && (
+												<button
+													type="button"
+													onClick={handleCookClick}
+													disabled={cookRecipe.isPending}
+													className="flex items-center gap-1.5 rounded-full bg-(--lagoon) px-4 py-2 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
+												>
+													<CookingPot size={16} />
+													{cookRecipe.isPending ? "Cooking…" : "Cook"}
+												</button>
+											)}
+											<button
+												type="button"
+												onClick={startEditing}
+												className="rounded-lg p-2 text-(--sea-ink-soft) transition hover:bg-(--surface) hover:text-(--sea-ink)"
+												title="Edit"
+											>
+												<Pencil size={18} />
+											</button>
+											<button
+												type="button"
+												onClick={() => setConfirmDelete(true)}
+												className="rounded-lg p-2 text-(--sea-ink-soft) transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950"
+												title="Delete"
+											>
+												<Trash2 size={18} />
+											</button>
+										</div>
+									</div>
 
-								<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
-									Name
-									<input
-										type="text"
-										required
-										value={form.name}
-										onChange={(e) => setForm({ ...form, name: e.target.value })}
-										className={inputClass}
-									/>
-								</label>
+									{recipe.description && (
+										<p className="mb-4 text-sm text-(--sea-ink-soft)">
+											{recipe.description}
+										</p>
+									)}
 
-								<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
-									Description
-									<textarea
-										value={form.description}
-										onChange={(e) =>
-											setForm({ ...form, description: e.target.value })
-										}
-										rows={3}
-										className={cn(inputClass, "h-auto py-2")}
-									/>
-								</label>
+									{recipe.image && (
+										<img
+											src={recipe.image}
+											alt={recipe.name}
+											className="mb-4 h-40 w-40 rounded-lg border border-(--line) object-cover"
+										/>
+									)}
 
-								<ImageInput
-									value={form.image}
-									onChange={(url) => setForm({ ...form, image: url })}
-								/>
+									<dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-3">
+										<div>
+											<dt className="font-medium text-(--sea-ink-soft)">
+												Servings
+											</dt>
+											<dd className="mt-0.5 text-(--sea-ink)">
+												{recipe.servings != null
+													? (() => {
+															const base = recipe.servings;
+															return (
+																<span className="inline-flex items-center gap-1.5">
+																	<button
+																		type="button"
+																		onClick={() =>
+																			setAdjustedServings(
+																				Math.max(
+																					1,
+																					(currentServings ?? base) - 1,
+																				),
+																			)
+																		}
+																		className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-(--line) text-(--sea-ink-soft) transition hover:bg-(--surface)"
+																		aria-label="Decrease servings"
+																	>
+																		<Minus size={12} />
+																	</button>
+																	<span data-testid="adjusted-servings">
+																		{currentServings}
+																	</span>
+																	<button
+																		type="button"
+																		onClick={() =>
+																			setAdjustedServings(
+																				(currentServings ?? base) + 1,
+																			)
+																		}
+																		className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-(--line) text-(--sea-ink-soft) transition hover:bg-(--surface)"
+																		aria-label="Increase servings"
+																	>
+																		<Plus size={12} />
+																	</button>
+																	{adjustedServings != null &&
+																		adjustedServings !== base && (
+																			<button
+																				type="button"
+																				onClick={() =>
+																					setAdjustedServings(null)
+																				}
+																				className="ml-1 text-xs font-medium text-(--lagoon-deep) hover:underline"
+																			>
+																				Reset
+																			</button>
+																		)}
+																</span>
+															);
+														})()
+													: "—"}
+											</dd>
+										</div>
+										<div>
+											<dt className="font-medium text-(--sea-ink-soft)">
+												Prep Time
+											</dt>
+											<dd className="mt-0.5 text-(--sea-ink)">
+												{recipe.prepTime != null
+													? `${recipe.prepTime} min`
+													: "—"}
+											</dd>
+										</div>
+										<div>
+											<dt className="font-medium text-(--sea-ink-soft)">
+												Cook Time
+											</dt>
+											<dd className="mt-0.5 text-(--sea-ink)">
+												{recipe.cookTime != null
+													? `${recipe.cookTime} min`
+													: "—"}
+											</dd>
+										</div>
+										<div>
+											<dt className="font-medium text-(--sea-ink-soft)">
+												Created
+											</dt>
+											<dd className="mt-0.5 text-(--sea-ink)">
+												{formatDate(recipe.createdAt)}
+											</dd>
+										</div>
+										<div>
+											<dt className="font-medium text-(--sea-ink-soft)">
+												Updated
+											</dt>
+											<dd className="mt-0.5 text-(--sea-ink)">
+												{formatDate(recipe.updatedAt)}
+											</dd>
+										</div>
+									</dl>
 
-								<div className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
-									Categories
-									<MultiCombobox
-										value={form.categoryIds}
-										onChange={(v) => setForm({ ...form, categoryIds: v })}
-										options={categoryOptions}
-										placeholder="None"
-									/>
-								</div>
-
-								<div className="flex flex-col gap-1.5">
-									<label
-										htmlFor={`${htmlId}-servings`}
-										className="text-sm font-medium text-(--sea-ink)"
-									>
-										Servings
-									</label>
-									<NumberInput
-										id={`${htmlId}-servings`}
-										min="1"
-										value={form.servings}
-										onChange={(e) =>
-											setForm({ ...form, servings: e.target.value })
-										}
-										className="w-full"
-									/>
-								</div>
-
-								<div className="flex flex-col gap-1.5">
-									<label
-										htmlFor={`${htmlId}-prepTime`}
-										className="text-sm font-medium text-(--sea-ink)"
-									>
-										Prep Time (minutes)
-									</label>
-									<NumberInput
-										id={`${htmlId}-prepTime`}
-										min="0"
-										value={form.prepTime}
-										onChange={(e) =>
-											setForm({ ...form, prepTime: e.target.value })
-										}
-										className="w-full"
-									/>
-								</div>
-
-								<div className="flex flex-col gap-1.5">
-									<label
-										htmlFor={`${htmlId}-cookTime`}
-										className="text-sm font-medium text-(--sea-ink)"
-									>
-										Cook Time (minutes)
-									</label>
-									<NumberInput
-										id={`${htmlId}-cookTime`}
-										min="0"
-										value={form.cookTime}
-										onChange={(e) =>
-											setForm({ ...form, cookTime: e.target.value })
-										}
-										className="w-full"
-									/>
-								</div>
-
-								<fieldset className="flex flex-col gap-3 rounded-lg border border-(--line) p-4">
-									<legend className="px-1 text-sm font-medium text-(--sea-ink)">
-										Prep Steps
-									</legend>
 									{(() => {
 										const sorted = [...(prepSteps ?? [])].sort(
 											(a, b) => b.leadTimeMinutes - a.leadTimeMinutes,
 										);
 										return sorted.length > 0 ? (
-											<div className="flex flex-col gap-2">
-												{sorted.map((step) =>
-													editingPrepStepId === step.id ? (
-														<div
-															key={step.id}
-															className="flex flex-col gap-3 rounded-lg border border-(--lagoon) p-3"
-														>
-															<input
-																type="text"
-																placeholder="Description"
-																value={editPrepStep.description}
-																onChange={(e) =>
-																	setEditPrepStep({
-																		...editPrepStep,
-																		description: e.target.value,
-																	})
-																}
-																className={inputClass}
-															/>
-															<div className="flex flex-col gap-1">
-																<NumberInput
-																	min="1"
-																	placeholder="Lead time (minutes)"
-																	value={editPrepStep.leadTimeMinutes}
-																	onChange={(e) =>
-																		setEditPrepStep({
-																			...editPrepStep,
-																			leadTimeMinutes: e.target.value,
-																		})
-																	}
-																	className="w-full"
-																/>
-																{editPrepStep.leadTimeMinutes && (
-																	<p className="text-xs text-(--sea-ink-soft)">
-																		{formatLeadTime(
-																			Number.parseInt(
-																				editPrepStep.leadTimeMinutes,
-																				10,
-																			),
-																		)}
-																	</p>
-																)}
-															</div>
-															<div className="flex gap-2">
-																<button
-																	type="button"
-																	onClick={handleSavePrepStep}
-																	disabled={
-																		updatePrepStep.isPending ||
-																		!editPrepStep.description ||
-																		!editPrepStep.leadTimeMinutes
-																	}
-																	className="flex h-8 items-center gap-1 rounded-full bg-(--lagoon) px-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
-																>
-																	<Check size={14} />
-																	{updatePrepStep.isPending
-																		? "Saving…"
-																		: "Save"}
-																</button>
-																<button
-																	type="button"
-																	onClick={() => setEditingPrepStepId(null)}
-																	className="flex h-8 items-center rounded-full px-3 text-sm font-medium text-(--sea-ink-soft) transition hover:bg-(--surface)"
-																>
-																	Cancel
-																</button>
-															</div>
-														</div>
-													) : (
+											<div className="mt-4">
+												<SectionHeading>Prep Steps</SectionHeading>
+												<div className="flex flex-col gap-2">
+													{sorted.map((step) => (
 														<div
 															key={step.id}
 															className="flex items-center justify-between rounded-lg border border-(--line) px-3 py-2"
@@ -895,441 +1248,150 @@ function RecipeDetail() {
 																	{formatLeadTime(step.leadTimeMinutes)}
 																</span>
 															</div>
-															<div className="flex gap-0.5">
-																<button
-																	type="button"
-																	onClick={() => startEditingPrepStep(step)}
-																	className="rounded-lg p-1.5 text-(--sea-ink-soft) transition hover:bg-(--surface) hover:text-(--sea-ink)"
-																	title="Edit prep step"
-																>
-																	<Pencil size={14} />
-																</button>
-																<button
-																	type="button"
-																	onClick={() => handleDeletePrepStep(step.id)}
-																	className="rounded-lg p-1.5 text-(--sea-ink-soft) transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950"
-																	title="Delete prep step"
-																>
-																	<Trash2 size={14} />
-																</button>
-															</div>
 														</div>
-													),
-												)}
+													))}
+												</div>
 											</div>
-										) : (
-											<p className="text-sm text-(--sea-ink-soft)">
-												No prep steps yet.
-											</p>
-										);
+										) : null;
 									})()}
 
-									<div className="flex flex-col gap-2 rounded-lg border border-dashed border-(--line) p-3">
-										<input
-											type="text"
-											placeholder="e.g. Defrost chicken"
-											value={newPrepStep.description}
-											onChange={(e) =>
-												setNewPrepStep({
-													...newPrepStep,
-													description: e.target.value,
-												})
-											}
-											className={inputClass}
-										/>
-										<div className="flex flex-col gap-1">
-											<NumberInput
-												min="1"
-												placeholder="Lead time (minutes)"
-												value={newPrepStep.leadTimeMinutes}
-												onChange={(e) =>
-													setNewPrepStep({
-														...newPrepStep,
-														leadTimeMinutes: e.target.value,
-													})
-												}
-												className="w-full"
-											/>
-											{newPrepStep.leadTimeMinutes && (
-												<p className="text-xs text-(--sea-ink-soft)">
-													{formatLeadTime(
-														Number.parseInt(newPrepStep.leadTimeMinutes, 10),
-													)}
+									{recipe.producedProductId &&
+										(() => {
+											const producedProduct = products?.find(
+												(p) => p.id === recipe.producedProductId,
+											);
+											return (
+												<div className="mt-4">
+													<SectionHeading>Produces</SectionHeading>
+													<div className="flex items-center gap-3">
+														{producedProduct?.image && (
+															<img
+																src={producedProduct.image}
+																alt={producedProduct.name}
+																className="h-10 w-10 rounded-lg border border-(--line) object-cover"
+															/>
+														)}
+														<p className="text-sm text-(--sea-ink-soft)">
+															{producedProduct?.name ?? "Unknown product"}
+															{recipe.producedQuantity && (
+																<>
+																	{" — "}
+																	{recipe.producedQuantity}
+																	{getUnitLabel(recipe.producedQuantityUnitId)
+																		? ` ${getUnitLabel(recipe.producedQuantityUnitId)}`
+																		: ""}
+																</>
+															)}
+														</p>
+													</div>
+												</div>
+											);
+										})()}
+
+									{cookResult && (
+										<div
+											ref={cookResultRef}
+											className="mt-4 rounded-lg border border-(--line) p-4"
+										>
+											<div className="mb-2 flex items-center justify-between">
+												<h2 className="text-sm font-semibold text-(--sea-ink)">
+													Cook Result
+												</h2>
+												<button
+													type="button"
+													onClick={() => setCookResult(null)}
+													className="rounded-lg p-1 text-(--sea-ink-soft) transition hover:bg-(--surface)"
+												>
+													<X size={14} />
+												</button>
+											</div>
+											{cookResult.deductions.length > 0 && (
+												<ul className="mb-2 flex flex-col gap-1 text-sm text-(--sea-ink-soft)">
+													{cookResult.deductions.map((d) => (
+														<li key={d.productId}>
+															{getProductName(d.productId)}: deducted{" "}
+															{d.deducted} of {d.needed}
+														</li>
+													))}
+												</ul>
+											)}
+											{cookResult.warnings.length > 0 && (
+												<ul className="mb-2 flex flex-col gap-1 text-sm text-amber-600 dark:text-amber-400">
+													{cookResult.warnings.map((w) => (
+														<li key={w}>{w}</li>
+													))}
+												</ul>
+											)}
+											{cookResult.produced && (
+												<p className="text-sm font-medium text-(--lagoon-deep)">
+													Produced:{" "}
+													{getProductName(cookResult.produced.productId)} (
+													{cookResult.produced.quantity})
 												</p>
 											)}
 										</div>
-										<button
-											type="button"
-											onClick={handleAddPrepStep}
-											disabled={
-												createPrepStep.isPending ||
-												!newPrepStep.description ||
-												!newPrepStep.leadTimeMinutes
-											}
-											className="h-8 rounded-full bg-(--lagoon) px-4 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
-										>
-											{createPrepStep.isPending ? "Adding…" : "Add prep step"}
-										</button>
-									</div>
-								</fieldset>
+									)}
 
-								<fieldset className="flex flex-col gap-3 rounded-lg border border-(--line) p-4">
-									<legend className="px-1 text-sm font-medium text-(--sea-ink)">
-										Produced Product
-									</legend>
-									<div className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
-										Product
-										<Combobox
-											value={form.producedProductId}
-											onChange={(v) =>
-												setForm({ ...form, producedProductId: v })
-											}
-											options={productOptions}
-											placeholder="None"
-										/>
-									</div>
-									<div className="flex flex-col gap-1.5">
-										<label
-											htmlFor={`${htmlId}-producedQty`}
-											className="text-sm font-medium text-(--sea-ink)"
-										>
-											Quantity
-										</label>
-										<NumberInput
-											id={`${htmlId}-producedQty`}
-											step="any"
-											min="0"
-											value={form.producedQuantity}
-											onChange={(e) =>
-												setForm({
-													...form,
-													producedQuantity: e.target.value,
-												})
-											}
-											className="w-full"
-										/>
-									</div>
-									<div className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
-										Unit
-										<Combobox
-											value={form.producedQuantityUnitId}
-											onChange={(v) =>
-												setForm({
-													...form,
-													producedQuantityUnitId: v,
-												})
-											}
-											options={unitOptions}
-											placeholder="None"
-										/>
-									</div>
-								</fieldset>
-
-								<button
-									type="submit"
-									disabled={updateRecipe.isPending}
-									className="mt-2 h-10 rounded-full bg-(--lagoon) text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
-								>
-									{updateRecipe.isPending ? "Saving…" : "Save changes"}
-								</button>
-							</form>
-						) : (
-							<>
-								<div className="mb-6 flex items-start justify-between gap-4">
-									<div>
-										<div className="flex items-center gap-2">
-											<h1 className="font-display text-2xl font-bold text-(--sea-ink)">
-												{recipe.name}
-											</h1>
-											{recipeAvailability?.[recipe.id] === "sufficient" && (
-												<CircleCheck
-													size={20}
-													className="shrink-0 text-emerald-500"
-												/>
-											)}
-											{recipeAvailability?.[recipe.id] === "deficit" && (
-												<CircleX size={20} className="shrink-0 text-red-500" />
-											)}
-										</div>
-										{categoryNames.length > 0 && (
-											<div className="mt-2 flex flex-wrap gap-1">
-												{categoryNames.map((name) => (
-													<span
-														key={name}
-														className="inline-block rounded-full bg-[rgba(79,184,178,0.14)] px-2.5 py-0.5 text-xs font-medium text-(--lagoon-deep)"
-													>
-														{name}
-													</span>
-												))}
-											</div>
-										)}
-									</div>
-									<div className="flex gap-1">
-										{ingredients && ingredients.length > 0 && (
+									{confirmDelete && (
+										<AlertBox className="mt-6 flex items-center gap-3">
+											<p className="flex-1 text-sm">
+												Delete this recipe? This cannot be undone.
+											</p>
 											<button
 												type="button"
-												onClick={handleCookClick}
-												disabled={cookRecipe.isPending}
-												className="flex items-center gap-1.5 rounded-full bg-(--lagoon) px-4 py-2 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
+												onClick={() => setConfirmDelete(false)}
+												className="rounded-lg px-3 py-1.5 text-sm font-medium text-(--sea-ink-soft) transition hover:bg-(--surface)"
 											>
-												<CookingPot size={16} />
-												{cookRecipe.isPending ? "Cooking…" : "Cook"}
+												Cancel
 											</button>
-										)}
-										<button
-											type="button"
-											onClick={startEditing}
-											className="rounded-lg p-2 text-(--sea-ink-soft) transition hover:bg-(--surface) hover:text-(--sea-ink)"
-											title="Edit"
-										>
-											<Pencil size={18} />
-										</button>
-										<button
-											type="button"
-											onClick={() => setConfirmDelete(true)}
-											className="rounded-lg p-2 text-(--sea-ink-soft) transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950"
-											title="Delete"
-										>
-											<Trash2 size={18} />
-										</button>
+											<button
+												type="button"
+												onClick={handleDelete}
+												disabled={deleteRecipe.isPending}
+												className="rounded-lg bg-red-600 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-red-700 disabled:opacity-50"
+											>
+												{deleteRecipe.isPending ? "Deleting…" : "Delete"}
+											</button>
+										</AlertBox>
+									)}
+								</>
+							)}
+						</Island>
+						{recipeCost && (
+							<Island
+								as="section"
+								className="animate-rise-in mt-6 rounded-2xl p-6 sm:p-8"
+							>
+								<SectionHeading>Cost Estimate</SectionHeading>
+								<dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+									<div>
+										<dt className="font-medium text-(--sea-ink-soft)">
+											Estimated Cost
+										</dt>
+										<dd className="mt-0.5 text-(--sea-ink)">
+											${recipeCost.total.toFixed(2)}
+										</dd>
 									</div>
-								</div>
-
-								{recipe.description && (
-									<p className="mb-4 text-sm text-(--sea-ink-soft)">
-										{recipe.description}
+									{currentServings != null && currentServings > 0 && (
+										<div>
+											<dt className="font-medium text-(--sea-ink-soft)">
+												Cost per Serving
+											</dt>
+											<dd className="mt-0.5 text-(--sea-ink)">
+												${(recipeCost.total / currentServings).toFixed(2)}
+											</dd>
+										</div>
+									)}
+								</dl>
+								{recipeCost.ingredientsPriced < recipeCost.ingredientsTotal && (
+									<p className="mt-2 text-xs text-(--sea-ink-soft)">
+										Based on {recipeCost.ingredientsPriced} of{" "}
+										{recipeCost.ingredientsTotal} ingredients
 									</p>
 								)}
-
-								{recipe.image && (
-									<img
-										src={recipe.image}
-										alt={recipe.name}
-										className="mb-4 h-40 w-40 rounded-lg border border-(--line) object-cover"
-									/>
-								)}
-
-								<dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-3">
-									<div>
-										<dt className="font-medium text-(--sea-ink-soft)">
-											Servings
-										</dt>
-										<dd className="mt-0.5 text-(--sea-ink)">
-											{recipe.servings != null
-												? (() => {
-														const base = recipe.servings;
-														return (
-															<span className="inline-flex items-center gap-1.5">
-																<button
-																	type="button"
-																	onClick={() =>
-																		setAdjustedServings(
-																			Math.max(
-																				1,
-																				(currentServings ?? base) - 1,
-																			),
-																		)
-																	}
-																	className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-(--line) text-(--sea-ink-soft) transition hover:bg-(--surface)"
-																	aria-label="Decrease servings"
-																>
-																	<Minus size={12} />
-																</button>
-																<span data-testid="adjusted-servings">
-																	{currentServings}
-																</span>
-																<button
-																	type="button"
-																	onClick={() =>
-																		setAdjustedServings(
-																			(currentServings ?? base) + 1,
-																		)
-																	}
-																	className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-(--line) text-(--sea-ink-soft) transition hover:bg-(--surface)"
-																	aria-label="Increase servings"
-																>
-																	<Plus size={12} />
-																</button>
-																{adjustedServings != null &&
-																	adjustedServings !== base && (
-																		<button
-																			type="button"
-																			onClick={() => setAdjustedServings(null)}
-																			className="ml-1 text-xs font-medium text-(--lagoon-deep) hover:underline"
-																		>
-																			Reset
-																		</button>
-																	)}
-															</span>
-														);
-													})()
-												: "—"}
-										</dd>
-									</div>
-									<div>
-										<dt className="font-medium text-(--sea-ink-soft)">
-											Prep Time
-										</dt>
-										<dd className="mt-0.5 text-(--sea-ink)">
-											{recipe.prepTime != null ? `${recipe.prepTime} min` : "—"}
-										</dd>
-									</div>
-									<div>
-										<dt className="font-medium text-(--sea-ink-soft)">
-											Cook Time
-										</dt>
-										<dd className="mt-0.5 text-(--sea-ink)">
-											{recipe.cookTime != null ? `${recipe.cookTime} min` : "—"}
-										</dd>
-									</div>
-									<div>
-										<dt className="font-medium text-(--sea-ink-soft)">
-											Created
-										</dt>
-										<dd className="mt-0.5 text-(--sea-ink)">
-											{formatDate(recipe.createdAt)}
-										</dd>
-									</div>
-									<div>
-										<dt className="font-medium text-(--sea-ink-soft)">
-											Updated
-										</dt>
-										<dd className="mt-0.5 text-(--sea-ink)">
-											{formatDate(recipe.updatedAt)}
-										</dd>
-									</div>
-								</dl>
-
-								{(() => {
-									const sorted = [...(prepSteps ?? [])].sort(
-										(a, b) => b.leadTimeMinutes - a.leadTimeMinutes,
-									);
-									return sorted.length > 0 ? (
-										<div className="mt-4">
-											<SectionHeading>Prep Steps</SectionHeading>
-											<div className="flex flex-col gap-2">
-												{sorted.map((step) => (
-													<div
-														key={step.id}
-														className="flex items-center justify-between rounded-lg border border-(--line) px-3 py-2"
-													>
-														<div className="flex-1 text-sm text-(--sea-ink)">
-															<span className="font-medium">
-																{step.description}
-															</span>
-															<span className="ml-2 text-(--sea-ink-soft)">
-																{formatLeadTime(step.leadTimeMinutes)}
-															</span>
-														</div>
-													</div>
-												))}
-											</div>
-										</div>
-									) : null;
-								})()}
-
-								{recipe.producedProductId &&
-									(() => {
-										const producedProduct = products?.find(
-											(p) => p.id === recipe.producedProductId,
-										);
-										return (
-											<div className="mt-4">
-												<SectionHeading>Produces</SectionHeading>
-												<div className="flex items-center gap-3">
-													{producedProduct?.image && (
-														<img
-															src={producedProduct.image}
-															alt={producedProduct.name}
-															className="h-10 w-10 rounded-lg border border-(--line) object-cover"
-														/>
-													)}
-													<p className="text-sm text-(--sea-ink-soft)">
-														{producedProduct?.name ?? "Unknown product"}
-														{recipe.producedQuantity && (
-															<>
-																{" — "}
-																{recipe.producedQuantity}
-																{getUnitLabel(recipe.producedQuantityUnitId)
-																	? ` ${getUnitLabel(recipe.producedQuantityUnitId)}`
-																	: ""}
-															</>
-														)}
-													</p>
-												</div>
-											</div>
-										);
-									})()}
-
-								{cookResult && (
-									<div
-										ref={cookResultRef}
-										className="mt-4 rounded-lg border border-(--line) p-4"
-									>
-										<div className="mb-2 flex items-center justify-between">
-											<h2 className="text-sm font-semibold text-(--sea-ink)">
-												Cook Result
-											</h2>
-											<button
-												type="button"
-												onClick={() => setCookResult(null)}
-												className="rounded-lg p-1 text-(--sea-ink-soft) transition hover:bg-(--surface)"
-											>
-												<X size={14} />
-											</button>
-										</div>
-										{cookResult.deductions.length > 0 && (
-											<ul className="mb-2 flex flex-col gap-1 text-sm text-(--sea-ink-soft)">
-												{cookResult.deductions.map((d) => (
-													<li key={d.productId}>
-														{getProductName(d.productId)}: deducted {d.deducted}{" "}
-														of {d.needed}
-													</li>
-												))}
-											</ul>
-										)}
-										{cookResult.warnings.length > 0 && (
-											<ul className="mb-2 flex flex-col gap-1 text-sm text-amber-600 dark:text-amber-400">
-												{cookResult.warnings.map((w) => (
-													<li key={w}>{w}</li>
-												))}
-											</ul>
-										)}
-										{cookResult.produced && (
-											<p className="text-sm font-medium text-(--lagoon-deep)">
-												Produced:{" "}
-												{getProductName(cookResult.produced.productId)} (
-												{cookResult.produced.quantity})
-											</p>
-										)}
-									</div>
-								)}
-
-								{confirmDelete && (
-									<AlertBox className="mt-6 flex items-center gap-3">
-										<p className="flex-1 text-sm">
-											Delete this recipe? This cannot be undone.
-										</p>
-										<button
-											type="button"
-											onClick={() => setConfirmDelete(false)}
-											className="rounded-lg px-3 py-1.5 text-sm font-medium text-(--sea-ink-soft) transition hover:bg-(--surface)"
-										>
-											Cancel
-										</button>
-										<button
-											type="button"
-											onClick={handleDelete}
-											disabled={deleteRecipe.isPending}
-											className="rounded-lg bg-red-600 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-red-700 disabled:opacity-50"
-										>
-											{deleteRecipe.isPending ? "Deleting…" : "Delete"}
-										</button>
-									</AlertBox>
-								)}
-							</>
+							</Island>
 						)}
-					</Island>
+					</>
 				}
 				side={
 					<div className="flex flex-col gap-6">
