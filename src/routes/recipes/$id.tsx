@@ -27,6 +27,7 @@ import { NumberInput } from "#src/components/NumberInput";
 import { Page } from "#src/components/Page";
 import { IngredientGroup } from "#src/components/recipes/IngredientGroup";
 import { IngredientRow } from "#src/components/recipes/IngredientRow";
+import { PrepStepRow } from "#src/components/recipes/PrepStepRow";
 import { SectionHeading } from "#src/components/SectionHeading";
 import { authClient } from "#src/lib/auth-client";
 import { useRecipeCategories } from "#src/lib/hooks/use-categories";
@@ -873,107 +874,21 @@ function RecipeDetail() {
 										</legend>
 										{sortedPrepSteps.length > 0 ? (
 											<div className="flex flex-col gap-2">
-												{sortedPrepSteps.map((step) =>
-													editingPrepStepId === step.id ? (
-														<div
-															key={step.id}
-															className="flex flex-col gap-3 rounded-lg border border-(--lagoon) p-3"
-														>
-															<input
-																type="text"
-																placeholder="Description"
-																value={editPrepStep.description}
-																onChange={(e) =>
-																	setEditPrepStep({
-																		...editPrepStep,
-																		description: e.target.value,
-																	})
-																}
-																className={inputClass}
-															/>
-															<div className="flex flex-col gap-1">
-																<NumberInput
-																	min="1"
-																	placeholder="Lead time (minutes)"
-																	value={editPrepStep.leadTimeMinutes}
-																	onChange={(e) =>
-																		setEditPrepStep({
-																			...editPrepStep,
-																			leadTimeMinutes: e.target.value,
-																		})
-																	}
-																	className="w-full"
-																/>
-																{editPrepStep.leadTimeMinutes && (
-																	<p className="text-xs text-(--sea-ink-soft)">
-																		{formatLeadTime(
-																			Number.parseInt(
-																				editPrepStep.leadTimeMinutes,
-																				10,
-																			),
-																		)}
-																	</p>
-																)}
-															</div>
-															<div className="flex gap-2">
-																<button
-																	type="button"
-																	onClick={handleSavePrepStep}
-																	disabled={
-																		updatePrepStep.isPending ||
-																		!editPrepStep.description ||
-																		!editPrepStep.leadTimeMinutes
-																	}
-																	className="flex h-8 items-center gap-1 rounded-full bg-(--lagoon) px-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
-																>
-																	<Check size={14} />
-																	{updatePrepStep.isPending
-																		? "Saving…"
-																		: "Save"}
-																</button>
-																<button
-																	type="button"
-																	onClick={() => setEditingPrepStepId(null)}
-																	className="flex h-8 items-center rounded-full px-3 text-sm font-medium text-(--sea-ink-soft) transition hover:bg-(--surface)"
-																>
-																	Cancel
-																</button>
-															</div>
-														</div>
-													) : (
-														<div
-															key={step.id}
-															className="flex items-center justify-between rounded-lg border border-(--line) px-3 py-2"
-														>
-															<div className="flex-1 text-sm text-(--sea-ink)">
-																<span className="font-medium">
-																	{step.description}
-																</span>
-																<span className="ml-2 text-(--sea-ink-soft)">
-																	{formatLeadTime(step.leadTimeMinutes)}
-																</span>
-															</div>
-															<div className="flex gap-0.5">
-																<button
-																	type="button"
-																	onClick={() => startEditingPrepStep(step)}
-																	className="rounded-lg p-1.5 text-(--sea-ink-soft) transition hover:bg-(--surface) hover:text-(--sea-ink)"
-																	title="Edit prep step"
-																>
-																	<Pencil size={14} />
-																</button>
-																<button
-																	type="button"
-																	onClick={() => handleDeletePrepStep(step.id)}
-																	className="rounded-lg p-1.5 text-(--sea-ink-soft) transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950"
-																	title="Delete prep step"
-																>
-																	<Trash2 size={14} />
-																</button>
-															</div>
-														</div>
-													),
-												)}
+												{sortedPrepSteps.map((step) => (
+													<PrepStepRow
+														key={step.id}
+														step={step}
+														isEditing={editingPrepStepId === step.id}
+														editState={editPrepStep}
+														onEditStateChange={setEditPrepStep}
+														isSaving={updatePrepStep.isPending}
+														onSave={handleSavePrepStep}
+														onCancel={() => setEditingPrepStepId(null)}
+														onEdit={() => startEditingPrepStep(step)}
+														onDelete={() => handleDeletePrepStep(step.id)}
+														formatLeadTime={formatLeadTime}
+													/>
+												))}
 											</div>
 										) : (
 											<p className="text-sm text-(--sea-ink-soft)">
@@ -1267,19 +1182,20 @@ function RecipeDetail() {
 											<SectionHeading>Prep Steps</SectionHeading>
 											<div className="flex flex-col gap-2">
 												{sortedPrepSteps.map((step) => (
-													<div
+													<PrepStepRow
 														key={step.id}
-														className="flex items-center justify-between rounded-lg border border-(--line) px-3 py-2"
-													>
-														<div className="flex-1 text-sm text-(--sea-ink)">
-															<span className="font-medium">
-																{step.description}
-															</span>
-															<span className="ml-2 text-(--sea-ink-soft)">
-																{formatLeadTime(step.leadTimeMinutes)}
-															</span>
-														</div>
-													</div>
+														step={step}
+														isEditing={false}
+														editState={{ description: "", leadTimeMinutes: "" }}
+														onEditStateChange={() => {}}
+														isSaving={false}
+														onSave={() => {}}
+														onCancel={() => {}}
+														onEdit={() => {}}
+														onDelete={() => {}}
+														formatLeadTime={formatLeadTime}
+														readOnly
+													/>
 												))}
 											</div>
 										</div>
