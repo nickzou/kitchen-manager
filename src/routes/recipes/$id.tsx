@@ -251,6 +251,52 @@ function RecipeDetail() {
 		});
 	}, [ingredients, products, stockEntries, unitConversions, scaleFactor]);
 
+	const sortedPrepSteps = useMemo(
+		() =>
+			[...(prepSteps ?? [])].sort(
+				(a, b) => b.leadTimeMinutes - a.leadTimeMinutes,
+			),
+		[prepSteps],
+	);
+
+	const producedProduct = useMemo(
+		() =>
+			recipe?.producedProductId
+				? products?.find((p) => p.id === recipe.producedProductId)
+				: undefined,
+		[recipe?.producedProductId, products],
+	);
+
+	const ingredientGroups = useMemo(() => {
+		const allIngs = ingredients ?? [];
+		const ungrouped = allIngs.filter((i) => !i.groupName);
+		const groups = new Map<string, typeof allIngs>();
+		for (const ing of allIngs) {
+			if (ing.groupName) {
+				if (!groups.has(ing.groupName)) {
+					groups.set(ing.groupName, []);
+				}
+				groups.get(ing.groupName)?.push(ing);
+			}
+		}
+		return { ungrouped, groups };
+	}, [ingredients]);
+
+	const cookPickerGroups = useMemo(() => {
+		const groups = new Map<string, NonNullable<typeof ingredients>>();
+		for (const ing of ingredients ?? []) {
+			if (ing.groupName) {
+				if (!groups.has(ing.groupName)) {
+					groups.set(ing.groupName, []);
+				}
+				groups.get(ing.groupName)?.push(ing);
+			}
+		}
+		return groups;
+	}, [ingredients]);
+
+	const editConversionHint = getEditConversionHint();
+
 	if (sessionLoading) return null;
 	if (!session) {
 		navigate({ to: "/sign-in" });
@@ -826,122 +872,115 @@ function RecipeDetail() {
 										<legend className="px-1 text-sm font-medium text-(--sea-ink)">
 											Prep Steps
 										</legend>
-										{(() => {
-											const sorted = [...(prepSteps ?? [])].sort(
-												(a, b) => b.leadTimeMinutes - a.leadTimeMinutes,
-											);
-											return sorted.length > 0 ? (
-												<div className="flex flex-col gap-2">
-													{sorted.map((step) =>
-														editingPrepStepId === step.id ? (
-															<div
-																key={step.id}
-																className="flex flex-col gap-3 rounded-lg border border-(--lagoon) p-3"
-															>
-																<input
-																	type="text"
-																	placeholder="Description"
-																	value={editPrepStep.description}
+										{sortedPrepSteps.length > 0 ? (
+											<div className="flex flex-col gap-2">
+												{sortedPrepSteps.map((step) =>
+													editingPrepStepId === step.id ? (
+														<div
+															key={step.id}
+															className="flex flex-col gap-3 rounded-lg border border-(--lagoon) p-3"
+														>
+															<input
+																type="text"
+																placeholder="Description"
+																value={editPrepStep.description}
+																onChange={(e) =>
+																	setEditPrepStep({
+																		...editPrepStep,
+																		description: e.target.value,
+																	})
+																}
+																className={inputClass}
+															/>
+															<div className="flex flex-col gap-1">
+																<NumberInput
+																	min="1"
+																	placeholder="Lead time (minutes)"
+																	value={editPrepStep.leadTimeMinutes}
 																	onChange={(e) =>
 																		setEditPrepStep({
 																			...editPrepStep,
-																			description: e.target.value,
+																			leadTimeMinutes: e.target.value,
 																		})
 																	}
-																	className={inputClass}
+																	className="w-full"
 																/>
-																<div className="flex flex-col gap-1">
-																	<NumberInput
-																		min="1"
-																		placeholder="Lead time (minutes)"
-																		value={editPrepStep.leadTimeMinutes}
-																		onChange={(e) =>
-																			setEditPrepStep({
-																				...editPrepStep,
-																				leadTimeMinutes: e.target.value,
-																			})
-																		}
-																		className="w-full"
-																	/>
-																	{editPrepStep.leadTimeMinutes && (
-																		<p className="text-xs text-(--sea-ink-soft)">
-																			{formatLeadTime(
-																				Number.parseInt(
-																					editPrepStep.leadTimeMinutes,
-																					10,
-																				),
-																			)}
-																		</p>
-																	)}
-																</div>
-																<div className="flex gap-2">
-																	<button
-																		type="button"
-																		onClick={handleSavePrepStep}
-																		disabled={
-																			updatePrepStep.isPending ||
-																			!editPrepStep.description ||
-																			!editPrepStep.leadTimeMinutes
-																		}
-																		className="flex h-8 items-center gap-1 rounded-full bg-(--lagoon) px-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
-																	>
-																		<Check size={14} />
-																		{updatePrepStep.isPending
-																			? "Saving…"
-																			: "Save"}
-																	</button>
-																	<button
-																		type="button"
-																		onClick={() => setEditingPrepStepId(null)}
-																		className="flex h-8 items-center rounded-full px-3 text-sm font-medium text-(--sea-ink-soft) transition hover:bg-(--surface)"
-																	>
-																		Cancel
-																	</button>
-																</div>
+																{editPrepStep.leadTimeMinutes && (
+																	<p className="text-xs text-(--sea-ink-soft)">
+																		{formatLeadTime(
+																			Number.parseInt(
+																				editPrepStep.leadTimeMinutes,
+																				10,
+																			),
+																		)}
+																	</p>
+																)}
 															</div>
-														) : (
-															<div
-																key={step.id}
-																className="flex items-center justify-between rounded-lg border border-(--line) px-3 py-2"
-															>
-																<div className="flex-1 text-sm text-(--sea-ink)">
-																	<span className="font-medium">
-																		{step.description}
-																	</span>
-																	<span className="ml-2 text-(--sea-ink-soft)">
-																		{formatLeadTime(step.leadTimeMinutes)}
-																	</span>
-																</div>
-																<div className="flex gap-0.5">
-																	<button
-																		type="button"
-																		onClick={() => startEditingPrepStep(step)}
-																		className="rounded-lg p-1.5 text-(--sea-ink-soft) transition hover:bg-(--surface) hover:text-(--sea-ink)"
-																		title="Edit prep step"
-																	>
-																		<Pencil size={14} />
-																	</button>
-																	<button
-																		type="button"
-																		onClick={() =>
-																			handleDeletePrepStep(step.id)
-																		}
-																		className="rounded-lg p-1.5 text-(--sea-ink-soft) transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950"
-																		title="Delete prep step"
-																	>
-																		<Trash2 size={14} />
-																	</button>
-																</div>
+															<div className="flex gap-2">
+																<button
+																	type="button"
+																	onClick={handleSavePrepStep}
+																	disabled={
+																		updatePrepStep.isPending ||
+																		!editPrepStep.description ||
+																		!editPrepStep.leadTimeMinutes
+																	}
+																	className="flex h-8 items-center gap-1 rounded-full bg-(--lagoon) px-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
+																>
+																	<Check size={14} />
+																	{updatePrepStep.isPending
+																		? "Saving…"
+																		: "Save"}
+																</button>
+																<button
+																	type="button"
+																	onClick={() => setEditingPrepStepId(null)}
+																	className="flex h-8 items-center rounded-full px-3 text-sm font-medium text-(--sea-ink-soft) transition hover:bg-(--surface)"
+																>
+																	Cancel
+																</button>
 															</div>
-														),
-													)}
-												</div>
-											) : (
-												<p className="text-sm text-(--sea-ink-soft)">
-													No prep steps yet.
-												</p>
-											);
-										})()}
+														</div>
+													) : (
+														<div
+															key={step.id}
+															className="flex items-center justify-between rounded-lg border border-(--line) px-3 py-2"
+														>
+															<div className="flex-1 text-sm text-(--sea-ink)">
+																<span className="font-medium">
+																	{step.description}
+																</span>
+																<span className="ml-2 text-(--sea-ink-soft)">
+																	{formatLeadTime(step.leadTimeMinutes)}
+																</span>
+															</div>
+															<div className="flex gap-0.5">
+																<button
+																	type="button"
+																	onClick={() => startEditingPrepStep(step)}
+																	className="rounded-lg p-1.5 text-(--sea-ink-soft) transition hover:bg-(--surface) hover:text-(--sea-ink)"
+																	title="Edit prep step"
+																>
+																	<Pencil size={14} />
+																</button>
+																<button
+																	type="button"
+																	onClick={() => handleDeletePrepStep(step.id)}
+																	className="rounded-lg p-1.5 text-(--sea-ink-soft) transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950"
+																	title="Delete prep step"
+																>
+																	<Trash2 size={14} />
+																</button>
+															</div>
+														</div>
+													),
+												)}
+											</div>
+										) : (
+											<p className="text-sm text-(--sea-ink-soft)">
+												No prep steps yet.
+											</p>
+										)}
 
 										<div className="flex flex-col gap-2 rounded-lg border border-dashed border-(--line) p-3">
 											<input
@@ -1137,57 +1176,53 @@ function RecipeDetail() {
 												Servings
 											</dt>
 											<dd className="mt-0.5 text-(--sea-ink)">
-												{recipe.servings != null
-													? (() => {
-															const base = recipe.servings;
-															return (
-																<span className="inline-flex items-center gap-1.5">
-																	<button
-																		type="button"
-																		onClick={() =>
-																			setAdjustedServings(
-																				Math.max(
-																					1,
-																					(currentServings ?? base) - 1,
-																				),
-																			)
-																		}
-																		className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-(--line) text-(--sea-ink-soft) transition hover:bg-(--surface)"
-																		aria-label="Decrease servings"
-																	>
-																		<Minus size={12} />
-																	</button>
-																	<span data-testid="adjusted-servings">
-																		{currentServings}
-																	</span>
-																	<button
-																		type="button"
-																		onClick={() =>
-																			setAdjustedServings(
-																				(currentServings ?? base) + 1,
-																			)
-																		}
-																		className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-(--line) text-(--sea-ink-soft) transition hover:bg-(--surface)"
-																		aria-label="Increase servings"
-																	>
-																		<Plus size={12} />
-																	</button>
-																	{adjustedServings != null &&
-																		adjustedServings !== base && (
-																			<button
-																				type="button"
-																				onClick={() =>
-																					setAdjustedServings(null)
-																				}
-																				className="ml-1 text-xs font-medium text-(--lagoon-deep) hover:underline"
-																			>
-																				Reset
-																			</button>
-																		)}
-																</span>
-															);
-														})()
-													: "—"}
+												{recipe.servings != null ? (
+													<span className="inline-flex items-center gap-1.5">
+														<button
+															type="button"
+															onClick={() =>
+																setAdjustedServings(
+																	Math.max(
+																		1,
+																		(currentServings ?? recipe.servings ?? 1) -
+																			1,
+																	),
+																)
+															}
+															className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-(--line) text-(--sea-ink-soft) transition hover:bg-(--surface)"
+															aria-label="Decrease servings"
+														>
+															<Minus size={12} />
+														</button>
+														<span data-testid="adjusted-servings">
+															{currentServings}
+														</span>
+														<button
+															type="button"
+															onClick={() =>
+																setAdjustedServings(
+																	(currentServings ?? recipe.servings ?? 1) + 1,
+																)
+															}
+															className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-(--line) text-(--sea-ink-soft) transition hover:bg-(--surface)"
+															aria-label="Increase servings"
+														>
+															<Plus size={12} />
+														</button>
+														{adjustedServings != null &&
+															adjustedServings !== recipe.servings && (
+																<button
+																	type="button"
+																	onClick={() => setAdjustedServings(null)}
+																	className="ml-1 text-xs font-medium text-(--lagoon-deep) hover:underline"
+																>
+																	Reset
+																</button>
+															)}
+													</span>
+												) : (
+													"—"
+												)}
 											</dd>
 										</div>
 										<div>
@@ -1228,66 +1263,55 @@ function RecipeDetail() {
 										</div>
 									</dl>
 
-									{(() => {
-										const sorted = [...(prepSteps ?? [])].sort(
-											(a, b) => b.leadTimeMinutes - a.leadTimeMinutes,
-										);
-										return sorted.length > 0 ? (
-											<div className="mt-4">
-												<SectionHeading>Prep Steps</SectionHeading>
-												<div className="flex flex-col gap-2">
-													{sorted.map((step) => (
-														<div
-															key={step.id}
-															className="flex items-center justify-between rounded-lg border border-(--line) px-3 py-2"
-														>
-															<div className="flex-1 text-sm text-(--sea-ink)">
-																<span className="font-medium">
-																	{step.description}
-																</span>
-																<span className="ml-2 text-(--sea-ink-soft)">
-																	{formatLeadTime(step.leadTimeMinutes)}
-																</span>
-															</div>
+									{sortedPrepSteps.length > 0 && (
+										<div className="mt-4">
+											<SectionHeading>Prep Steps</SectionHeading>
+											<div className="flex flex-col gap-2">
+												{sortedPrepSteps.map((step) => (
+													<div
+														key={step.id}
+														className="flex items-center justify-between rounded-lg border border-(--line) px-3 py-2"
+													>
+														<div className="flex-1 text-sm text-(--sea-ink)">
+															<span className="font-medium">
+																{step.description}
+															</span>
+															<span className="ml-2 text-(--sea-ink-soft)">
+																{formatLeadTime(step.leadTimeMinutes)}
+															</span>
 														</div>
-													))}
-												</div>
-											</div>
-										) : null;
-									})()}
-
-									{recipe.producedProductId &&
-										(() => {
-											const producedProduct = products?.find(
-												(p) => p.id === recipe.producedProductId,
-											);
-											return (
-												<div className="mt-4">
-													<SectionHeading>Produces</SectionHeading>
-													<div className="flex items-center gap-3">
-														{producedProduct?.image && (
-															<img
-																src={producedProduct.image}
-																alt={producedProduct.name}
-																className="h-10 w-10 rounded-lg border border-(--line) object-cover"
-															/>
-														)}
-														<p className="text-sm text-(--sea-ink-soft)">
-															{producedProduct?.name ?? "Unknown product"}
-															{recipe.producedQuantity && (
-																<>
-																	{" — "}
-																	{recipe.producedQuantity}
-																	{getUnitLabel(recipe.producedQuantityUnitId)
-																		? ` ${getUnitLabel(recipe.producedQuantityUnitId)}`
-																		: ""}
-																</>
-															)}
-														</p>
 													</div>
-												</div>
-											);
-										})()}
+												))}
+											</div>
+										</div>
+									)}
+
+									{recipe.producedProductId && producedProduct && (
+										<div className="mt-4">
+											<SectionHeading>Produces</SectionHeading>
+											<div className="flex items-center gap-3">
+												{producedProduct?.image && (
+													<img
+														src={producedProduct.image}
+														alt={producedProduct.name}
+														className="h-10 w-10 rounded-lg border border-(--line) object-cover"
+													/>
+												)}
+												<p className="text-sm text-(--sea-ink-soft)">
+													{producedProduct?.name ?? "Unknown product"}
+													{recipe.producedQuantity && (
+														<>
+															{" — "}
+															{recipe.producedQuantity}
+															{getUnitLabel(recipe.producedQuantityUnitId)
+																? ` ${getUnitLabel(recipe.producedQuantityUnitId)}`
+																: ""}
+														</>
+													)}
+												</p>
+											</div>
+										</div>
+									)}
 
 									{cookResult && (
 										<div
@@ -1427,57 +1451,43 @@ function RecipeDetail() {
 									<h3 className="mb-3 text-sm font-semibold text-(--sea-ink)">
 										Choose ingredients
 									</h3>
-									{(() => {
-										const groups = new Map<
-											string,
-											NonNullable<typeof ingredients>
-										>();
-										for (const ing of ingredients ?? []) {
-											if (ing.groupName) {
-												if (!groups.has(ing.groupName)) {
-													groups.set(ing.groupName, []);
-												}
-												groups.get(ing.groupName)?.push(ing);
-											}
-										}
-										return [...groups].map(([groupName, groupIngs]) => (
-											<div key={groupName} className="mb-3">
-												<p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-(--sea-ink-soft)">
-													{groupName}
-												</p>
-												<div className="flex flex-col gap-1">
-													{groupIngs.map((ing) => (
-														<label
-															key={ing.id}
-															className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-(--sea-ink) hover:bg-(--line)"
-														>
-															<input
-																type="radio"
-																name={`group-${groupName}`}
-																checked={groupSelections[groupName] === ing.id}
-																onChange={() =>
-																	setGroupSelections({
-																		...groupSelections,
-																		[groupName]: ing.id,
-																	})
-																}
-																className="accent-(--lagoon)"
-															/>
-															<span className="font-medium">
-																{getProductName(ing.productId)}
-															</span>
-															<span className="text-(--sea-ink-soft)">
-																{formatScaled(ing.quantity)}
-																{getUnitLabel(ing.quantityUnitId)
-																	? ` ${getUnitLabel(ing.quantityUnitId)}`
-																	: ""}
-															</span>
-														</label>
-													))}
-												</div>
+									{[...cookPickerGroups].map(([groupName, groupIngs]) => (
+										<div key={groupName} className="mb-3">
+											<p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-(--sea-ink-soft)">
+												{groupName}
+											</p>
+											<div className="flex flex-col gap-1">
+												{groupIngs.map((ing) => (
+													<label
+														key={ing.id}
+														className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-(--sea-ink) hover:bg-(--line)"
+													>
+														<input
+															type="radio"
+															name={`group-${groupName}`}
+															checked={groupSelections[groupName] === ing.id}
+															onChange={() =>
+																setGroupSelections({
+																	...groupSelections,
+																	[groupName]: ing.id,
+																})
+															}
+															className="accent-(--lagoon)"
+														/>
+														<span className="font-medium">
+															{getProductName(ing.productId)}
+														</span>
+														<span className="text-(--sea-ink-soft)">
+															{formatScaled(ing.quantity)}
+															{getUnitLabel(ing.quantityUnitId)
+																? ` ${getUnitLabel(ing.quantityUnitId)}`
+																: ""}
+														</span>
+													</label>
+												))}
 											</div>
-										));
-									})()}
+										</div>
+									))}
 									<div className="flex gap-2">
 										<button
 											type="button"
@@ -1506,19 +1516,11 @@ function RecipeDetail() {
 							) : (
 								<div className="mb-4 flex flex-col gap-2">
 									{(() => {
-										const allIngs = ingredients ?? [];
-										const ungrouped = allIngs.filter((i) => !i.groupName);
-										const groups = new Map<string, typeof allIngs>();
-										for (const ing of allIngs) {
-											if (ing.groupName) {
-												if (!groups.has(ing.groupName)) {
-													groups.set(ing.groupName, []);
-												}
-												groups.get(ing.groupName)?.push(ing);
-											}
-										}
+										const { ungrouped, groups } = ingredientGroups;
 
-										function renderIngredient(ing: (typeof allIngs)[number]) {
+										function renderIngredient(
+											ing: NonNullable<typeof ingredients>[number],
+										) {
 											if (editingIngredientId === ing.id) {
 												return (
 													<div
@@ -1594,16 +1596,13 @@ function RecipeDetail() {
 																className={inputClass}
 															/>
 														</div>
-														{(() => {
-															const hint = getEditConversionHint();
-															return hint ? (
-																<p
-																	className={`text-xs ${hint.includes("No conversion") ? "text-amber-600 dark:text-amber-400" : "text-(--sea-ink-soft)"}`}
-																>
-																	{hint}
-																</p>
-															) : null;
-														})()}
+														{editConversionHint && (
+															<p
+																className={`text-xs ${editConversionHint.includes("No conversion") ? "text-amber-600 dark:text-amber-400" : "text-(--sea-ink-soft)"}`}
+															>
+																{editConversionHint}
+															</p>
+														)}
 														<div className="flex gap-2">
 															<button
 																type="button"
