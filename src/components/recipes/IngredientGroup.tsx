@@ -41,7 +41,7 @@ export function IngredientGroup({
 	onDelete,
 }: IngredientGroupProps) {
 	return (
-		<div className="rounded-lg border border-(--line) overflow-hidden">
+		<div className="rounded-lg border border-(--line)">
 			<div className="flex items-center px-3 py-2">
 				{isRenaming ? (
 					<form
