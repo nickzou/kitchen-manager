@@ -25,6 +25,7 @@ import { MarkdownEditor } from "#src/components/MarkdownEditor";
 import { MultiCombobox } from "#src/components/MultiCombobox";
 import { NumberInput } from "#src/components/NumberInput";
 import { Page } from "#src/components/Page";
+import { CookPicker } from "#src/components/recipes/CookPicker";
 import { IngredientGroup } from "#src/components/recipes/IngredientGroup";
 import { IngredientRow } from "#src/components/recipes/IngredientRow";
 import { PrepStepRow } from "#src/components/recipes/PrepStepRow";
@@ -1362,66 +1363,31 @@ function RecipeDetail() {
 							</h2>
 
 							{showCookPicker && (
-								<div className="mb-4 rounded-lg border border-(--lagoon) bg-(--surface) p-4">
-									<h3 className="mb-3 text-sm font-semibold text-(--sea-ink)">
-										Choose ingredients
-									</h3>
-									{[...cookPickerGroups].map(([groupName, groupIngs]) => (
-										<div key={groupName} className="mb-3">
-											<p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-(--sea-ink-soft)">
-												{groupName}
-											</p>
-											<div className="flex flex-col gap-1">
-												{groupIngs.map((ing) => (
-													<label
-														key={ing.id}
-														className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-(--sea-ink) hover:bg-(--line)"
-													>
-														<input
-															type="radio"
-															name={`group-${groupName}`}
-															checked={groupSelections[groupName] === ing.id}
-															onChange={() =>
-																setGroupSelections({
-																	...groupSelections,
-																	[groupName]: ing.id,
-																})
-															}
-															className="accent-(--lagoon)"
-														/>
-														<span className="font-medium">
-															{getProductName(ing.productId)}
-														</span>
-														<span className="text-(--sea-ink-soft)">
-															{formatScaled(ing.quantity)}
-															{getUnitLabel(ing.quantityUnitId)
-																? ` ${getUnitLabel(ing.quantityUnitId)}`
-																: ""}
-														</span>
-													</label>
-												))}
-											</div>
-										</div>
-									))}
-									<div className="flex gap-2">
-										<button
-											type="button"
-											onClick={() => handleCook(groupSelections)}
-											disabled={cookRecipe.isPending}
-											className="flex h-8 items-center gap-1.5 rounded-full bg-(--lagoon) px-4 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
-										>
-											<CookingPot size={14} />
-											{cookRecipe.isPending ? "Cooking…" : "Cook"}
-										</button>
-										<button
-											type="button"
-											onClick={() => setShowCookPicker(false)}
-											className="flex h-8 items-center rounded-full px-3 text-sm font-medium text-(--sea-ink-soft) transition hover:bg-(--surface)"
-										>
-											Cancel
-										</button>
-									</div>
-								</div>
+								<CookPicker
+									groups={
+										new Map(
+											[...cookPickerGroups].map(([groupName, groupIngs]) => [
+												groupName,
+												groupIngs.map((ing) => ({
+													ingredient: ing,
+													productName: getProductName(ing.productId),
+													scaledQuantity: formatScaled(ing.quantity),
+													unitLabel: getUnitLabel(ing.quantityUnitId),
+												})),
+											]),
+										)
+									}
+									selections={groupSelections}
+									onSelectionChange={(groupName, ingredientId) =>
+										setGroupSelections({
+											...groupSelections,
+											[groupName]: ingredientId,
+										})
+									}
+									onCook={() => handleCook(groupSelections)}
+									onCancel={() => setShowCookPicker(false)}
+									isCooking={cookRecipe.isPending}
+								/>
 							)}
 
 							{!ingredients?.length && !editing ? (
