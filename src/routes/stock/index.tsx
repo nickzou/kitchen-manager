@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Minus, Plus } from "lucide-react";
+import { Minus } from "lucide-react";
 import { type FormEvent, useState } from "react";
 import { Accordion } from "#src/components/Accordion";
 import { Combobox } from "#src/components/Combobox";
@@ -9,6 +9,7 @@ import { Modal } from "#src/components/Modal";
 import { NumberInput } from "#src/components/NumberInput";
 import { Page } from "#src/components/Page";
 import { SearchInput } from "#src/components/SearchInput";
+import { QuickAddStock } from "#src/components/stock/QuickAddStock";
 import { StockProductContent } from "#src/components/stock/StockProductContent";
 import { StockProductTrigger } from "#src/components/stock/StockProductTrigger";
 import { authClient } from "#src/lib/auth-client";
@@ -19,7 +20,6 @@ import { useQuantityUnits } from "#src/lib/hooks/use-quantity-units";
 import {
 	type StockEntry,
 	useConsumeStock,
-	useCreateStockEntry,
 	useDeleteStockEntry,
 	useStockEntries,
 	useUpdateStockEntry,
@@ -42,17 +42,9 @@ function StockPage() {
 	const { data: quantityUnits } = useQuantityUnits();
 	const { data: stockEntries, isLoading: entriesLoading } = useStockEntries();
 	const { data: stockLogs } = useStockLogs();
-	const createBrand = useCreateBrand();
-	const createStockEntry = useCreateStockEntry();
 	const deleteStockEntry = useDeleteStockEntry();
 	const consumeStock = useConsumeStock();
 
-	const [productId, setProductId] = useState("");
-	const [quantity, setQuantity] = useState("");
-	const [expirationDate, setExpirationDate] = useState("");
-	const [price, setPrice] = useState("");
-	const [storeId, setStoreId] = useState("");
-	const [brandId, setBrandId] = useState("");
 	const [search, setSearch] = useState("");
 	const [consumeAmounts, setConsumeAmounts] = useState<Record<string, string>>(
 		{},
@@ -64,25 +56,6 @@ function StockPage() {
 	if (!session) {
 		navigate({ to: "/sign-in" });
 		return null;
-	}
-
-	async function handleAddStock(e: FormEvent) {
-		e.preventDefault();
-		if (!productId || !quantity) return;
-		await createStockEntry.mutateAsync({
-			productId,
-			quantity,
-			expirationDate: expirationDate || undefined,
-			purchaseDate: new Date().toISOString().slice(0, 10),
-			price: price || undefined,
-			storeId: storeId || undefined,
-			brandId: brandId || undefined,
-		});
-		setQuantity("");
-		setExpirationDate("");
-		setPrice("");
-		setStoreId("");
-		setBrandId("");
 	}
 
 	async function handleConsume(stockEntryId: string) {
@@ -165,78 +138,11 @@ function StockPage() {
 					Stock
 				</h1>
 
-				{/* Quick-add section */}
-				<form
-					onSubmit={handleAddStock}
-					className="mb-6 flex flex-wrap gap-3 border-b border-(--line) pb-6"
-				>
-					<Combobox
-						value={productId}
-						onChange={setProductId}
-						options={(products ?? []).map((p) => ({
-							value: p.id,
-							label: p.name,
-						}))}
-						placeholder="Select product *"
-						required
-						className="flex-1 min-w-40"
-					/>
-					<NumberInput
-						placeholder="Quantity *"
-						required
-						step="any"
-						min="0.01"
-						value={quantity}
-						onChange={(e) => setQuantity(e.target.value)}
-						className="w-28"
-					/>
-					<DatePicker
-						value={expirationDate}
-						onChange={setExpirationDate}
-						placeholder="Expiration"
-						className="w-40"
-					/>
-					<NumberInput
-						placeholder="Price"
-						step="0.01"
-						min="0"
-						value={price}
-						onChange={(e) => setPrice(e.target.value)}
-						className="w-28"
-					/>
-					<Combobox
-						value={storeId}
-						onChange={setStoreId}
-						options={(stores ?? []).map((s) => ({
-							value: s.id,
-							label: s.name,
-						}))}
-						placeholder="Store"
-						className="w-40"
-					/>
-					<Combobox
-						value={brandId}
-						onChange={setBrandId}
-						options={(brands ?? []).map((b) => ({
-							value: b.id,
-							label: b.name,
-						}))}
-						placeholder="Brand"
-						className="w-40"
-						onCreateNew={async (name) => {
-							const created = await createBrand.mutateAsync({ name });
-							setBrandId(created.id);
-						}}
-					/>
-					<button
-						type="submit"
-						disabled={createStockEntry.isPending}
-						className="flex h-10 items-center gap-1.5 rounded-full bg-(--lagoon) px-4 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
-					>
-						<Plus size={16} />
-						Add Stock
-					</button>
-				</form>
+				<QuickAddStock
+					products={products ?? []}
+					stores={stores ?? []}
+					brands={brands ?? []}
+				/>
 
 				{/* Tab bar */}
 				<nav className="mb-6 flex gap-4 text-sm font-semibold">
