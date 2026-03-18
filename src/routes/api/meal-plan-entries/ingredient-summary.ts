@@ -11,6 +11,10 @@ import {
 	unitConversion,
 } from "#src/db/schema";
 import { getAuthSession } from "#src/lib/auth-session";
+import {
+	buildConversionGraph,
+	tryConvert,
+} from "#src/lib/recipe-utils/conversion-graph";
 
 function json(data: unknown, init?: { status?: number }) {
 	return new Response(JSON.stringify(data), {
@@ -163,33 +167,7 @@ export const Route = createFileRoute(
 				);
 				const unitMap = new Map(units.map((u) => [u.id, u]));
 
-				// Build conversion graph for unit conversion attempts
-				const conversionGraph = new Map<string, Map<string, number>>();
-				for (const c of conversions) {
-					if (!conversionGraph.has(c.fromUnitId))
-						conversionGraph.set(c.fromUnitId, new Map());
-					conversionGraph.get(c.fromUnitId)?.set(c.toUnitId, Number(c.factor));
-
-					if (!conversionGraph.has(c.toUnitId))
-						conversionGraph.set(c.toUnitId, new Map());
-					conversionGraph
-						.get(c.toUnitId)
-						?.set(c.fromUnitId, 1 / Number(c.factor));
-				}
-
-				function tryConvert(
-					qty: number,
-					fromUnitId: string | null,
-					toUnitId: string | null,
-				): number | null {
-					if (fromUnitId === toUnitId) return qty;
-					if (!fromUnitId || !toUnitId) return null;
-					const fromEdges = conversionGraph.get(fromUnitId);
-					if (!fromEdges) return null;
-					const factor = fromEdges.get(toUnitId);
-					if (factor !== undefined) return qty * factor;
-					return null;
-				}
+				const graph = buildConversionGraph(conversions);
 
 				const ingredients: AggregatedIngredient[] = [];
 
@@ -202,6 +180,7 @@ export const Route = createFileRoute(
 
 					// Try to convert needed quantity to product's default unit for comparison
 					let neededInStockUnit = tryConvert(
+						graph,
 						agg.quantity,
 						agg.unitId,
 						p.defaultQuantityUnitId,

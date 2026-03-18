@@ -58,7 +58,12 @@ import {
 } from "#src/lib/hooks/use-recipes";
 import { useStockEntries } from "#src/lib/hooks/use-stock-entries";
 import { useUnitConversions } from "#src/lib/hooks/use-unit-conversions";
-import { getRecipeCost } from "#src/lib/recipe-utils";
+import {
+	buildConversionGraph,
+	getRecipeCost,
+	getStockTotals,
+	tryConvert,
+} from "#src/lib/recipe-utils";
 
 export const Route = createFileRoute("/recipes/$id")({
 	component: RecipeDetail,
@@ -181,38 +186,9 @@ function RecipeDetail() {
 			return new Map<string, "sufficient" | "deficit" | "unknown">();
 		const result = new Map<string, "sufficient" | "deficit" | "unknown">();
 
-		// Build stock totals per product
-		const stockTotals = new Map<string, number>();
-		for (const entry of stockEntries) {
-			const prev = stockTotals.get(entry.productId) ?? 0;
-			stockTotals.set(entry.productId, prev + Number(entry.quantity));
-		}
+		const stockTotals = getStockTotals(stockEntries);
 
-		// Build conversion graph
-		const conversionGraph = new Map<string, Map<string, number>>();
-		function addEdge(from: string, to: string, factor: number) {
-			if (!conversionGraph.has(from)) conversionGraph.set(from, new Map());
-			conversionGraph.get(from)?.set(to, factor);
-			if (!conversionGraph.has(to)) conversionGraph.set(to, new Map());
-			conversionGraph.get(to)?.set(from, 1 / factor);
-		}
-		for (const c of unitConversions ?? []) {
-			addEdge(c.fromUnitId, c.toUnitId, Number(c.factor));
-		}
-
-		function tryConvert(
-			qty: number,
-			fromUnitId: string | null,
-			toUnitId: string | null,
-		): number | null {
-			if (fromUnitId === toUnitId) return qty;
-			if (!fromUnitId || !toUnitId) return null;
-			const fromEdges = conversionGraph.get(fromUnitId);
-			if (!fromEdges) return null;
-			const factor = fromEdges.get(toUnitId);
-			if (factor !== undefined) return qty * factor;
-			return null;
-		}
+		const graph = buildConversionGraph(unitConversions ?? []);
 
 		for (const ing of ingredients) {
 			if (!ing.productId) continue;
@@ -222,6 +198,7 @@ function RecipeDetail() {
 			const stockQty = stockTotals.get(ing.productId) ?? 0;
 			const needed = Number(ing.quantity) * scaleFactor;
 			const neededInStockUnit = tryConvert(
+				graph,
 				needed,
 				ing.quantityUnitId,
 				p.defaultQuantityUnitId,
