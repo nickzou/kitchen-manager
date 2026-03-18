@@ -1,3 +1,4 @@
+import { QueryClient } from "@tanstack/react-query";
 import { renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createTestWrapper } from "#src/tests/helpers/test-wrapper";
@@ -123,6 +124,77 @@ describe("useDeleteRecipeIngredient", () => {
 			"/api/recipes/recipe-1/ingredients/ri-1",
 			{ method: "DELETE" },
 		);
+	});
+});
+
+function createSpyWrapper() {
+	const queryClient = new QueryClient({
+		defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+	});
+	const spy = vi.spyOn(queryClient, "invalidateQueries");
+	return { wrapper: createTestWrapper(queryClient), spy };
+}
+
+describe("recipe-availability invalidation", () => {
+	it("useCreateRecipeIngredient invalidates recipe-availability on success", async () => {
+		vi.mocked(fetch).mockResolvedValueOnce({
+			ok: true,
+			json: () => Promise.resolve(mockIngredients[0]),
+		} as Response);
+
+		const { wrapper, spy } = createSpyWrapper();
+		const { result } = renderHook(() => useCreateRecipeIngredient("recipe-1"), {
+			wrapper,
+		});
+
+		await waitFor(() =>
+			result.current.mutateAsync({
+				quantity: "2",
+				productId: "product-1",
+			}),
+		);
+
+		expect(spy).toHaveBeenCalledWith({
+			queryKey: ["recipe-availability"],
+		});
+	});
+
+	it("useUpdateRecipeIngredient invalidates recipe-availability on success", async () => {
+		vi.mocked(fetch).mockResolvedValueOnce({
+			ok: true,
+			json: () => Promise.resolve({ ...mockIngredients[0], quantity: "5" }),
+		} as Response);
+
+		const { wrapper, spy } = createSpyWrapper();
+		const { result } = renderHook(() => useUpdateRecipeIngredient("recipe-1"), {
+			wrapper,
+		});
+
+		await waitFor(() =>
+			result.current.mutateAsync({ id: "ri-1", quantity: "5" }),
+		);
+
+		expect(spy).toHaveBeenCalledWith({
+			queryKey: ["recipe-availability"],
+		});
+	});
+
+	it("useDeleteRecipeIngredient invalidates recipe-availability on success", async () => {
+		vi.mocked(fetch).mockResolvedValueOnce({
+			ok: true,
+			json: () => Promise.resolve({ success: true }),
+		} as Response);
+
+		const { wrapper, spy } = createSpyWrapper();
+		const { result } = renderHook(() => useDeleteRecipeIngredient("recipe-1"), {
+			wrapper,
+		});
+
+		await waitFor(() => result.current.mutateAsync("ri-1"));
+
+		expect(spy).toHaveBeenCalledWith({
+			queryKey: ["recipe-availability"],
+		});
 	});
 });
 
