@@ -5,6 +5,7 @@ import { CompactView } from "#src/components/CompactView";
 import CookingSubNav from "#src/components/CookingSubNav";
 import { GridView } from "#src/components/GridView";
 import { ImageToggle } from "#src/components/ImageToggle";
+import { Input } from "#src/components/Input";
 import { Island } from "#src/components/Island";
 import { MultiCombobox } from "#src/components/MultiCombobox";
 import { Page } from "#src/components/Page";
@@ -16,7 +17,6 @@ import { formatDate } from "#src/lib/format-date";
 import { useRecipeCategories } from "#src/lib/hooks/use-categories";
 import { useRecipeAvailability } from "#src/lib/hooks/use-recipe-availability";
 import { useCreateRecipe, useRecipes } from "#src/lib/hooks/use-recipes";
-import { cn } from "#src/lib/utils";
 
 export const Route = createFileRoute("/recipes/")({ component: RecipesPage });
 
@@ -72,9 +72,6 @@ function RecipesPage() {
 			.filter(Boolean) as string[];
 	}
 
-	const inputClass =
-		"h-10 rounded-lg border border-(--line) bg-(--surface) px-3 text-sm text-(--sea-ink) outline-none focus:border-(--lagoon)";
-
 	return (
 		<Page as="main" className="pb-8 pt-14">
 			<Island as="section" className="animate-rise-in rounded-2xl p-6 sm:p-8">
@@ -91,13 +88,13 @@ function RecipesPage() {
 					onSubmit={handleSubmit}
 					className="mb-6 flex flex-wrap gap-3 border-b border-(--line) pb-6"
 				>
-					<input
+					<Input
 						type="text"
 						placeholder="Recipe name *"
 						required
 						value={name}
 						onChange={(e) => setName(e.target.value)}
-						className={cn(inputClass, "flex-1 min-w-[160px]")}
+						className="flex-1 min-w-[160px]"
 					/>
 					<MultiCombobox
 						value={categoryIds}

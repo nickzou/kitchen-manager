@@ -4,6 +4,7 @@ import { type FormEvent, useMemo, useState } from "react";
 import { CompactView } from "#src/components/CompactView";
 import CookingSubNav from "#src/components/CookingSubNav";
 import { GridView } from "#src/components/GridView";
+import { Input } from "#src/components/Input";
 import { Island } from "#src/components/Island";
 import { Page } from "#src/components/Page";
 import { SearchInput } from "#src/components/SearchInput";
@@ -15,7 +16,6 @@ import {
 	useCreateRecipeCategory,
 	useRecipeCategories,
 } from "#src/lib/hooks/use-categories";
-import { cn } from "#src/lib/utils";
 
 export const Route = createFileRoute("/recipe-categories/")({
 	component: RecipeCategoriesPage,
@@ -60,9 +60,6 @@ function RecipeCategoriesPage() {
 		setDescription("");
 	}
 
-	const inputClass =
-		"h-10 rounded-lg border border-(--line) bg-(--surface) px-3 text-sm text-(--sea-ink) outline-none focus:border-(--lagoon)";
-
 	return (
 		<Page as="main" className="pb-8 pt-14">
 			<Island as="section" className="animate-rise-in rounded-2xl p-6 sm:p-8">
@@ -79,20 +76,20 @@ function RecipeCategoriesPage() {
 					onSubmit={handleSubmit}
 					className="mb-6 flex flex-wrap gap-3 border-b border-(--line) pb-6"
 				>
-					<input
+					<Input
 						type="text"
 						placeholder="Category name *"
 						required
 						value={name}
 						onChange={(e) => setName(e.target.value)}
-						className={cn(inputClass, "flex-1 min-w-[160px]")}
+						className="flex-1 min-w-[160px]"
 					/>
-					<input
+					<Input
 						type="text"
 						placeholder="Description"
 						value={description}
 						onChange={(e) => setDescription(e.target.value)}
-						className={cn(inputClass, "w-48")}
+						className="w-48"
 					/>
 					<button
 						type="submit"

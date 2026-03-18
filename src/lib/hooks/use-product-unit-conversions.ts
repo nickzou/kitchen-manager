@@ -20,7 +20,7 @@ export type CreateProductUnitConversionInput = {
 export type UpdateProductUnitConversionInput =
 	Partial<CreateProductUnitConversionInput>;
 
-export function useProductUnitConversions(productId: string) {
+export function useProductUnitConversion(productId: string) {
 	return useQuery<ProductUnitConversion[]>({
 		queryKey: ["product-unit-conversions", productId],
 		queryFn: async () => {
@@ -29,6 +29,20 @@ export function useProductUnitConversions(productId: string) {
 			return res.json();
 		},
 		enabled: !!productId,
+	});
+}
+
+export function useProductUnitConversions(productIds: string[]) {
+	return useQuery<ProductUnitConversion[]>({
+		queryKey: ["product-unit-conversions-bulk", productIds],
+		queryFn: async () => {
+			const res = await fetch(
+				`/api/product-unit-conversions?productIds=${productIds.join(",")}`,
+			);
+			if (!res.ok) throw new Error("Failed to fetch product unit conversions");
+			return res.json();
+		},
+		enabled: productIds.length > 0,
 	});
 }
 

@@ -29,7 +29,13 @@
 				"noLabelWithoutControl": {
 					"level": "error",
 					"options": {
-						"inputComponents": ["NumberInput", "DatePicker", "Combobox"]
+						"inputComponents": [
+							"Input",
+							"NumberInput",
+							"Textarea",
+							"DatePicker",
+							"Combobox"
+						]
 					}
 				}
 			}

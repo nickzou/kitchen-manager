@@ -52,6 +52,9 @@ export function useCreateRecipeIngredient(recipeId: string) {
 			queryClient.invalidateQueries({
 				queryKey: ["recipes", recipeId, "ingredients"],
 			});
+			queryClient.invalidateQueries({
+				queryKey: ["recipe-availability"],
+			});
 		},
 	});
 }
@@ -75,6 +78,9 @@ export function useUpdateRecipeIngredient(recipeId: string) {
 			queryClient.invalidateQueries({
 				queryKey: ["recipes", recipeId, "ingredients"],
 			});
+			queryClient.invalidateQueries({
+				queryKey: ["recipe-availability"],
+			});
 		},
 	});
 }
@@ -92,6 +98,9 @@ export function useDeleteRecipeIngredient(recipeId: string) {
 		onSuccess: () => {
 			queryClient.invalidateQueries({
 				queryKey: ["recipes", recipeId, "ingredients"],
+			});
+			queryClient.invalidateQueries({
+				queryKey: ["recipe-availability"],
 			});
 		},
 	});

@@ -5,6 +5,7 @@ import { AlertBox } from "#src/components/AlertBox";
 import { AlertText } from "#src/components/AlertText";
 import { Combobox } from "#src/components/Combobox";
 import { ImageInput } from "#src/components/ImageInput";
+import { Input } from "#src/components/Input";
 import InventorySubNav from "#src/components/InventorySubNav";
 import { Island } from "#src/components/Island";
 import { DetailColumns } from "#src/components/layouts/DetailColumns";
@@ -12,13 +13,14 @@ import { MultiCombobox } from "#src/components/MultiCombobox";
 import { NumberInput } from "#src/components/NumberInput";
 import { Page } from "#src/components/Page";
 import { PricingHistoryChart } from "#src/components/stock/PricingHistoryChart";
+import { Textarea } from "#src/components/Textarea";
 import { authClient } from "#src/lib/auth-client";
 import { useBrands } from "#src/lib/hooks/use-brands";
 import { useProductCategories } from "#src/lib/hooks/use-categories";
 import {
 	useCreateProductUnitConversion,
 	useDeleteProductUnitConversion,
-	useProductUnitConversions,
+	useProductUnitConversion,
 	useUpdateProductUnitConversion,
 } from "#src/lib/hooks/use-product-unit-conversions";
 import {
@@ -30,7 +32,6 @@ import { useQuantityUnits } from "#src/lib/hooks/use-quantity-units";
 import { useStockEntries } from "#src/lib/hooks/use-stock-entries";
 import { useStores } from "#src/lib/hooks/use-stores";
 import { getAvgUnitCost, getLatestUnitCost } from "#src/lib/stock-utils";
-import { cn } from "#src/lib/utils";
 
 export const Route = createFileRoute("/products/$id")({
 	component: ProductDetail,
@@ -52,7 +53,7 @@ function ProductDetail() {
 	for (const s of stores ?? []) storeNames[s.id] = s.name;
 	const brandNames: Record<string, string> = {};
 	for (const b of brands ?? []) brandNames[b.id] = b.name;
-	const { data: productConversions } = useProductUnitConversions(id);
+	const { data: productConversions } = useProductUnitConversion(id);
 	const createConversion = useCreateProductUnitConversion(id);
 	const deleteConversion = useDeleteProductUnitConversion(id);
 	const [editingConversionId, setEditingConversionId] = useState<string | null>(
@@ -228,9 +229,6 @@ function ProductDetail() {
 		await deleteConversion.mutateAsync(conversionId);
 	}
 
-	const inputClass =
-		"h-10 w-full rounded-lg border border-(--line) bg-(--surface) px-3 text-sm text-(--sea-ink) outline-none focus:border-(--lagoon)";
-
 	function formatDate(dateStr: string | null) {
 		if (!dateStr) return "—";
 		return new Date(dateStr).toLocaleDateString();
@@ -277,12 +275,11 @@ function ProductDetail() {
 
 								<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
 									Name
-									<input
+									<Input
 										type="text"
 										required
 										value={form.name}
 										onChange={(e) => setForm({ ...form, name: e.target.value })}
-										className={inputClass}
 									/>
 								</label>
 
@@ -301,13 +298,12 @@ function ProductDetail() {
 
 								<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
 									Description
-									<textarea
+									<Textarea
 										value={form.description}
 										onChange={(e) =>
 											setForm({ ...form, description: e.target.value })
 										}
 										rows={3}
-										className={cn(inputClass, "h-auto py-2")}
 									/>
 								</label>
 

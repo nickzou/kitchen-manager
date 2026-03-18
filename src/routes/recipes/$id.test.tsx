@@ -56,8 +56,11 @@ vi.mock("#src/lib/hooks/use-quantity-units", () => ({
 	useQuantityUnits: (...args: unknown[]) => mockUseQuantityUnits(...args),
 }));
 
+const mockUseProductUnitConversion = vi.fn();
 const mockUseProductUnitConversions = vi.fn();
 vi.mock("#src/lib/hooks/use-product-unit-conversions", () => ({
+	useProductUnitConversion: (...args: unknown[]) =>
+		mockUseProductUnitConversion(...args),
 	useProductUnitConversions: (...args: unknown[]) =>
 		mockUseProductUnitConversions(...args),
 }));
@@ -192,6 +195,7 @@ beforeEach(() => {
 			{ id: "qu3", name: "Cups", abbreviation: "cup" },
 		],
 	});
+	mockUseProductUnitConversion.mockReturnValue({ data: [] });
 	mockUseProductUnitConversions.mockReturnValue({ data: [] });
 	mockUseUnitConversions.mockReturnValue({
 		data: [
@@ -425,7 +429,7 @@ describe("RecipeDetail", () => {
 		});
 
 		it("prioritizes product-specific conversion over global", async () => {
-			mockUseProductUnitConversions.mockReturnValue({
+			mockUseProductUnitConversion.mockReturnValue({
 				data: [
 					{
 						id: "puc1",

@@ -2,8 +2,6 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
 	ArrowLeft,
 	Check,
-	ChevronDown,
-	ChevronLeft,
 	CircleCheck,
 	CircleX,
 	CookingPot,
@@ -21,17 +19,26 @@ import {
 import { AlertBox } from "#src/components/AlertBox";
 import { Combobox } from "#src/components/Combobox";
 import { ImageInput } from "#src/components/ImageInput";
+import { Input } from "#src/components/Input";
 import { Island } from "#src/components/Island";
 import { DetailColumns } from "#src/components/layouts/DetailColumns";
 import { MarkdownEditor } from "#src/components/MarkdownEditor";
 import { MultiCombobox } from "#src/components/MultiCombobox";
 import { NumberInput } from "#src/components/NumberInput";
 import { Page } from "#src/components/Page";
+import { CookPicker } from "#src/components/recipes/CookPicker";
+import { IngredientGroup } from "#src/components/recipes/IngredientGroup";
+import { IngredientRow } from "#src/components/recipes/IngredientRow";
+import { PrepStepRow } from "#src/components/recipes/PrepStepRow";
 import { SectionHeading } from "#src/components/SectionHeading";
+import { Textarea } from "#src/components/Textarea";
 import { authClient } from "#src/lib/auth-client";
 import { useRecipeCategories } from "#src/lib/hooks/use-categories";
 import { useCookRecipe } from "#src/lib/hooks/use-cook-recipe";
-import { useProductUnitConversions } from "#src/lib/hooks/use-product-unit-conversions";
+import {
+	useProductUnitConversion,
+	useProductUnitConversions,
+} from "#src/lib/hooks/use-product-unit-conversions";
 import { useCreateProduct, useProducts } from "#src/lib/hooks/use-products";
 import { useQuantityUnits } from "#src/lib/hooks/use-quantity-units";
 import { useRecipeAvailability } from "#src/lib/hooks/use-recipe-availability";
@@ -54,8 +61,10 @@ import {
 } from "#src/lib/hooks/use-recipes";
 import { useStockEntries } from "#src/lib/hooks/use-stock-entries";
 import { useUnitConversions } from "#src/lib/hooks/use-unit-conversions";
-import { getRecipeCost } from "#src/lib/recipe-utils";
-import { cn } from "#src/lib/utils";
+import {
+	getIngredientAvailability,
+	getRecipeCost,
+} from "#src/lib/recipe-utils";
 
 export const Route = createFileRoute("/recipes/$id")({
 	component: RecipeDetail,
@@ -159,12 +168,25 @@ function RecipeDetail() {
 		leadTimeMinutes: "",
 	});
 
-	const { data: productConversions } = useProductUnitConversions(
+	const { data: productConversions } = useProductUnitConversion(
 		newIngredient.productId,
 	);
-	const { data: editProductConversions } = useProductUnitConversions(
+	const { data: editProductConversions } = useProductUnitConversion(
 		editIngredient.productId,
 	);
+
+	const ingredientProductIds = useMemo(
+		() => [
+			...new Set(
+				(ingredients ?? [])
+					.filter((i) => i.productId)
+					.map((i) => i.productId as string),
+			),
+		],
+		[ingredients],
+	);
+	const { data: allProductConversions } =
+		useProductUnitConversions(ingredientProductIds);
 
 	const currentServings = adjustedServings ?? recipe?.servings ?? null;
 	const scaleFactor =
@@ -173,70 +195,27 @@ function RecipeDetail() {
 			: 1;
 
 	// Compute per-ingredient stock availability
-	const ingredientAvailability = useMemo(() => {
-		if (!ingredients || !products || !stockEntries)
-			return new Map<string, "sufficient" | "deficit" | "unknown">();
-		const result = new Map<string, "sufficient" | "deficit" | "unknown">();
-
-		// Build stock totals per product
-		const stockTotals = new Map<string, number>();
-		for (const entry of stockEntries) {
-			const prev = stockTotals.get(entry.productId) ?? 0;
-			stockTotals.set(entry.productId, prev + Number(entry.quantity));
-		}
-
-		// Build conversion graph
-		const conversionGraph = new Map<string, Map<string, number>>();
-		function addEdge(from: string, to: string, factor: number) {
-			if (!conversionGraph.has(from)) conversionGraph.set(from, new Map());
-			conversionGraph.get(from)?.set(to, factor);
-			if (!conversionGraph.has(to)) conversionGraph.set(to, new Map());
-			conversionGraph.get(to)?.set(from, 1 / factor);
-		}
-		for (const c of unitConversions ?? []) {
-			addEdge(c.fromUnitId, c.toUnitId, Number(c.factor));
-		}
-
-		function tryConvert(
-			qty: number,
-			fromUnitId: string | null,
-			toUnitId: string | null,
-		): number | null {
-			if (fromUnitId === toUnitId) return qty;
-			if (!fromUnitId || !toUnitId) return null;
-			const fromEdges = conversionGraph.get(fromUnitId);
-			if (!fromEdges) return null;
-			const factor = fromEdges.get(toUnitId);
-			if (factor !== undefined) return qty * factor;
-			return null;
-		}
-
-		for (const ing of ingredients) {
-			if (!ing.productId) continue;
-			const p = products.find((p) => p.id === ing.productId);
-			if (!p) continue;
-
-			const stockQty = stockTotals.get(ing.productId) ?? 0;
-			const needed = Number(ing.quantity) * scaleFactor;
-			const neededInStockUnit = tryConvert(
-				needed,
-				ing.quantityUnitId,
-				p.defaultQuantityUnitId,
-			);
-
-			if (
-				ing.quantityUnitId !== p.defaultQuantityUnitId &&
-				neededInStockUnit === null
-			) {
-				result.set(ing.id, "unknown");
-			} else {
-				const effective = neededInStockUnit ?? needed;
-				result.set(ing.id, stockQty >= effective ? "sufficient" : "deficit");
-			}
-		}
-
-		return result;
-	}, [ingredients, products, stockEntries, unitConversions, scaleFactor]);
+	const ingredientAvailability = useMemo(
+		() =>
+			ingredients && products && stockEntries
+				? getIngredientAvailability({
+						ingredients,
+						products,
+						stockEntries,
+						unitConversions: unitConversions ?? [],
+						productConversions: allProductConversions ?? [],
+						scaleFactor,
+					})
+				: new Map(),
+		[
+			ingredients,
+			products,
+			stockEntries,
+			unitConversions,
+			allProductConversions,
+			scaleFactor,
+		],
+	);
 
 	const recipeCost = useMemo(() => {
 		if (!ingredients || !products || !stockEntries || !unitConversions)
@@ -249,6 +228,52 @@ function RecipeDetail() {
 			scaleFactor,
 		});
 	}, [ingredients, products, stockEntries, unitConversions, scaleFactor]);
+
+	const sortedPrepSteps = useMemo(
+		() =>
+			[...(prepSteps ?? [])].sort(
+				(a, b) => b.leadTimeMinutes - a.leadTimeMinutes,
+			),
+		[prepSteps],
+	);
+
+	const producedProduct = useMemo(
+		() =>
+			recipe?.producedProductId
+				? products?.find((p) => p.id === recipe.producedProductId)
+				: undefined,
+		[recipe?.producedProductId, products],
+	);
+
+	const ingredientGroups = useMemo(() => {
+		const allIngs = ingredients ?? [];
+		const ungrouped = allIngs.filter((i) => !i.groupName);
+		const groups = new Map<string, typeof allIngs>();
+		for (const ing of allIngs) {
+			if (ing.groupName) {
+				if (!groups.has(ing.groupName)) {
+					groups.set(ing.groupName, []);
+				}
+				groups.get(ing.groupName)?.push(ing);
+			}
+		}
+		return { ungrouped, groups };
+	}, [ingredients]);
+
+	const cookPickerGroups = useMemo(() => {
+		const groups = new Map<string, NonNullable<typeof ingredients>>();
+		for (const ing of ingredients ?? []) {
+			if (ing.groupName) {
+				if (!groups.has(ing.groupName)) {
+					groups.set(ing.groupName, []);
+				}
+				groups.get(ing.groupName)?.push(ing);
+			}
+		}
+		return groups;
+	}, [ingredients]);
+
+	const editConversionHint = getEditConversionHint();
 
 	if (sessionLoading) return null;
 	if (!session) {
@@ -652,9 +677,6 @@ function RecipeDetail() {
 		return Number.parseFloat(scaled.toFixed(2)).toString();
 	}
 
-	const inputClass =
-		"h-10 w-full rounded-lg border border-(--line) bg-(--surface) px-3 text-sm text-(--sea-ink) outline-none focus:border-(--lagoon)";
-
 	function formatLeadTime(minutes: number): string {
 		if (minutes < 60) return `${minutes} minutes before`;
 		const hours = Math.floor(minutes / 60);
@@ -729,26 +751,24 @@ function RecipeDetail() {
 
 									<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
 										Name
-										<input
+										<Input
 											type="text"
 											required
 											value={form.name}
 											onChange={(e) =>
 												setForm({ ...form, name: e.target.value })
 											}
-											className={inputClass}
 										/>
 									</label>
 
 									<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
 										Description
-										<textarea
+										<Textarea
 											value={form.description}
 											onChange={(e) =>
 												setForm({ ...form, description: e.target.value })
 											}
 											rows={3}
-											className={cn(inputClass, "h-auto py-2")}
 										/>
 									</label>
 
@@ -825,125 +845,32 @@ function RecipeDetail() {
 										<legend className="px-1 text-sm font-medium text-(--sea-ink)">
 											Prep Steps
 										</legend>
-										{(() => {
-											const sorted = [...(prepSteps ?? [])].sort(
-												(a, b) => b.leadTimeMinutes - a.leadTimeMinutes,
-											);
-											return sorted.length > 0 ? (
-												<div className="flex flex-col gap-2">
-													{sorted.map((step) =>
-														editingPrepStepId === step.id ? (
-															<div
-																key={step.id}
-																className="flex flex-col gap-3 rounded-lg border border-(--lagoon) p-3"
-															>
-																<input
-																	type="text"
-																	placeholder="Description"
-																	value={editPrepStep.description}
-																	onChange={(e) =>
-																		setEditPrepStep({
-																			...editPrepStep,
-																			description: e.target.value,
-																		})
-																	}
-																	className={inputClass}
-																/>
-																<div className="flex flex-col gap-1">
-																	<NumberInput
-																		min="1"
-																		placeholder="Lead time (minutes)"
-																		value={editPrepStep.leadTimeMinutes}
-																		onChange={(e) =>
-																			setEditPrepStep({
-																				...editPrepStep,
-																				leadTimeMinutes: e.target.value,
-																			})
-																		}
-																		className="w-full"
-																	/>
-																	{editPrepStep.leadTimeMinutes && (
-																		<p className="text-xs text-(--sea-ink-soft)">
-																			{formatLeadTime(
-																				Number.parseInt(
-																					editPrepStep.leadTimeMinutes,
-																					10,
-																				),
-																			)}
-																		</p>
-																	)}
-																</div>
-																<div className="flex gap-2">
-																	<button
-																		type="button"
-																		onClick={handleSavePrepStep}
-																		disabled={
-																			updatePrepStep.isPending ||
-																			!editPrepStep.description ||
-																			!editPrepStep.leadTimeMinutes
-																		}
-																		className="flex h-8 items-center gap-1 rounded-full bg-(--lagoon) px-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
-																	>
-																		<Check size={14} />
-																		{updatePrepStep.isPending
-																			? "Saving…"
-																			: "Save"}
-																	</button>
-																	<button
-																		type="button"
-																		onClick={() => setEditingPrepStepId(null)}
-																		className="flex h-8 items-center rounded-full px-3 text-sm font-medium text-(--sea-ink-soft) transition hover:bg-(--surface)"
-																	>
-																		Cancel
-																	</button>
-																</div>
-															</div>
-														) : (
-															<div
-																key={step.id}
-																className="flex items-center justify-between rounded-lg border border-(--line) px-3 py-2"
-															>
-																<div className="flex-1 text-sm text-(--sea-ink)">
-																	<span className="font-medium">
-																		{step.description}
-																	</span>
-																	<span className="ml-2 text-(--sea-ink-soft)">
-																		{formatLeadTime(step.leadTimeMinutes)}
-																	</span>
-																</div>
-																<div className="flex gap-0.5">
-																	<button
-																		type="button"
-																		onClick={() => startEditingPrepStep(step)}
-																		className="rounded-lg p-1.5 text-(--sea-ink-soft) transition hover:bg-(--surface) hover:text-(--sea-ink)"
-																		title="Edit prep step"
-																	>
-																		<Pencil size={14} />
-																	</button>
-																	<button
-																		type="button"
-																		onClick={() =>
-																			handleDeletePrepStep(step.id)
-																		}
-																		className="rounded-lg p-1.5 text-(--sea-ink-soft) transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950"
-																		title="Delete prep step"
-																	>
-																		<Trash2 size={14} />
-																	</button>
-																</div>
-															</div>
-														),
-													)}
-												</div>
-											) : (
-												<p className="text-sm text-(--sea-ink-soft)">
-													No prep steps yet.
-												</p>
-											);
-										})()}
+										{sortedPrepSteps.length > 0 ? (
+											<div className="flex flex-col gap-2">
+												{sortedPrepSteps.map((step) => (
+													<PrepStepRow
+														key={step.id}
+														step={step}
+														isEditing={editingPrepStepId === step.id}
+														editState={editPrepStep}
+														onEditStateChange={setEditPrepStep}
+														isSaving={updatePrepStep.isPending}
+														onSave={handleSavePrepStep}
+														onCancel={() => setEditingPrepStepId(null)}
+														onEdit={() => startEditingPrepStep(step)}
+														onDelete={() => handleDeletePrepStep(step.id)}
+														formatLeadTime={formatLeadTime}
+													/>
+												))}
+											</div>
+										) : (
+											<p className="text-sm text-(--sea-ink-soft)">
+												No prep steps yet.
+											</p>
+										)}
 
 										<div className="flex flex-col gap-2 rounded-lg border border-dashed border-(--line) p-3">
-											<input
+											<Input
 												type="text"
 												placeholder="e.g. Defrost chicken"
 												value={newPrepStep.description}
@@ -953,7 +880,6 @@ function RecipeDetail() {
 														description: e.target.value,
 													})
 												}
-												className={inputClass}
 											/>
 											<div className="flex flex-col gap-1">
 												<NumberInput
@@ -1136,57 +1062,53 @@ function RecipeDetail() {
 												Servings
 											</dt>
 											<dd className="mt-0.5 text-(--sea-ink)">
-												{recipe.servings != null
-													? (() => {
-															const base = recipe.servings;
-															return (
-																<span className="inline-flex items-center gap-1.5">
-																	<button
-																		type="button"
-																		onClick={() =>
-																			setAdjustedServings(
-																				Math.max(
-																					1,
-																					(currentServings ?? base) - 1,
-																				),
-																			)
-																		}
-																		className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-(--line) text-(--sea-ink-soft) transition hover:bg-(--surface)"
-																		aria-label="Decrease servings"
-																	>
-																		<Minus size={12} />
-																	</button>
-																	<span data-testid="adjusted-servings">
-																		{currentServings}
-																	</span>
-																	<button
-																		type="button"
-																		onClick={() =>
-																			setAdjustedServings(
-																				(currentServings ?? base) + 1,
-																			)
-																		}
-																		className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-(--line) text-(--sea-ink-soft) transition hover:bg-(--surface)"
-																		aria-label="Increase servings"
-																	>
-																		<Plus size={12} />
-																	</button>
-																	{adjustedServings != null &&
-																		adjustedServings !== base && (
-																			<button
-																				type="button"
-																				onClick={() =>
-																					setAdjustedServings(null)
-																				}
-																				className="ml-1 text-xs font-medium text-(--lagoon-deep) hover:underline"
-																			>
-																				Reset
-																			</button>
-																		)}
-																</span>
-															);
-														})()
-													: "—"}
+												{recipe.servings != null ? (
+													<span className="inline-flex items-center gap-1.5">
+														<button
+															type="button"
+															onClick={() =>
+																setAdjustedServings(
+																	Math.max(
+																		1,
+																		(currentServings ?? recipe.servings ?? 1) -
+																			1,
+																	),
+																)
+															}
+															className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-(--line) text-(--sea-ink-soft) transition hover:bg-(--surface)"
+															aria-label="Decrease servings"
+														>
+															<Minus size={12} />
+														</button>
+														<span data-testid="adjusted-servings">
+															{currentServings}
+														</span>
+														<button
+															type="button"
+															onClick={() =>
+																setAdjustedServings(
+																	(currentServings ?? recipe.servings ?? 1) + 1,
+																)
+															}
+															className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-(--line) text-(--sea-ink-soft) transition hover:bg-(--surface)"
+															aria-label="Increase servings"
+														>
+															<Plus size={12} />
+														</button>
+														{adjustedServings != null &&
+															adjustedServings !== recipe.servings && (
+																<button
+																	type="button"
+																	onClick={() => setAdjustedServings(null)}
+																	className="ml-1 text-xs font-medium text-(--lagoon-deep) hover:underline"
+																>
+																	Reset
+																</button>
+															)}
+													</span>
+												) : (
+													"—"
+												)}
 											</dd>
 										</div>
 										<div>
@@ -1227,66 +1149,56 @@ function RecipeDetail() {
 										</div>
 									</dl>
 
-									{(() => {
-										const sorted = [...(prepSteps ?? [])].sort(
-											(a, b) => b.leadTimeMinutes - a.leadTimeMinutes,
-										);
-										return sorted.length > 0 ? (
-											<div className="mt-4">
-												<SectionHeading>Prep Steps</SectionHeading>
-												<div className="flex flex-col gap-2">
-													{sorted.map((step) => (
-														<div
-															key={step.id}
-															className="flex items-center justify-between rounded-lg border border-(--line) px-3 py-2"
-														>
-															<div className="flex-1 text-sm text-(--sea-ink)">
-																<span className="font-medium">
-																	{step.description}
-																</span>
-																<span className="ml-2 text-(--sea-ink-soft)">
-																	{formatLeadTime(step.leadTimeMinutes)}
-																</span>
-															</div>
-														</div>
-													))}
-												</div>
+									{sortedPrepSteps.length > 0 && (
+										<div className="mt-4">
+											<SectionHeading>Prep Steps</SectionHeading>
+											<div className="flex flex-col gap-2">
+												{sortedPrepSteps.map((step) => (
+													<PrepStepRow
+														key={step.id}
+														step={step}
+														isEditing={false}
+														editState={{ description: "", leadTimeMinutes: "" }}
+														onEditStateChange={() => {}}
+														isSaving={false}
+														onSave={() => {}}
+														onCancel={() => {}}
+														onEdit={() => {}}
+														onDelete={() => {}}
+														formatLeadTime={formatLeadTime}
+														readOnly
+													/>
+												))}
 											</div>
-										) : null;
-									})()}
+										</div>
+									)}
 
-									{recipe.producedProductId &&
-										(() => {
-											const producedProduct = products?.find(
-												(p) => p.id === recipe.producedProductId,
-											);
-											return (
-												<div className="mt-4">
-													<SectionHeading>Produces</SectionHeading>
-													<div className="flex items-center gap-3">
-														{producedProduct?.image && (
-															<img
-																src={producedProduct.image}
-																alt={producedProduct.name}
-																className="h-10 w-10 rounded-lg border border-(--line) object-cover"
-															/>
-														)}
-														<p className="text-sm text-(--sea-ink-soft)">
-															{producedProduct?.name ?? "Unknown product"}
-															{recipe.producedQuantity && (
-																<>
-																	{" — "}
-																	{recipe.producedQuantity}
-																	{getUnitLabel(recipe.producedQuantityUnitId)
-																		? ` ${getUnitLabel(recipe.producedQuantityUnitId)}`
-																		: ""}
-																</>
-															)}
-														</p>
-													</div>
-												</div>
-											);
-										})()}
+									{recipe.producedProductId && producedProduct && (
+										<div className="mt-4">
+											<SectionHeading>Produces</SectionHeading>
+											<div className="flex items-center gap-3">
+												{producedProduct?.image && (
+													<img
+														src={producedProduct.image}
+														alt={producedProduct.name}
+														className="h-10 w-10 rounded-lg border border-(--line) object-cover"
+													/>
+												)}
+												<p className="text-sm text-(--sea-ink-soft)">
+													{producedProduct?.name ?? "Unknown product"}
+													{recipe.producedQuantity && (
+														<>
+															{" — "}
+															{recipe.producedQuantity}
+															{getUnitLabel(recipe.producedQuantityUnitId)
+																? ` ${getUnitLabel(recipe.producedQuantityUnitId)}`
+																: ""}
+														</>
+													)}
+												</p>
+											</div>
+										</div>
+									)}
 
 									{cookResult && (
 										<div
@@ -1422,80 +1334,31 @@ function RecipeDetail() {
 							</h2>
 
 							{showCookPicker && (
-								<div className="mb-4 rounded-lg border border-(--lagoon) bg-(--surface) p-4">
-									<h3 className="mb-3 text-sm font-semibold text-(--sea-ink)">
-										Choose ingredients
-									</h3>
-									{(() => {
-										const groups = new Map<
-											string,
-											NonNullable<typeof ingredients>
-										>();
-										for (const ing of ingredients ?? []) {
-											if (ing.groupName) {
-												if (!groups.has(ing.groupName)) {
-													groups.set(ing.groupName, []);
-												}
-												groups.get(ing.groupName)?.push(ing);
-											}
-										}
-										return [...groups].map(([groupName, groupIngs]) => (
-											<div key={groupName} className="mb-3">
-												<p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-(--sea-ink-soft)">
-													{groupName}
-												</p>
-												<div className="flex flex-col gap-1">
-													{groupIngs.map((ing) => (
-														<label
-															key={ing.id}
-															className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-(--sea-ink) hover:bg-(--line)"
-														>
-															<input
-																type="radio"
-																name={`group-${groupName}`}
-																checked={groupSelections[groupName] === ing.id}
-																onChange={() =>
-																	setGroupSelections({
-																		...groupSelections,
-																		[groupName]: ing.id,
-																	})
-																}
-																className="accent-(--lagoon)"
-															/>
-															<span className="font-medium">
-																{getProductName(ing.productId)}
-															</span>
-															<span className="text-(--sea-ink-soft)">
-																{formatScaled(ing.quantity)}
-																{getUnitLabel(ing.quantityUnitId)
-																	? ` ${getUnitLabel(ing.quantityUnitId)}`
-																	: ""}
-															</span>
-														</label>
-													))}
-												</div>
-											</div>
-										));
-									})()}
-									<div className="flex gap-2">
-										<button
-											type="button"
-											onClick={() => handleCook(groupSelections)}
-											disabled={cookRecipe.isPending}
-											className="flex h-8 items-center gap-1.5 rounded-full bg-(--lagoon) px-4 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
-										>
-											<CookingPot size={14} />
-											{cookRecipe.isPending ? "Cooking…" : "Cook"}
-										</button>
-										<button
-											type="button"
-											onClick={() => setShowCookPicker(false)}
-											className="flex h-8 items-center rounded-full px-3 text-sm font-medium text-(--sea-ink-soft) transition hover:bg-(--surface)"
-										>
-											Cancel
-										</button>
-									</div>
-								</div>
+								<CookPicker
+									groups={
+										new Map(
+											[...cookPickerGroups].map(([groupName, groupIngs]) => [
+												groupName,
+												groupIngs.map((ing) => ({
+													ingredient: ing,
+													productName: getProductName(ing.productId),
+													scaledQuantity: formatScaled(ing.quantity),
+													unitLabel: getUnitLabel(ing.quantityUnitId),
+												})),
+											]),
+										)
+									}
+									selections={groupSelections}
+									onSelectionChange={(groupName, ingredientId) =>
+										setGroupSelections({
+											...groupSelections,
+											[groupName]: ingredientId,
+										})
+									}
+									onCook={() => handleCook(groupSelections)}
+									onCancel={() => setShowCookPicker(false)}
+									isCooking={cookRecipe.isPending}
+								/>
 							)}
 
 							{!ingredients?.length && !editing ? (
@@ -1504,329 +1367,94 @@ function RecipeDetail() {
 								</p>
 							) : (
 								<div className="mb-4 flex flex-col gap-2">
-									{(() => {
-										const allIngs = ingredients ?? [];
-										const ungrouped = allIngs.filter((i) => !i.groupName);
-										const groups = new Map<string, typeof allIngs>();
-										for (const ing of allIngs) {
-											if (ing.groupName) {
-												if (!groups.has(ing.groupName)) {
-													groups.set(ing.groupName, []);
+									{ingredientGroups.ungrouped.map((ing) => (
+										<IngredientRow
+											key={ing.id}
+											ingredient={ing}
+											productName={getProductName(ing.productId)}
+											unitLabel={getUnitLabel(ing.quantityUnitId)}
+											scaledQuantity={formatScaled(ing.quantity)}
+											status={
+												ing.productId
+													? ingredientAvailability.get(ing.id)
+													: undefined
+											}
+											isEditing={editingIngredientId === ing.id}
+											editState={editIngredient}
+											onEditStateChange={setEditIngredient}
+											conversionHint={
+												editingIngredientId === ing.id
+													? editConversionHint
+													: undefined
+											}
+											isSaving={updateIngredient.isPending}
+											onSave={handleSaveIngredient}
+											onCancel={() => setEditingIngredientId(null)}
+											onEditProductChange={handleEditProductChange}
+											onCreateProduct={handleCreateProduct}
+											onEdit={() => startEditingIngredient(ing)}
+											onDelete={() => handleDeleteIngredient(ing.id)}
+											productOptions={productOptions}
+											unitOptions={unitOptions}
+										/>
+									))}
+									{[...ingredientGroups.groups].map(
+										([groupName, groupIngs]) => (
+											<IngredientGroup
+												key={groupName}
+												groupName={groupName}
+												ingredientCount={groupIngs.length}
+												ingredientRows={groupIngs.map((ing) => ({
+													ingredient: ing,
+													productName: getProductName(ing.productId),
+													unitLabel: getUnitLabel(ing.quantityUnitId),
+													scaledQuantity: formatScaled(ing.quantity),
+													status: ing.productId
+														? ingredientAvailability.get(ing.id)
+														: undefined,
+													isEditing: editingIngredientId === ing.id,
+													editState: editIngredient,
+													onEditStateChange: setEditIngredient,
+													conversionHint:
+														editingIngredientId === ing.id
+															? editConversionHint
+															: undefined,
+													isSaving: updateIngredient.isPending,
+													onSave: handleSaveIngredient,
+													onCancel: () => setEditingIngredientId(null),
+													onEditProductChange: handleEditProductChange,
+													onCreateProduct: handleCreateProduct,
+													onEdit: () => startEditingIngredient(ing),
+													onDelete: () => handleDeleteIngredient(ing.id),
+													productOptions,
+													unitOptions,
+												}))}
+												isCollapsed={collapsedGroups.has(groupName)}
+												onToggleCollapse={() => toggleGroupCollapse(groupName)}
+												isRenaming={editingGroupName === groupName}
+												renameValue={editGroupNameValue}
+												onRenameValueChange={setEditGroupNameValue}
+												onRenameSubmit={() =>
+													handleRenameGroup(
+														groupName,
+														editGroupNameValue,
+														groupIngs,
+													)
 												}
-												groups.get(ing.groupName)?.push(ing);
-											}
-										}
-
-										function renderIngredient(ing: (typeof allIngs)[number]) {
-											if (editingIngredientId === ing.id) {
-												return (
-													<div
-														key={ing.id}
-														className="flex flex-col gap-3 rounded-lg border border-(--lagoon) p-3"
-													>
-														<div className="grid grid-cols-[1fr_1fr] gap-2 sm:grid-cols-[2fr_5rem_1fr_1fr_1fr]">
-															<Combobox
-																value={editIngredient.productId}
-																onChange={(v) => {
-																	setEditIngredient({
-																		...editIngredient,
-																		productId: v,
-																	});
-																	handleEditProductChange(v);
-																}}
-																options={productOptions}
-																placeholder="Product"
-																className="col-span-full sm:col-span-1"
-																onCreateNew={async (name) => {
-																	const newId = await handleCreateProduct(name);
-																	setEditIngredient({
-																		...editIngredient,
-																		productId: newId,
-																	});
-																}}
-															/>
-															<NumberInput
-																step="any"
-																min="0"
-																placeholder="Qty"
-																value={editIngredient.quantity}
-																onChange={(e) =>
-																	setEditIngredient({
-																		...editIngredient,
-																		quantity: e.target.value,
-																	})
-																}
-															/>
-															<Combobox
-																value={editIngredient.quantityUnitId}
-																onChange={(v) =>
-																	setEditIngredient({
-																		...editIngredient,
-																		quantityUnitId: v,
-																	})
-																}
-																options={unitOptions}
-																placeholder="Unit"
-															/>
-															<input
-																type="text"
-																placeholder="Notes"
-																value={editIngredient.notes}
-																onChange={(e) =>
-																	setEditIngredient({
-																		...editIngredient,
-																		notes: e.target.value,
-																	})
-																}
-																className={inputClass}
-															/>
-															<input
-																type="text"
-																placeholder="Group"
-																value={editIngredient.groupName}
-																onChange={(e) =>
-																	setEditIngredient({
-																		...editIngredient,
-																		groupName: e.target.value,
-																	})
-																}
-																className={inputClass}
-															/>
-														</div>
-														{(() => {
-															const hint = getEditConversionHint();
-															return hint ? (
-																<p
-																	className={`text-xs ${hint.includes("No conversion") ? "text-amber-600 dark:text-amber-400" : "text-(--sea-ink-soft)"}`}
-																>
-																	{hint}
-																</p>
-															) : null;
-														})()}
-														<div className="flex gap-2">
-															<button
-																type="button"
-																onClick={handleSaveIngredient}
-																disabled={
-																	updateIngredient.isPending ||
-																	!editIngredient.quantity
-																}
-																className="flex h-8 items-center gap-1 rounded-full bg-(--lagoon) px-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
-															>
-																<Check size={14} />
-																{updateIngredient.isPending
-																	? "Saving…"
-																	: "Save"}
-															</button>
-															<button
-																type="button"
-																onClick={() => setEditingIngredientId(null)}
-																className="flex h-8 items-center rounded-full px-3 text-sm font-medium text-(--sea-ink-soft) transition hover:bg-(--surface)"
-															>
-																Cancel
-															</button>
-														</div>
-													</div>
-												);
-											}
-											const status = ing.productId
-												? ingredientAvailability.get(ing.id)
-												: undefined;
-											return (
-												<div
-													key={ing.id}
-													className="flex items-center justify-between rounded-lg border border-(--line) px-3 py-2"
-												>
-													<div className="flex flex-1 items-center gap-2 text-sm text-(--sea-ink)">
-														{status === "sufficient" && (
-															<CircleCheck
-																size={16}
-																className="shrink-0 text-emerald-500"
-															/>
-														)}
-														{status === "deficit" && (
-															<CircleX
-																size={16}
-																className="shrink-0 text-red-500"
-															/>
-														)}
-														{status === "unknown" && (
-															<CircleX
-																size={16}
-																className="shrink-0 text-amber-500"
-															/>
-														)}
-														<span>
-															<span className="font-medium">
-																{getProductName(ing.productId)}
-															</span>
-															<span className="ml-2 text-(--sea-ink-soft)">
-																{formatScaled(ing.quantity)}
-																{getUnitLabel(ing.quantityUnitId)
-																	? ` ${getUnitLabel(ing.quantityUnitId)}`
-																	: ""}
-															</span>
-															{ing.notes && (
-																<span className="ml-2 text-xs text-(--sea-ink-soft)">
-																	({ing.notes})
-																</span>
-															)}
-														</span>
-													</div>
-													<div className="flex gap-0.5">
-														<button
-															type="button"
-															onClick={() => startEditingIngredient(ing)}
-															className="rounded-lg p-1.5 text-(--sea-ink-soft) transition hover:bg-(--surface) hover:text-(--sea-ink)"
-															title="Edit ingredient"
-														>
-															<Pencil size={14} />
-														</button>
-														<button
-															type="button"
-															onClick={() => handleDeleteIngredient(ing.id)}
-															className="rounded-lg p-1.5 text-(--sea-ink-soft) transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950"
-															title="Delete ingredient"
-														>
-															<Trash2 size={14} />
-														</button>
-													</div>
-												</div>
-											);
-										}
-
-										return (
-											<>
-												{ungrouped.map(renderIngredient)}
-												{[...groups].map(([groupName, groupIngs]) => {
-													const isCollapsed = collapsedGroups.has(groupName);
-													return (
-														<div
-															key={groupName}
-															className="rounded-lg border border-(--line) overflow-hidden"
-														>
-															<div className="flex items-center px-3 py-2">
-																{editingGroupName === groupName ? (
-																	<form
-																		className="flex flex-1 items-center gap-2"
-																		onSubmit={(e) => {
-																			e.preventDefault();
-																			handleRenameGroup(
-																				groupName,
-																				editGroupNameValue,
-																				groupIngs,
-																			);
-																		}}
-																	>
-																		<input
-																			type="text"
-																			value={editGroupNameValue}
-																			onChange={(e) =>
-																				setEditGroupNameValue(e.target.value)
-																			}
-																			className={`${inputClass} !h-8`}
-																			ref={(el) => el?.focus()}
-																			onKeyDown={(e) => {
-																				if (e.key === "Escape") {
-																					setEditingGroupName(null);
-																				}
-																			}}
-																		/>
-																		<button
-																			type="submit"
-																			disabled={updateIngredient.isPending}
-																			className="rounded-lg p-1.5 text-(--lagoon) transition hover:bg-(--surface)"
-																			title="Save"
-																		>
-																			<Check size={14} />
-																		</button>
-																		<button
-																			type="button"
-																			onClick={() => setEditingGroupName(null)}
-																			className="rounded-lg p-1.5 text-(--sea-ink-soft) transition hover:bg-(--surface)"
-																			title="Cancel"
-																		>
-																			<X size={14} />
-																		</button>
-																	</form>
-																) : (
-																	<>
-																		<div className="flex flex-1 items-center gap-2">
-																			<span className="text-sm font-medium text-(--sea-ink)">
-																				{groupName || "Unnamed group"}
-																			</span>
-																			<span className="rounded-full bg-(--surface) px-1.5 py-0.5 text-xs text-(--sea-ink-soft)">
-																				{groupIngs.length}
-																			</span>
-																		</div>
-																		<div className="flex gap-0.5">
-																			<button
-																				type="button"
-																				onClick={() =>
-																					toggleGroupCollapse(groupName)
-																				}
-																				className="rounded-lg p-1.5 text-(--sea-ink-soft) transition hover:bg-(--surface) hover:text-(--sea-ink)"
-																				title={
-																					isCollapsed
-																						? "Expand group"
-																						: "Collapse group"
-																				}
-																			>
-																				{isCollapsed ? (
-																					<ChevronLeft size={14} />
-																				) : (
-																					<ChevronDown size={14} />
-																				)}
-																			</button>
-																			<button
-																				type="button"
-																				onClick={() => {
-																					setEditingGroupName(groupName);
-																					setEditGroupNameValue(groupName);
-																				}}
-																				className="rounded-lg p-1.5 text-(--sea-ink-soft) transition hover:bg-(--surface) hover:text-(--sea-ink)"
-																				title="Rename group"
-																			>
-																				<Pencil size={14} />
-																			</button>
-																			<button
-																				type="button"
-																				onClick={async () => {
-																					for (const ing of groupIngs) {
-																						await deleteIngredient.mutateAsync(
-																							ing.id,
-																						);
-																					}
-																				}}
-																				className="rounded-lg p-1.5 text-(--sea-ink-soft) transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950"
-																				title="Delete group"
-																			>
-																				<Trash2 size={14} />
-																			</button>
-																		</div>
-																	</>
-																)}
-															</div>
-															{!isCollapsed && (
-																<div className="border-t border-(--line) px-3 py-2 flex flex-col gap-1">
-																	{groupIngs.map((ing, i) => (
-																		<div key={ing.id}>
-																			{i > 0 && (
-																				<p className="py-0.5 text-center text-xs italic text-(--sea-ink-soft)">
-																					or
-																				</p>
-																			)}
-																			{renderIngredient(ing)}
-																		</div>
-																	))}
-																</div>
-															)}
-														</div>
-													);
-												})}
-											</>
-										);
-									})()}
+												onRenameCancel={() => setEditingGroupName(null)}
+												onStartRename={() => {
+													setEditingGroupName(groupName);
+													setEditGroupNameValue(groupName);
+												}}
+												isRenameSaving={updateIngredient.isPending}
+												onDelete={async () => {
+													for (const ing of groupIngs) {
+														await deleteIngredient.mutateAsync(ing.id);
+													}
+												}}
+											/>
+										),
+									)}
 								</div>
 							)}
 

@@ -55,7 +55,7 @@ const mockUseCreateProductUnitConversion = vi.fn();
 const mockUseUpdateProductUnitConversion = vi.fn();
 const mockUseDeleteProductUnitConversion = vi.fn();
 vi.mock("#src/lib/hooks/use-product-unit-conversions", () => ({
-	useProductUnitConversions: (...args: unknown[]) =>
+	useProductUnitConversion: (...args: unknown[]) =>
 		mockUseProductUnitConversions(...args),
 	useCreateProductUnitConversion: (...args: unknown[]) =>
 		mockUseCreateProductUnitConversion(...args),

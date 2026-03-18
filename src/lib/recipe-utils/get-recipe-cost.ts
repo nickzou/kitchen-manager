@@ -3,6 +3,7 @@ import type { RecipeIngredient } from "#src/lib/hooks/use-recipe-ingredients";
 import type { StockEntry } from "#src/lib/hooks/use-stock-entries";
 import type { UnitConversion } from "#src/lib/hooks/use-unit-conversions";
 import { getAvgUnitCost } from "#src/lib/stock-utils";
+import { buildConversionGraph, tryConvert } from "./conversion-graph";
 
 export function getRecipeCost(opts: {
 	ingredients: RecipeIngredient[];
@@ -18,31 +19,7 @@ export function getRecipeCost(opts: {
 	const { ingredients, products, stockEntries, unitConversions, scaleFactor } =
 		opts;
 
-	// Build conversion graph from global unit conversions
-	const conversionGraph = new Map<string, Map<string, number>>();
-	function addEdge(from: string, to: string, factor: number) {
-		if (!conversionGraph.has(from)) conversionGraph.set(from, new Map());
-		conversionGraph.get(from)?.set(to, factor);
-		if (!conversionGraph.has(to)) conversionGraph.set(to, new Map());
-		conversionGraph.get(to)?.set(from, 1 / factor);
-	}
-	for (const c of unitConversions) {
-		addEdge(c.fromUnitId, c.toUnitId, Number(c.factor));
-	}
-
-	function tryConvert(
-		qty: number,
-		fromUnitId: string | null,
-		toUnitId: string | null,
-	): number | null {
-		if (fromUnitId === toUnitId) return qty;
-		if (!fromUnitId || !toUnitId) return null;
-		const fromEdges = conversionGraph.get(fromUnitId);
-		if (!fromEdges) return null;
-		const factor = fromEdges.get(toUnitId);
-		if (factor !== undefined) return qty * factor;
-		return null;
-	}
+	const graph = buildConversionGraph(unitConversions);
 
 	// Group stock entries by product
 	const entriesByProduct = new Map<string, StockEntry[]>();
@@ -67,6 +44,7 @@ export function getRecipeCost(opts: {
 
 		// avgCost is per product's default unit; convert ingredient qty to that unit
 		const convertedQty = tryConvert(
+			graph,
 			Number(ing.quantity),
 			ing.quantityUnitId,
 			product.defaultQuantityUnitId,

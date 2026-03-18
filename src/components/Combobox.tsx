@@ -1,5 +1,6 @@
 import { Plus } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { inputClass } from "#src/components/Input";
 import { cn } from "#src/lib/utils";
 
 interface ComboboxOption {
@@ -142,10 +143,7 @@ export function Combobox({
 					if (!open) setOpen(true);
 				}}
 				onKeyDown={handleKeyDown}
-				className={cn(
-					"h-10 w-full rounded-lg border border-(--line) bg-(--surface) px-3 text-sm text-(--sea-ink) outline-none focus:border-(--lagoon)",
-					!value && !open && "text-(--sea-ink-soft)",
-				)}
+				className={cn(inputClass, !value && !open && "text-(--sea-ink-soft)")}
 			/>
 			{open && totalItems > 0 && (
 				<div
