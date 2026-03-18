@@ -118,9 +118,7 @@ describe("getIngredientAvailability", () => {
 
 	it("returns 'unknown' when unit conversion is unavailable", () => {
 		const result = getIngredientAvailability({
-			ingredients: [
-				makeIngredient({ quantity: "2", quantityUnitId: "cups" }),
-			],
+			ingredients: [makeIngredient({ quantity: "2", quantityUnitId: "cups" })],
 			products: [makeProduct({ defaultQuantityUnitId: "g" })],
 			stockEntries: [makeEntry({ quantity: "1000" })],
 			...defaults,
@@ -159,9 +157,7 @@ describe("getIngredientAvailability", () => {
 		// Product-specific: cups→g factor 240 for product p1
 		// 2 cups * 240 = 480g needed, stock is 1000g → sufficient
 		const result = getIngredientAvailability({
-			ingredients: [
-				makeIngredient({ quantity: "2", quantityUnitId: "cups" }),
-			],
+			ingredients: [makeIngredient({ quantity: "2", quantityUnitId: "cups" })],
 			products: [makeProduct({ defaultQuantityUnitId: "g" })],
 			stockEntries: [makeEntry({ quantity: "1000" })],
 			unitConversions: [],
@@ -192,9 +188,7 @@ describe("getIngredientAvailability", () => {
 		// ingredient: 0.5 kg, product default: g, conversion: kg→g = 1000
 		// 0.5 * 1000 = 500g needed, stock is 1000g → sufficient
 		const result = getIngredientAvailability({
-			ingredients: [
-				makeIngredient({ quantity: "0.5", quantityUnitId: "kg" }),
-			],
+			ingredients: [makeIngredient({ quantity: "0.5", quantityUnitId: "kg" })],
 			products: [makeProduct({ defaultQuantityUnitId: "g" })],
 			stockEntries: [makeEntry({ quantity: "1000" })],
 			unitConversions: [
