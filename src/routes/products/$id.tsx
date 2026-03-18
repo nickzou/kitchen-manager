@@ -20,7 +20,7 @@ import { useProductCategories } from "#src/lib/hooks/use-categories";
 import {
 	useCreateProductUnitConversion,
 	useDeleteProductUnitConversion,
-	useProductUnitConversions,
+	useProductUnitConversion,
 	useUpdateProductUnitConversion,
 } from "#src/lib/hooks/use-product-unit-conversions";
 import {
@@ -53,7 +53,7 @@ function ProductDetail() {
 	for (const s of stores ?? []) storeNames[s.id] = s.name;
 	const brandNames: Record<string, string> = {};
 	for (const b of brands ?? []) brandNames[b.id] = b.name;
-	const { data: productConversions } = useProductUnitConversions(id);
+	const { data: productConversions } = useProductUnitConversion(id);
 	const createConversion = useCreateProductUnitConversion(id);
 	const deleteConversion = useDeleteProductUnitConversion(id);
 	const [editingConversionId, setEditingConversionId] = useState<string | null>(

@@ -4,6 +4,7 @@ import { createTestWrapper } from "#src/tests/helpers/test-wrapper";
 import {
 	useCreateProductUnitConversion,
 	useDeleteProductUnitConversion,
+	useProductUnitConversion,
 	useProductUnitConversions,
 	useUpdateProductUnitConversion,
 } from "./use-product-unit-conversions";
@@ -37,12 +38,11 @@ afterEach(() => {
 	vi.restoreAllMocks();
 });
 
-describe("useProductUnitConversions", () => {
+describe("useProductUnitConversion", () => {
 	it("calls GET /api/products/:id/unit-conversions and returns data", async () => {
-		const { result } = renderHook(
-			() => useProductUnitConversions("product-1"),
-			{ wrapper: createTestWrapper() },
-		);
+		const { result } = renderHook(() => useProductUnitConversion("product-1"), {
+			wrapper: createTestWrapper(),
+		});
 
 		await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
@@ -53,7 +53,33 @@ describe("useProductUnitConversions", () => {
 	});
 
 	it("does not fetch when productId is empty", async () => {
-		const { result } = renderHook(() => useProductUnitConversions(""), {
+		const { result } = renderHook(() => useProductUnitConversion(""), {
+			wrapper: createTestWrapper(),
+		});
+
+		await waitFor(() => expect(result.current.fetchStatus).toBe("idle"));
+
+		expect(fetch).not.toHaveBeenCalled();
+	});
+});
+
+describe("useProductUnitConversions (bulk)", () => {
+	it("calls GET /api/product-unit-conversions with productIds and returns data", async () => {
+		const { result } = renderHook(
+			() => useProductUnitConversions(["product-1", "product-2"]),
+			{ wrapper: createTestWrapper() },
+		);
+
+		await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+		expect(fetch).toHaveBeenCalledWith(
+			"/api/product-unit-conversions?productIds=product-1,product-2",
+		);
+		expect(result.current.data).toEqual(mockConversions);
+	});
+
+	it("does not fetch when productIds is empty", async () => {
+		const { result } = renderHook(() => useProductUnitConversions([]), {
 			wrapper: createTestWrapper(),
 		});
 

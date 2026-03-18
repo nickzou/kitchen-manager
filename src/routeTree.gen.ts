@@ -44,6 +44,7 @@ import { Route as ApiRecipesIndexRouteImport } from './routes/api/recipes/index'
 import { Route as ApiRecipeCategoriesIndexRouteImport } from './routes/api/recipe-categories/index'
 import { Route as ApiQuantityUnitsIndexRouteImport } from './routes/api/quantity-units/index'
 import { Route as ApiProductsIndexRouteImport } from './routes/api/products/index'
+import { Route as ApiProductUnitConversionsIndexRouteImport } from './routes/api/product-unit-conversions/index'
 import { Route as ApiProductCategoriesIndexRouteImport } from './routes/api/product-categories/index'
 import { Route as ApiMealSlotsIndexRouteImport } from './routes/api/meal-slots/index'
 import { Route as ApiMealPlanEntriesIndexRouteImport } from './routes/api/meal-plan-entries/index'
@@ -255,6 +256,12 @@ const ApiProductsIndexRoute = ApiProductsIndexRouteImport.update({
   path: '/api/products/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiProductUnitConversionsIndexRoute =
+  ApiProductUnitConversionsIndexRouteImport.update({
+    id: '/api/product-unit-conversions/',
+    path: '/api/product-unit-conversions/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiProductCategoriesIndexRoute =
   ApiProductCategoriesIndexRouteImport.update({
     id: '/api/product-categories/',
@@ -488,6 +495,7 @@ export interface FileRoutesByFullPath {
   '/api/meal-plan-entries/': typeof ApiMealPlanEntriesIndexRoute
   '/api/meal-slots/': typeof ApiMealSlotsIndexRoute
   '/api/product-categories/': typeof ApiProductCategoriesIndexRoute
+  '/api/product-unit-conversions/': typeof ApiProductUnitConversionsIndexRoute
   '/api/products/': typeof ApiProductsIndexRoute
   '/api/quantity-units/': typeof ApiQuantityUnitsIndexRoute
   '/api/recipe-categories/': typeof ApiRecipeCategoriesIndexRoute
@@ -559,6 +567,7 @@ export interface FileRoutesByTo {
   '/api/meal-plan-entries': typeof ApiMealPlanEntriesIndexRoute
   '/api/meal-slots': typeof ApiMealSlotsIndexRoute
   '/api/product-categories': typeof ApiProductCategoriesIndexRoute
+  '/api/product-unit-conversions': typeof ApiProductUnitConversionsIndexRoute
   '/api/products': typeof ApiProductsIndexRoute
   '/api/quantity-units': typeof ApiQuantityUnitsIndexRoute
   '/api/recipe-categories': typeof ApiRecipeCategoriesIndexRoute
@@ -631,6 +640,7 @@ export interface FileRoutesById {
   '/api/meal-plan-entries/': typeof ApiMealPlanEntriesIndexRoute
   '/api/meal-slots/': typeof ApiMealSlotsIndexRoute
   '/api/product-categories/': typeof ApiProductCategoriesIndexRoute
+  '/api/product-unit-conversions/': typeof ApiProductUnitConversionsIndexRoute
   '/api/products/': typeof ApiProductsIndexRoute
   '/api/quantity-units/': typeof ApiQuantityUnitsIndexRoute
   '/api/recipe-categories/': typeof ApiRecipeCategoriesIndexRoute
@@ -704,6 +714,7 @@ export interface FileRouteTypes {
     | '/api/meal-plan-entries/'
     | '/api/meal-slots/'
     | '/api/product-categories/'
+    | '/api/product-unit-conversions/'
     | '/api/products/'
     | '/api/quantity-units/'
     | '/api/recipe-categories/'
@@ -775,6 +786,7 @@ export interface FileRouteTypes {
     | '/api/meal-plan-entries'
     | '/api/meal-slots'
     | '/api/product-categories'
+    | '/api/product-unit-conversions'
     | '/api/products'
     | '/api/quantity-units'
     | '/api/recipe-categories'
@@ -846,6 +858,7 @@ export interface FileRouteTypes {
     | '/api/meal-plan-entries/'
     | '/api/meal-slots/'
     | '/api/product-categories/'
+    | '/api/product-unit-conversions/'
     | '/api/products/'
     | '/api/quantity-units/'
     | '/api/recipe-categories/'
@@ -918,6 +931,7 @@ export interface RootRouteChildren {
   ApiMealPlanEntriesIndexRoute: typeof ApiMealPlanEntriesIndexRoute
   ApiMealSlotsIndexRoute: typeof ApiMealSlotsIndexRoute
   ApiProductCategoriesIndexRoute: typeof ApiProductCategoriesIndexRoute
+  ApiProductUnitConversionsIndexRoute: typeof ApiProductUnitConversionsIndexRoute
   ApiProductsIndexRoute: typeof ApiProductsIndexRoute
   ApiQuantityUnitsIndexRoute: typeof ApiQuantityUnitsIndexRoute
   ApiRecipeCategoriesIndexRoute: typeof ApiRecipeCategoriesIndexRoute
@@ -1175,6 +1189,13 @@ declare module '@tanstack/react-router' {
       path: '/api/products'
       fullPath: '/api/products/'
       preLoaderRoute: typeof ApiProductsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/product-unit-conversions/': {
+      id: '/api/product-unit-conversions/'
+      path: '/api/product-unit-conversions'
+      fullPath: '/api/product-unit-conversions/'
+      preLoaderRoute: typeof ApiProductUnitConversionsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/product-categories/': {
@@ -1508,6 +1529,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiMealPlanEntriesIndexRoute: ApiMealPlanEntriesIndexRoute,
   ApiMealSlotsIndexRoute: ApiMealSlotsIndexRoute,
   ApiProductCategoriesIndexRoute: ApiProductCategoriesIndexRoute,
+  ApiProductUnitConversionsIndexRoute: ApiProductUnitConversionsIndexRoute,
   ApiProductsIndexRoute: ApiProductsIndexRoute,
   ApiQuantityUnitsIndexRoute: ApiQuantityUnitsIndexRoute,
   ApiRecipeCategoriesIndexRoute: ApiRecipeCategoriesIndexRoute,

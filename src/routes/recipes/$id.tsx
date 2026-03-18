@@ -35,7 +35,10 @@ import { Textarea } from "#src/components/Textarea";
 import { authClient } from "#src/lib/auth-client";
 import { useRecipeCategories } from "#src/lib/hooks/use-categories";
 import { useCookRecipe } from "#src/lib/hooks/use-cook-recipe";
-import { useProductUnitConversions } from "#src/lib/hooks/use-product-unit-conversions";
+import {
+	useProductUnitConversion,
+	useProductUnitConversions,
+} from "#src/lib/hooks/use-product-unit-conversions";
 import { useCreateProduct, useProducts } from "#src/lib/hooks/use-products";
 import { useQuantityUnits } from "#src/lib/hooks/use-quantity-units";
 import { useRecipeAvailability } from "#src/lib/hooks/use-recipe-availability";
@@ -167,12 +170,25 @@ function RecipeDetail() {
 		leadTimeMinutes: "",
 	});
 
-	const { data: productConversions } = useProductUnitConversions(
+	const { data: productConversions } = useProductUnitConversion(
 		newIngredient.productId,
 	);
-	const { data: editProductConversions } = useProductUnitConversions(
+	const { data: editProductConversions } = useProductUnitConversion(
 		editIngredient.productId,
 	);
+
+	const ingredientProductIds = useMemo(
+		() => [
+			...new Set(
+				(ingredients ?? [])
+					.filter((i) => i.productId)
+					.map((i) => i.productId as string),
+			),
+		],
+		[ingredients],
+	);
+	const { data: allProductConversions } =
+		useProductUnitConversions(ingredientProductIds);
 
 	const currentServings = adjustedServings ?? recipe?.servings ?? null;
 	const scaleFactor =
@@ -188,12 +204,18 @@ function RecipeDetail() {
 
 		const stockTotals = getStockTotals(stockEntries);
 
-		const graph = buildConversionGraph(unitConversions ?? []);
-
 		for (const ing of ingredients) {
 			if (!ing.productId) continue;
 			const p = products.find((p) => p.id === ing.productId);
 			if (!p) continue;
+
+			const specific =
+				allProductConversions?.filter((c) => c.productId === ing.productId) ??
+				[];
+			const graph = buildConversionGraph([
+				...(unitConversions ?? []),
+				...specific,
+			]);
 
 			const stockQty = stockTotals.get(ing.productId) ?? 0;
 			const needed = Number(ing.quantity) * scaleFactor;
@@ -216,7 +238,14 @@ function RecipeDetail() {
 		}
 
 		return result;
-	}, [ingredients, products, stockEntries, unitConversions, scaleFactor]);
+	}, [
+		ingredients,
+		products,
+		stockEntries,
+		unitConversions,
+		allProductConversions,
+		scaleFactor,
+	]);
 
 	const recipeCost = useMemo(() => {
 		if (!ingredients || !products || !stockEntries || !unitConversions)
