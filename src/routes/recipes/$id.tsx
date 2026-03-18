@@ -62,10 +62,8 @@ import {
 import { useStockEntries } from "#src/lib/hooks/use-stock-entries";
 import { useUnitConversions } from "#src/lib/hooks/use-unit-conversions";
 import {
-	buildConversionGraph,
+	getIngredientAvailability,
 	getRecipeCost,
-	getStockTotals,
-	tryConvert,
 } from "#src/lib/recipe-utils";
 
 export const Route = createFileRoute("/recipes/$id")({
@@ -197,55 +195,27 @@ function RecipeDetail() {
 			: 1;
 
 	// Compute per-ingredient stock availability
-	const ingredientAvailability = useMemo(() => {
-		if (!ingredients || !products || !stockEntries)
-			return new Map<string, "sufficient" | "deficit" | "unknown">();
-		const result = new Map<string, "sufficient" | "deficit" | "unknown">();
-
-		const stockTotals = getStockTotals(stockEntries);
-
-		for (const ing of ingredients) {
-			if (!ing.productId) continue;
-			const p = products.find((p) => p.id === ing.productId);
-			if (!p) continue;
-
-			const specific =
-				allProductConversions?.filter((c) => c.productId === ing.productId) ??
-				[];
-			const graph = buildConversionGraph([
-				...(unitConversions ?? []),
-				...specific,
-			]);
-
-			const stockQty = stockTotals.get(ing.productId) ?? 0;
-			const needed = Number(ing.quantity) * scaleFactor;
-			const neededInStockUnit = tryConvert(
-				graph,
-				needed,
-				ing.quantityUnitId,
-				p.defaultQuantityUnitId,
-			);
-
-			if (
-				ing.quantityUnitId !== p.defaultQuantityUnitId &&
-				neededInStockUnit === null
-			) {
-				result.set(ing.id, "unknown");
-			} else {
-				const effective = neededInStockUnit ?? needed;
-				result.set(ing.id, stockQty >= effective ? "sufficient" : "deficit");
-			}
-		}
-
-		return result;
-	}, [
-		ingredients,
-		products,
-		stockEntries,
-		unitConversions,
-		allProductConversions,
-		scaleFactor,
-	]);
+	const ingredientAvailability = useMemo(
+		() =>
+			ingredients && products && stockEntries
+				? getIngredientAvailability({
+						ingredients,
+						products,
+						stockEntries,
+						unitConversions: unitConversions ?? [],
+						productConversions: allProductConversions ?? [],
+						scaleFactor,
+					})
+				: new Map(),
+		[
+			ingredients,
+			products,
+			stockEntries,
+			unitConversions,
+			allProductConversions,
+			scaleFactor,
+		],
+	);
 
 	const recipeCost = useMemo(() => {
 		if (!ingredients || !products || !stockEntries || !unitConversions)
