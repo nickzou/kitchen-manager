@@ -134,7 +134,9 @@ describe("getRecipeCost", () => {
 			ingredients: [makeIngredient({ quantity: "0.5", quantityUnitId: "kg" })],
 			products: [makeProduct({ defaultQuantityUnitId: "g" })],
 			stockEntries: [makeEntry({ quantity: "1000", price: "5.00" })],
-			unitConversions: [makeConversion({ fromUnitId: "kg", toUnitId: "g", factor: "1000" })],
+			unitConversions: [
+				makeConversion({ fromUnitId: "kg", toUnitId: "g", factor: "1000" }),
+			],
 			scaleFactor: 1,
 		});
 		expect(result!.total).toBeCloseTo(2.5);
@@ -148,7 +150,9 @@ describe("getRecipeCost", () => {
 			ingredients: [makeIngredient({ quantity: "0.5", quantityUnitId: "kg" })],
 			products: [makeProduct({ defaultQuantityUnitId: "g" })],
 			stockEntries: [makeEntry({ quantity: "1000", price: "5.00" })],
-			unitConversions: [makeConversion({ fromUnitId: "g", toUnitId: "kg", factor: "0.001" })],
+			unitConversions: [
+				makeConversion({ fromUnitId: "g", toUnitId: "kg", factor: "0.001" }),
+			],
 			scaleFactor: 1,
 		});
 		expect(result!.total).toBeCloseTo(2.5);
@@ -188,16 +192,36 @@ describe("getRecipeCost", () => {
 	it("reports partial pricing when some ingredients can be priced", () => {
 		const result = getRecipeCost({
 			ingredients: [
-				makeIngredient({ id: "i1", productId: "p1", quantity: "500", quantityUnitId: "g" }),
-				makeIngredient({ id: "i2", productId: "p2", quantity: "2", quantityUnitId: "cups" }),
+				makeIngredient({
+					id: "i1",
+					productId: "p1",
+					quantity: "500",
+					quantityUnitId: "g",
+				}),
+				makeIngredient({
+					id: "i2",
+					productId: "p2",
+					quantity: "2",
+					quantityUnitId: "cups",
+				}),
 			],
 			products: [
 				makeProduct({ id: "p1", defaultQuantityUnitId: "g" }),
 				makeProduct({ id: "p2", defaultQuantityUnitId: "ml" }),
 			],
 			stockEntries: [
-				makeEntry({ id: "e1", productId: "p1", quantity: "1000", price: "5.00" }),
-				makeEntry({ id: "e2", productId: "p2", quantity: "500", price: "3.00" }),
+				makeEntry({
+					id: "e1",
+					productId: "p1",
+					quantity: "1000",
+					price: "5.00",
+				}),
+				makeEntry({
+					id: "e2",
+					productId: "p2",
+					quantity: "500",
+					price: "3.00",
+				}),
 			],
 			unitConversions: [],
 			scaleFactor: 1,
