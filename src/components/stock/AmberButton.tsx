@@ -9,8 +9,8 @@ export const AmberButton = forwardRef<HTMLButtonElement, AmberButtonProps>(
 			<button
 				ref={ref}
 				className={cn(
-					"cursor-pointer rounded-full bg-amber-600 px-2.5 text-xs font-semibold text-white transition hover:opacity-90 disabled:opacity-50",
-					"h-7",
+					"cursor-pointer bg-amber-600 text-xs font-semibold text-white transition hover:opacity-90 disabled:opacity-50",
+					"flex h-7 w-7 items-center justify-center rounded-lg sm:w-auto sm:rounded-full sm:px-2.5",
 					className,
 				)}
 				{...props}

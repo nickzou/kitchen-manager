@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Minus } from "lucide-react";
+import { UtensilsCrossed } from "lucide-react";
 import { type FormEvent, useState } from "react";
 import { Accordion } from "#src/components/Accordion";
 import { Button } from "#src/components/Button";
@@ -222,8 +222,8 @@ function StockPage() {
 											title={`Consume ${amount}`}
 											className="flex shrink-0 items-center gap-1"
 										>
-											<Minus size={12} />
-											Consume {amount}
+											<UtensilsCrossed size={12} className="sm:hidden" />
+											<span className="hidden sm:inline">Consume {amount}</span>
 										</AmberButton>
 									);
 								}}

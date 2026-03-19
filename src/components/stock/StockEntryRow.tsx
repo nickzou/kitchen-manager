@@ -1,4 +1,4 @@
-import { Minus, Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, UtensilsCrossed } from "lucide-react";
 import { NumberInput } from "#src/components/NumberInput";
 import { AmberButton } from "#src/components/stock/AmberButton";
 import type { StockEntry } from "#src/lib/hooks/use-stock-entries";
@@ -76,8 +76,8 @@ export function StockEntryRow({
 					disabled={consumePending || !consumeAmount}
 					className="flex items-center gap-1"
 				>
-					<Minus size={12} />
-					Consume
+					<UtensilsCrossed size={12} className="sm:hidden" />
+					<span className="hidden sm:inline">Consume</span>
 				</AmberButton>
 			</div>
 		</div>
