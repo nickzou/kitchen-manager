@@ -107,6 +107,7 @@ function ProductCategoriesPage() {
 						placeholder="Search..."
 						value={search}
 						onChange={(e) => setSearch(e.target.value)}
+						onClear={() => setSearch("")}
 					/>
 					<ViewSwitcher view={view} onViewChange={setView} />
 				</div>

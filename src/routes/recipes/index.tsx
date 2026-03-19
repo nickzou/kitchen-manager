@@ -122,6 +122,7 @@ function RecipesPage() {
 						placeholder="Search..."
 						value={search}
 						onChange={(e) => setSearch(e.target.value)}
+						onClear={() => setSearch("")}
 					/>
 					<div className="flex items-center gap-2">
 						<ImageToggle
