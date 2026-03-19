@@ -11,7 +11,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 			<button
 				ref={ref}
 				className={cn(
-					"rounded-full bg-(--lagoon) text-center text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50",
+					"cursor-pointer rounded-full bg-(--lagoon) text-center text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50",
 					size === "sm" ? "h-8 px-3" : "h-10 px-4",
 					className,
 				)}
