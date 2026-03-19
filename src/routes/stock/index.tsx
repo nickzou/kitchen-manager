@@ -10,6 +10,7 @@ import { Modal } from "#src/components/Modal";
 import { NumberInput } from "#src/components/NumberInput";
 import { Page } from "#src/components/Page";
 import { SearchInput } from "#src/components/SearchInput";
+import { AmberButton } from "#src/components/stock/AmberButton";
 import { QuickAddStock } from "#src/components/stock/QuickAddStock";
 import { StockProductContent } from "#src/components/stock/StockProductContent";
 import { StockProductTrigger } from "#src/components/stock/StockProductTrigger";
@@ -214,16 +215,16 @@ function StockPage() {
 										? Number.parseFloat(item.product.defaultConsumeAmount)
 										: 1;
 									return (
-										<button
+										<AmberButton
 											type="button"
 											onClick={() => handleQuickConsume(item.entries, amount)}
 											disabled={consumeStock.isPending || item.totalStock <= 0}
 											title={`Consume ${amount}`}
-											className="flex h-7 shrink-0 items-center gap-1 rounded-full bg-amber-600 px-2.5 text-xs font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
+											className="flex shrink-0 items-center gap-1"
 										>
 											<Minus size={12} />
 											Consume {amount}
-										</button>
+										</AmberButton>
 									);
 								}}
 								renderContent={(item) => (
