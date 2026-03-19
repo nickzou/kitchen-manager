@@ -1,6 +1,6 @@
 import { Check, CircleCheck, CircleX, Pencil, Trash2 } from "lucide-react";
-import { Button } from "#src/components/Button";
 import type { IngredientFormState } from "#src/components/AddIngredientForm";
+import { Button } from "#src/components/Button";
 import { Combobox } from "#src/components/Combobox";
 import { Input } from "#src/components/Input";
 import { NumberInput } from "#src/components/NumberInput";
