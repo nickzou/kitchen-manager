@@ -79,11 +79,7 @@ function SignIn() {
 
 					{error && <AlertText>{error}</AlertText>}
 
-					<Button
-						type="submit"
-						disabled={loading}
-						className="mt-2"
-					>
+					<Button type="submit" disabled={loading} className="mt-2">
 						{loading ? "Signing in\u2026" : "Sign in"}
 					</Button>
 				</form>

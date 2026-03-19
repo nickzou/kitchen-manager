@@ -287,11 +287,7 @@ function Profile() {
 							<AlertText variant="success">Profile updated</AlertText>
 						)}
 
-						<Button
-							type="submit"
-							disabled={profileLoading}
-							className="mt-2"
-						>
+						<Button type="submit" disabled={profileLoading} className="mt-2">
 							{profileLoading ? "Saving\u2026" : "Save profile"}
 						</Button>
 					</form>
@@ -331,11 +327,7 @@ function Profile() {
 							<AlertText variant="success">Password changed</AlertText>
 						)}
 
-						<Button
-							type="submit"
-							disabled={passwordLoading}
-							className="mt-2"
-						>
+						<Button type="submit" disabled={passwordLoading} className="mt-2">
 							{passwordLoading ? "Changing\u2026" : "Change password"}
 						</Button>
 					</form>
@@ -413,11 +405,7 @@ function Profile() {
 
 						{apiKeyError && <AlertText>{apiKeyError}</AlertText>}
 
-						<Button
-							type="submit"
-							disabled={apiKeyLoading}
-							className="mt-2"
-						>
+						<Button type="submit" disabled={apiKeyLoading} className="mt-2">
 							{apiKeyLoading ? "Generating\u2026" : "Generate new key"}
 						</Button>
 					</form>

@@ -74,11 +74,7 @@ function ResetPassword() {
 
 					{error && <AlertText>{error}</AlertText>}
 
-					<Button
-						type="submit"
-						disabled={loading}
-						className="mt-2"
-					>
+					<Button type="submit" disabled={loading} className="mt-2">
 						{loading ? "Resetting\u2026" : "Reset password"}
 					</Button>
 				</form>

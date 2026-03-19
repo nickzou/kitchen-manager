@@ -65,11 +65,7 @@ function ForgotPassword() {
 								/>
 							</label>
 
-							<Button
-								type="submit"
-								disabled={loading}
-								className="mt-2"
-							>
+							<Button type="submit" disabled={loading} className="mt-2">
 								{loading ? "Sending\u2026" : "Send reset link"}
 							</Button>
 						</form>
