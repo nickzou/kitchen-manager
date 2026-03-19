@@ -32,7 +32,7 @@ export function SearchInput({
 				<button
 					type="button"
 					onClick={onClear}
-					className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-(--sea-ink-soft) transition hover:text-(--sea-ink)"
+					className="absolute right-3 top-1/2 -translate-y-1/2 text-(--sea-ink-soft) transition hover:text-(--sea-ink)"
 				>
 					<X size={16} />
 				</button>
