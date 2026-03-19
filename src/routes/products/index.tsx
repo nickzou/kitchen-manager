@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
 import { type FormEvent, useMemo, useState } from "react";
 import { AlertText } from "#src/components/AlertText";
+import { Button } from "#src/components/Button";
 import { CompactView } from "#src/components/CompactView";
 import { GridView } from "#src/components/GridView";
 import { ImageToggle } from "#src/components/ImageToggle";
@@ -109,14 +110,14 @@ function ProductsPage() {
 						placeholder="Categories"
 						className="w-48"
 					/>
-					<button
+					<Button
 						type="submit"
 						disabled={createProduct.isPending}
-						className="flex h-10 items-center gap-1.5 rounded-full bg-(--lagoon) px-4 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
+						className="flex items-center gap-1.5"
 					>
 						<Plus size={16} />
 						Add
-					</button>
+					</Button>
 					{createProduct.error && (
 						<AlertText className="w-full">
 							{createProduct.error.message}

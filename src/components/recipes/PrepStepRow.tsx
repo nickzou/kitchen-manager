@@ -1,4 +1,5 @@
 import { Check, Pencil, Trash2 } from "lucide-react";
+import { Button } from "#src/components/Button";
 import { Input } from "#src/components/Input";
 import { NumberInput } from "#src/components/NumberInput";
 import type { RecipePrepStep } from "#src/lib/hooks/use-recipe-prep-steps";
@@ -69,17 +70,18 @@ export function PrepStepRow({
 					)}
 				</div>
 				<div className="flex gap-2">
-					<button
+					<Button
 						type="button"
 						onClick={onSave}
 						disabled={
 							isSaving || !editState.description || !editState.leadTimeMinutes
 						}
-						className="flex h-8 items-center gap-1 rounded-full bg-(--lagoon) px-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
+						size="sm"
+						className="flex items-center gap-1"
 					>
 						<Check size={14} />
 						{isSaving ? "Saving…" : "Save"}
-					</button>
+					</Button>
 					<button
 						type="button"
 						onClick={onCancel}

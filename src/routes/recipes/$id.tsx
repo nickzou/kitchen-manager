@@ -17,6 +17,7 @@ import {
 	type IngredientFormState,
 } from "#src/components/AddIngredientForm";
 import { AlertBox } from "#src/components/AlertBox";
+import { Button } from "#src/components/Button";
 import { Combobox } from "#src/components/Combobox";
 import { ImageInput } from "#src/components/ImageInput";
 import { Input } from "#src/components/Input";
@@ -902,7 +903,7 @@ function RecipeDetail() {
 													</p>
 												)}
 											</div>
-											<button
+											<Button
 												type="button"
 												onClick={handleAddPrepStep}
 												disabled={
@@ -910,10 +911,11 @@ function RecipeDetail() {
 													!newPrepStep.description ||
 													!newPrepStep.leadTimeMinutes
 												}
-												className="h-8 rounded-full bg-(--lagoon) px-4 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
+												size="sm"
+												className="px-4"
 											>
 												{createPrepStep.isPending ? "Adding…" : "Add prep step"}
-											</button>
+											</Button>
 										</div>
 									</fieldset>
 
@@ -969,13 +971,13 @@ function RecipeDetail() {
 										</div>
 									</fieldset>
 
-									<button
+									<Button
 										type="submit"
 										disabled={updateRecipe.isPending}
-										className="mt-2 h-10 rounded-full bg-(--lagoon) text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
+										className="mt-2"
 									>
 										{updateRecipe.isPending ? "Saving…" : "Save changes"}
-									</button>
+									</Button>
 								</form>
 							) : (
 								<>
@@ -1013,15 +1015,15 @@ function RecipeDetail() {
 										</div>
 										<div className="flex gap-1">
 											{ingredients && ingredients.length > 0 && (
-												<button
+												<Button
 													type="button"
 													onClick={handleCookClick}
 													disabled={cookRecipe.isPending}
-													className="flex items-center gap-1.5 rounded-full bg-(--lagoon) px-4 py-2 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
+													className="flex items-center gap-1.5 py-2 h-auto"
 												>
 													<CookingPot size={16} />
 													{cookRecipe.isPending ? "Cooking…" : "Cook"}
-												</button>
+												</Button>
 											)}
 											<button
 												type="button"
@@ -1518,15 +1520,16 @@ function RecipeDetail() {
 											</div>
 										))}
 									</div>
-									<button
+									<Button
 										type="button"
 										onClick={handleSaveGroup}
 										disabled={createIngredient.isPending}
-										className="mt-2 flex h-8 items-center gap-1.5 rounded-full bg-(--lagoon) px-4 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
+										size="sm"
+										className="mt-2 flex items-center gap-1.5 px-4"
 									>
 										<Check size={14} />
 										{createIngredient.isPending ? "Saving…" : "Save group"}
-									</button>
+									</Button>
 								</div>
 							)}
 						</Island>

@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { type FormEvent, useState } from "react";
 import { AlertText } from "#src/components/AlertText";
+import { Button } from "#src/components/Button";
 import { Island } from "#src/components/Island";
 import { MobileLink } from "#src/components/MobileLink";
 import { Page } from "#src/components/Page";
@@ -78,13 +79,9 @@ function SignIn() {
 
 					{error && <AlertText>{error}</AlertText>}
 
-					<button
-						type="submit"
-						disabled={loading}
-						className="mt-2 h-10 rounded-full bg-(--lagoon) text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
-					>
+					<Button type="submit" disabled={loading} className="mt-2">
 						{loading ? "Signing in\u2026" : "Sign in"}
-					</button>
+					</Button>
 				</form>
 
 				<p className="mt-6 text-center text-sm text-(--sea-ink-soft)">

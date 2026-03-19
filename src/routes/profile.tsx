@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { type FormEvent, useCallback, useEffect, useState } from "react";
 import { AlertBox } from "#src/components/AlertBox";
 import { AlertText } from "#src/components/AlertText";
+import { Button } from "#src/components/Button";
 import { ImageInput } from "#src/components/ImageInput";
 import { Island } from "#src/components/Island";
 import { Page } from "#src/components/Page";
@@ -286,13 +287,9 @@ function Profile() {
 							<AlertText variant="success">Profile updated</AlertText>
 						)}
 
-						<button
-							type="submit"
-							disabled={profileLoading}
-							className="mt-2 h-10 rounded-full bg-(--lagoon) text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
-						>
+						<Button type="submit" disabled={profileLoading} className="mt-2">
 							{profileLoading ? "Saving\u2026" : "Save profile"}
-						</button>
+						</Button>
 					</form>
 				</Island>
 
@@ -330,13 +327,9 @@ function Profile() {
 							<AlertText variant="success">Password changed</AlertText>
 						)}
 
-						<button
-							type="submit"
-							disabled={passwordLoading}
-							className="mt-2 h-10 rounded-full bg-(--lagoon) text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
-						>
+						<Button type="submit" disabled={passwordLoading} className="mt-2">
 							{passwordLoading ? "Changing\u2026" : "Change password"}
-						</button>
+						</Button>
 					</form>
 				</Island>
 				<Island
@@ -412,13 +405,9 @@ function Profile() {
 
 						{apiKeyError && <AlertText>{apiKeyError}</AlertText>}
 
-						<button
-							type="submit"
-							disabled={apiKeyLoading}
-							className="mt-2 h-10 rounded-full bg-(--lagoon) text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
-						>
+						<Button type="submit" disabled={apiKeyLoading} className="mt-2">
 							{apiKeyLoading ? "Generating\u2026" : "Generate new key"}
-						</button>
+						</Button>
 					</form>
 				</Island>
 
@@ -556,13 +545,13 @@ function Profile() {
 
 						{webhookError && <AlertText>{webhookError}</AlertText>}
 
-						<button
+						<Button
 							type="submit"
 							disabled={webhookLoading || webhookEvents.length === 0}
-							className="mt-2 h-10 rounded-full bg-(--lagoon) text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
+							className="mt-2"
 						>
 							{webhookLoading ? "Creating\u2026" : "Create webhook"}
-						</button>
+						</Button>
 					</form>
 				</Island>
 			</div>

@@ -1,5 +1,6 @@
-import { Minus, Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, UtensilsCrossed } from "lucide-react";
 import { NumberInput } from "#src/components/NumberInput";
+import { AmberButton } from "#src/components/stock/AmberButton";
 import type { StockEntry } from "#src/lib/hooks/use-stock-entries";
 
 export function StockEntryRow({
@@ -28,7 +29,7 @@ export function StockEntryRow({
 	brandName: string | null;
 }) {
 	return (
-		<div className="flex flex-wrap items-center gap-3 rounded-lg bg-(--surface) px-3 py-2 text-xs text-(--sea-ink-soft)">
+		<div className="flex flex-wrap items-center gap-3 rounded-lg bg-(--surface) pl-3 py-2 text-xs text-(--sea-ink-soft)">
 			<span className="font-medium text-(--sea-ink)">
 				{entry.quantity}
 				{unitAbbr ? ` ${unitAbbr}` : ""}
@@ -69,15 +70,15 @@ export function StockEntryRow({
 				>
 					<Trash2 size={12} />
 				</button>
-				<button
+				<AmberButton
 					type="button"
 					onClick={onConsume}
 					disabled={consumePending || !consumeAmount}
-					className="flex h-7 items-center gap-1 rounded-full bg-amber-600 px-2.5 text-xs font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
+					className="flex items-center gap-1"
 				>
-					<Minus size={12} />
-					Consume
-				</button>
+					<UtensilsCrossed size={12} className="sm:hidden" />
+					<span className="hidden sm:inline">Consume</span>
+				</AmberButton>
 			</div>
 		</div>
 	);

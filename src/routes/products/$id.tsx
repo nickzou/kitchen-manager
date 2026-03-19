@@ -3,6 +3,7 @@ import { ArrowLeft, Pencil, Trash2, X } from "lucide-react";
 import { type FormEvent, useId, useState } from "react";
 import { AlertBox } from "#src/components/AlertBox";
 import { AlertText } from "#src/components/AlertText";
+import { Button } from "#src/components/Button";
 import { Combobox } from "#src/components/Combobox";
 import { ImageInput } from "#src/components/ImageInput";
 import { Input } from "#src/components/Input";
@@ -391,13 +392,13 @@ function ProductDetail() {
 								{updateProduct.error && (
 									<AlertText>{updateProduct.error.message}</AlertText>
 								)}
-								<button
+								<Button
 									type="submit"
 									disabled={updateProduct.isPending}
-									className="mt-2 h-10 rounded-full bg-(--lagoon) text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
+									className="mt-2"
 								>
 									{updateProduct.isPending ? "Saving…" : "Save changes"}
-								</button>
+								</Button>
 							</form>
 						) : (
 							<>
@@ -651,7 +652,7 @@ function ProductDetail() {
 													</div>
 												</div>
 												<div className="flex gap-2">
-													<button
+													<Button
 														type="button"
 														onClick={handleSaveConversion}
 														disabled={
@@ -660,10 +661,11 @@ function ProductDetail() {
 															!editConversion.factor ||
 															updateConversion.isPending
 														}
-														className="h-8 rounded-full bg-(--lagoon) px-4 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
+														size="sm"
+														className="px-4"
 													>
 														{updateConversion.isPending ? "Saving…" : "Save"}
-													</button>
+													</Button>
 													<button
 														type="button"
 														onClick={() => setEditingConversionId(null)}
@@ -762,7 +764,7 @@ function ProductDetail() {
 										/>
 									</div>
 								</div>
-								<button
+								<Button
 									type="button"
 									onClick={handleAddConversion}
 									disabled={
@@ -771,10 +773,10 @@ function ProductDetail() {
 										!newConversion.factor ||
 										createConversion.isPending
 									}
-									className="mt-1 h-9 rounded-full bg-(--lagoon) text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
+									className="mt-1 h-9"
 								>
 									{createConversion.isPending ? "Adding…" : "Add conversion"}
-								</button>
+								</Button>
 							</div>
 						</Island>
 					</div>

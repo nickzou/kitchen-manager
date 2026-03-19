@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Check, Pencil, Plus, Trash2, X } from "lucide-react";
 import { type FormEvent, useState } from "react";
 import { AlertBox } from "#src/components/AlertBox";
+import { Button } from "#src/components/Button";
 import { Combobox } from "#src/components/Combobox";
 import { Input } from "#src/components/Input";
 import InventorySubNav from "#src/components/InventorySubNav";
@@ -239,7 +240,7 @@ function QuantityUnitDetail() {
 									onChange={(e) => setNewConvFactor(e.target.value)}
 									className="w-28"
 								/>
-								<button
+								<Button
 									type="button"
 									onClick={handleAddConversion}
 									disabled={
@@ -247,21 +248,21 @@ function QuantityUnitDetail() {
 										!newConvToUnitId ||
 										!newConvFactor
 									}
-									className="flex h-10 items-center gap-1 rounded-full bg-(--lagoon) px-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
+									className="flex items-center gap-1 px-3"
 								>
 									<Plus size={14} />
 									Add
-								</button>
+								</Button>
 							</div>
 						</div>
 
-						<button
+						<Button
 							type="submit"
 							disabled={updateQuantityUnit.isPending}
-							className="mt-2 h-10 rounded-full bg-(--lagoon) text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
+							className="mt-2"
 						>
 							{updateQuantityUnit.isPending ? "Saving…" : "Save changes"}
-						</button>
+						</Button>
 					</form>
 				) : (
 					<>
