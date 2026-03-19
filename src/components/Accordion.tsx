@@ -44,11 +44,11 @@ export function Accordion<T extends AccordionItem>({
 
                 return (
                     <div key={item.key}>
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-1 py-2.5">
                             <button
                                 type="button"
                                 onClick={() => toggle(item.key)}
-                                className="flex min-w-0 flex-1 items-center gap-3 rounded-lg pr-3 py-2.5 text-left transition hover:bg-(--surface)"
+                                className="flex min-w-0 flex-1 items-center gap-3 rounded-lg pr-3  text-left transition hover:bg-(--surface)"
                             >
                                 {type === "multi" ? (
                                     <ChevronDown
