@@ -8,15 +8,21 @@ import { useCreateBrand } from "#src/lib/hooks/use-brands";
 import { useCreateStockEntry } from "#src/lib/hooks/use-stock-entries";
 
 interface QuickAddStockProps {
-	products: { id: string; name: string }[];
+	products: {
+		id: string;
+		name: string;
+		defaultQuantityUnitId: string | null;
+	}[];
 	stores: { id: string; name: string }[];
 	brands: { id: string; name: string }[];
+	quantityUnits: { id: string; abbreviation: string | null; name: string }[];
 }
 
 export function QuickAddStock({
 	products,
 	stores,
 	brands,
+	quantityUnits,
 }: QuickAddStockProps) {
 	const createStockEntry = useCreateStockEntry();
 	const createBrand = useCreateBrand();
@@ -49,6 +55,12 @@ export function QuickAddStock({
 		setOpen(false);
 	}
 
+	const selectedProduct = products.find((p) => p.id === productId);
+	const selectedUnit = selectedProduct?.defaultQuantityUnitId
+		? quantityUnits.find((u) => u.id === selectedProduct.defaultQuantityUnitId)
+		: null;
+	const unitLabel = selectedUnit?.abbreviation ?? selectedUnit?.name ?? "";
+
 	const formFields = (
 		<>
 			<Combobox
@@ -62,15 +74,20 @@ export function QuickAddStock({
 				required
 				className="flex-1 min-w-40"
 			/>
-			<NumberInput
-				placeholder="Quantity *"
-				required
-				step="any"
-				min="0.01"
-				value={quantity}
-				onChange={(e) => setQuantity(e.target.value)}
-				className="w-28 sm:w-28"
-			/>
+			<div className="flex items-center gap-1.5">
+				<NumberInput
+					placeholder="Quantity *"
+					required
+					step="any"
+					min="0.01"
+					value={quantity}
+					onChange={(e) => setQuantity(e.target.value)}
+					className="w-28 sm:w-28"
+				/>
+				{unitLabel && (
+					<span className="text-sm text-(--sea-ink-soft)">{unitLabel}</span>
+				)}
+			</div>
 			<DatePicker
 				value={expirationDate}
 				onChange={setExpirationDate}

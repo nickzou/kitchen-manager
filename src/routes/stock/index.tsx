@@ -142,6 +142,7 @@ function StockPage() {
 					products={products ?? []}
 					stores={stores ?? []}
 					brands={brands ?? []}
+					quantityUnits={quantityUnits ?? []}
 				/>
 
 				{/* Tab bar */}
