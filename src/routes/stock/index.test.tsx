@@ -336,7 +336,9 @@ describe("StockPage", () => {
 			fireEvent.change(screen.getByPlaceholderText("Quantity *"), {
 				target: { value: "5" },
 			});
-			fireEvent.click(screen.getByText("Add Stock"));
+			fireEvent.click(
+				screen.getAllByRole("button", { name: /Add Stock/ })[0],
+			);
 
 			await waitFor(() => {
 				expect(mockMutateAsync).toHaveBeenCalledWith({
