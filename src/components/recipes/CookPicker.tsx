@@ -1,4 +1,5 @@
 import { CookingPot } from "lucide-react";
+import { Button } from "#src/components/Button";
 import type { RecipeIngredient } from "#src/lib/hooks/use-recipe-ingredients";
 
 interface IngredientDisplay {
@@ -61,15 +62,16 @@ export function CookPicker({
 				</div>
 			))}
 			<div className="flex gap-2">
-				<button
+				<Button
 					type="button"
 					onClick={onCook}
 					disabled={isCooking}
-					className="flex h-8 items-center gap-1.5 rounded-full bg-(--lagoon) px-4 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
+					size="sm"
+					className="flex items-center gap-1.5 px-4"
 				>
 					<CookingPot size={14} />
 					{isCooking ? "Cooking…" : "Cook"}
-				</button>
+				</Button>
 				<button
 					type="button"
 					onClick={onCancel}

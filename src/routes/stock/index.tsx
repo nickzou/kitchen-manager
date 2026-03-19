@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Minus } from "lucide-react";
 import { type FormEvent, useState } from "react";
 import { Accordion } from "#src/components/Accordion";
+import { Button } from "#src/components/Button";
 import { Combobox } from "#src/components/Combobox";
 import { DatePicker } from "#src/components/DatePicker";
 import { Island } from "#src/components/Island";
@@ -447,13 +448,13 @@ function EditStockModal({
 						>
 							Cancel
 						</button>
-						<button
+						<Button
 							type="submit"
 							disabled={updateStockEntry.isPending}
-							className="flex h-10 items-center gap-1.5 rounded-full bg-(--lagoon) px-4 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
+							className="flex items-center gap-1.5"
 						>
 							Save Changes
-						</button>
+						</Button>
 					</div>
 				</div>
 			</form>

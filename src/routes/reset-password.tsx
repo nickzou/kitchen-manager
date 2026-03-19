@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { type FormEvent, useState } from "react";
 import { AlertText } from "#src/components/AlertText";
+import { Button } from "#src/components/Button";
 import { Island } from "#src/components/Island";
 import { Page } from "#src/components/Page";
 import { PasswordInput } from "#src/components/PasswordInput";
@@ -73,13 +74,13 @@ function ResetPassword() {
 
 					{error && <AlertText>{error}</AlertText>}
 
-					<button
+					<Button
 						type="submit"
 						disabled={loading}
-						className="mt-2 h-10 rounded-full bg-(--lagoon) text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
+						className="mt-2"
 					>
 						{loading ? "Resetting\u2026" : "Reset password"}
-					</button>
+					</Button>
 				</form>
 			</Island>
 		</Page>

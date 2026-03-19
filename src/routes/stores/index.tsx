@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
 import { type FormEvent, useMemo, useState } from "react";
+import { Button } from "#src/components/Button";
 import { CompactView } from "#src/components/CompactView";
 import { GridView } from "#src/components/GridView";
 import { Input } from "#src/components/Input";
@@ -74,14 +75,14 @@ function StoresPage() {
 						onChange={(e) => setName(e.target.value)}
 						className="flex-1 min-w-[160px]"
 					/>
-					<button
+					<Button
 						type="submit"
 						disabled={createStore.isPending}
-						className="flex h-10 items-center gap-1.5 rounded-full bg-(--lagoon) px-4 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
+						className="flex items-center gap-1.5"
 					>
 						<Plus size={16} />
 						Add
-					</button>
+					</Button>
 				</form>
 
 				<div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">

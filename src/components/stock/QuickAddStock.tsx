@@ -1,5 +1,6 @@
 import { Plus } from "lucide-react";
 import { type FormEvent, useState } from "react";
+import { Button } from "#src/components/Button";
 import { Combobox } from "#src/components/Combobox";
 import { DatePicker } from "#src/components/DatePicker";
 import { Modal } from "#src/components/Modal";
@@ -126,14 +127,14 @@ export function QuickAddStock({
 					setBrandId(created.id);
 				}}
 			/>
-			<button
+			<Button
 				type="submit"
 				disabled={createStockEntry.isPending}
-				className="flex h-10 items-center gap-1.5 rounded-full bg-(--lagoon) px-4 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
+				className="flex items-center gap-1.5"
 			>
 				<Plus size={16} />
 				Add Stock
-			</button>
+			</Button>
 		</>
 	);
 
@@ -149,14 +150,14 @@ export function QuickAddStock({
 
 			{/* Mobile: button that opens a modal */}
 			<div className="mb-6 border-b border-(--line) pb-6 sm:hidden">
-				<button
+				<Button
 					type="button"
 					onClick={() => setOpen(true)}
-					className="flex h-10 items-center gap-1.5 rounded-full bg-(--lagoon) px-4 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90"
+					className="flex items-center gap-1.5"
 				>
 					<Plus size={16} />
 					Add Stock
-				</button>
+				</Button>
 				<Modal open={open} onOpenChange={setOpen} title="Add Stock">
 					<form onSubmit={handleSubmit} className="flex flex-col gap-3">
 						{formFields}

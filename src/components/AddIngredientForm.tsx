@@ -1,5 +1,6 @@
 import { Plus } from "lucide-react";
 import { useId } from "react";
+import { Button } from "#src/components/Button";
 import { Combobox } from "#src/components/Combobox";
 import { Input } from "#src/components/Input";
 import { NumberInput } from "#src/components/NumberInput";
@@ -137,15 +138,15 @@ export function AddIngredientForm({
 					value={notes}
 					onChange={(e) => update({ notes: e.target.value })}
 				/>
-				<button
+				<Button
 					type="button"
 					onClick={onAdd}
 					disabled={isPending || !quantity}
-					className="flex h-10 items-center gap-1 rounded-full bg-(--lagoon) px-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
+					className="flex items-center gap-1 px-3"
 				>
 					<Plus size={14} />
 					{addButtonLabel ?? "Add"}
-				</button>
+				</Button>
 			</div>
 			{unitHint && (
 				<p

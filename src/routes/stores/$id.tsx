@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Pencil, Trash2, X } from "lucide-react";
 import { type FormEvent, useState } from "react";
 import { AlertBox } from "#src/components/AlertBox";
+import { Button } from "#src/components/Button";
 import { Input } from "#src/components/Input";
 import InventorySubNav from "#src/components/InventorySubNav";
 import { Island } from "#src/components/Island";
@@ -127,13 +128,13 @@ function StoreDetail() {
 							/>
 						</label>
 
-						<button
+						<Button
 							type="submit"
 							disabled={updateStore.isPending}
-							className="mt-2 h-10 rounded-full bg-(--lagoon) text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-50"
+							className="mt-2"
 						>
 							{updateStore.isPending ? "Saving…" : "Save changes"}
-						</button>
+						</Button>
 					</form>
 				) : (
 					<>
