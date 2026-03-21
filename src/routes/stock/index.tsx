@@ -12,6 +12,7 @@ import { Page } from "#src/components/Page";
 import { SearchInput } from "#src/components/SearchInput";
 import { AmberButton } from "#src/components/stock/AmberButton";
 import { QuickAddStock } from "#src/components/stock/QuickAddStock";
+import { StockActivityRow } from "#src/components/stock/StockActivityRow";
 import { StockProductContent } from "#src/components/stock/StockProductContent";
 import { StockProductTrigger } from "#src/components/stock/StockProductTrigger";
 import { authClient } from "#src/lib/auth-client";
@@ -122,13 +123,6 @@ function StockPage() {
 				new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
 		)
 		.slice(0, 20);
-
-	const transactionBadgeClass: Record<string, string> = {
-		add: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
-		consume:
-			"bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
-		remove: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
-	};
 
 	return (
 		<Page as="main" className="pb-8 pt-14">
@@ -261,36 +255,17 @@ function StockPage() {
 					(recentLogs.length > 0 ? (
 						<div className="flex flex-col gap-1">
 							{recentLogs.map((log) => (
-								<div
+								<StockActivityRow
 									key={log.id}
-									className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm"
-								>
-									<span
-										className={cn(
-											"w-[4.5rem] shrink-0 rounded-full px-2 py-0.5 text-center text-xs font-semibold capitalize",
-											transactionBadgeClass[log.transactionType],
-										)}
-									>
-										{log.transactionType}
-									</span>
-									<div className="flex min-w-0 flex-1 flex-col">
-										<span className="font-medium text-(--sea-ink)">
-											{getProductName(log.productId)}
-										</span>
-										<span className="text-xs text-(--sea-ink-soft)">
-											{new Date(log.createdAt).toLocaleString()}
-										</span>
-									</div>
-									<span className="shrink-0 text-(--sea-ink-soft)">
-										{log.quantity}
-										{getUnitAbbr(
-											products?.find((p) => p.id === log.productId)
-												?.defaultQuantityUnitId ?? null,
-										)
-											? ` ${getUnitAbbr(products?.find((p) => p.id === log.productId)?.defaultQuantityUnitId ?? null)}`
-											: ""}
-									</span>
-								</div>
+									transactionType={log.transactionType}
+									productName={getProductName(log.productId)}
+									quantity={log.quantity}
+									unitAbbr={getUnitAbbr(
+										products?.find((p) => p.id === log.productId)
+											?.defaultQuantityUnitId ?? null,
+									)}
+									createdAt={log.createdAt}
+								/>
 							))}
 						</div>
 					) : (
