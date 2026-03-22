@@ -235,6 +235,7 @@ pre code {
 
 button,
 a {
+  cursor: pointer;
   transition: background-color 180ms ease, color 180ms ease, border-color 180ms ease,
     transform 180ms ease;
 }

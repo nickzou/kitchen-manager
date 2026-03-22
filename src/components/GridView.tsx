@@ -19,7 +19,7 @@ export function GridView<T>({
 	getImageAlt,
 }: GridViewProps<T>) {
 	return (
-		<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+		<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
 			{items.map((item) => {
 				const link = getLink(item);
 				const image = getImage?.(item);
@@ -34,7 +34,7 @@ export function GridView<T>({
 							<img
 								src={image}
 								alt={getImageAlt?.(item) ?? ""}
-								className="aspect-[21/9] w-full object-cover"
+								className="aspect-21/9 w-full object-cover"
 							/>
 						)}
 						<div className={image ? "p-4" : ""}>{renderCard(item)}</div>

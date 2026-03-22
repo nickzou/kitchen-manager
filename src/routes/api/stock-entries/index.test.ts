@@ -52,7 +52,6 @@ const { Route } = await import("#src/routes/api/stock-entries/index");
 
 type Handler = (ctx: never) => Promise<Response>;
 
-// biome-ignore lint/style/noNonNullAssertion: test file — handlers are guaranteed to exist
 const { GET, POST } = Route.options.server!.handlers! as Record<
 	string,
 	Handler

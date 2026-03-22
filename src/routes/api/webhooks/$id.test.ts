@@ -55,7 +55,6 @@ const { Route } = await import("#src/routes/api/webhooks/$id");
 
 type Handler = (ctx: never) => Promise<Response>;
 
-// biome-ignore lint/style/noNonNullAssertion: test file
 const { PUT, DELETE } = Route.options.server!.handlers! as Record<
 	string,
 	Handler

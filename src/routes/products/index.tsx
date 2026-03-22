@@ -16,9 +16,11 @@ import { TableView } from "#src/components/TableView";
 import { type ViewMode, ViewSwitcher } from "#src/components/ViewSwitcher";
 import { authClient } from "#src/lib/auth-client";
 import { formatDate } from "#src/lib/format-date";
+import { useBrands } from "#src/lib/hooks/use-brands";
 import { useProductCategories } from "#src/lib/hooks/use-categories";
 import { useCreateProduct, useProducts } from "#src/lib/hooks/use-products";
 import { useQuantityUnits } from "#src/lib/hooks/use-quantity-units";
+import { useStockEntries } from "#src/lib/hooks/use-stock-entries";
 
 export const Route = createFileRoute("/products/")({ component: ProductsPage });
 
@@ -29,6 +31,8 @@ function ProductsPage() {
 	const { data: products, isLoading } = useProducts();
 	const { data: categories } = useProductCategories();
 	const { data: quantityUnits } = useQuantityUnits();
+	const { data: brands } = useBrands();
+	const { data: stockEntries } = useStockEntries();
 	const createProduct = useCreateProduct();
 
 	const [view, setView] = useState<ViewMode>("grid");
@@ -37,11 +41,37 @@ function ProductsPage() {
 	const [search, setSearch] = useState("");
 	const [showImages, setShowImages] = useState(true);
 
+	const brandsByProduct = useMemo(() => {
+		const map = new Map<string, string[]>();
+		if (!stockEntries || !brands) return map;
+		const brandMap = new Map(brands.map((b) => [b.id, b.name]));
+		for (const entry of stockEntries) {
+			if (!entry.brandId) continue;
+			const name = brandMap.get(entry.brandId);
+			if (!name) continue;
+			const list = map.get(entry.productId) ?? [];
+			if (!list.includes(name)) list.push(name);
+			map.set(entry.productId, list);
+		}
+		return map;
+	}, [stockEntries, brands]);
+
 	const filteredProducts = useMemo(() => {
 		if (!products || !search.trim()) return products;
 		const term = search.toLowerCase();
-		return products.filter((p) => p.name.toLowerCase().includes(term));
-	}, [products, search]);
+		const catMap = new Map(
+			(categories ?? []).map((c) => [c.id, c.name.toLowerCase()]),
+		);
+		return products.filter((p) => {
+			if (p.name.toLowerCase().includes(term)) return true;
+			if (p.categoryIds.some((id) => catMap.get(id)?.includes(term)))
+				return true;
+			const productBrands = brandsByProduct.get(p.id) ?? [];
+			if (productBrands.some((n) => n.toLowerCase().includes(term)))
+				return true;
+			return false;
+		});
+	}, [products, search, categories, brandsByProduct]);
 
 	if (sessionLoading) return null;
 	if (!session) {
@@ -130,6 +160,7 @@ function ProductsPage() {
 						placeholder="Search..."
 						value={search}
 						onChange={(e) => setSearch(e.target.value)}
+						onClear={() => setSearch("")}
 					/>
 					<div className="flex items-center gap-2">
 						<ImageToggle

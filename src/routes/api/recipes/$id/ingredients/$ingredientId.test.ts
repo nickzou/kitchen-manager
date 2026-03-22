@@ -43,7 +43,6 @@ const { Route } = await import(
 
 type Handler = (ctx: never) => Promise<Response>;
 
-// biome-ignore lint/style/noNonNullAssertion: test file — handlers are guaranteed to exist
 const h = Route.options.server!.handlers! as Record<string, Handler>;
 const { PUT, DELETE: DELETE_HANDLER } = h;
 const params = { id: "recipe-1", ingredientId: "recipe-ingredient-1" };
