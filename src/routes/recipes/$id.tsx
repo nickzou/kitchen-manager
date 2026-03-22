@@ -1425,6 +1425,20 @@ function RecipeDetail() {
 												key={groupName}
 												groupName={groupName}
 												ingredientCount={groupIngs.length}
+												status={(() => {
+													const statuses = groupIngs.map((ing) =>
+														ing.productId
+															? ingredientAvailability.get(ing.id)
+															: undefined,
+													);
+													if (statuses.every((s) => s === undefined))
+														return undefined;
+													if (statuses.some((s) => s === "sufficient"))
+														return "sufficient";
+													if (statuses.some((s) => s === "unknown"))
+														return "unknown";
+													return "deficit";
+												})()}
 												ingredientRows={groupIngs.map((ing) => ({
 													ingredient: ing,
 													productName: getProductName(ing.productId),
