@@ -1,10 +1,9 @@
-import { cn } from "#src/lib/utils";
+import { Badge } from "#src/components/Badge";
 
-const badgeClass: Record<string, string> = {
-    add: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
-    consume:
-        "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
-    remove: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
+const transactionColor: Record<string, "green" | "amber" | "red"> = {
+    add: "green",
+    consume: "amber",
+    remove: "red",
 };
 
 export function StockActivityRow({
@@ -21,15 +20,13 @@ export function StockActivityRow({
     createdAt: string;
 }) {
     return (
-        <div className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm">
-            <span
-                className={cn(
-                    "w-18 shrink-0 rounded-full px-2 py-0.5 text-center text-xs font-semibold capitalize",
-                    badgeClass[transactionType],
-                )}
+        <div className="flex items-center gap-3 rounded-lg py-2 text-sm">
+            <Badge
+                color={transactionColor[transactionType] ?? "green"}
+                className="w-18 shrink-0 capitalize"
             >
                 {transactionType}
-            </span>
+            </Badge>
             <div className="flex min-w-0 flex-1 flex-col">
                 <span className="font-medium text-(--sea-ink)">{productName}</span>
                 <span className="text-xs text-(--sea-ink-soft)">
