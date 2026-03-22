@@ -153,6 +153,8 @@ function RecipeDetail() {
 		notes: "",
 		groupName: "",
 	});
+	const [addToGroup, setAddToGroup] = useState<string | null>(null);
+	const addFormRef = useRef<HTMLDivElement>(null);
 	const [showCookPicker, setShowCookPicker] = useState(false);
 	const [groupSelections, setGroupSelections] = useState<
 		Record<string, string>
@@ -407,6 +409,23 @@ function RecipeDetail() {
 
 	async function handleAddIngredient() {
 		if (!newIngredient.quantity) return;
+		if (addToGroup) {
+			await createIngredient.mutateAsync({
+				productId: newIngredient.productId || undefined,
+				quantity: newIngredient.quantity,
+				quantityUnitId: newIngredient.quantityUnitId || undefined,
+				notes: newIngredient.notes || undefined,
+				groupName: addToGroup,
+			});
+			setNewIngredient({
+				productId: "",
+				quantity: "",
+				quantityUnitId: "",
+				notes: "",
+			});
+			setAddToGroup(null);
+			return;
+		}
 		if (addMode === "group") {
 			setPendingGroupItems([
 				...pendingGroupItems,
@@ -1449,6 +1468,17 @@ function RecipeDetail() {
 													setEditGroupNameValue(groupName);
 												}}
 												isRenameSaving={updateIngredient.isPending}
+												onAddIngredient={() => {
+													setAddToGroup(groupName);
+													setAddMode("ingredient");
+													setTimeout(
+														() =>
+															addFormRef.current?.scrollIntoView({
+																behavior: "smooth",
+															}),
+														100,
+													);
+												}}
 												onDelete={async () => {
 													for (const ing of groupIngs) {
 														await deleteIngredient.mutateAsync(ing.id);
@@ -1460,24 +1490,38 @@ function RecipeDetail() {
 								</div>
 							)}
 
-							<AddIngredientForm
-								productOptions={productOptions}
-								unitOptions={unitOptions}
-								onAdd={handleAddIngredient}
-								isPending={
-									addMode === "ingredient" ? createIngredient.isPending : false
-								}
-								newIngredient={newIngredient}
-								setNewIngredient={setNewIngredient}
-								onCreateProduct={handleCreateProduct}
-								onProductChange={handleProductChange}
-								unitHint={getConversionHint()}
-								mode={addMode}
-								onModeChange={setAddMode}
-								groupName={pendingGroupName}
-								onGroupNameChange={setPendingGroupName}
-								addButtonLabel={addMode === "group" ? "Add to group" : "Add"}
-							/>
+							<div ref={addFormRef}>
+								<AddIngredientForm
+									productOptions={productOptions}
+									unitOptions={unitOptions}
+									onAdd={handleAddIngredient}
+									isPending={
+										addToGroup
+											? createIngredient.isPending
+											: addMode === "ingredient"
+												? createIngredient.isPending
+												: false
+									}
+									newIngredient={newIngredient}
+									setNewIngredient={setNewIngredient}
+									onCreateProduct={handleCreateProduct}
+									onProductChange={handleProductChange}
+									unitHint={getConversionHint()}
+									mode={addMode}
+									onModeChange={setAddMode}
+									groupName={pendingGroupName}
+									onGroupNameChange={setPendingGroupName}
+									addButtonLabel={
+										addToGroup
+											? "Add to group"
+											: addMode === "group"
+												? "Add to group"
+												: "Add"
+									}
+									targetGroup={addToGroup}
+									onCancelTargetGroup={() => setAddToGroup(null)}
+								/>
+							</div>
 
 							{addMode === "group" && pendingGroupItems.length > 0 && (
 								<div className="mt-3 rounded-lg border border-dashed border-(--line) p-3">

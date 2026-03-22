@@ -3,6 +3,7 @@ import {
 	ChevronDown,
 	ChevronLeft,
 	Pencil,
+	Plus,
 	Trash2,
 	X,
 } from "lucide-react";
@@ -23,6 +24,7 @@ export interface IngredientGroupProps {
 	onStartRename: () => void;
 	isRenameSaving: boolean;
 	onDelete: () => void;
+	onAddIngredient?: () => void;
 }
 
 export function IngredientGroup({
@@ -39,6 +41,7 @@ export function IngredientGroup({
 	onStartRename,
 	isRenameSaving,
 	onDelete,
+	onAddIngredient,
 }: IngredientGroupProps) {
 	return (
 		<div className="rounded-lg border border-(--line)">
@@ -103,6 +106,16 @@ export function IngredientGroup({
 									<ChevronDown size={14} />
 								)}
 							</button>
+							{onAddIngredient && (
+								<button
+									type="button"
+									onClick={onAddIngredient}
+									className="rounded-lg p-1.5 text-(--sea-ink-soft) transition hover:bg-(--surface) hover:text-(--sea-ink)"
+									title="Add ingredient to group"
+								>
+									<Plus size={14} />
+								</button>
+							)}
 							<button
 								type="button"
 								onClick={onStartRename}

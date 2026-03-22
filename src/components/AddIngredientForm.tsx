@@ -1,4 +1,4 @@
-import { Plus } from "lucide-react";
+import { Plus, X } from "lucide-react";
 import { useId } from "react";
 import { Button } from "#src/components/Button";
 import { Combobox } from "#src/components/Combobox";
@@ -30,6 +30,8 @@ export function AddIngredientForm({
 	groupName,
 	onGroupNameChange,
 	addButtonLabel,
+	targetGroup,
+	onCancelTargetGroup,
 }: {
 	productOptions: ComboboxOption[];
 	unitOptions: ComboboxOption[];
@@ -45,6 +47,8 @@ export function AddIngredientForm({
 	groupName?: string;
 	onGroupNameChange?: (name: string) => void;
 	addButtonLabel?: string;
+	targetGroup?: string | null;
+	onCancelTargetGroup?: () => void;
 }) {
 	const htmlId = useId();
 
@@ -62,7 +66,23 @@ export function AddIngredientForm({
 		<div className="border-t border-(--line) pt-4">
 			<SectionHeading>Add ingredient</SectionHeading>
 
-			{onModeChange && (
+			{targetGroup && onCancelTargetGroup && (
+				<div className="mb-3 flex items-center gap-2 rounded-lg bg-[rgba(79,184,178,0.14)] px-3 py-1.5 text-sm text-(--lagoon-deep)">
+					<span className="flex-1">
+						Adding to: <span className="font-medium">{targetGroup}</span>
+					</span>
+					<button
+						type="button"
+						onClick={onCancelTargetGroup}
+						className="rounded p-0.5 transition hover:bg-[rgba(79,184,178,0.2)]"
+						title="Cancel adding to group"
+					>
+						<X size={14} />
+					</button>
+				</div>
+			)}
+
+			{onModeChange && !targetGroup && (
 				<div className="mb-3 inline-flex rounded-lg border border-(--line) p-0.5">
 					<button
 						type="button"
