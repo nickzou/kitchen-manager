@@ -27,7 +27,6 @@ const { Route } = await import("#src/routes/api/api-keys/$id");
 
 type Handler = (ctx: never) => Promise<Response>;
 
-// biome-ignore lint/style/noNonNullAssertion: test file — handlers are guaranteed to exist
 const h = Route.options.server!.handlers! as Record<string, Handler>;
 const { DELETE: DELETE_HANDLER } = h;
 const params = { id: "api-key-1" };

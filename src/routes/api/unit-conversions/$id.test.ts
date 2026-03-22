@@ -45,7 +45,6 @@ const { Route } = await import("#src/routes/api/unit-conversions/$id");
 
 type Handler = (ctx: never) => Promise<Response>;
 
-// biome-ignore lint/style/noNonNullAssertion: test file — handlers are guaranteed to exist
 const h = Route.options.server!.handlers! as Record<string, Handler>;
 const { GET, PUT, DELETE: DELETE_HANDLER } = h;
 const params = { id: "conversion-1" };
