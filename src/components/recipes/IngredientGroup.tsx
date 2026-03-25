@@ -2,6 +2,8 @@ import {
 	Check,
 	ChevronDown,
 	ChevronLeft,
+	CircleCheck,
+	CircleX,
 	Pencil,
 	Plus,
 	Trash2,
@@ -25,6 +27,7 @@ export interface IngredientGroupProps {
 	isRenameSaving: boolean;
 	onDelete: () => void;
 	onAddIngredient?: () => void;
+	status?: "sufficient" | "deficit" | "unknown";
 }
 
 export function IngredientGroup({
@@ -42,6 +45,7 @@ export function IngredientGroup({
 	isRenameSaving,
 	onDelete,
 	onAddIngredient,
+	status,
 }: IngredientGroupProps) {
 	return (
 		<div className="rounded-lg border border-(--line)">
@@ -86,6 +90,15 @@ export function IngredientGroup({
 				) : (
 					<>
 						<div className="flex flex-1 items-center gap-2">
+							{status === "sufficient" && (
+								<CircleCheck size={14} className="shrink-0 text-emerald-500" />
+							)}
+							{status === "deficit" && (
+								<CircleX size={14} className="shrink-0 text-red-500" />
+							)}
+							{status === "unknown" && (
+								<CircleX size={14} className="shrink-0 text-amber-500" />
+							)}
 							<span className="text-sm font-medium text-(--sea-ink)">
 								{groupName || "Unnamed group"}
 							</span>

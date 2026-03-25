@@ -319,7 +319,7 @@ a {
 }
 
 .wmde-markdown li {
-  @apply text-sm text-(--sea-ink-soft);
+  @apply text-sm text-(--sea-ink-soft) leading-2;
 }
 
 .wmde-markdown strong {
