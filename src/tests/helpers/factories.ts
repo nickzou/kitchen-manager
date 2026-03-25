@@ -244,6 +244,19 @@ export function makeRecipeIngredient(overrides?: Record<string, unknown>) {
 	};
 }
 
+export function makeUserSettings(overrides?: Record<string, unknown>) {
+	return {
+		id: "user-settings-1",
+		userId: "user-1",
+		advancedMode: false,
+		apiEnabled: false,
+		webhooksEnabled: false,
+		createdAt: new Date("2025-01-01"),
+		updatedAt: new Date("2025-01-01"),
+		...overrides,
+	};
+}
+
 export function makeRecipePrepStep(overrides?: Record<string, unknown>) {
 	return {
 		id: "prep-step-1",
