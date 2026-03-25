@@ -823,6 +823,8 @@ export const userSettings = pgTable("user_settings", {
 		.unique()
 		.references(() => user.id, { onDelete: "cascade" }),
 	advancedMode: boolean("advanced_mode").default(false).notNull(),
+	apiEnabled: boolean("api_enabled").default(false).notNull(),
+	webhooksEnabled: boolean("webhooks_enabled").default(false).notNull(),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at")
 		.defaultNow()

@@ -44,17 +44,22 @@ export const Route = createFileRoute("/api/user-settings/")({
 
 				const body = await request.json();
 
+				const values: Record<string, unknown> = {};
+				if ("advancedMode" in body)
+					values.advancedMode = body.advancedMode ?? false;
+				if ("apiEnabled" in body) values.apiEnabled = body.apiEnabled ?? false;
+				if ("webhooksEnabled" in body)
+					values.webhooksEnabled = body.webhooksEnabled ?? false;
+
 				const [updated] = await db
 					.insert(userSettings)
 					.values({
 						userId: session.user.id,
-						advancedMode: body.advancedMode ?? false,
+						...values,
 					})
 					.onConflictDoUpdate({
 						target: userSettings.userId,
-						set: {
-							advancedMode: body.advancedMode ?? false,
-						},
+						set: values,
 					})
 					.returning();
 

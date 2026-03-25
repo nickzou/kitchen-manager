@@ -4,13 +4,15 @@ export interface UserSettings {
 	id: string;
 	userId: string;
 	advancedMode: boolean;
+	apiEnabled: boolean;
+	webhooksEnabled: boolean;
 	createdAt: string;
 	updatedAt: string;
 }
 
-export type UpdateUserSettingsInput = {
-	advancedMode: boolean;
-};
+export type UpdateUserSettingsInput = Partial<
+	Pick<UserSettings, "advancedMode" | "apiEnabled" | "webhooksEnabled">
+>;
 
 export function useUserSettings() {
 	return useQuery<UserSettings>({

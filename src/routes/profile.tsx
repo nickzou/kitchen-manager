@@ -372,224 +372,312 @@ function Profile() {
 							/>
 						</button>
 					</label>
-				</Island>
+					{settings?.advancedMode && (
+						<>
+							<hr className="my-6 border-(--line)" />
 
-				<Island as="section" className="animate-rise-in rounded-2xl p-6 sm:p-8">
-					<h2 className="font-display mb-6 text-xl font-bold text-(--sea-ink)">
-						API Keys
-					</h2>
+							<h3 className="mb-4 text-sm font-semibold text-(--sea-ink)">
+								Features
+							</h3>
 
-					{apiKeys.length > 0 && (
-						<ul className="mb-6 flex flex-col gap-3">
-							{apiKeys.map((k) => (
-								<li
-									key={k.id}
-									className="flex items-center justify-between gap-2 rounded-lg border border-(--line) bg-(--surface) px-3 py-2"
-								>
-									<div className="min-w-0">
-										<p className="truncate text-sm font-medium text-(--sea-ink)">
-											{k.name}
+							<div className="flex flex-col gap-4">
+								<label className="flex items-center justify-between gap-3">
+									<div>
+										<p className="text-sm font-medium text-(--sea-ink)">
+											API Keys
 										</p>
 										<p className="text-xs text-(--sea-ink-soft)">
-											{k.keyPrefix}...
-											{k.lastUsedAt
-												? ` \u00b7 Last used ${new Date(k.lastUsedAt).toLocaleDateString()}`
-												: " \u00b7 Never used"}
+											Generate API keys for external integrations
 										</p>
 									</div>
 									<button
 										type="button"
-										onClick={() => handleDeleteKey(k.id)}
-										className="shrink-0 rounded-md px-2 py-1 text-xs font-medium text-red-600 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950"
+										role="switch"
+										aria-checked={settings?.apiEnabled ?? false}
+										onClick={() =>
+											updateSettings.mutate({
+												apiEnabled: !settings?.apiEnabled,
+											})
+										}
+										className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-(--lagoon) focus-visible:ring-offset-2 ${
+											settings?.apiEnabled ? "bg-(--lagoon)" : "bg-(--line)"
+										}`}
 									>
-										Revoke
+										<span
+											className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+												settings?.apiEnabled ? "translate-x-5" : "translate-x-0"
+											}`}
+										/>
 									</button>
-								</li>
-							))}
-						</ul>
-					)}
+								</label>
 
-					{generatedKey && (
-						<AlertBox variant="warning" className="mb-6 p-3">
-							<p className="mb-1 text-xs font-semibold">
-								Copy your key now — it won't be shown again
-							</p>
-							<div className="flex items-center gap-2">
-								<code className="min-w-0 flex-1 truncate text-xs text-amber-900 dark:text-amber-100">
-									{generatedKey}
-								</code>
-								<button
-									type="button"
-									onClick={handleCopyKey}
-									className="shrink-0 rounded-md bg-amber-200 px-2 py-1 text-xs font-medium text-amber-900 transition hover:bg-amber-300 dark:bg-amber-800 dark:text-amber-100 dark:hover:bg-amber-700"
-								>
-									{keyCopied ? "Copied!" : "Copy"}
-								</button>
-							</div>
-						</AlertBox>
-					)}
-
-					<form onSubmit={handleGenerateKey} className="flex flex-col gap-4">
-						<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
-							Key name
-							<input
-								type="text"
-								required
-								placeholder="e.g. My Script"
-								value={newKeyName}
-								onChange={(e) => setNewKeyName(e.target.value)}
-								className="h-10 rounded-lg border border-(--line) bg-(--surface) px-3 text-sm text-(--sea-ink) outline-none focus:border-(--lagoon)"
-							/>
-						</label>
-
-						{apiKeyError && <AlertText>{apiKeyError}</AlertText>}
-
-						<Button type="submit" disabled={apiKeyLoading} className="mt-2">
-							{apiKeyLoading ? "Generating\u2026" : "Generate new key"}
-						</Button>
-					</form>
-
-					<hr className="my-8 border-(--line)" />
-
-					<h2 className="font-display mb-6 text-xl font-bold text-(--sea-ink)">
-						Webhooks
-					</h2>
-
-					{webhooks.length > 0 && (
-						<ul className="mb-6 flex flex-col gap-3">
-							{webhooks.map((wh) => (
-								<li
-									key={wh.id}
-									className="flex items-center justify-between gap-2 rounded-lg border border-(--line) bg-(--surface) px-3 py-2"
-								>
-									<div className="min-w-0">
-										<div className="flex items-center gap-2">
-											<p className="truncate text-sm font-medium text-(--sea-ink)">
-												{wh.name}
-											</p>
-											<span
-												className={`inline-block rounded-full px-2 py-0.5 text-[0.65rem] font-semibold ${
-													wh.status === "active"
-														? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-														: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-												}`}
-											>
-												{wh.status}
-											</span>
-										</div>
-										<p className="truncate text-xs text-(--sea-ink-soft)">
-											{wh.url} · {wh.events.length} event
-											{wh.events.length !== 1 && "s"}
+								<label className="flex items-center justify-between gap-3">
+									<div>
+										<p className="text-sm font-medium text-(--sea-ink)">
+											Webhooks
+										</p>
+										<p className="text-xs text-(--sea-ink-soft)">
+											Send event notifications to external URLs
 										</p>
 									</div>
-									<div className="flex shrink-0 gap-1">
-										{wh.status === "suspended" && (
-											<button
-												type="button"
-												onClick={() => handleReactivateWebhook(wh.id)}
-												className="rounded-md px-2 py-1 text-xs font-medium text-green-600 transition hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-950"
-											>
-												Reactivate
-											</button>
-										)}
+									<button
+										type="button"
+										role="switch"
+										aria-checked={settings?.webhooksEnabled ?? false}
+										onClick={() =>
+											updateSettings.mutate({
+												webhooksEnabled: !settings?.webhooksEnabled,
+											})
+										}
+										className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-(--lagoon) focus-visible:ring-offset-2 ${
+											settings?.webhooksEnabled
+												? "bg-(--lagoon)"
+												: "bg-(--line)"
+										}`}
+									>
+										<span
+											className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+												settings?.webhooksEnabled
+													? "translate-x-5"
+													: "translate-x-0"
+											}`}
+										/>
+									</button>
+								</label>
+							</div>
+						</>
+					)}
+				</Island>
+
+				{settings?.advancedMode && settings?.apiEnabled && (
+					<Island
+						as="section"
+						className="animate-rise-in rounded-2xl p-6 sm:p-8"
+					>
+						<h2 className="font-display mb-6 text-xl font-bold text-(--sea-ink)">
+							API Keys
+						</h2>
+
+						{apiKeys.length > 0 && (
+							<ul className="mb-6 flex flex-col gap-3">
+								{apiKeys.map((k) => (
+									<li
+										key={k.id}
+										className="flex items-center justify-between gap-2 rounded-lg border border-(--line) bg-(--surface) px-3 py-2"
+									>
+										<div className="min-w-0">
+											<p className="truncate text-sm font-medium text-(--sea-ink)">
+												{k.name}
+											</p>
+											<p className="text-xs text-(--sea-ink-soft)">
+												{k.keyPrefix}...
+												{k.lastUsedAt
+													? ` \u00b7 Last used ${new Date(k.lastUsedAt).toLocaleDateString()}`
+													: " \u00b7 Never used"}
+											</p>
+										</div>
 										<button
 											type="button"
-											onClick={() => handleDeleteWebhook(wh.id)}
-											className="rounded-md px-2 py-1 text-xs font-medium text-red-600 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950"
+											onClick={() => handleDeleteKey(k.id)}
+											className="shrink-0 rounded-md px-2 py-1 text-xs font-medium text-red-600 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950"
 										>
-											Delete
+											Revoke
 										</button>
-									</div>
-								</li>
-							))}
-						</ul>
-					)}
+									</li>
+								))}
+							</ul>
+						)}
 
-					{webhookSecret && (
-						<AlertBox variant="warning" className="mb-6 p-3">
-							<p className="mb-1 text-xs font-semibold">
-								Copy your signing secret now — it won't be shown again
-							</p>
-							<div className="flex items-center gap-2">
-								<code className="min-w-0 flex-1 truncate text-xs text-amber-900 dark:text-amber-100">
-									{webhookSecret}
-								</code>
-								<button
-									type="button"
-									onClick={handleCopySecret}
-									className="shrink-0 rounded-md bg-amber-200 px-2 py-1 text-xs font-medium text-amber-900 transition hover:bg-amber-300 dark:bg-amber-800 dark:text-amber-100 dark:hover:bg-amber-700"
-								>
-									{secretCopied ? "Copied!" : "Copy"}
-								</button>
-							</div>
-						</AlertBox>
-					)}
-
-					<form onSubmit={handleCreateWebhook} className="flex flex-col gap-4">
-						<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
-							Name
-							<input
-								type="text"
-								required
-								placeholder="e.g. My Integration"
-								value={webhookName}
-								onChange={(e) => setWebhookName(e.target.value)}
-								className="h-10 rounded-lg border border-(--line) bg-(--surface) px-3 text-sm text-(--sea-ink) outline-none focus:border-(--lagoon)"
-							/>
-						</label>
-
-						<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
-							URL
-							<input
-								type="url"
-								required
-								placeholder="https://example.com/webhook"
-								value={webhookUrl}
-								onChange={(e) => setWebhookUrl(e.target.value)}
-								className="h-10 rounded-lg border border-(--line) bg-(--surface) px-3 text-sm text-(--sea-ink) outline-none focus:border-(--lagoon)"
-							/>
-						</label>
-
-						<fieldset className="flex flex-col gap-2">
-							<legend className="text-sm font-medium text-(--sea-ink)">
-								Events
-							</legend>
-							{Object.entries(EVENT_GROUPS).map(([group, events]) => (
-								<div key={group}>
-									<p className="mb-1 text-xs font-semibold text-(--sea-ink-soft)">
-										{group}
-									</p>
-									<div className="flex flex-wrap gap-2">
-										{events.map((event) => (
-											<label
-												key={event}
-												className="flex items-center gap-1.5 text-xs text-(--sea-ink)"
-											>
-												<input
-													type="checkbox"
-													checked={webhookEvents.includes(event)}
-													onChange={() => toggleEvent(event)}
-													className="rounded border-(--line)"
-												/>
-												{event}
-											</label>
-										))}
-									</div>
+						{generatedKey && (
+							<AlertBox variant="warning" className="mb-6 p-3">
+								<p className="mb-1 text-xs font-semibold">
+									Copy your key now — it won't be shown again
+								</p>
+								<div className="flex items-center gap-2">
+									<code className="min-w-0 flex-1 truncate text-xs text-amber-900 dark:text-amber-100">
+										{generatedKey}
+									</code>
+									<button
+										type="button"
+										onClick={handleCopyKey}
+										className="shrink-0 rounded-md bg-amber-200 px-2 py-1 text-xs font-medium text-amber-900 transition hover:bg-amber-300 dark:bg-amber-800 dark:text-amber-100 dark:hover:bg-amber-700"
+									>
+										{keyCopied ? "Copied!" : "Copy"}
+									</button>
 								</div>
-							))}
-						</fieldset>
+							</AlertBox>
+						)}
 
-						{webhookError && <AlertText>{webhookError}</AlertText>}
+						<form onSubmit={handleGenerateKey} className="flex flex-col gap-4">
+							<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
+								Key name
+								<input
+									type="text"
+									required
+									placeholder="e.g. My Script"
+									value={newKeyName}
+									onChange={(e) => setNewKeyName(e.target.value)}
+									className="h-10 rounded-lg border border-(--line) bg-(--surface) px-3 text-sm text-(--sea-ink) outline-none focus:border-(--lagoon)"
+								/>
+							</label>
 
-						<Button
-							type="submit"
-							disabled={webhookLoading || webhookEvents.length === 0}
-							className="mt-2"
+							{apiKeyError && <AlertText>{apiKeyError}</AlertText>}
+
+							<Button type="submit" disabled={apiKeyLoading} className="mt-2">
+								{apiKeyLoading ? "Generating\u2026" : "Generate new key"}
+							</Button>
+						</form>
+					</Island>
+				)}
+
+				{settings?.advancedMode && settings?.webhooksEnabled && (
+					<Island
+						as="section"
+						className="animate-rise-in rounded-2xl p-6 sm:p-8"
+					>
+						<h2 className="font-display mb-6 text-xl font-bold text-(--sea-ink)">
+							Webhooks
+						</h2>
+
+						{webhooks.length > 0 && (
+							<ul className="mb-6 flex flex-col gap-3">
+								{webhooks.map((wh) => (
+									<li
+										key={wh.id}
+										className="flex items-center justify-between gap-2 rounded-lg border border-(--line) bg-(--surface) px-3 py-2"
+									>
+										<div className="min-w-0">
+											<div className="flex items-center gap-2">
+												<p className="truncate text-sm font-medium text-(--sea-ink)">
+													{wh.name}
+												</p>
+												<span
+													className={`inline-block rounded-full px-2 py-0.5 text-[0.65rem] font-semibold ${
+														wh.status === "active"
+															? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+															: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+													}`}
+												>
+													{wh.status}
+												</span>
+											</div>
+											<p className="truncate text-xs text-(--sea-ink-soft)">
+												{wh.url} · {wh.events.length} event
+												{wh.events.length !== 1 && "s"}
+											</p>
+										</div>
+										<div className="flex shrink-0 gap-1">
+											{wh.status === "suspended" && (
+												<button
+													type="button"
+													onClick={() => handleReactivateWebhook(wh.id)}
+													className="rounded-md px-2 py-1 text-xs font-medium text-green-600 transition hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-950"
+												>
+													Reactivate
+												</button>
+											)}
+											<button
+												type="button"
+												onClick={() => handleDeleteWebhook(wh.id)}
+												className="rounded-md px-2 py-1 text-xs font-medium text-red-600 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950"
+											>
+												Delete
+											</button>
+										</div>
+									</li>
+								))}
+							</ul>
+						)}
+
+						{webhookSecret && (
+							<AlertBox variant="warning" className="mb-6 p-3">
+								<p className="mb-1 text-xs font-semibold">
+									Copy your signing secret now — it won't be shown again
+								</p>
+								<div className="flex items-center gap-2">
+									<code className="min-w-0 flex-1 truncate text-xs text-amber-900 dark:text-amber-100">
+										{webhookSecret}
+									</code>
+									<button
+										type="button"
+										onClick={handleCopySecret}
+										className="shrink-0 rounded-md bg-amber-200 px-2 py-1 text-xs font-medium text-amber-900 transition hover:bg-amber-300 dark:bg-amber-800 dark:text-amber-100 dark:hover:bg-amber-700"
+									>
+										{secretCopied ? "Copied!" : "Copy"}
+									</button>
+								</div>
+							</AlertBox>
+						)}
+
+						<form
+							onSubmit={handleCreateWebhook}
+							className="flex flex-col gap-4"
 						>
-							{webhookLoading ? "Creating\u2026" : "Create webhook"}
-						</Button>
-					</form>
-				</Island>
+							<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
+								Name
+								<input
+									type="text"
+									required
+									placeholder="e.g. My Integration"
+									value={webhookName}
+									onChange={(e) => setWebhookName(e.target.value)}
+									className="h-10 rounded-lg border border-(--line) bg-(--surface) px-3 text-sm text-(--sea-ink) outline-none focus:border-(--lagoon)"
+								/>
+							</label>
+
+							<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
+								URL
+								<input
+									type="url"
+									required
+									placeholder="https://example.com/webhook"
+									value={webhookUrl}
+									onChange={(e) => setWebhookUrl(e.target.value)}
+									className="h-10 rounded-lg border border-(--line) bg-(--surface) px-3 text-sm text-(--sea-ink) outline-none focus:border-(--lagoon)"
+								/>
+							</label>
+
+							<fieldset className="flex flex-col gap-2">
+								<legend className="text-sm font-medium text-(--sea-ink)">
+									Events
+								</legend>
+								{Object.entries(EVENT_GROUPS).map(([group, events]) => (
+									<div key={group}>
+										<p className="mb-1 text-xs font-semibold text-(--sea-ink-soft)">
+											{group}
+										</p>
+										<div className="flex flex-wrap gap-2">
+											{events.map((event) => (
+												<label
+													key={event}
+													className="flex items-center gap-1.5 text-xs text-(--sea-ink)"
+												>
+													<input
+														type="checkbox"
+														checked={webhookEvents.includes(event)}
+														onChange={() => toggleEvent(event)}
+														className="rounded border-(--line)"
+													/>
+													{event}
+												</label>
+											))}
+										</div>
+									</div>
+								))}
+							</fieldset>
+
+							{webhookError && <AlertText>{webhookError}</AlertText>}
+
+							<Button
+								type="submit"
+								disabled={webhookLoading || webhookEvents.length === 0}
+								className="mt-2"
+							>
+								{webhookLoading ? "Creating\u2026" : "Create webhook"}
+							</Button>
+						</form>
+					</Island>
+				)}
 			</div>
 		</Page>
 	);
