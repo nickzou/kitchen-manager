@@ -374,10 +374,7 @@ function Profile() {
 					</label>
 				</Island>
 
-				<Island
-					as="section"
-					className="animate-rise-in rounded-2xl p-6 sm:p-8 lg:col-span-2"
-				>
+				<Island as="section" className="animate-rise-in rounded-2xl p-6 sm:p-8">
 					<h2 className="font-display mb-6 text-xl font-bold text-(--sea-ink)">
 						API Keys
 					</h2>
@@ -451,12 +448,9 @@ function Profile() {
 							{apiKeyLoading ? "Generating\u2026" : "Generate new key"}
 						</Button>
 					</form>
-				</Island>
 
-				<Island
-					as="section"
-					className="animate-rise-in rounded-2xl p-6 sm:p-8 lg:col-span-2"
-				>
+					<hr className="my-8 border-(--line)" />
+
 					<h2 className="font-display mb-6 text-xl font-bold text-(--sea-ink)">
 						Webhooks
 					</h2>
