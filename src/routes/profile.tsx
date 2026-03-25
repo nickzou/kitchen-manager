@@ -8,6 +8,10 @@ import { Island } from "#src/components/Island";
 import { Page } from "#src/components/Page";
 import { PasswordInput } from "#src/components/PasswordInput";
 import { authClient } from "#src/lib/auth-client";
+import {
+	useUpdateUserSettings,
+	useUserSettings,
+} from "#src/lib/hooks/use-user-settings";
 
 interface ApiKeyEntry {
 	id: string;
@@ -48,6 +52,8 @@ export const Route = createFileRoute("/profile")({ component: Profile });
 
 function Profile() {
 	const { data: session } = authClient.useSession();
+	const { data: settings } = useUserSettings();
+	const updateSettings = useUpdateUserSettings();
 
 	const [name, setName] = useState("");
 	const [image, setImage] = useState<string | null>(null);
@@ -332,6 +338,42 @@ function Profile() {
 						</Button>
 					</form>
 				</Island>
+				<Island as="section" className="animate-rise-in rounded-2xl p-6 sm:p-8">
+					<h2 className="font-display mb-6 text-xl font-bold text-(--sea-ink)">
+						Settings
+					</h2>
+
+					<label className="flex items-center justify-between gap-3">
+						<div>
+							<p className="text-sm font-medium text-(--sea-ink)">
+								Advanced mode
+							</p>
+							<p className="text-xs text-(--sea-ink-soft)">
+								Enable advanced features and options
+							</p>
+						</div>
+						<button
+							type="button"
+							role="switch"
+							aria-checked={settings?.advancedMode ?? false}
+							onClick={() =>
+								updateSettings.mutate({
+									advancedMode: !settings?.advancedMode,
+								})
+							}
+							className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-(--lagoon) focus-visible:ring-offset-2 ${
+								settings?.advancedMode ? "bg-(--lagoon)" : "bg-(--line)"
+							}`}
+						>
+							<span
+								className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+									settings?.advancedMode ? "translate-x-5" : "translate-x-0"
+								}`}
+							/>
+						</button>
+					</label>
+				</Island>
+
 				<Island
 					as="section"
 					className="animate-rise-in rounded-2xl p-6 sm:p-8 lg:col-span-2"

@@ -169,6 +169,13 @@
       "when": 1774243200000,
       "tag": "0023_unique-product-name-per-user",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1774404039343,
+      "tag": "0024_add-user-settings",
+      "breakpoints": true
     }
   ]
 }

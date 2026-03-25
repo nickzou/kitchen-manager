@@ -35,6 +35,7 @@ import { Route as ProductCategoriesIdRouteImport } from './routes/product-catego
 import { Route as MealPlanShoppingListRouteImport } from './routes/meal-plan/shopping-list'
 import { Route as BrandsIdRouteImport } from './routes/brands/$id'
 import { Route as ApiWebhooksIndexRouteImport } from './routes/api/webhooks/index'
+import { Route as ApiUserSettingsIndexRouteImport } from './routes/api/user-settings/index'
 import { Route as ApiUploadsIndexRouteImport } from './routes/api/uploads/index'
 import { Route as ApiUnitConversionsIndexRouteImport } from './routes/api/unit-conversions/index'
 import { Route as ApiStoresIndexRouteImport } from './routes/api/stores/index'
@@ -208,6 +209,11 @@ const BrandsIdRoute = BrandsIdRouteImport.update({
 const ApiWebhooksIndexRoute = ApiWebhooksIndexRouteImport.update({
   id: '/api/webhooks/',
   path: '/api/webhooks/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiUserSettingsIndexRoute = ApiUserSettingsIndexRouteImport.update({
+  id: '/api/user-settings/',
+  path: '/api/user-settings/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiUploadsIndexRoute = ApiUploadsIndexRouteImport.update({
@@ -505,6 +511,7 @@ export interface FileRoutesByFullPath {
   '/api/stores/': typeof ApiStoresIndexRoute
   '/api/unit-conversions/': typeof ApiUnitConversionsIndexRoute
   '/api/uploads/': typeof ApiUploadsIndexRoute
+  '/api/user-settings/': typeof ApiUserSettingsIndexRoute
   '/api/webhooks/': typeof ApiWebhooksIndexRoute
   '/api/products/$id/unit-conversions/$conversionId': typeof ApiProductsIdUnitConversionsConversionIdRoute
   '/api/recipes/$id/ingredients/$ingredientId': typeof ApiRecipesIdIngredientsIngredientIdRoute
@@ -577,6 +584,7 @@ export interface FileRoutesByTo {
   '/api/stores': typeof ApiStoresIndexRoute
   '/api/unit-conversions': typeof ApiUnitConversionsIndexRoute
   '/api/uploads': typeof ApiUploadsIndexRoute
+  '/api/user-settings': typeof ApiUserSettingsIndexRoute
   '/api/webhooks': typeof ApiWebhooksIndexRoute
   '/api/products/$id/unit-conversions/$conversionId': typeof ApiProductsIdUnitConversionsConversionIdRoute
   '/api/recipes/$id/ingredients/$ingredientId': typeof ApiRecipesIdIngredientsIngredientIdRoute
@@ -650,6 +658,7 @@ export interface FileRoutesById {
   '/api/stores/': typeof ApiStoresIndexRoute
   '/api/unit-conversions/': typeof ApiUnitConversionsIndexRoute
   '/api/uploads/': typeof ApiUploadsIndexRoute
+  '/api/user-settings/': typeof ApiUserSettingsIndexRoute
   '/api/webhooks/': typeof ApiWebhooksIndexRoute
   '/api/products/$id/unit-conversions/$conversionId': typeof ApiProductsIdUnitConversionsConversionIdRoute
   '/api/recipes/$id/ingredients/$ingredientId': typeof ApiRecipesIdIngredientsIngredientIdRoute
@@ -724,6 +733,7 @@ export interface FileRouteTypes {
     | '/api/stores/'
     | '/api/unit-conversions/'
     | '/api/uploads/'
+    | '/api/user-settings/'
     | '/api/webhooks/'
     | '/api/products/$id/unit-conversions/$conversionId'
     | '/api/recipes/$id/ingredients/$ingredientId'
@@ -796,6 +806,7 @@ export interface FileRouteTypes {
     | '/api/stores'
     | '/api/unit-conversions'
     | '/api/uploads'
+    | '/api/user-settings'
     | '/api/webhooks'
     | '/api/products/$id/unit-conversions/$conversionId'
     | '/api/recipes/$id/ingredients/$ingredientId'
@@ -868,6 +879,7 @@ export interface FileRouteTypes {
     | '/api/stores/'
     | '/api/unit-conversions/'
     | '/api/uploads/'
+    | '/api/user-settings/'
     | '/api/webhooks/'
     | '/api/products/$id/unit-conversions/$conversionId'
     | '/api/recipes/$id/ingredients/$ingredientId'
@@ -941,6 +953,7 @@ export interface RootRouteChildren {
   ApiStoresIndexRoute: typeof ApiStoresIndexRoute
   ApiUnitConversionsIndexRoute: typeof ApiUnitConversionsIndexRoute
   ApiUploadsIndexRoute: typeof ApiUploadsIndexRoute
+  ApiUserSettingsIndexRoute: typeof ApiUserSettingsIndexRoute
   ApiWebhooksIndexRoute: typeof ApiWebhooksIndexRoute
 }
 
@@ -1126,6 +1139,13 @@ declare module '@tanstack/react-router' {
       path: '/api/webhooks'
       fullPath: '/api/webhooks/'
       preLoaderRoute: typeof ApiWebhooksIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/user-settings/': {
+      id: '/api/user-settings/'
+      path: '/api/user-settings'
+      fullPath: '/api/user-settings/'
+      preLoaderRoute: typeof ApiUserSettingsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/uploads/': {
@@ -1539,6 +1559,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiStoresIndexRoute: ApiStoresIndexRoute,
   ApiUnitConversionsIndexRoute: ApiUnitConversionsIndexRoute,
   ApiUploadsIndexRoute: ApiUploadsIndexRoute,
+  ApiUserSettingsIndexRoute: ApiUserSettingsIndexRoute,
   ApiWebhooksIndexRoute: ApiWebhooksIndexRoute,
 }
 export const routeTree = rootRouteImport

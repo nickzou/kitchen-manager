@@ -1,5 +1,6 @@
 import { relations } from "drizzle-orm";
 import {
+	boolean,
 	date,
 	index,
 	integer,
@@ -812,3 +813,26 @@ export const webhookDeliveryRelations = relations(
 		}),
 	}),
 );
+
+export const userSettings = pgTable("user_settings", {
+	id: text("id")
+		.primaryKey()
+		.$defaultFn(() => crypto.randomUUID()),
+	userId: text("user_id")
+		.notNull()
+		.unique()
+		.references(() => user.id, { onDelete: "cascade" }),
+	advancedMode: boolean("advanced_mode").default(false).notNull(),
+	createdAt: timestamp("created_at").defaultNow().notNull(),
+	updatedAt: timestamp("updated_at")
+		.defaultNow()
+		.$onUpdate(() => new Date())
+		.notNull(),
+});
+
+export const userSettingsRelations = relations(userSettings, ({ one }) => ({
+	user: one(user, {
+		fields: [userSettings.userId],
+		references: [user.id],
+	}),
+}));
