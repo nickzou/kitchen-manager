@@ -29,23 +29,27 @@ export function StockEntryRow({
 	brandName: string | null;
 }) {
 	return (
-		<div className="flex flex-wrap items-center gap-3 rounded-lg bg-(--surface) pl-3 py-2 text-xs text-(--sea-ink-soft)">
-			<span className="font-medium text-(--sea-ink)">
-				{entry.quantity}
-				{unitAbbr ? ` ${unitAbbr}` : ""}
-			</span>
-			{entry.expirationDate && (
-				<span>Exp: {new Date(entry.expirationDate).toLocaleDateString()}</span>
-			)}
-			{entry.purchaseDate && (
-				<span>
-					Purchased: {new Date(entry.purchaseDate).toLocaleDateString()}
+		<div className="flex flex-col gap-2 rounded-lg bg-(--surface) pl-3 py-2 text-xs text-(--sea-ink-soft) sm:flex-row sm:flex-wrap sm:items-center sm:gap-3 sm:pl-3 sm:pr-0">
+			<div className="flex flex-wrap items-center gap-2 sm:contents">
+				<span className="font-medium text-(--sea-ink)">
+					{entry.quantity}
+					{unitAbbr ? ` ${unitAbbr}` : ""}
 				</span>
-			)}
-			{entry.price && <span>${entry.price}</span>}
-			{brandName && <span>{brandName}</span>}
-			{storeName && <span>{storeName}</span>}
-			<div className="ml-auto flex items-center gap-1.5">
+				{entry.expirationDate && (
+					<span>
+						Exp: {new Date(entry.expirationDate).toLocaleDateString()}
+					</span>
+				)}
+				{entry.purchaseDate && (
+					<span>
+						Purchased: {new Date(entry.purchaseDate).toLocaleDateString()}
+					</span>
+				)}
+				{entry.price && <span>${entry.price}</span>}
+				{brandName && <span>{brandName}</span>}
+				{storeName && <span>{storeName}</span>}
+			</div>
+			<div className="flex items-center gap-1.5 sm:ml-auto">
 				<NumberInput
 					placeholder="Qty"
 					step="any"
@@ -53,12 +57,12 @@ export function StockEntryRow({
 					max={entry.quantity}
 					value={consumeAmount}
 					onChange={(e) => onConsumeAmountChange(e.target.value)}
-					className="h-7 w-20 rounded border bg-white px-2 text-xs dark:bg-(--surface)"
+					className="h-7 flex-1 rounded border bg-white px-2 text-xs sm:w-20 sm:flex-none dark:bg-(--surface)"
 				/>
 				<button
 					type="button"
 					onClick={onEdit}
-					className="flex h-7 items-center gap-1 rounded-full border border-(--line) px-2.5 text-xs font-semibold text-(--sea-ink-soft) transition hover:bg-(--line)"
+					className="flex h-7 w-7 items-center justify-center rounded-full border border-(--line) text-xs font-semibold text-(--sea-ink-soft) transition hover:bg-(--line) sm:w-auto sm:gap-1 sm:px-2.5"
 				>
 					<Pencil size={12} />
 				</button>
@@ -66,7 +70,7 @@ export function StockEntryRow({
 					type="button"
 					onClick={onDelete}
 					disabled={deletePending}
-					className="flex h-7 items-center gap-1 rounded-full border border-red-200 px-2.5 text-xs font-semibold text-red-600 transition hover:bg-red-50 disabled:opacity-50 dark:border-red-900 dark:hover:bg-red-950"
+					className="flex h-7 w-7 items-center justify-center rounded-full border border-red-200 text-xs font-semibold text-red-600 transition hover:bg-red-50 disabled:opacity-50 dark:border-red-900 dark:hover:bg-red-950 sm:w-auto sm:gap-1 sm:px-2.5"
 				>
 					<Trash2 size={12} />
 				</button>
