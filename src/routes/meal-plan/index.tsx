@@ -22,7 +22,9 @@ import {
 	useReorderMealSlots,
 	useUpdateMealSlot,
 } from "#src/lib/hooks/use-meal-slots";
+import { useNutritionSummary } from "#src/lib/hooks/use-nutrition-summary";
 import { useRecipes } from "#src/lib/hooks/use-recipes";
+import { useUserSettings } from "#src/lib/hooks/use-user-settings";
 
 export const Route = createFileRoute("/meal-plan/")({
 	component: MealPlanPage,
@@ -61,6 +63,8 @@ function MealPlanPage() {
 	const { data: mealSlots } = useMealSlots();
 	const { data: entries } = useMealPlanEntries(startStr, endStr);
 	const { data: recipes } = useRecipes();
+	const { data: settings } = useUserSettings();
+	const { data: nutritionSummary } = useNutritionSummary(startStr, endStr);
 
 	const createEntry = useCreateMealPlanEntry();
 	const updateEntry = useUpdateMealPlanEntry();
@@ -203,6 +207,9 @@ function MealPlanPage() {
 						isCooking={cookEntry.isPending || uncookEntry.isPending}
 						selectedDay={selectedDay}
 						onSelectDay={setSelectedDay}
+						nutritionSummary={
+							settings?.nutritionEnabled ? nutritionSummary : undefined
+						}
 					/>
 				)}
 			</Island>

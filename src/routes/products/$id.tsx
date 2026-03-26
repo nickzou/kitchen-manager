@@ -32,6 +32,7 @@ import {
 import { useQuantityUnits } from "#src/lib/hooks/use-quantity-units";
 import { useStockEntries } from "#src/lib/hooks/use-stock-entries";
 import { useStores } from "#src/lib/hooks/use-stores";
+import { useUserSettings } from "#src/lib/hooks/use-user-settings";
 import { getAvgUnitCost, getLatestUnitCost } from "#src/lib/stock-utils";
 
 export const Route = createFileRoute("/products/$id")({
@@ -47,6 +48,7 @@ function ProductDetail() {
 	const { data: categories } = useProductCategories();
 	const { data: quantityUnits } = useQuantityUnits();
 	const { data: stockEntries } = useStockEntries(id);
+	const { data: settings } = useUserSettings();
 	const { data: stores } = useStores();
 	const { data: brands } = useBrands();
 
@@ -84,6 +86,10 @@ function ProductDetail() {
 		minStockAmount: "",
 		defaultExpirationDays: "",
 		defaultConsumeAmount: "",
+		calories: "",
+		protein: "",
+		fat: "",
+		carbs: "",
 	});
 	const [newConversion, setNewConversion] = useState({
 		fromUnitId: "",
@@ -152,6 +158,10 @@ function ProductDetail() {
 					? String(product.defaultExpirationDays)
 					: "",
 			defaultConsumeAmount: product.defaultConsumeAmount ?? "",
+			calories: product.calories ?? "",
+			protein: product.protein ?? "",
+			fat: product.fat ?? "",
+			carbs: product.carbs ?? "",
 		});
 		setEditing(true);
 	}
@@ -170,6 +180,10 @@ function ProductDetail() {
 					? Number.parseInt(form.defaultExpirationDays, 10)
 					: undefined,
 				defaultConsumeAmount: form.defaultConsumeAmount || undefined,
+				calories: form.calories || undefined,
+				protein: form.protein || undefined,
+				fat: form.fat || undefined,
+				carbs: form.carbs || undefined,
 			});
 			setEditing(false);
 		} catch {
@@ -389,6 +403,89 @@ function ProductDetail() {
 									/>
 								</div>
 
+								{settings?.nutritionEnabled && (
+									<fieldset className="flex flex-col gap-3 rounded-lg border border-(--line) p-4">
+										<legend className="px-1 text-sm font-medium text-(--sea-ink)">
+											Nutrition (per{" "}
+											{getUnitName(form.defaultQuantityUnitId) ?? "unit"})
+										</legend>
+										<div className="grid grid-cols-2 gap-3">
+											<div className="flex flex-col gap-1.5">
+												<label
+													htmlFor={`${htmlId}-calories`}
+													className="text-sm font-medium text-(--sea-ink)"
+												>
+													Calories
+												</label>
+												<NumberInput
+													id={`${htmlId}-calories`}
+													step="any"
+													min="0"
+													value={form.calories}
+													onChange={(e) =>
+														setForm({ ...form, calories: e.target.value })
+													}
+													className="w-full"
+												/>
+											</div>
+											<div className="flex flex-col gap-1.5">
+												<label
+													htmlFor={`${htmlId}-protein`}
+													className="text-sm font-medium text-(--sea-ink)"
+												>
+													Protein (g)
+												</label>
+												<NumberInput
+													id={`${htmlId}-protein`}
+													step="any"
+													min="0"
+													value={form.protein}
+													onChange={(e) =>
+														setForm({ ...form, protein: e.target.value })
+													}
+													className="w-full"
+												/>
+											</div>
+											<div className="flex flex-col gap-1.5">
+												<label
+													htmlFor={`${htmlId}-fat`}
+													className="text-sm font-medium text-(--sea-ink)"
+												>
+													Fat (g)
+												</label>
+												<NumberInput
+													id={`${htmlId}-fat`}
+													step="any"
+													min="0"
+													value={form.fat}
+													onChange={(e) =>
+														setForm({ ...form, fat: e.target.value })
+													}
+													className="w-full"
+												/>
+											</div>
+											<div className="flex flex-col gap-1.5">
+												<label
+													htmlFor={`${htmlId}-carbs`}
+													className="text-sm font-medium text-(--sea-ink)"
+												>
+													Carbs (g)
+												</label>
+												<NumberInput
+													id={`${htmlId}-carbs`}
+													step="any"
+													min="0"
+													value={form.carbs}
+													onChange={(e) =>
+														setForm({ ...form, carbs: e.target.value })
+													}
+													className="w-full"
+												/>
+											</div>
+										</div>
+									</fieldset>
+								)}
+
 								{updateProduct.error && (
 									<AlertText>{updateProduct.error.message}</AlertText>
 								)}
@@ -508,6 +605,60 @@ function ProductDetail() {
 										</dd>
 									</div>
 								</dl>
+
+								{settings?.nutritionEnabled &&
+									(product.calories ||
+										product.protein ||
+										product.fat ||
+										product.carbs) && (
+										<div className="mt-4">
+											<h3 className="mb-2 text-sm font-semibold text-(--sea-ink)">
+												Nutrition (per {unitName ?? "unit"})
+											</h3>
+											<dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm sm:grid-cols-4">
+												{product.calories && (
+													<div>
+														<dt className="font-medium text-(--sea-ink-soft)">
+															Calories
+														</dt>
+														<dd className="mt-0.5 text-(--sea-ink)">
+															{product.calories}
+														</dd>
+													</div>
+												)}
+												{product.protein && (
+													<div>
+														<dt className="font-medium text-(--sea-ink-soft)">
+															Protein
+														</dt>
+														<dd className="mt-0.5 text-(--sea-ink)">
+															{product.protein}g
+														</dd>
+													</div>
+												)}
+												{product.fat && (
+													<div>
+														<dt className="font-medium text-(--sea-ink-soft)">
+															Fat
+														</dt>
+														<dd className="mt-0.5 text-(--sea-ink)">
+															{product.fat}g
+														</dd>
+													</div>
+												)}
+												{product.carbs && (
+													<div>
+														<dt className="font-medium text-(--sea-ink-soft)">
+															Carbs
+														</dt>
+														<dd className="mt-0.5 text-(--sea-ink)">
+															{product.carbs}g
+														</dd>
+													</div>
+												)}
+											</dl>
+										</div>
+									)}
 
 								{confirmDelete && (
 									<AlertBox className="mt-6 flex items-center gap-3">

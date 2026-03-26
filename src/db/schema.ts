@@ -247,6 +247,10 @@ export const product = pgTable(
 		minStockAmount: numeric("min_stock_amount").default("0").notNull(),
 		defaultExpirationDays: integer("default_expiration_days"),
 		defaultConsumeAmount: numeric("default_consume_amount"),
+		calories: numeric("calories"),
+		protein: numeric("protein"),
+		fat: numeric("fat"),
+		carbs: numeric("carbs"),
 		userId: text("user_id")
 			.notNull()
 			.references(() => user.id, { onDelete: "cascade" }),
@@ -825,6 +829,7 @@ export const userSettings = pgTable("user_settings", {
 	advancedMode: boolean("advanced_mode").default(false).notNull(),
 	apiEnabled: boolean("api_enabled").default(false).notNull(),
 	webhooksEnabled: boolean("webhooks_enabled").default(false).notNull(),
+	nutritionEnabled: boolean("nutrition_enabled").default(false).notNull(),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at")
 		.defaultNow()

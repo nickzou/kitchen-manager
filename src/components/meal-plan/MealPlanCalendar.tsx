@@ -1,6 +1,7 @@
 import { Fragment } from "react";
 import type { MealPlanEntry } from "#src/lib/hooks/use-meal-plan-entries";
 import type { MealSlot } from "#src/lib/hooks/use-meal-slots";
+import type { NutritionSummary } from "#src/lib/hooks/use-nutrition-summary";
 import { cn } from "#src/lib/utils";
 import { MealPlanCell } from "./MealPlanCell";
 
@@ -22,6 +23,7 @@ interface MealPlanCalendarProps {
 	isCooking: boolean;
 	selectedDay: number;
 	onSelectDay: (day: number) => void;
+	nutritionSummary?: NutritionSummary;
 }
 
 const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -59,6 +61,7 @@ export function MealPlanCalendar({
 	isCooking,
 	selectedDay,
 	onSelectDay,
+	nutritionSummary,
 }: MealPlanCalendarProps) {
 	const days = getDayDates(weekStart);
 	const today = new Date();
@@ -133,6 +136,40 @@ export function MealPlanCalendar({
 						})}
 					</Fragment>
 				))}
+
+				{/* Nutrition summary row */}
+				{nutritionSummary && (
+					<>
+						<div className="flex items-start bg-(--surface-strong) p-2 text-xs font-semibold text-(--sea-ink-soft)" />
+						{days.map((day, i) => {
+							const dateStr = toDateString(day);
+							const dayNutrition = nutritionSummary[dateStr];
+							return (
+								<div
+									key={`nutrition-${DAY_NAMES[i]}`}
+									className={cn(
+										"bg-white p-2 dark:bg-[#1a2e30]",
+										isSameDay(day, today) &&
+											"bg-[rgba(79,184,178,0.04)] dark:bg-[rgba(79,184,178,0.06)]",
+									)}
+								>
+									{dayNutrition ? (
+										<div className="text-center">
+											<p className="text-sm font-bold text-(--sea-ink)">
+												{Math.round(dayNutrition.calories)} cal
+											</p>
+											<p className="text-[0.65rem] text-(--sea-ink-soft)">
+												{dayNutrition.protein.toFixed(0)}p /{" "}
+												{dayNutrition.fat.toFixed(0)}f /{" "}
+												{dayNutrition.carbs.toFixed(0)}c
+											</p>
+										</div>
+									) : null}
+								</div>
+							);
+						})}
+					</>
+				)}
 			</div>
 		</div>
 	);
@@ -194,6 +231,19 @@ export function MealPlanCalendar({
 						</div>
 					);
 				})}
+
+				{nutritionSummary && nutritionSummary[mobileDateStr] && (
+					<div className="mt-3 rounded-xl border border-(--line) bg-white p-3 text-center dark:bg-[#1a2e30]">
+						<p className="text-sm font-bold text-(--sea-ink)">
+							{Math.round(nutritionSummary[mobileDateStr].calories)} cal
+						</p>
+						<p className="text-xs text-(--sea-ink-soft)">
+							{nutritionSummary[mobileDateStr].protein.toFixed(0)}g protein /{" "}
+							{nutritionSummary[mobileDateStr].fat.toFixed(0)}g fat /{" "}
+							{nutritionSummary[mobileDateStr].carbs.toFixed(0)}g carbs
+						</p>
+					</div>
+				)}
 			</div>
 		</div>
 	);

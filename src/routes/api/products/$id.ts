@@ -62,6 +62,10 @@ export const Route = createFileRoute("/api/products/$id")({
 					updates.defaultExpirationDays = body.defaultExpirationDays;
 				if (body.defaultConsumeAmount !== undefined)
 					updates.defaultConsumeAmount = body.defaultConsumeAmount;
+				if (body.calories !== undefined) updates.calories = body.calories;
+				if (body.protein !== undefined) updates.protein = body.protein;
+				if (body.fat !== undefined) updates.fat = body.fat;
+				if (body.carbs !== undefined) updates.carbs = body.carbs;
 
 				let updated: typeof product.$inferSelect | undefined;
 				try {

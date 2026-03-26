@@ -10,6 +10,10 @@ export interface Product {
 	minStockAmount: string;
 	defaultExpirationDays: number | null;
 	defaultConsumeAmount: string | null;
+	calories: string | null;
+	protein: string | null;
+	fat: string | null;
+	carbs: string | null;
 	userId: string;
 	createdAt: string;
 	updatedAt: string;
@@ -24,6 +28,10 @@ export type CreateProductInput = {
 	minStockAmount?: string;
 	defaultExpirationDays?: number;
 	defaultConsumeAmount?: string;
+	calories?: string;
+	protein?: string;
+	fat?: string;
+	carbs?: string;
 };
 
 export type UpdateProductInput = Partial<CreateProductInput>;
