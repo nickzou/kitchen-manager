@@ -13,7 +13,5 @@ export function Page<T extends ElementType = "div">({
 	...props
 }: PageProps<T>) {
 	const Comp = as || "div";
-	return (
-		<Comp className={cn("container mx-auto px-4", className)} {...props} />
-	);
+	return <Comp className={cn("container mx-auto", className)} {...props} />;
 }
