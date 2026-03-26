@@ -62,9 +62,11 @@ import {
 } from "#src/lib/hooks/use-recipes";
 import { useStockEntries } from "#src/lib/hooks/use-stock-entries";
 import { useUnitConversions } from "#src/lib/hooks/use-unit-conversions";
+import { useUserSettings } from "#src/lib/hooks/use-user-settings";
 import {
 	getIngredientAvailability,
 	getRecipeCost,
+	getRecipeNutrition,
 } from "#src/lib/recipe-utils";
 
 export const Route = createFileRoute("/recipes/$id")({
@@ -95,6 +97,7 @@ function RecipeDetail() {
 	const deletePrepStep = useDeleteRecipePrepStep(id);
 	const { data: stockEntries } = useStockEntries();
 	const { data: recipeAvailability } = useRecipeAvailability();
+	const { data: settings } = useUserSettings();
 
 	const [editing, setEditing] = useState(false);
 	const [confirmDelete, setConfirmDelete] = useState(false);
@@ -231,6 +234,16 @@ function RecipeDetail() {
 			scaleFactor,
 		});
 	}, [ingredients, products, stockEntries, unitConversions, scaleFactor]);
+
+	const recipeNutrition = useMemo(() => {
+		if (!ingredients || !products || !unitConversions) return null;
+		return getRecipeNutrition({
+			ingredients,
+			products,
+			unitConversions,
+			scaleFactor,
+		});
+	}, [ingredients, products, unitConversions, scaleFactor]);
 
 	const sortedPrepSteps = useMemo(
 		() =>
@@ -1320,6 +1333,88 @@ function RecipeDetail() {
 									<p className="mt-2 text-xs text-(--sea-ink-soft)">
 										Based on {recipeCost.ingredientsPriced} of{" "}
 										{recipeCost.ingredientsTotal} ingredients
+									</p>
+								)}
+							</Island>
+						)}
+						{settings?.nutritionEnabled && recipeNutrition && (
+							<Island
+								as="section"
+								className="animate-rise-in mt-6 rounded-2xl p-6 sm:p-8"
+							>
+								<SectionHeading>Nutrition Estimate</SectionHeading>
+								<dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm sm:grid-cols-4">
+									<div>
+										<dt className="font-medium text-(--sea-ink-soft)">
+											Calories
+										</dt>
+										<dd className="mt-0.5 text-lg font-bold text-(--sea-ink)">
+											{Math.round(recipeNutrition.calories)}
+										</dd>
+									</div>
+									<div>
+										<dt className="font-medium text-(--sea-ink-soft)">
+											Protein
+										</dt>
+										<dd className="mt-0.5 text-(--sea-ink)">
+											{recipeNutrition.protein.toFixed(1)}g
+										</dd>
+									</div>
+									<div>
+										<dt className="font-medium text-(--sea-ink-soft)">Fat</dt>
+										<dd className="mt-0.5 text-(--sea-ink)">
+											{recipeNutrition.fat.toFixed(1)}g
+										</dd>
+									</div>
+									<div>
+										<dt className="font-medium text-(--sea-ink-soft)">Carbs</dt>
+										<dd className="mt-0.5 text-(--sea-ink)">
+											{recipeNutrition.carbs.toFixed(1)}g
+										</dd>
+									</div>
+								</dl>
+								{currentServings != null && currentServings > 0 && (
+									<>
+										<h4 className="mt-3 text-xs font-semibold uppercase tracking-wide text-(--sea-ink-soft)">
+											Per Serving
+										</h4>
+										<dl className="mt-1 grid grid-cols-2 gap-x-6 gap-y-1 text-sm sm:grid-cols-4">
+											<div>
+												<dd className="text-(--sea-ink)">
+													{Math.round(
+														recipeNutrition.calories / currentServings,
+													)}{" "}
+													cal
+												</dd>
+											</div>
+											<div>
+												<dd className="text-(--sea-ink)">
+													{(recipeNutrition.protein / currentServings).toFixed(
+														1,
+													)}
+													g protein
+												</dd>
+											</div>
+											<div>
+												<dd className="text-(--sea-ink)">
+													{(recipeNutrition.fat / currentServings).toFixed(1)}g
+													fat
+												</dd>
+											</div>
+											<div>
+												<dd className="text-(--sea-ink)">
+													{(recipeNutrition.carbs / currentServings).toFixed(1)}
+													g carbs
+												</dd>
+											</div>
+										</dl>
+									</>
+								)}
+								{recipeNutrition.ingredientsWithNutrition <
+									recipeNutrition.ingredientsTotal && (
+									<p className="mt-2 text-xs text-(--sea-ink-soft)">
+										Based on {recipeNutrition.ingredientsWithNutrition} of{" "}
+										{recipeNutrition.ingredientsTotal} ingredients
 									</p>
 								)}
 							</Island>

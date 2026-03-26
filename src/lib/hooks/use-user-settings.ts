@@ -6,12 +6,16 @@ export interface UserSettings {
 	advancedMode: boolean;
 	apiEnabled: boolean;
 	webhooksEnabled: boolean;
+	nutritionEnabled: boolean;
 	createdAt: string;
 	updatedAt: string;
 }
 
 export type UpdateUserSettingsInput = Partial<
-	Pick<UserSettings, "advancedMode" | "apiEnabled" | "webhooksEnabled">
+	Pick<
+		UserSettings,
+		"advancedMode" | "apiEnabled" | "webhooksEnabled" | "nutritionEnabled"
+	>
 >;
 
 export function useUserSettings() {

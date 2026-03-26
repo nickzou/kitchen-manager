@@ -83,6 +83,7 @@ describe("GET /api/user-settings/", () => {
 		expect(data.advancedMode).toBe(false);
 		expect(data.apiEnabled).toBe(false);
 		expect(data.webhooksEnabled).toBe(false);
+		expect(data.nutritionEnabled).toBe(false);
 	});
 });
 
@@ -136,6 +137,21 @@ describe("PUT /api/user-settings/", () => {
 		const data = await response.json();
 		expect(data.apiEnabled).toBe(true);
 		expect(data.webhooksEnabled).toBe(true);
+	});
+
+	it("updates nutritionEnabled", async () => {
+		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
+		const updated = makeUserSettings({ nutritionEnabled: true });
+		mockReturning.mockResolvedValue([updated]);
+		const request = makePutRequest("/api/user-settings", {
+			nutritionEnabled: true,
+		});
+
+		const response = await PUT({ request } as never);
+
+		expect(response.status).toBe(200);
+		const data = await response.json();
+		expect(data.nutritionEnabled).toBe(true);
 	});
 
 	it("performs partial update without affecting other fields", async () => {

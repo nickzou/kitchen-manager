@@ -183,6 +183,13 @@
       "when": 1774406111736,
       "tag": "0025_add-api-webhooks-enabled-settings",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1774470718403,
+      "tag": "0026_add-nutrition-fields",
+      "breakpoints": true
     }
   ]
 }

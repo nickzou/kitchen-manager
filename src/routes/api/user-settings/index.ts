@@ -50,6 +50,8 @@ export const Route = createFileRoute("/api/user-settings/")({
 				if ("apiEnabled" in body) values.apiEnabled = body.apiEnabled ?? false;
 				if ("webhooksEnabled" in body)
 					values.webhooksEnabled = body.webhooksEnabled ?? false;
+				if ("nutritionEnabled" in body)
+					values.nutritionEnabled = body.nutritionEnabled ?? false;
 
 				const [updated] = await db
 					.insert(userSettings)

@@ -67,6 +67,10 @@ export const Route = createFileRoute("/api/products/")({
 							minStockAmount: body.minStockAmount ?? "0",
 							defaultExpirationDays: body.defaultExpirationDays ?? null,
 							defaultConsumeAmount: body.defaultConsumeAmount ?? null,
+							calories: body.calories ?? null,
+							protein: body.protein ?? null,
+							fat: body.fat ?? null,
+							carbs: body.carbs ?? null,
 							userId: session.user.id,
 						})
 						.returning();
