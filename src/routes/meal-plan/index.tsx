@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Settings } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Island } from "#src/components/Island";
 import { MealPlanCalendar } from "#src/components/meal-plan/MealPlanCalendar";
 import { MealSlotManager } from "#src/components/meal-plan/MealSlotManager";
@@ -30,11 +30,11 @@ export const Route = createFileRoute("/meal-plan/")({
 	component: MealPlanPage,
 });
 
-function getMonday(d: Date): Date {
+function getWeekStart(d: Date, startDay: number): Date {
 	const date = new Date(d);
 	const day = date.getDay();
-	const diff = date.getDate() - day + (day === 0 ? -6 : 1);
-	date.setDate(diff);
+	const diff = (day - startDay + 7) % 7;
+	date.setDate(date.getDate() - diff);
 	date.setHours(0, 0, 0, 0);
 	return date;
 }
@@ -47,13 +47,23 @@ function MealPlanPage() {
 	const { data: session, isPending: sessionLoading } = authClient.useSession();
 	const navigate = useNavigate();
 
-	const [weekStart, setWeekStart] = useState(() => getMonday(new Date()));
+	const { data: settings } = useUserSettings();
+	const weekStartDay = settings?.weekStartDay ?? 1;
+
+	const [weekStart, setWeekStart] = useState(() =>
+		getWeekStart(new Date(), weekStartDay),
+	);
 	const [showSlotManager, setShowSlotManager] = useState(false);
 	const [selectedDay, setSelectedDay] = useState(() => {
 		const today = new Date();
-		const day = today.getDay();
-		return day === 0 ? 6 : day - 1; // Mon=0, Sun=6
+		return (today.getDay() - weekStartDay + 7) % 7;
 	});
+
+	useEffect(() => {
+		setWeekStart(getWeekStart(new Date(), weekStartDay));
+		const today = new Date();
+		setSelectedDay((today.getDay() - weekStartDay + 7) % 7);
+	}, [weekStartDay]);
 	const weekEnd = new Date(weekStart);
 	weekEnd.setDate(weekEnd.getDate() + 6);
 
@@ -63,7 +73,6 @@ function MealPlanPage() {
 	const { data: mealSlots } = useMealSlots();
 	const { data: entries } = useMealPlanEntries(startStr, endStr);
 	const { data: recipes } = useRecipes();
-	const { data: settings } = useUserSettings();
 	const { data: nutritionSummary } = useNutritionSummary(startStr, endStr);
 
 	const createEntry = useCreateMealPlanEntry();
@@ -98,11 +107,10 @@ function MealPlanPage() {
 	}, []);
 
 	const handleToday = useCallback(() => {
-		setWeekStart(getMonday(new Date()));
+		setWeekStart(getWeekStart(new Date(), weekStartDay));
 		const today = new Date();
-		const day = today.getDay();
-		setSelectedDay(day === 0 ? 6 : day - 1);
-	}, []);
+		setSelectedDay((today.getDay() - weekStartDay + 7) % 7);
+	}, [weekStartDay]);
 
 	if (sessionLoading) return null;
 	if (!session) {
@@ -196,6 +204,7 @@ function MealPlanPage() {
 				{mealSlots && (
 					<MealPlanCalendar
 						weekStart={weekStart}
+						weekStartDay={weekStartDay}
 						mealSlots={mealSlots}
 						entries={entries ?? []}
 						recipeOptions={recipeOptions}

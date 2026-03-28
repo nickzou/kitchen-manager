@@ -154,6 +154,21 @@ describe("PUT /api/user-settings/", () => {
 		expect(data.nutritionEnabled).toBe(true);
 	});
 
+	it("updates weekStartDay", async () => {
+		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
+		const updated = makeUserSettings({ weekStartDay: 0 });
+		mockReturning.mockResolvedValue([updated]);
+		const request = makePutRequest("/api/user-settings", {
+			weekStartDay: 0,
+		});
+
+		const response = await PUT({ request } as never);
+
+		expect(response.status).toBe(200);
+		const data = await response.json();
+		expect(data.weekStartDay).toBe(0);
+	});
+
 	it("performs partial update without affecting other fields", async () => {
 		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
 		const updated = makeUserSettings({

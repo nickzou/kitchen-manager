@@ -346,6 +346,32 @@ function Profile() {
 					<label className="flex items-center justify-between gap-3">
 						<div>
 							<p className="text-sm font-medium text-(--sea-ink)">
+								Week starts on
+							</p>
+							<p className="text-xs text-(--sea-ink-soft)">
+								Choose which day your meal plan week begins
+							</p>
+						</div>
+						<select
+							value={settings?.weekStartDay ?? 1}
+							onChange={(e) =>
+								updateSettings.mutate({
+									weekStartDay: Number(e.target.value),
+								})
+							}
+							className="h-9 rounded-lg border border-(--line) bg-(--surface) px-2 text-sm text-(--sea-ink) outline-none focus:border-(--lagoon)"
+						>
+							<option value={0}>Sunday</option>
+							<option value={1}>Monday</option>
+							<option value={6}>Saturday</option>
+						</select>
+					</label>
+
+					<hr className="my-4 border-(--line)" />
+
+					<label className="flex items-center justify-between gap-3">
+						<div>
+							<p className="text-sm font-medium text-(--sea-ink)">
 								Advanced mode
 							</p>
 							<p className="text-xs text-(--sea-ink-soft)">

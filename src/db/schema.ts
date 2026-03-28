@@ -830,6 +830,7 @@ export const userSettings = pgTable("user_settings", {
 	apiEnabled: boolean("api_enabled").default(false).notNull(),
 	webhooksEnabled: boolean("webhooks_enabled").default(false).notNull(),
 	nutritionEnabled: boolean("nutrition_enabled").default(false).notNull(),
+	weekStartDay: integer("week_start_day").default(1).notNull(),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at")
 		.defaultNow()

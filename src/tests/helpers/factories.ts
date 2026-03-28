@@ -257,6 +257,7 @@ export function makeUserSettings(overrides?: Record<string, unknown>) {
 		apiEnabled: false,
 		webhooksEnabled: false,
 		nutritionEnabled: false,
+		weekStartDay: 1,
 		createdAt: new Date("2025-01-01"),
 		updatedAt: new Date("2025-01-01"),
 		...overrides,

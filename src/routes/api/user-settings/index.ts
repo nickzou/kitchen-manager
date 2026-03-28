@@ -52,6 +52,8 @@ export const Route = createFileRoute("/api/user-settings/")({
 					values.webhooksEnabled = body.webhooksEnabled ?? false;
 				if ("nutritionEnabled" in body)
 					values.nutritionEnabled = body.nutritionEnabled ?? false;
+				if ("weekStartDay" in body)
+					values.weekStartDay = body.weekStartDay ?? 1;
 
 				const [updated] = await db
 					.insert(userSettings)

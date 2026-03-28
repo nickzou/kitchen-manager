@@ -7,6 +7,7 @@ export interface UserSettings {
 	apiEnabled: boolean;
 	webhooksEnabled: boolean;
 	nutritionEnabled: boolean;
+	weekStartDay: number;
 	createdAt: string;
 	updatedAt: string;
 }
@@ -14,7 +15,11 @@ export interface UserSettings {
 export type UpdateUserSettingsInput = Partial<
 	Pick<
 		UserSettings,
-		"advancedMode" | "apiEnabled" | "webhooksEnabled" | "nutritionEnabled"
+		| "advancedMode"
+		| "apiEnabled"
+		| "webhooksEnabled"
+		| "nutritionEnabled"
+		| "weekStartDay"
 	>
 >;
 
