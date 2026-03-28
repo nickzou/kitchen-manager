@@ -13,6 +13,7 @@ vi.mock("#src/db/schema", () => ({
 
 const mockTxSelectWhere = vi.fn();
 const mockTxUpdateReturning = vi.fn();
+const mockTxDeleteReturning = vi.fn();
 const mockTxInsertValues = vi.fn(() => ({}));
 
 vi.mock("#src/db", () => ({
@@ -29,6 +30,11 @@ vi.mock("#src/db", () => ({
 						where: vi.fn(() => ({
 							returning: mockTxUpdateReturning,
 						})),
+					})),
+				})),
+				delete: vi.fn(() => ({
+					where: vi.fn(() => ({
+						returning: mockTxDeleteReturning,
 					})),
 				})),
 				insert: vi.fn(() => ({
@@ -120,6 +126,23 @@ describe("POST /api/stock-entries/consume", () => {
 		expect(await response.json()).toEqual({
 			error: "Cannot consume 5, only 2 available",
 		});
+	});
+
+	it("deletes entry when consumed to zero", async () => {
+		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
+		const entry = makeStockEntry({ quantity: "5" });
+		mockTxSelectWhere.mockResolvedValue([entry]);
+		mockTxDeleteReturning.mockResolvedValue([entry]);
+		const request = makePostRequest("/api/stock-entries/consume", {
+			stockEntryId: "stock-entry-1",
+			quantity: "5",
+		});
+
+		const response = await POST({ request } as never);
+
+		expect(response.status).toBe(200);
+		const data = await response.json();
+		expect(data.quantity).toBe("0");
 	});
 
 	it("returns 200 with updated entry after consuming", async () => {

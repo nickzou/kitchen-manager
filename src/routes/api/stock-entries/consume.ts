@@ -61,12 +61,6 @@ export const Route = createFileRoute("/api/stock-entries/consume")({
 
 					const newQuantity = (available - consumeQty).toString();
 
-					const [updated] = await tx
-						.update(stockEntry)
-						.set({ quantity: newQuantity })
-						.where(eq(stockEntry.id, stockEntryId))
-						.returning();
-
 					await tx.insert(stockLog).values({
 						stockEntryId: entry.id,
 						productId: entry.productId,
@@ -74,6 +68,20 @@ export const Route = createFileRoute("/api/stock-entries/consume")({
 						quantity: quantity.toString(),
 						userId: session.user.id,
 					});
+
+					if (newQuantity === "0") {
+						const [deleted] = await tx
+							.delete(stockEntry)
+							.where(eq(stockEntry.id, stockEntryId))
+							.returning();
+						return { entry: { ...deleted, quantity: "0" }, status: 200 };
+					}
+
+					const [updated] = await tx
+						.update(stockEntry)
+						.set({ quantity: newQuantity })
+						.where(eq(stockEntry.id, stockEntryId))
+						.returning();
 
 					return { entry: updated, status: 200 };
 				});
