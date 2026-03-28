@@ -125,8 +125,11 @@ function StockPage() {
 		.slice(0, 20);
 
 	return (
-		<Page as="main" className="pb-8 pt-14">
-			<Island as="section" className="animate-rise-in rounded-2xl p-6 sm:p-8">
+		<Page as="main" className="sm:pb-8 sm:pt-14">
+			<Island
+				as="section"
+				className="animate-rise-in sm:rounded-2xl p-6 sm:p-8"
+			>
 				<p className="mb-2 text-[0.69rem] font-bold uppercase tracking-[0.16em] text-(--kicker)">
 					Inventory
 				</p>
