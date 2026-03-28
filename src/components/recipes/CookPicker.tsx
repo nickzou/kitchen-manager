@@ -1,5 +1,6 @@
 import { CookingPot } from "lucide-react";
 import { Button } from "#src/components/Button";
+import { Modal } from "#src/components/Modal";
 import type { RecipeIngredient } from "#src/lib/hooks/use-recipe-ingredients";
 
 interface IngredientDisplay {
@@ -10,6 +11,7 @@ interface IngredientDisplay {
 }
 
 export interface CookPickerProps {
+	open: boolean;
 	groups: Map<string, IngredientDisplay[]>;
 	selections: Record<string, string>;
 	onSelectionChange: (groupName: string, ingredientId: string) => void;
@@ -19,6 +21,7 @@ export interface CookPickerProps {
 }
 
 export function CookPicker({
+	open,
 	groups,
 	selections,
 	onSelectionChange,
@@ -27,10 +30,13 @@ export function CookPicker({
 	isCooking,
 }: CookPickerProps) {
 	return (
-		<div className="mb-4 rounded-lg border border-(--lagoon) bg-(--surface) p-4">
-			<h3 className="mb-3 text-sm font-semibold text-(--sea-ink)">
-				Choose ingredients
-			</h3>
+		<Modal
+			open={open}
+			onOpenChange={(isOpen) => {
+				if (!isOpen) onCancel();
+			}}
+			title="Choose ingredients"
+		>
 			{[...groups].map(([groupName, groupIngs]) => (
 				<div key={groupName} className="mb-3">
 					<p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-(--sea-ink-soft)">
@@ -80,6 +86,6 @@ export function CookPicker({
 					Cancel
 				</button>
 			</div>
-		</div>
+		</Modal>
 	);
 }

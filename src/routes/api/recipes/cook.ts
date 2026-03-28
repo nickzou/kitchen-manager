@@ -1,7 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { and, asc, eq, sql } from "drizzle-orm";
 import { db } from "#src/db";
-import { recipe, recipeIngredient, stockEntry, stockLog } from "#src/db/schema";
+import {
+	product,
+	recipe,
+	recipeIngredient,
+	stockEntry,
+	stockLog,
+} from "#src/db/schema";
 import { getAuthSession } from "#src/lib/auth-session";
 
 function json(data: unknown, init?: { status?: number }) {
@@ -44,6 +50,26 @@ export const Route = createFileRoute("/api/recipes/cook")({
 						.from(recipeIngredient)
 						.where(eq(recipeIngredient.recipeId, rec.id));
 
+					// Build product name lookup
+					const productIds = [
+						...new Set(
+							[
+								...ingredients.map((i) => i.productId),
+								rec.producedProductId,
+							].filter((id): id is string => id != null),
+						),
+					];
+					const productNames = new Map<string, string>();
+					if (productIds.length > 0) {
+						const products = await tx
+							.select({ id: product.id, name: product.name })
+							.from(product)
+							.where(sql`${product.id} IN ${productIds}`);
+						for (const p of products) {
+							productNames.set(p.id, p.name);
+						}
+					}
+
 					const scaleFactor =
 						(servings ?? rec.servings ?? 1) / (rec.servings ?? 1);
 
@@ -77,6 +103,7 @@ export const Route = createFileRoute("/api/recipes/cook")({
 					const warnings: string[] = [];
 					const deductions: {
 						productId: string;
+						productName: string;
 						needed: number;
 						deducted: number;
 					}[] = [];
@@ -127,21 +154,27 @@ export const Route = createFileRoute("/api/recipes/cook")({
 							totalDeducted += deduct;
 						}
 
+						const name =
+							productNames.get(ingredient.productId) ?? ingredient.productId;
+
 						deductions.push({
 							productId: ingredient.productId,
+							productName: name,
 							needed,
 							deducted: totalDeducted,
 						});
 
 						if (remaining > 0) {
 							warnings.push(
-								`Insufficient stock for product ${ingredient.productId}: needed ${needed}, only deducted ${totalDeducted}`,
+								`Insufficient stock for ${name}: needed ${needed}, only deducted ${totalDeducted}`,
 							);
 						}
 					}
 
 					// Production: if recipe produces a product, add to stock
-					let produced: { productId: string; quantity: number } | undefined;
+					let produced:
+						| { productId: string; productName: string; quantity: number }
+						| undefined;
 
 					if (rec.producedProductId && rec.producedQuantity) {
 						const producedQty = Number(rec.producedQuantity) * scaleFactor;
@@ -165,6 +198,9 @@ export const Route = createFileRoute("/api/recipes/cook")({
 
 						produced = {
 							productId: rec.producedProductId,
+							productName:
+								productNames.get(rec.producedProductId) ??
+								rec.producedProductId,
 							quantity: producedQty,
 						};
 					}
