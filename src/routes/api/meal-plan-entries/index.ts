@@ -81,7 +81,7 @@ export const Route = createFileRoute("/api/meal-plan-entries/")({
 						date: body.date,
 						mealSlotId: body.mealSlotId,
 						recipeId: body.recipeId,
-						servings: body.servings ?? null,
+						servings: body.servings ?? 1,
 						sortOrder: body.sortOrder ?? 0,
 						userId: session.user.id,
 					})
