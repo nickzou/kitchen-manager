@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { and, eq } from "drizzle-orm";
+import { and, eq, ne } from "drizzle-orm";
 import { db } from "#src/db";
 import { stockEntry, stockLog } from "#src/db/schema";
 import { getAuthSession } from "#src/lib/auth-session";
@@ -24,7 +24,10 @@ export const Route = createFileRoute("/api/stock-entries/")({
 				const url = new URL(request.url);
 				const productId = url.searchParams.get("productId");
 
-				const conditions = [eq(stockEntry.userId, session.user.id)];
+				const conditions = [
+					eq(stockEntry.userId, session.user.id),
+					ne(stockEntry.quantity, "0"),
+				];
 				if (productId) {
 					conditions.push(eq(stockEntry.productId, productId));
 				}
