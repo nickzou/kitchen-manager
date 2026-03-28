@@ -87,6 +87,7 @@ export function MealPlanCell({
 					options={recipeOptions}
 					placeholder="Search recipes…"
 					className="w-full"
+					portal
 				/>
 			) : (
 				<button
