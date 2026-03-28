@@ -12,6 +12,7 @@ interface RecipeOption {
 
 interface MealPlanCalendarProps {
 	weekStart: Date;
+	weekStartDay: number;
 	mealSlots: MealSlot[];
 	entries: MealPlanEntry[];
 	recipeOptions: RecipeOption[];
@@ -26,7 +27,11 @@ interface MealPlanCalendarProps {
 	nutritionSummary?: NutritionSummary;
 }
 
-const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const ALL_DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+function getDayNames(startDay: number): string[] {
+	return Array.from({ length: 7 }, (_, i) => ALL_DAY_NAMES[(startDay + i) % 7]);
+}
 
 function getDayDates(weekStart: Date): Date[] {
 	return Array.from({ length: 7 }, (_, i) => {
@@ -50,6 +55,7 @@ function isSameDay(a: Date, b: Date): boolean {
 
 export function MealPlanCalendar({
 	weekStart,
+	weekStartDay,
 	mealSlots,
 	entries,
 	recipeOptions,
@@ -64,6 +70,7 @@ export function MealPlanCalendar({
 	nutritionSummary,
 }: MealPlanCalendarProps) {
 	const days = getDayDates(weekStart);
+	const dayNames = getDayNames(weekStartDay);
 	const today = new Date();
 
 	// Desktop grid
@@ -79,7 +86,7 @@ export function MealPlanCalendar({
 				<div className="bg-(--surface-strong) p-2" />
 				{days.map((day, i) => (
 					<div
-						key={DAY_NAMES[i]}
+						key={dayNames[i]}
 						className={cn(
 							"bg-(--surface-strong) p-2 text-center text-xs font-semibold",
 							isSameDay(day, today)
@@ -87,7 +94,7 @@ export function MealPlanCalendar({
 								: "text-(--sea-ink-soft)",
 						)}
 					>
-						<div>{DAY_NAMES[i]}</div>
+						<div>{dayNames[i]}</div>
 						<div
 							className={cn(
 								"mt-0.5 text-base font-bold",
@@ -112,7 +119,7 @@ export function MealPlanCalendar({
 							);
 							return (
 								<div
-									key={`${slot.id}-${DAY_NAMES[i]}`}
+									key={`${slot.id}-${dayNames[i]}`}
 									className={cn(
 										"bg-white dark:bg-[#1a2e30]",
 										isSameDay(day, today) &&
@@ -146,7 +153,7 @@ export function MealPlanCalendar({
 							const dayNutrition = nutritionSummary[dateStr];
 							return (
 								<div
-									key={`nutrition-${DAY_NAMES[i]}`}
+									key={`nutrition-${dayNames[i]}`}
 									className={cn(
 										"bg-white p-2 dark:bg-[#1a2e30]",
 										isSameDay(day, today) &&
@@ -183,7 +190,7 @@ export function MealPlanCalendar({
 			<div className="mb-4 flex gap-1">
 				{days.map((day, i) => (
 					<button
-						key={DAY_NAMES[i]}
+						key={dayNames[i]}
 						type="button"
 						onClick={() => onSelectDay(i)}
 						className={cn(
@@ -196,7 +203,7 @@ export function MealPlanCalendar({
 								"font-bold text-(--lagoon-deep)",
 						)}
 					>
-						<span>{DAY_NAMES[i]}</span>
+						<span>{dayNames[i]}</span>
 						<span className="text-sm font-bold">{day.getDate()}</span>
 					</button>
 				))}

@@ -190,6 +190,13 @@
       "when": 1774470718403,
       "tag": "0026_add-nutrition-fields",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1774736833313,
+      "tag": "0027_add-week-start-day",
+      "breakpoints": true
     }
   ]
 }
