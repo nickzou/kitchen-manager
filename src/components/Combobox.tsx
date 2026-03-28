@@ -1,5 +1,6 @@
 import { Plus } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { inputClass } from "#src/components/Input";
 import { cn } from "#src/lib/utils";
 
@@ -16,6 +17,8 @@ interface ComboboxProps {
 	className?: string;
 	required?: boolean;
 	onCreateNew?: (query: string) => void;
+	/** Render the dropdown in a portal to escape overflow:hidden containers */
+	portal?: boolean;
 }
 
 export function Combobox({
@@ -26,12 +29,18 @@ export function Combobox({
 	className,
 	required,
 	onCreateNew,
+	portal,
 }: ComboboxProps) {
 	const [open, setOpen] = useState(false);
 	const [query, setQuery] = useState("");
 	const [highlightedIndex, setHighlightedIndex] = useState(0);
 	const containerRef = useRef<HTMLDivElement>(null);
 	const listRef = useRef<HTMLDivElement>(null);
+	const [portalPos, setPortalPos] = useState<{
+		top: number;
+		left: number;
+		width: number;
+	} | null>(null);
 
 	const selectedLabel = options.find((o) => o.value === value)?.label ?? "";
 
@@ -43,7 +52,8 @@ export function Combobox({
 		function handleClickOutside(e: MouseEvent) {
 			if (
 				containerRef.current &&
-				!containerRef.current.contains(e.target as Node)
+				!containerRef.current.contains(e.target as Node) &&
+				(!listRef.current || !listRef.current.contains(e.target as Node))
 			) {
 				setOpen(false);
 				setQuery("");
@@ -63,6 +73,29 @@ export function Combobox({
 			item?.scrollIntoView({ block: "nearest" });
 		}
 	}, [highlightedIndex, open]);
+
+	useEffect(() => {
+		if (!portal || !open || !containerRef.current) {
+			setPortalPos(null);
+			return;
+		}
+		function updatePos() {
+			if (!containerRef.current) return;
+			const rect = containerRef.current.getBoundingClientRect();
+			setPortalPos({
+				top: rect.bottom + 4,
+				left: rect.left,
+				width: rect.width,
+			});
+		}
+		updatePos();
+		window.addEventListener("scroll", updatePos, true);
+		window.addEventListener("resize", updatePos);
+		return () => {
+			window.removeEventListener("scroll", updatePos, true);
+			window.removeEventListener("resize", updatePos);
+		};
+	}, [portal, open]);
 
 	function resetHighlight() {
 		setHighlightedIndex(0);
@@ -122,6 +155,68 @@ export function Combobox({
 
 	const listId = "combobox-listbox";
 
+	const dropdown = open && totalItems > 0 && (
+		<div
+			id={listId}
+			ref={listRef}
+			role="listbox"
+			style={
+				portal && portalPos
+					? {
+							position: "fixed",
+							top: portalPos.top,
+							left: portalPos.left,
+							width: portalPos.width,
+						}
+					: undefined
+			}
+			className={cn(
+				"z-50 max-h-60 overflow-auto rounded-xl border border-(--line) bg-white py-1 shadow-lg dark:bg-[#1a2e30]",
+				!portal && "absolute top-full left-0 mt-1 w-full",
+			)}
+		>
+			{filtered.map((option, i) => (
+				<div
+					key={option.value}
+					role="option"
+					aria-selected={i === highlightedIndex}
+					tabIndex={-1}
+					onMouseDown={(e) => {
+						e.preventDefault();
+						select(option.value);
+					}}
+					onMouseEnter={() => setHighlightedIndex(i)}
+					className={cn(
+						"cursor-pointer px-3 py-2 text-sm text-(--sea-ink)",
+						i === highlightedIndex &&
+							"bg-[rgba(79,184,178,0.14)] text-(--lagoon-deep)",
+					)}
+				>
+					{option.label}
+				</div>
+			))}
+			{showCreateRow && (
+				<div
+					role="option"
+					aria-selected={highlightedIndex === createRowIndex}
+					tabIndex={-1}
+					onMouseDown={(e) => {
+						e.preventDefault();
+						handleCreateNew();
+					}}
+					onMouseEnter={() => setHighlightedIndex(createRowIndex)}
+					className={cn(
+						"flex cursor-pointer items-center gap-1.5 border-t border-(--line) px-3 py-2 text-sm font-medium text-(--lagoon-deep)",
+						highlightedIndex === createRowIndex && "bg-[rgba(79,184,178,0.14)]",
+					)}
+				>
+					<Plus size={14} />
+					Create &ldquo;{query.trim()}&rdquo;
+				</div>
+			)}
+		</div>
+	);
+
 	return (
 		<div ref={containerRef} className={cn("relative", className)}>
 			<input
@@ -145,55 +240,7 @@ export function Combobox({
 				onKeyDown={handleKeyDown}
 				className={cn(inputClass, !value && !open && "text-(--sea-ink-soft)")}
 			/>
-			{open && totalItems > 0 && (
-				<div
-					id={listId}
-					ref={listRef}
-					role="listbox"
-					className="absolute top-full left-0 z-50 mt-1 max-h-60 w-full overflow-auto rounded-xl border border-(--line) bg-white py-1 shadow-lg dark:bg-[#1a2e30]"
-				>
-					{filtered.map((option, i) => (
-						<div
-							key={option.value}
-							role="option"
-							aria-selected={i === highlightedIndex}
-							tabIndex={-1}
-							onMouseDown={(e) => {
-								e.preventDefault();
-								select(option.value);
-							}}
-							onMouseEnter={() => setHighlightedIndex(i)}
-							className={cn(
-								"cursor-pointer px-3 py-2 text-sm text-(--sea-ink)",
-								i === highlightedIndex &&
-									"bg-[rgba(79,184,178,0.14)] text-(--lagoon-deep)",
-							)}
-						>
-							{option.label}
-						</div>
-					))}
-					{showCreateRow && (
-						<div
-							role="option"
-							aria-selected={highlightedIndex === createRowIndex}
-							tabIndex={-1}
-							onMouseDown={(e) => {
-								e.preventDefault();
-								handleCreateNew();
-							}}
-							onMouseEnter={() => setHighlightedIndex(createRowIndex)}
-							className={cn(
-								"flex cursor-pointer items-center gap-1.5 border-t border-(--line) px-3 py-2 text-sm font-medium text-(--lagoon-deep)",
-								highlightedIndex === createRowIndex &&
-									"bg-[rgba(79,184,178,0.14)]",
-							)}
-						>
-							<Plus size={14} />
-							Create &ldquo;{query.trim()}&rdquo;
-						</div>
-					)}
-				</div>
-			)}
+			{portal ? createPortal(dropdown, document.body) : dropdown}
 		</div>
 	);
 }
