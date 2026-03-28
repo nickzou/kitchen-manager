@@ -103,9 +103,14 @@ function RecipeDetail() {
 	const [confirmDelete, setConfirmDelete] = useState(false);
 	const [adjustedServings, setAdjustedServings] = useState<number | null>(null);
 	const [cookResult, setCookResult] = useState<{
-		deductions: { productId: string; needed: number; deducted: number }[];
+		deductions: {
+			productId: string;
+			productName: string;
+			needed: number;
+			deducted: number;
+		}[];
 		warnings: string[];
-		produced?: { productId: string; quantity: number };
+		produced?: { productId: string; productName: string; quantity: number };
 	} | null>(null);
 	const cookResultRef = useRef<HTMLDivElement>(null);
 	const htmlId = useId();
@@ -1255,8 +1260,8 @@ function RecipeDetail() {
 												<ul className="mb-2 flex flex-col gap-1 text-sm text-(--sea-ink-soft)">
 													{cookResult.deductions.map((d) => (
 														<li key={d.productId}>
-															{getProductName(d.productId)}: deducted{" "}
-															{d.deducted} of {d.needed}
+															{d.productName}: deducted {d.deducted} of{" "}
+															{d.needed}
 														</li>
 													))}
 												</ul>
@@ -1270,8 +1275,7 @@ function RecipeDetail() {
 											)}
 											{cookResult.produced && (
 												<p className="text-sm font-medium text-(--lagoon-deep)">
-													Produced:{" "}
-													{getProductName(cookResult.produced.productId)} (
+													Produced: {cookResult.produced.productName} (
 													{cookResult.produced.quantity})
 												</p>
 											)}
@@ -1449,33 +1453,32 @@ function RecipeDetail() {
 								Ingredients
 							</h2>
 
-							{showCookPicker && (
-								<CookPicker
-									groups={
-										new Map(
-											[...cookPickerGroups].map(([groupName, groupIngs]) => [
-												groupName,
-												groupIngs.map((ing) => ({
-													ingredient: ing,
-													productName: getProductName(ing.productId),
-													scaledQuantity: formatScaled(ing.quantity),
-													unitLabel: getUnitLabel(ing.quantityUnitId),
-												})),
-											]),
-										)
-									}
-									selections={groupSelections}
-									onSelectionChange={(groupName, ingredientId) =>
-										setGroupSelections({
-											...groupSelections,
-											[groupName]: ingredientId,
-										})
-									}
-									onCook={() => handleCook(groupSelections)}
-									onCancel={() => setShowCookPicker(false)}
-									isCooking={cookRecipe.isPending}
-								/>
-							)}
+							<CookPicker
+								open={showCookPicker}
+								groups={
+									new Map(
+										[...cookPickerGroups].map(([groupName, groupIngs]) => [
+											groupName,
+											groupIngs.map((ing) => ({
+												ingredient: ing,
+												productName: getProductName(ing.productId),
+												scaledQuantity: formatScaled(ing.quantity),
+												unitLabel: getUnitLabel(ing.quantityUnitId),
+											})),
+										]),
+									)
+								}
+								selections={groupSelections}
+								onSelectionChange={(groupName, ingredientId) =>
+									setGroupSelections({
+										...groupSelections,
+										[groupName]: ingredientId,
+									})
+								}
+								onCook={() => handleCook(groupSelections)}
+								onCancel={() => setShowCookPicker(false)}
+								isCooking={cookRecipe.isPending}
+							/>
 
 							{!ingredients?.length && !editing ? (
 								<p className="mb-4 text-sm text-(--sea-ink-soft)">

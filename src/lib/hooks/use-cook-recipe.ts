@@ -8,9 +8,14 @@ interface CookRecipeInput {
 
 interface CookRecipeResult {
 	success: boolean;
-	deductions: { productId: string; needed: number; deducted: number }[];
+	deductions: {
+		productId: string;
+		productName: string;
+		needed: number;
+		deducted: number;
+	}[];
 	warnings: string[];
-	produced?: { productId: string; quantity: number };
+	produced?: { productId: string; productName: string; quantity: number };
 }
 
 export function useCookRecipe() {
