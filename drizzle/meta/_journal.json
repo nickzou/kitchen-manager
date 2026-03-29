@@ -197,6 +197,13 @@
       "when": 1774736833313,
       "tag": "0027_add-week-start-day",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1774822438827,
+      "tag": "0028_add-stock-entry-unit-cost",
+      "breakpoints": true
     }
   ]
 }

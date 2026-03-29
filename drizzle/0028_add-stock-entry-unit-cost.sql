@@ -1,0 +1,1 @@
+ALTER TABLE "stock_entry" ADD COLUMN "unit_cost" numeric;

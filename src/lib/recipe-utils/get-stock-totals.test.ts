@@ -10,6 +10,7 @@ function makeEntry(overrides: Partial<StockEntry> = {}): StockEntry {
 		expirationDate: null,
 		purchaseDate: null,
 		price: null,
+		unitCost: null,
 		storeId: null,
 		brandId: null,
 		userId: "u1",

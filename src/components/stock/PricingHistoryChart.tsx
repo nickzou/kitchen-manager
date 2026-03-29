@@ -38,10 +38,10 @@ export function PricingHistoryChart({
 	const [viewMode, setViewMode] = useState<ViewMode>("average");
 
 	const pricedEntries = stockEntries
-		.filter((e) => e.price != null && e.purchaseDate != null)
+		.filter((e) => e.unitCost != null && e.purchaseDate != null)
 		.map((e) => ({
 			...e,
-			priceNum: Number.parseFloat(e.price as string),
+			unitCostNum: Number.parseFloat(e.unitCost as string),
 			dateTs: new Date(e.purchaseDate as string).getTime(),
 		}))
 		.sort((a, b) => a.dateTs - b.dateTs);
@@ -49,7 +49,7 @@ export function PricingHistoryChart({
 	if (pricedEntries.length === 0) {
 		return (
 			<p className="text-sm text-(--sea-ink-soft)">
-				No pricing data available.
+				No unit cost data available.
 			</p>
 		);
 	}
@@ -70,7 +70,7 @@ export function PricingHistoryChart({
 	if (viewMode === "average") {
 		const data = pricedEntries.map((e) => ({
 			date: e.dateTs,
-			price: e.priceNum,
+			unitCost: e.unitCostNum,
 		}));
 
 		return (
@@ -95,7 +95,7 @@ export function PricingHistoryChart({
 						/>
 						<Tooltip
 							labelFormatter={(label) => formatDate(label as number)}
-							formatter={(v) => [`$${Number(v).toFixed(2)}`, "Price"]}
+							formatter={(v) => [`$${Number(v).toFixed(2)}`, "Unit Cost"]}
 							contentStyle={{
 								backgroundColor: "var(--surface-strong)",
 								border: "1px solid var(--line)",
@@ -105,7 +105,7 @@ export function PricingHistoryChart({
 						/>
 						<Line
 							type="monotone"
-							dataKey="price"
+							dataKey="unitCost"
 							stroke="#4fb8b2"
 							strokeWidth={2}
 							dot={{ r: 3 }}
@@ -120,14 +120,14 @@ export function PricingHistoryChart({
 	const groupKey = viewMode === "store" ? "storeId" : "brandId";
 	const nameMap = viewMode === "store" ? storeNames : brandNames;
 
-	const groups = new Map<string, { date: number; price: number }[]>();
+	const groups = new Map<string, { date: number; unitCost: number }[]>();
 	for (const e of pricedEntries) {
 		const key = e[groupKey] ?? "unknown";
 		if (!groups.has(key)) groups.set(key, []);
-		groups.get(key)?.push({ date: e.dateTs, price: e.priceNum });
+		groups.get(key)?.push({ date: e.dateTs, unitCost: e.unitCostNum });
 	}
 
-	// Build combined data keyed by date with one price field per group
+	// Build combined data keyed by date with one unit cost field per group
 	const allDates = [...new Set(pricedEntries.map((e) => e.dateTs))].sort(
 		(a, b) => a - b,
 	);
@@ -136,7 +136,7 @@ export function PricingHistoryChart({
 		const row: Record<string, number | undefined> = { date };
 		for (const gk of groupKeys) {
 			const point = groups.get(gk)?.find((p) => p.date === date);
-			if (point) row[gk] = point.price;
+			if (point) row[gk] = point.unitCost;
 		}
 		return row;
 	});
