@@ -54,6 +54,7 @@ function makeEntry(overrides: Partial<StockEntry> = {}): StockEntry {
 		expirationDate: null,
 		purchaseDate: null,
 		price: "5.00",
+		unitCost: "0.005",
 		storeId: null,
 		brandId: null,
 		userId: "u1",
@@ -98,7 +99,7 @@ describe("getRecipeCost", () => {
 		const result = getRecipeCost({
 			ingredients: [makeIngredient()],
 			products: [makeProduct()],
-			stockEntries: [makeEntry({ price: null })],
+			stockEntries: [makeEntry({ price: null, unitCost: null })],
 			...defaults,
 		});
 		expect(result).toBeNull();
@@ -225,6 +226,7 @@ describe("getRecipeCost", () => {
 					productId: "p2",
 					quantity: "500",
 					price: "3.00",
+					unitCost: "0.006",
 				}),
 			],
 			unitConversions: [],
@@ -246,8 +248,18 @@ describe("getRecipeCost", () => {
 			ingredients: [makeIngredient({ quantity: "500", quantityUnitId: "g" })],
 			products: [makeProduct({ defaultQuantityUnitId: "g" })],
 			stockEntries: [
-				makeEntry({ id: "e1", quantity: "1000", price: "4.00" }),
-				makeEntry({ id: "e2", quantity: "500", price: "3.00" }),
+				makeEntry({
+					id: "e1",
+					quantity: "1000",
+					price: "4.00",
+					unitCost: "0.004",
+				}),
+				makeEntry({
+					id: "e2",
+					quantity: "500",
+					price: "3.00",
+					unitCost: "0.006",
+				}),
 			],
 			...defaults,
 		});

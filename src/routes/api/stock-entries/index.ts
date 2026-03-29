@@ -60,6 +60,15 @@ export const Route = createFileRoute("/api/stock-entries/")({
 								? new Date(body.purchaseDate)
 								: null,
 							price: body.price ?? null,
+							unitCost:
+								body.price &&
+								body.quantity &&
+								Number.parseFloat(body.quantity) > 0
+									? String(
+											Number.parseFloat(body.price) /
+												Number.parseFloat(body.quantity),
+										)
+									: null,
 							storeId: body.storeId ?? null,
 							brandId: body.brandId ?? null,
 							userId: session.user.id,

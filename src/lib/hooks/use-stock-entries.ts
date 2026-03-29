@@ -7,6 +7,7 @@ export interface StockEntry {
 	expirationDate: string | null;
 	purchaseDate: string | null;
 	price: string | null;
+	unitCost: string | null;
 	storeId: string | null;
 	brandId: string | null;
 	userId: string;

@@ -399,6 +399,7 @@ export const stockEntry = pgTable(
 		expirationDate: timestamp("expiration_date"),
 		purchaseDate: timestamp("purchase_date"),
 		price: numeric("price"),
+		unitCost: numeric("unit_cost"),
 		storeId: text("store_id").references(() => store.id, {
 			onDelete: "set null",
 		}),

@@ -27,32 +27,24 @@ export function pickBestEntry(entries: StockEntry[]): StockEntry | null {
 }
 
 export function getAvgUnitCost(
-	entries: Pick<StockEntry, "price" | "quantity">[],
+	entries: Pick<StockEntry, "unitCost">[],
 ): number | null {
 	const costs = entries
-		.filter((e) => e.price && Number.parseFloat(e.quantity) > 0)
-		.map(
-			(e) =>
-				Number.parseFloat(e.price as string) / Number.parseFloat(e.quantity),
-		);
+		.filter((e) => e.unitCost !== null)
+		.map((e) => Number.parseFloat(e.unitCost as string));
 	if (costs.length === 0) return null;
 	return costs.reduce((sum, c) => sum + c, 0) / costs.length;
 }
 
 export function getLatestUnitCost(
-	entries: Pick<StockEntry, "price" | "quantity" | "purchaseDate">[],
+	entries: Pick<StockEntry, "unitCost" | "purchaseDate">[],
 ): number | null {
-	const priced = entries.filter(
-		(e) => e.price && Number.parseFloat(e.quantity) > 0,
-	);
+	const priced = entries.filter((e) => e.unitCost !== null);
 	if (priced.length === 0) return null;
 	const latest = [...priced].sort(
 		(a, b) =>
 			new Date(b.purchaseDate ?? 0).getTime() -
 			new Date(a.purchaseDate ?? 0).getTime(),
 	)[0];
-	return (
-		Number.parseFloat(latest.price as string) /
-		Number.parseFloat(latest.quantity)
-	);
+	return Number.parseFloat(latest.unitCost as string);
 }
