@@ -14,7 +14,8 @@ vi.mock("#src/db/schema", () => ({
 	productCategory: {},
 }));
 
-const mockWhere = vi.fn();
+const mockOrderBy = vi.fn();
+const mockWhere = vi.fn(() => ({ orderBy: mockOrderBy }));
 const mockReturning = vi.fn();
 const mockCategoryWhere = vi.fn();
 
@@ -68,7 +69,7 @@ describe("GET /api/products/", () => {
 
 	it("returns 200 with empty array when user has no products", async () => {
 		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
-		mockWhere.mockResolvedValue([]);
+		mockOrderBy.mockResolvedValue([]);
 		const request = makeGetRequest();
 
 		const response = await GET({ request } as never);
@@ -83,7 +84,7 @@ describe("GET /api/products/", () => {
 			makeProduct(),
 			makeProduct({ id: "product-2", name: "Eggs" }),
 		];
-		mockWhere.mockResolvedValue(products);
+		mockOrderBy.mockResolvedValue(products);
 		mockCategoryWhere.mockResolvedValue([
 			{ productId: "product-1", categoryId: "cat-1" },
 		]);
