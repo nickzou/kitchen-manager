@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { eq, inArray } from "drizzle-orm";
+import { asc, eq, inArray } from "drizzle-orm";
 import { db } from "#src/db";
 import { product, productCategory } from "#src/db/schema";
 import { getAuthSession } from "#src/lib/auth-session";
@@ -23,7 +23,8 @@ export const Route = createFileRoute("/api/products/")({
 				const products = await db
 					.select()
 					.from(product)
-					.where(eq(product.userId, session.user.id));
+					.where(eq(product.userId, session.user.id))
+					.orderBy(asc(product.name));
 
 				if (products.length === 0) return json([]);
 
