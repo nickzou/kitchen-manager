@@ -535,11 +535,6 @@ function Profile() {
 								<h2 className="font-display mb-6 text-xl font-bold text-(--sea-ink)">
 									Developer
 								</h2>
-
-								<h3 className="mb-4 text-sm font-semibold text-(--sea-ink)">
-									Features
-								</h3>
-
 								<div className="flex flex-col gap-4">
 									<label className="flex items-center justify-between gap-3">
 										<div>
