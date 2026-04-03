@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { Code, Lock, Menu, Settings, User } from "lucide-react";
 import { type FormEvent, useCallback, useEffect, useState } from "react";
 import { AlertBox } from "#src/components/AlertBox";
 import { AlertText } from "#src/components/AlertText";
@@ -12,6 +13,15 @@ import {
 	useUpdateUserSettings,
 	useUserSettings,
 } from "#src/lib/hooks/use-user-settings";
+
+type Section = "profile" | "password" | "preferences" | "developer";
+
+const NAV_ITEMS: { key: Section; label: string; icon: typeof User }[] = [
+	{ key: "profile", label: "Profile", icon: User },
+	{ key: "password", label: "Password", icon: Lock },
+	{ key: "preferences", label: "Preferences", icon: Settings },
+	{ key: "developer", label: "Developer", icon: Code },
+];
 
 interface ApiKeyEntry {
 	id: string;
@@ -54,6 +64,9 @@ function Profile() {
 	const { data: session } = authClient.useSession();
 	const { data: settings } = useUserSettings();
 	const updateSettings = useUpdateUserSettings();
+
+	const [activeSection, setActiveSection] = useState<Section>("profile");
+	const [sidebarOpen, setSidebarOpen] = useState(false);
 
 	const [name, setName] = useState("");
 	const [image, setImage] = useState<string | null>(null);
@@ -253,504 +266,609 @@ function Profile() {
 		setTimeout(() => setSecretCopied(false), 2000);
 	}
 
+	function handleSelectSection(section: Section) {
+		setActiveSection(section);
+		setSidebarOpen(false);
+	}
+
 	return (
 		<Page as="main" className="py-12">
-			<div className="mx-auto grid gap-6 lg:grid-cols-2">
-				<Island as="section" className="animate-rise-in rounded-2xl p-6 sm:p-8">
-					<p className="mb-2 text-[0.69rem] font-bold uppercase tracking-[0.16em] text-(--kicker)">
-						Account
-					</p>
-					<h1 className="font-display mb-6 text-3xl font-bold text-(--sea-ink)">
-						Profile
-					</h1>
+			<div className="relative mx-auto flex gap-8">
+				{/* Mobile menu button */}
+				<button
+					type="button"
+					onClick={() => setSidebarOpen(!sidebarOpen)}
+					className="absolute -top-1 right-0 rounded-lg border border-(--line) bg-(--surface) p-2 text-(--sea-ink) lg:hidden"
+				>
+					<Menu className="h-5 w-5" />
+				</button>
 
-					<form onSubmit={handleProfileSubmit} className="flex flex-col gap-4">
-						<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
-							Name
-							<input
-								type="text"
-								required
-								value={name}
-								onChange={(e) => setName(e.target.value)}
-								className="h-10 rounded-lg border border-(--line) bg-(--surface) px-3 text-sm text-(--sea-ink) outline-none focus:border-(--lagoon)"
-							/>
-						</label>
+				{/* Mobile overlay */}
+				{sidebarOpen && (
+					<button
+						type="button"
+						aria-label="Close menu"
+						className="fixed inset-0 z-30 bg-black/20 lg:hidden"
+						onClick={() => setSidebarOpen(false)}
+					/>
+				)}
 
-						<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
-							Email
-							<input
-								type="email"
-								disabled
-								value={session?.user?.email ?? ""}
-								className="h-10 rounded-lg border border-(--line) bg-(--surface-strong) px-3 text-sm text-(--sea-ink-soft) outline-none"
-							/>
-						</label>
+				{/* Sidebar nav */}
+				<nav
+					className={`${
+						sidebarOpen
+							? "absolute left-0 top-0 z-40 rounded-2xl border border-(--line) bg-(--surface) p-2 shadow-lg"
+							: "hidden"
+					} w-52 shrink-0 lg:sticky lg:top-24 lg:block lg:self-start lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none`}
+				>
+					<ul className="flex flex-col gap-1">
+						{NAV_ITEMS.map(({ key, label, icon: Icon }) => (
+							<li key={key}>
+								<button
+									type="button"
+									onClick={() => handleSelectSection(key)}
+									className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition ${
+										activeSection === key
+											? "border-l-2 border-(--lagoon) bg-(--surface) font-semibold text-(--sea-ink)"
+											: "text-(--sea-ink-soft) hover:bg-(--surface) hover:text-(--sea-ink)"
+									}`}
+								>
+									<Icon className="h-4 w-4" />
+									{label}
+								</button>
+							</li>
+						))}
+					</ul>
+				</nav>
 
-						<ImageInput value={image} onChange={setImage} />
+				{/* Content area */}
+				<div className="min-w-0 flex-1">
+					<Island
+						as="section"
+						className="animate-rise-in rounded-2xl p-6 sm:p-8"
+					>
+						{activeSection === "profile" && (
+							<>
+								<p className="mb-2 text-[0.69rem] font-bold uppercase tracking-[0.16em] text-(--kicker)">
+									Account
+								</p>
+								<h1 className="font-display mb-6 text-3xl font-bold text-(--sea-ink)">
+									Profile
+								</h1>
 
-						{profileError && <AlertText>{profileError}</AlertText>}
-						{profileSaved && (
-							<AlertText variant="success">Profile updated</AlertText>
-						)}
-
-						<Button type="submit" disabled={profileLoading} className="mt-2">
-							{profileLoading ? "Saving\u2026" : "Save profile"}
-						</Button>
-					</form>
-				</Island>
-
-				<Island as="section" className="animate-rise-in rounded-2xl p-6 sm:p-8">
-					<h2 className="font-display mb-6 text-xl font-bold text-(--sea-ink)">
-						Change password
-					</h2>
-
-					<form onSubmit={handlePasswordSubmit} className="flex flex-col gap-4">
-						<PasswordInput
-							label="Current password"
-							required
-							value={currentPassword}
-							onChange={(e) => setCurrentPassword(e.target.value)}
-						/>
-
-						<PasswordInput
-							label="New password"
-							required
-							minLength={8}
-							value={newPassword}
-							onChange={(e) => setNewPassword(e.target.value)}
-						/>
-
-						<PasswordInput
-							label="Confirm new password"
-							required
-							minLength={8}
-							value={confirmPassword}
-							onChange={(e) => setConfirmPassword(e.target.value)}
-						/>
-
-						{passwordError && <AlertText>{passwordError}</AlertText>}
-						{passwordSaved && (
-							<AlertText variant="success">Password changed</AlertText>
-						)}
-
-						<Button type="submit" disabled={passwordLoading} className="mt-2">
-							{passwordLoading ? "Changing\u2026" : "Change password"}
-						</Button>
-					</form>
-				</Island>
-				<Island as="section" className="animate-rise-in rounded-2xl p-6 sm:p-8">
-					<h2 className="font-display mb-6 text-xl font-bold text-(--sea-ink)">
-						Settings
-					</h2>
-
-					<label className="flex items-center justify-between gap-3">
-						<div>
-							<p className="text-sm font-medium text-(--sea-ink)">
-								Week starts on
-							</p>
-							<p className="text-xs text-(--sea-ink-soft)">
-								Choose which day your meal plan week begins
-							</p>
-						</div>
-						<select
-							value={settings?.weekStartDay ?? 1}
-							onChange={(e) =>
-								updateSettings.mutate({
-									weekStartDay: Number(e.target.value),
-								})
-							}
-							className="h-9 rounded-lg border border-(--line) bg-(--surface) px-2 text-sm text-(--sea-ink) outline-none focus:border-(--lagoon)"
-						>
-							<option value={0}>Sunday</option>
-							<option value={1}>Monday</option>
-							<option value={6}>Saturday</option>
-						</select>
-					</label>
-
-					<hr className="my-4 border-(--line)" />
-
-					<label className="flex items-center justify-between gap-3">
-						<div>
-							<p className="text-sm font-medium text-(--sea-ink)">
-								Advanced mode
-							</p>
-							<p className="text-xs text-(--sea-ink-soft)">
-								Enable advanced features and options
-							</p>
-						</div>
-						<button
-							type="button"
-							role="switch"
-							aria-checked={settings?.advancedMode ?? false}
-							onClick={() =>
-								updateSettings.mutate({
-									advancedMode: !settings?.advancedMode,
-								})
-							}
-							className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-(--lagoon) focus-visible:ring-offset-2 ${
-								settings?.advancedMode ? "bg-(--lagoon)" : "bg-(--line)"
-							}`}
-						>
-							<span
-								className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-									settings?.advancedMode ? "translate-x-5" : "translate-x-0"
-								}`}
-							/>
-						</button>
-					</label>
-					{settings?.advancedMode && (
-						<>
-							<hr className="my-6 border-(--line)" />
-
-							<h3 className="mb-4 text-sm font-semibold text-(--sea-ink)">
-								Features
-							</h3>
-
-							<div className="flex flex-col gap-4">
-								<label className="flex items-center justify-between gap-3">
-									<div>
-										<p className="text-sm font-medium text-(--sea-ink)">
-											API Keys
-										</p>
-										<p className="text-xs text-(--sea-ink-soft)">
-											Generate API keys for external integrations
-										</p>
-									</div>
-									<button
-										type="button"
-										role="switch"
-										aria-checked={settings?.apiEnabled ?? false}
-										onClick={() =>
-											updateSettings.mutate({
-												apiEnabled: !settings?.apiEnabled,
-											})
-										}
-										className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-(--lagoon) focus-visible:ring-offset-2 ${
-											settings?.apiEnabled ? "bg-(--lagoon)" : "bg-(--line)"
-										}`}
-									>
-										<span
-											className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-												settings?.apiEnabled ? "translate-x-5" : "translate-x-0"
-											}`}
+								<form
+									onSubmit={handleProfileSubmit}
+									className="flex flex-col gap-4"
+								>
+									<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
+										Name
+										<input
+											type="text"
+											required
+											value={name}
+											onChange={(e) => setName(e.target.value)}
+											className="h-10 rounded-lg border border-(--line) bg-(--surface) px-3 text-sm text-(--sea-ink) outline-none focus:border-(--lagoon)"
 										/>
-									</button>
-								</label>
+									</label>
 
-								<label className="flex items-center justify-between gap-3">
-									<div>
-										<p className="text-sm font-medium text-(--sea-ink)">
-											Webhooks
-										</p>
-										<p className="text-xs text-(--sea-ink-soft)">
-											Send event notifications to external URLs
-										</p>
-									</div>
-									<button
-										type="button"
-										role="switch"
-										aria-checked={settings?.webhooksEnabled ?? false}
-										onClick={() =>
-											updateSettings.mutate({
-												webhooksEnabled: !settings?.webhooksEnabled,
-											})
-										}
-										className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-(--lagoon) focus-visible:ring-offset-2 ${
-											settings?.webhooksEnabled
-												? "bg-(--lagoon)"
-												: "bg-(--line)"
-										}`}
-									>
-										<span
-											className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-												settings?.webhooksEnabled
-													? "translate-x-5"
-													: "translate-x-0"
-											}`}
+									<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
+										Email
+										<input
+											type="email"
+											disabled
+											value={session?.user?.email ?? ""}
+											className="h-10 rounded-lg border border-(--line) bg-(--surface-strong) px-3 text-sm text-(--sea-ink-soft) outline-none"
 										/>
-									</button>
-								</label>
+									</label>
 
-								<label className="flex items-center justify-between gap-3">
-									<div>
-										<p className="text-sm font-medium text-(--sea-ink)">
-											Nutrition Tracking
-										</p>
-										<p className="text-xs text-(--sea-ink-soft)">
-											Track calories and macros for products and recipes
-										</p>
-									</div>
-									<button
-										type="button"
-										role="switch"
-										aria-checked={settings?.nutritionEnabled ?? false}
-										onClick={() =>
-											updateSettings.mutate({
-												nutritionEnabled: !settings?.nutritionEnabled,
-											})
-										}
-										className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-(--lagoon) focus-visible:ring-offset-2 ${
-											settings?.nutritionEnabled
-												? "bg-(--lagoon)"
-												: "bg-(--line)"
-										}`}
-									>
-										<span
-											className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-												settings?.nutritionEnabled
-													? "translate-x-5"
-													: "translate-x-0"
-											}`}
-										/>
-									</button>
-								</label>
-							</div>
-						</>
-					)}
-				</Island>
+									<ImageInput value={image} onChange={setImage} />
 
-				{settings?.advancedMode &&
-					(settings?.apiEnabled || settings?.webhooksEnabled) && (
-						<Island
-							as="section"
-							className="animate-rise-in rounded-2xl p-6 sm:p-8"
-						>
-							{settings?.apiEnabled && (
-								<>
-									<h2 className="font-display mb-6 text-xl font-bold text-(--sea-ink)">
-										API Keys
-									</h2>
-
-									{apiKeys.length > 0 && (
-										<ul className="mb-6 flex flex-col gap-3">
-											{apiKeys.map((k) => (
-												<li
-													key={k.id}
-													className="flex items-center justify-between gap-2 rounded-lg border border-(--line) bg-(--surface) px-3 py-2"
-												>
-													<div className="min-w-0">
-														<p className="truncate text-sm font-medium text-(--sea-ink)">
-															{k.name}
-														</p>
-														<p className="text-xs text-(--sea-ink-soft)">
-															{k.keyPrefix}...
-															{k.lastUsedAt
-																? ` \u00b7 Last used ${new Date(k.lastUsedAt).toLocaleDateString()}`
-																: " \u00b7 Never used"}
-														</p>
-													</div>
-													<button
-														type="button"
-														onClick={() => handleDeleteKey(k.id)}
-														className="shrink-0 rounded-md px-2 py-1 text-xs font-medium text-red-600 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950"
-													>
-														Revoke
-													</button>
-												</li>
-											))}
-										</ul>
+									{profileError && <AlertText>{profileError}</AlertText>}
+									{profileSaved && (
+										<AlertText variant="success">Profile updated</AlertText>
 									)}
 
-									{generatedKey && (
-										<AlertBox variant="warning" className="mb-6 p-3">
-											<p className="mb-1 text-xs font-semibold">
-												Copy your key now — it won't be shown again
-											</p>
-											<div className="flex items-center gap-2">
-												<code className="min-w-0 flex-1 truncate text-xs text-amber-900 dark:text-amber-100">
-													{generatedKey}
-												</code>
+									<Button
+										type="submit"
+										disabled={profileLoading}
+										className="mt-2"
+									>
+										{profileLoading ? "Saving\u2026" : "Save profile"}
+									</Button>
+								</form>
+							</>
+						)}
+
+						{activeSection === "password" && (
+							<>
+								<h2 className="font-display mb-6 text-xl font-bold text-(--sea-ink)">
+									Change password
+								</h2>
+
+								<form
+									onSubmit={handlePasswordSubmit}
+									className="flex flex-col gap-4"
+								>
+									<PasswordInput
+										label="Current password"
+										required
+										value={currentPassword}
+										onChange={(e) => setCurrentPassword(e.target.value)}
+									/>
+
+									<PasswordInput
+										label="New password"
+										required
+										minLength={8}
+										value={newPassword}
+										onChange={(e) => setNewPassword(e.target.value)}
+									/>
+
+									<PasswordInput
+										label="Confirm new password"
+										required
+										minLength={8}
+										value={confirmPassword}
+										onChange={(e) => setConfirmPassword(e.target.value)}
+									/>
+
+									{passwordError && <AlertText>{passwordError}</AlertText>}
+									{passwordSaved && (
+										<AlertText variant="success">Password changed</AlertText>
+									)}
+
+									<Button
+										type="submit"
+										disabled={passwordLoading}
+										className="mt-2"
+									>
+										{passwordLoading ? "Changing\u2026" : "Change password"}
+									</Button>
+								</form>
+							</>
+						)}
+
+						{activeSection === "preferences" && (
+							<>
+								<h2 className="font-display mb-6 text-xl font-bold text-(--sea-ink)">
+									Preferences
+								</h2>
+
+								<label className="flex items-center justify-between gap-3">
+									<div>
+										<p className="text-sm font-medium text-(--sea-ink)">
+											Week starts on
+										</p>
+										<p className="text-xs text-(--sea-ink-soft)">
+											Choose which day your meal plan week begins
+										</p>
+									</div>
+									<select
+										value={settings?.weekStartDay ?? 1}
+										onChange={(e) =>
+											updateSettings.mutate({
+												weekStartDay: Number(e.target.value),
+											})
+										}
+										className="h-9 rounded-lg border border-(--line) bg-(--surface) px-2 text-sm text-(--sea-ink) outline-none focus:border-(--lagoon)"
+									>
+										<option value={0}>Sunday</option>
+										<option value={1}>Monday</option>
+										<option value={6}>Saturday</option>
+									</select>
+								</label>
+							</>
+						)}
+
+						{activeSection === "developer" && (
+							<>
+								<h2 className="font-display mb-6 text-xl font-bold text-(--sea-ink)">
+									Developer
+								</h2>
+
+								<label className="flex items-center justify-between gap-3">
+									<div>
+										<p className="text-sm font-medium text-(--sea-ink)">
+											Advanced mode
+										</p>
+										<p className="text-xs text-(--sea-ink-soft)">
+											Enable advanced features and options
+										</p>
+									</div>
+									<button
+										type="button"
+										role="switch"
+										aria-checked={settings?.advancedMode ?? false}
+										onClick={() =>
+											updateSettings.mutate({
+												advancedMode: !settings?.advancedMode,
+											})
+										}
+										className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-(--lagoon) focus-visible:ring-offset-2 ${
+											settings?.advancedMode ? "bg-(--lagoon)" : "bg-(--line)"
+										}`}
+									>
+										<span
+											className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+												settings?.advancedMode
+													? "translate-x-5"
+													: "translate-x-0"
+											}`}
+										/>
+									</button>
+								</label>
+
+								{settings?.advancedMode && (
+									<>
+										<hr className="my-6 border-(--line)" />
+
+										<h3 className="mb-4 text-sm font-semibold text-(--sea-ink)">
+											Features
+										</h3>
+
+										<div className="flex flex-col gap-4">
+											<label className="flex items-center justify-between gap-3">
+												<div>
+													<p className="text-sm font-medium text-(--sea-ink)">
+														API Keys
+													</p>
+													<p className="text-xs text-(--sea-ink-soft)">
+														Generate API keys for external integrations
+													</p>
+												</div>
 												<button
 													type="button"
-													onClick={handleCopyKey}
-													className="shrink-0 rounded-md bg-amber-200 px-2 py-1 text-xs font-medium text-amber-900 transition hover:bg-amber-300 dark:bg-amber-800 dark:text-amber-100 dark:hover:bg-amber-700"
+													role="switch"
+													aria-checked={settings?.apiEnabled ?? false}
+													onClick={() =>
+														updateSettings.mutate({
+															apiEnabled: !settings?.apiEnabled,
+														})
+													}
+													className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-(--lagoon) focus-visible:ring-offset-2 ${
+														settings?.apiEnabled
+															? "bg-(--lagoon)"
+															: "bg-(--line)"
+													}`}
 												>
-													{keyCopied ? "Copied!" : "Copy"}
+													<span
+														className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+															settings?.apiEnabled
+																? "translate-x-5"
+																: "translate-x-0"
+														}`}
+													/>
 												</button>
-											</div>
-										</AlertBox>
-									)}
+											</label>
 
-									<form
-										onSubmit={handleGenerateKey}
-										className="flex flex-col gap-4"
-									>
-										<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
-											Key name
-											<input
-												type="text"
-												required
-												placeholder="e.g. My Script"
-												value={newKeyName}
-												onChange={(e) => setNewKeyName(e.target.value)}
-												className="h-10 rounded-lg border border-(--line) bg-(--surface) px-3 text-sm text-(--sea-ink) outline-none focus:border-(--lagoon)"
-											/>
-										</label>
-
-										{apiKeyError && <AlertText>{apiKeyError}</AlertText>}
-
-										<Button
-											type="submit"
-											disabled={apiKeyLoading}
-											className="mt-2"
-										>
-											{apiKeyLoading ? "Generating\u2026" : "Generate new key"}
-										</Button>
-									</form>
-								</>
-							)}
-
-							{settings?.apiEnabled && settings?.webhooksEnabled && (
-								<hr className="my-8 border-(--line)" />
-							)}
-
-							{settings?.webhooksEnabled && (
-								<>
-									<h2 className="font-display mb-6 text-xl font-bold text-(--sea-ink)">
-										Webhooks
-									</h2>
-
-									{webhooks.length > 0 && (
-										<ul className="mb-6 flex flex-col gap-3">
-											{webhooks.map((wh) => (
-												<li
-													key={wh.id}
-													className="flex items-center justify-between gap-2 rounded-lg border border-(--line) bg-(--surface) px-3 py-2"
+											<label className="flex items-center justify-between gap-3">
+												<div>
+													<p className="text-sm font-medium text-(--sea-ink)">
+														Webhooks
+													</p>
+													<p className="text-xs text-(--sea-ink-soft)">
+														Send event notifications to external URLs
+													</p>
+												</div>
+												<button
+													type="button"
+													role="switch"
+													aria-checked={settings?.webhooksEnabled ?? false}
+													onClick={() =>
+														updateSettings.mutate({
+															webhooksEnabled: !settings?.webhooksEnabled,
+														})
+													}
+													className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-(--lagoon) focus-visible:ring-offset-2 ${
+														settings?.webhooksEnabled
+															? "bg-(--lagoon)"
+															: "bg-(--line)"
+													}`}
 												>
-													<div className="min-w-0">
-														<div className="flex items-center gap-2">
-															<p className="truncate text-sm font-medium text-(--sea-ink)">
-																{wh.name}
-															</p>
-															<span
-																className={`inline-block rounded-full px-2 py-0.5 text-[0.65rem] font-semibold ${
-																	wh.status === "active"
-																		? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-																		: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-																}`}
+													<span
+														className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+															settings?.webhooksEnabled
+																? "translate-x-5"
+																: "translate-x-0"
+														}`}
+													/>
+												</button>
+											</label>
+
+											<label className="flex items-center justify-between gap-3">
+												<div>
+													<p className="text-sm font-medium text-(--sea-ink)">
+														Nutrition Tracking
+													</p>
+													<p className="text-xs text-(--sea-ink-soft)">
+														Track calories and macros for products and recipes
+													</p>
+												</div>
+												<button
+													type="button"
+													role="switch"
+													aria-checked={settings?.nutritionEnabled ?? false}
+													onClick={() =>
+														updateSettings.mutate({
+															nutritionEnabled: !settings?.nutritionEnabled,
+														})
+													}
+													className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-(--lagoon) focus-visible:ring-offset-2 ${
+														settings?.nutritionEnabled
+															? "bg-(--lagoon)"
+															: "bg-(--line)"
+													}`}
+												>
+													<span
+														className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+															settings?.nutritionEnabled
+																? "translate-x-5"
+																: "translate-x-0"
+														}`}
+													/>
+												</button>
+											</label>
+										</div>
+
+										{(settings?.apiEnabled || settings?.webhooksEnabled) && (
+											<hr className="my-8 border-(--line)" />
+										)}
+
+										{settings?.apiEnabled && (
+											<>
+												<h3 className="font-display mb-6 text-lg font-bold text-(--sea-ink)">
+													API Keys
+												</h3>
+
+												{apiKeys.length > 0 && (
+													<ul className="mb-6 flex flex-col gap-3">
+														{apiKeys.map((k) => (
+															<li
+																key={k.id}
+																className="flex items-center justify-between gap-2 rounded-lg border border-(--line) bg-(--surface) px-3 py-2"
 															>
-																{wh.status}
-															</span>
-														</div>
-														<p className="truncate text-xs text-(--sea-ink-soft)">
-															{wh.url} · {wh.events.length} event
-															{wh.events.length !== 1 && "s"}
+																<div className="min-w-0">
+																	<p className="truncate text-sm font-medium text-(--sea-ink)">
+																		{k.name}
+																	</p>
+																	<p className="text-xs text-(--sea-ink-soft)">
+																		{k.keyPrefix}...
+																		{k.lastUsedAt
+																			? ` \u00b7 Last used ${new Date(k.lastUsedAt).toLocaleDateString()}`
+																			: " \u00b7 Never used"}
+																	</p>
+																</div>
+																<button
+																	type="button"
+																	onClick={() => handleDeleteKey(k.id)}
+																	className="shrink-0 rounded-md px-2 py-1 text-xs font-medium text-red-600 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950"
+																>
+																	Revoke
+																</button>
+															</li>
+														))}
+													</ul>
+												)}
+
+												{generatedKey && (
+													<AlertBox variant="warning" className="mb-6 p-3">
+														<p className="mb-1 text-xs font-semibold">
+															Copy your key now — it won't be shown again
 														</p>
-													</div>
-													<div className="flex shrink-0 gap-1">
-														{wh.status === "suspended" && (
+														<div className="flex items-center gap-2">
+															<code className="min-w-0 flex-1 truncate text-xs text-amber-900 dark:text-amber-100">
+																{generatedKey}
+															</code>
 															<button
 																type="button"
-																onClick={() => handleReactivateWebhook(wh.id)}
-																className="rounded-md px-2 py-1 text-xs font-medium text-green-600 transition hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-950"
+																onClick={handleCopyKey}
+																className="shrink-0 rounded-md bg-amber-200 px-2 py-1 text-xs font-medium text-amber-900 transition hover:bg-amber-300 dark:bg-amber-800 dark:text-amber-100 dark:hover:bg-amber-700"
 															>
-																Reactivate
+																{keyCopied ? "Copied!" : "Copy"}
 															</button>
-														)}
-														<button
-															type="button"
-															onClick={() => handleDeleteWebhook(wh.id)}
-															className="rounded-md px-2 py-1 text-xs font-medium text-red-600 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950"
-														>
-															Delete
-														</button>
-													</div>
-												</li>
-											))}
-										</ul>
-									)}
+														</div>
+													</AlertBox>
+												)}
 
-									{webhookSecret && (
-										<AlertBox variant="warning" className="mb-6 p-3">
-											<p className="mb-1 text-xs font-semibold">
-												Copy your signing secret now — it won't be shown again
-											</p>
-											<div className="flex items-center gap-2">
-												<code className="min-w-0 flex-1 truncate text-xs text-amber-900 dark:text-amber-100">
-													{webhookSecret}
-												</code>
-												<button
-													type="button"
-													onClick={handleCopySecret}
-													className="shrink-0 rounded-md bg-amber-200 px-2 py-1 text-xs font-medium text-amber-900 transition hover:bg-amber-300 dark:bg-amber-800 dark:text-amber-100 dark:hover:bg-amber-700"
+												<form
+													onSubmit={handleGenerateKey}
+													className="flex flex-col gap-4"
 												>
-													{secretCopied ? "Copied!" : "Copy"}
-												</button>
-											</div>
-										</AlertBox>
-									)}
+													<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
+														Key name
+														<input
+															type="text"
+															required
+															placeholder="e.g. My Script"
+															value={newKeyName}
+															onChange={(e) => setNewKeyName(e.target.value)}
+															className="h-10 rounded-lg border border-(--line) bg-(--surface) px-3 text-sm text-(--sea-ink) outline-none focus:border-(--lagoon)"
+														/>
+													</label>
 
-									<form
-										onSubmit={handleCreateWebhook}
-										className="flex flex-col gap-4"
-									>
-										<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
-											Name
-											<input
-												type="text"
-												required
-												placeholder="e.g. My Integration"
-												value={webhookName}
-												onChange={(e) => setWebhookName(e.target.value)}
-												className="h-10 rounded-lg border border-(--line) bg-(--surface) px-3 text-sm text-(--sea-ink) outline-none focus:border-(--lagoon)"
-											/>
-										</label>
+													{apiKeyError && <AlertText>{apiKeyError}</AlertText>}
 
-										<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
-											URL
-											<input
-												type="url"
-												required
-												placeholder="https://example.com/webhook"
-												value={webhookUrl}
-												onChange={(e) => setWebhookUrl(e.target.value)}
-												className="h-10 rounded-lg border border-(--line) bg-(--surface) px-3 text-sm text-(--sea-ink) outline-none focus:border-(--lagoon)"
-											/>
-										</label>
+													<Button
+														type="submit"
+														disabled={apiKeyLoading}
+														className="mt-2"
+													>
+														{apiKeyLoading
+															? "Generating\u2026"
+															: "Generate new key"}
+													</Button>
+												</form>
 
-										<fieldset className="flex flex-col gap-2">
-											<legend className="text-sm font-medium text-(--sea-ink)">
-												Events
-											</legend>
-											{Object.entries(EVENT_GROUPS).map(([group, events]) => (
-												<div key={group}>
-													<p className="mb-1 text-xs font-semibold text-(--sea-ink-soft)">
-														{group}
-													</p>
-													<div className="flex flex-wrap gap-2">
-														{events.map((event) => (
-															<label
-																key={event}
-																className="flex items-center gap-1.5 text-xs text-(--sea-ink)"
+												{settings?.webhooksEnabled && (
+													<hr className="my-8 border-(--line)" />
+												)}
+											</>
+										)}
+
+										{settings?.webhooksEnabled && (
+											<>
+												<h3 className="font-display mb-6 text-lg font-bold text-(--sea-ink)">
+													Webhooks
+												</h3>
+
+												{webhooks.length > 0 && (
+													<ul className="mb-6 flex flex-col gap-3">
+														{webhooks.map((wh) => (
+															<li
+																key={wh.id}
+																className="flex items-center justify-between gap-2 rounded-lg border border-(--line) bg-(--surface) px-3 py-2"
 															>
-																<input
-																	type="checkbox"
-																	checked={webhookEvents.includes(event)}
-																	onChange={() => toggleEvent(event)}
-																	className="rounded border-(--line)"
-																/>
-																{event}
-															</label>
+																<div className="min-w-0">
+																	<div className="flex items-center gap-2">
+																		<p className="truncate text-sm font-medium text-(--sea-ink)">
+																			{wh.name}
+																		</p>
+																		<span
+																			className={`inline-block rounded-full px-2 py-0.5 text-[0.65rem] font-semibold ${
+																				wh.status === "active"
+																					? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+																					: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+																			}`}
+																		>
+																			{wh.status}
+																		</span>
+																	</div>
+																	<p className="truncate text-xs text-(--sea-ink-soft)">
+																		{wh.url} · {wh.events.length} event
+																		{wh.events.length !== 1 && "s"}
+																	</p>
+																</div>
+																<div className="flex shrink-0 gap-1">
+																	{wh.status === "suspended" && (
+																		<button
+																			type="button"
+																			onClick={() =>
+																				handleReactivateWebhook(wh.id)
+																			}
+																			className="rounded-md px-2 py-1 text-xs font-medium text-green-600 transition hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-950"
+																		>
+																			Reactivate
+																		</button>
+																	)}
+																	<button
+																		type="button"
+																		onClick={() => handleDeleteWebhook(wh.id)}
+																		className="rounded-md px-2 py-1 text-xs font-medium text-red-600 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950"
+																	>
+																		Delete
+																	</button>
+																</div>
+															</li>
 														))}
-													</div>
-												</div>
-											))}
-										</fieldset>
+													</ul>
+												)}
 
-										{webhookError && <AlertText>{webhookError}</AlertText>}
+												{webhookSecret && (
+													<AlertBox variant="warning" className="mb-6 p-3">
+														<p className="mb-1 text-xs font-semibold">
+															Copy your signing secret now — it won't be shown
+															again
+														</p>
+														<div className="flex items-center gap-2">
+															<code className="min-w-0 flex-1 truncate text-xs text-amber-900 dark:text-amber-100">
+																{webhookSecret}
+															</code>
+															<button
+																type="button"
+																onClick={handleCopySecret}
+																className="shrink-0 rounded-md bg-amber-200 px-2 py-1 text-xs font-medium text-amber-900 transition hover:bg-amber-300 dark:bg-amber-800 dark:text-amber-100 dark:hover:bg-amber-700"
+															>
+																{secretCopied ? "Copied!" : "Copy"}
+															</button>
+														</div>
+													</AlertBox>
+												)}
 
-										<Button
-											type="submit"
-											disabled={webhookLoading || webhookEvents.length === 0}
-											className="mt-2"
-										>
-											{webhookLoading ? "Creating\u2026" : "Create webhook"}
-										</Button>
-									</form>
-								</>
-							)}
-						</Island>
-					)}
+												<form
+													onSubmit={handleCreateWebhook}
+													className="flex flex-col gap-4"
+												>
+													<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
+														Name
+														<input
+															type="text"
+															required
+															placeholder="e.g. My Integration"
+															value={webhookName}
+															onChange={(e) => setWebhookName(e.target.value)}
+															className="h-10 rounded-lg border border-(--line) bg-(--surface) px-3 text-sm text-(--sea-ink) outline-none focus:border-(--lagoon)"
+														/>
+													</label>
+
+													<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
+														URL
+														<input
+															type="url"
+															required
+															placeholder="https://example.com/webhook"
+															value={webhookUrl}
+															onChange={(e) => setWebhookUrl(e.target.value)}
+															className="h-10 rounded-lg border border-(--line) bg-(--surface) px-3 text-sm text-(--sea-ink) outline-none focus:border-(--lagoon)"
+														/>
+													</label>
+
+													<fieldset className="flex flex-col gap-2">
+														<legend className="text-sm font-medium text-(--sea-ink)">
+															Events
+														</legend>
+														{Object.entries(EVENT_GROUPS).map(
+															([group, events]) => (
+																<div key={group}>
+																	<p className="mb-1 text-xs font-semibold text-(--sea-ink-soft)">
+																		{group}
+																	</p>
+																	<div className="flex flex-wrap gap-2">
+																		{events.map((event) => (
+																			<label
+																				key={event}
+																				className="flex items-center gap-1.5 text-xs text-(--sea-ink)"
+																			>
+																				<input
+																					type="checkbox"
+																					checked={webhookEvents.includes(
+																						event,
+																					)}
+																					onChange={() => toggleEvent(event)}
+																					className="rounded border-(--line)"
+																				/>
+																				{event}
+																			</label>
+																		))}
+																	</div>
+																</div>
+															),
+														)}
+													</fieldset>
+
+													{webhookError && (
+														<AlertText>{webhookError}</AlertText>
+													)}
+
+													<Button
+														type="submit"
+														disabled={
+															webhookLoading || webhookEvents.length === 0
+														}
+														className="mt-2"
+													>
+														{webhookLoading
+															? "Creating\u2026"
+															: "Create webhook"}
+													</Button>
+												</form>
+											</>
+										)}
+									</>
+								)}
+							</>
+						)}
+					</Island>
+				</div>
 			</div>
 		</Page>
 	);
