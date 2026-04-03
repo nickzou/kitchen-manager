@@ -457,6 +457,42 @@ function Profile() {
 										<option value={6}>Saturday</option>
 									</select>
 								</label>
+
+								<hr className="my-4 border-(--line)" />
+
+								<label className="flex items-center justify-between gap-3">
+									<div>
+										<p className="text-sm font-medium text-(--sea-ink)">
+											Nutrition Tracking
+										</p>
+										<p className="text-xs text-(--sea-ink-soft)">
+											Track calories and macros for products and recipes
+										</p>
+									</div>
+									<button
+										type="button"
+										role="switch"
+										aria-checked={settings?.nutritionEnabled ?? false}
+										onClick={() =>
+											updateSettings.mutate({
+												nutritionEnabled: !settings?.nutritionEnabled,
+											})
+										}
+										className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-(--lagoon) focus-visible:ring-offset-2 ${
+											settings?.nutritionEnabled
+												? "bg-(--lagoon)"
+												: "bg-(--line)"
+										}`}
+									>
+										<span
+											className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+												settings?.nutritionEnabled
+													? "translate-x-5"
+													: "translate-x-0"
+											}`}
+										/>
+									</button>
+								</label>
 							</>
 						)}
 
@@ -568,40 +604,6 @@ function Profile() {
 													<span
 														className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
 															settings?.webhooksEnabled
-																? "translate-x-5"
-																: "translate-x-0"
-														}`}
-													/>
-												</button>
-											</label>
-
-											<label className="flex items-center justify-between gap-3">
-												<div>
-													<p className="text-sm font-medium text-(--sea-ink)">
-														Nutrition Tracking
-													</p>
-													<p className="text-xs text-(--sea-ink-soft)">
-														Track calories and macros for products and recipes
-													</p>
-												</div>
-												<button
-													type="button"
-													role="switch"
-													aria-checked={settings?.nutritionEnabled ?? false}
-													onClick={() =>
-														updateSettings.mutate({
-															nutritionEnabled: !settings?.nutritionEnabled,
-														})
-													}
-													className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-(--lagoon) focus-visible:ring-offset-2 ${
-														settings?.nutritionEnabled
-															? "bg-(--lagoon)"
-															: "bg-(--line)"
-													}`}
-												>
-													<span
-														className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-															settings?.nutritionEnabled
 																? "translate-x-5"
 																: "translate-x-0"
 														}`}
