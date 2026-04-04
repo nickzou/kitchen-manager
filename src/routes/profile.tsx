@@ -267,7 +267,7 @@ function Profile() {
 	}
 
 	return (
-		<Page as="main" className="py-6">
+		<Page as="main" className="py-6 lg:py-12">
 			<div className="mx-auto flex flex-col gap-6 lg:flex-row lg:gap-8">
 				{/* Mobile section picker */}
 				<div className="px-3">
