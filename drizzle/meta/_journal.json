@@ -204,6 +204,13 @@
       "when": 1774822438827,
       "tag": "0028_add-stock-entry-unit-cost",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1775334977790,
+      "tag": "0029_add-product-is-food",
+      "breakpoints": true
     }
   ]
 }

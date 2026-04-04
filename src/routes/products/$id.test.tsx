@@ -113,6 +113,7 @@ const mockProduct: Product = {
 	image: null,
 	defaultQuantityUnitId: null,
 	minStockAmount: "0",
+	isFood: true,
 	defaultExpirationDays: null,
 	defaultConsumeAmount: null,
 	calories: null,

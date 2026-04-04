@@ -82,6 +82,7 @@ function ProductDetail() {
 		categoryIds: [] as string[],
 		description: "",
 		image: null as string | null,
+		isFood: true,
 		defaultQuantityUnitId: "",
 		minStockAmount: "",
 		defaultExpirationDays: "",
@@ -148,6 +149,7 @@ function ProductDetail() {
 			categoryIds: [...product.categoryIds],
 			description: product.description || "",
 			image: product.image,
+			isFood: product.isFood,
 			defaultQuantityUnitId: product.defaultQuantityUnitId || "",
 			minStockAmount:
 				Number.parseFloat(product.minStockAmount) > 0
@@ -174,6 +176,7 @@ function ProductDetail() {
 				categoryIds: form.categoryIds,
 				description: form.description || undefined,
 				image: form.image || undefined,
+				isFood: form.isFood,
 				defaultQuantityUnitId: form.defaultQuantityUnitId || undefined,
 				minStockAmount: form.minStockAmount || undefined,
 				defaultExpirationDays: form.defaultExpirationDays
@@ -327,6 +330,32 @@ function ProductDetail() {
 									onChange={(url) => setForm({ ...form, image: url })}
 								/>
 
+								<label className="flex items-center justify-between gap-3">
+									<div>
+										<p className="text-sm font-medium text-(--sea-ink)">
+											Food product
+										</p>
+										<p className="text-xs text-(--sea-ink-soft)">
+											Non-food items hide nutrition and expiration fields
+										</p>
+									</div>
+									<button
+										type="button"
+										role="switch"
+										aria-checked={form.isFood}
+										onClick={() => setForm({ ...form, isFood: !form.isFood })}
+										className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-(--lagoon) focus-visible:ring-offset-2 ${
+											form.isFood ? "bg-(--lagoon)" : "bg-(--line)"
+										}`}
+									>
+										<span
+											className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+												form.isFood ? "translate-x-5" : "translate-x-0"
+											}`}
+										/>
+									</button>
+								</label>
+
 								<div className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
 									Default Quantity Unit
 									<Combobox
@@ -382,28 +411,30 @@ function ProductDetail() {
 									/>
 								</div>
 
-								<div className="flex flex-col gap-1.5">
-									<label
-										htmlFor={`${htmlId}-defaultExpirationDays`}
-										className="text-sm font-medium text-(--sea-ink)"
-									>
-										Default Expiration Days
-									</label>
-									<NumberInput
-										id={`${htmlId}-defaultExpirationDays`}
-										min="1"
-										value={form.defaultExpirationDays}
-										onChange={(e) =>
-											setForm({
-												...form,
-												defaultExpirationDays: e.target.value,
-											})
-										}
-										className="w-full"
-									/>
-								</div>
+								{form.isFood && (
+									<div className="flex flex-col gap-1.5">
+										<label
+											htmlFor={`${htmlId}-defaultExpirationDays`}
+											className="text-sm font-medium text-(--sea-ink)"
+										>
+											Default Expiration Days
+										</label>
+										<NumberInput
+											id={`${htmlId}-defaultExpirationDays`}
+											min="1"
+											value={form.defaultExpirationDays}
+											onChange={(e) =>
+												setForm({
+													...form,
+													defaultExpirationDays: e.target.value,
+												})
+											}
+											className="w-full"
+										/>
+									</div>
+								)}
 
-								{settings?.nutritionEnabled && (
+								{form.isFood && settings?.nutritionEnabled && (
 									<fieldset className="flex flex-col gap-3 rounded-lg border border-(--line) p-4">
 										<legend className="px-1 text-sm font-medium text-(--sea-ink)">
 											Nutrition (per{" "}
@@ -501,9 +532,16 @@ function ProductDetail() {
 							<>
 								<div className="mb-6 flex items-start justify-between gap-4">
 									<div>
-										<h1 className="font-display text-2xl font-bold text-(--sea-ink)">
-											{product.name}
-										</h1>
+										<div className="flex items-center gap-2">
+											<h1 className="font-display text-2xl font-bold text-(--sea-ink)">
+												{product.name}
+											</h1>
+											{!product.isFood && (
+												<span className="inline-block rounded-full bg-(--surface) px-2.5 py-0.5 text-xs font-medium text-(--sea-ink-soft)">
+													Non-food
+												</span>
+											)}
+										</div>
 										{categoryNames.length > 0 && (
 											<div className="mt-2 flex flex-wrap gap-1">
 												{categoryNames.map((name) => (
@@ -580,14 +618,16 @@ function ProductDetail() {
 												: "—"}
 										</dd>
 									</div>
-									<div>
-										<dt className="font-medium text-(--sea-ink-soft)">
-											Default Exp. Days
-										</dt>
-										<dd className="mt-0.5 text-(--sea-ink)">
-											{product.defaultExpirationDays ?? "—"}
-										</dd>
-									</div>
+									{product.isFood && (
+										<div>
+											<dt className="font-medium text-(--sea-ink-soft)">
+												Default Exp. Days
+											</dt>
+											<dd className="mt-0.5 text-(--sea-ink)">
+												{product.defaultExpirationDays ?? "—"}
+											</dd>
+										</div>
+									)}
 									<div>
 										<dt className="font-medium text-(--sea-ink-soft)">
 											Created
@@ -606,7 +646,8 @@ function ProductDetail() {
 									</div>
 								</dl>
 
-								{settings?.nutritionEnabled &&
+								{product.isFood &&
+									settings?.nutritionEnabled &&
 									(product.calories ||
 										product.protein ||
 										product.fat ||

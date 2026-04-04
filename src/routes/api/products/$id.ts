@@ -58,6 +58,7 @@ export const Route = createFileRoute("/api/products/$id")({
 					updates.defaultQuantityUnitId = body.defaultQuantityUnitId;
 				if (body.minStockAmount !== undefined)
 					updates.minStockAmount = body.minStockAmount;
+				if (body.isFood !== undefined) updates.isFood = body.isFood;
 				if (body.defaultExpirationDays !== undefined)
 					updates.defaultExpirationDays = body.defaultExpirationDays;
 				if (body.defaultConsumeAmount !== undefined)

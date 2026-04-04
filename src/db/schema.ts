@@ -245,6 +245,7 @@ export const product = pgTable(
 			},
 		),
 		minStockAmount: numeric("min_stock_amount").default("0").notNull(),
+		isFood: boolean("is_food").default(true).notNull(),
 		defaultExpirationDays: integer("default_expiration_days"),
 		defaultConsumeAmount: numeric("default_consume_amount"),
 		calories: numeric("calories"),
