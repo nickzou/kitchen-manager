@@ -267,15 +267,17 @@ function Profile() {
 	}
 
 	return (
-		<Page as="main" className="py-12">
+		<Page as="main" className="py-6">
 			<div className="mx-auto flex flex-col gap-6 lg:flex-row lg:gap-8">
 				{/* Mobile section picker */}
-				<DropdownPicker
-					items={NAV_ITEMS}
-					value={activeSection}
-					onChange={setActiveSection}
-					className="lg:hidden"
-				/>
+				<div className="px-3">
+					<DropdownPicker
+						items={NAV_ITEMS}
+						value={activeSection}
+						onChange={setActiveSection}
+						className="lg:hidden"
+					/>
+				</div>
 
 				{/* Sidebar nav (desktop only) */}
 				<nav className="hidden w-52 shrink-0 lg:sticky lg:top-24 lg:block lg:self-start">
