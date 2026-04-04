@@ -8,6 +8,7 @@ export interface Product {
 	image: string | null;
 	defaultQuantityUnitId: string | null;
 	minStockAmount: string;
+	isFood: boolean;
 	defaultExpirationDays: number | null;
 	defaultConsumeAmount: string | null;
 	calories: string | null;
@@ -24,6 +25,7 @@ export type CreateProductInput = {
 	categoryIds?: string[];
 	description?: string;
 	image?: string;
+	isFood?: boolean;
 	defaultQuantityUnitId?: string;
 	minStockAmount?: string;
 	defaultExpirationDays?: number;
