@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Code, Lock, Menu, Settings, User } from "lucide-react";
+import { Code, Lock, Settings, User } from "lucide-react";
 import { type FormEvent, useCallback, useEffect, useState } from "react";
 import { AlertBox } from "#src/components/AlertBox";
 import { AlertText } from "#src/components/AlertText";
@@ -66,7 +66,6 @@ function Profile() {
 	const updateSettings = useUpdateUserSettings();
 
 	const [activeSection, setActiveSection] = useState<Section>("profile");
-	const [sidebarOpen, setSidebarOpen] = useState(false);
 
 	const [name, setName] = useState("");
 	const [image, setImage] = useState<string | null>(null);
@@ -266,47 +265,30 @@ function Profile() {
 		setTimeout(() => setSecretCopied(false), 2000);
 	}
 
-	function handleSelectSection(section: Section) {
-		setActiveSection(section);
-		setSidebarOpen(false);
-	}
-
 	return (
 		<Page as="main" className="py-12">
-			<div className="relative mx-auto flex gap-8">
-				{/* Mobile menu button */}
-				<button
-					type="button"
-					onClick={() => setSidebarOpen(!sidebarOpen)}
-					className="absolute -top-1 right-0 rounded-lg border border-(--line) bg-(--surface) p-2 text-(--sea-ink) lg:hidden"
+			<div className="mx-auto flex flex-col gap-6 lg:flex-row lg:gap-8">
+				{/* Mobile section select */}
+				<select
+					value={activeSection}
+					onChange={(e) => setActiveSection(e.target.value as Section)}
+					className="h-10 rounded-lg border border-(--line) bg-(--surface) px-3 text-sm font-medium text-(--sea-ink) outline-none focus:border-(--lagoon) lg:hidden"
 				>
-					<Menu className="h-5 w-5" />
-				</button>
+					{NAV_ITEMS.map(({ key, label }) => (
+						<option key={key} value={key}>
+							{label}
+						</option>
+					))}
+				</select>
 
-				{/* Mobile overlay */}
-				{sidebarOpen && (
-					<button
-						type="button"
-						aria-label="Close menu"
-						className="fixed inset-0 z-30 bg-black/20 lg:hidden"
-						onClick={() => setSidebarOpen(false)}
-					/>
-				)}
-
-				{/* Sidebar nav */}
-				<nav
-					className={`${
-						sidebarOpen
-							? "absolute left-0 top-0 z-40 rounded-2xl border border-(--line) bg-(--surface) p-2 shadow-lg"
-							: "hidden"
-					} w-52 shrink-0 lg:sticky lg:top-24 lg:block lg:self-start lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none`}
-				>
+				{/* Sidebar nav (desktop only) */}
+				<nav className="hidden w-52 shrink-0 lg:sticky lg:top-24 lg:block lg:self-start">
 					<ul className="flex flex-col gap-1">
 						{NAV_ITEMS.map(({ key, label, icon: Icon }) => (
 							<li key={key}>
 								<button
 									type="button"
-									onClick={() => handleSelectSection(key)}
+									onClick={() => setActiveSection(key)}
 									className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition ${
 										activeSection === key
 											? "border-l-2 border-(--lagoon) bg-(--surface) font-semibold text-(--sea-ink)"
