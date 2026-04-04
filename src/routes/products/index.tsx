@@ -13,6 +13,7 @@ import { MultiCombobox } from "#src/components/MultiCombobox";
 import { Page } from "#src/components/Page";
 import { SearchInput } from "#src/components/SearchInput";
 import { TableView } from "#src/components/TableView";
+import { useToast } from "#src/components/Toast";
 import { type ViewMode, ViewSwitcher } from "#src/components/ViewSwitcher";
 import { authClient } from "#src/lib/auth-client";
 import { formatDate } from "#src/lib/format-date";
@@ -35,6 +36,7 @@ function ProductsPage() {
 	const { data: stockEntries } = useStockEntries();
 	const createProduct = useCreateProduct();
 
+	const toast = useToast();
 	const [view, setView] = useState<ViewMode>("grid");
 	const [name, setName] = useState("");
 	const [categoryIds, setCategoryIds] = useState<string[]>([]);
@@ -87,10 +89,11 @@ function ProductsPage() {
 				name: name.trim(),
 				categoryIds: categoryIds.length > 0 ? categoryIds : undefined,
 			});
+			toast.success(`${name.trim()} added`);
 			setName("");
 			setCategoryIds([]);
 		} catch {
-			// error is captured by the mutation and displayed in the UI
+			toast.error(`Failed to add ${name.trim()}`);
 		}
 	}
 

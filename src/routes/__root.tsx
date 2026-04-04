@@ -10,7 +10,7 @@ import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import type { ReactNode } from "react";
 import Footer from "../components/Footer";
 import Header from "../components/Header";
-
+import { ToastProvider } from "../components/Toast";
 import TanStackQueryDevtools from "../integrations/tanstack-query/devtools";
 import TanStackQueryProvider from "../integrations/tanstack-query/root-provider";
 import appCss from "../styles.css?url";
@@ -98,9 +98,11 @@ function RootDocument({ children }: { children: ReactNode }) {
 			</head>
 			<body className="font-sans antialiased [overflow-wrap:anywhere] selection:bg-[rgba(79,184,178,0.24)]">
 				<TanStackQueryProvider>
-					<Header />
-					{children}
-					<Footer />
+					<ToastProvider>
+						<Header />
+						{children}
+						<Footer />
+					</ToastProvider>
 					<TanStackDevtools
 						config={{
 							position: "bottom-right",

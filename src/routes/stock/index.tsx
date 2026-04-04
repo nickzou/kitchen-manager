@@ -15,6 +15,7 @@ import { QuickAddStock } from "#src/components/stock/QuickAddStock";
 import { StockActivityRow } from "#src/components/stock/StockActivityRow";
 import { StockProductContent } from "#src/components/stock/StockProductContent";
 import { StockProductTrigger } from "#src/components/stock/StockProductTrigger";
+import { useToast } from "#src/components/Toast";
 import { authClient } from "#src/lib/auth-client";
 import { useBrands, useCreateBrand } from "#src/lib/hooks/use-brands";
 import { useProductCategories } from "#src/lib/hooks/use-categories";
@@ -48,6 +49,7 @@ function StockPage() {
 	const deleteStockEntry = useDeleteStockEntry();
 	const consumeStock = useConsumeStock();
 
+	const toast = useToast();
 	const [search, setSearch] = useState("");
 	const [consumeAmounts, setConsumeAmounts] = useState<Record<string, string>>(
 		{},
@@ -64,16 +66,29 @@ function StockPage() {
 	async function handleConsume(stockEntryId: string) {
 		const amount = consumeAmounts[stockEntryId] ?? "1";
 		if (!amount) return;
-		await consumeStock.mutateAsync({ stockEntryId, quantity: amount });
+		const entry = (stockEntries ?? []).find((e) => e.id === stockEntryId);
+		const name = entry ? getProductName(entry.productId) : "Stock";
+		try {
+			await consumeStock.mutateAsync({ stockEntryId, quantity: amount });
+			toast.success(`${name} consumed`);
+		} catch {
+			toast.error(`Failed to consume ${name}`);
+		}
 	}
 
 	async function handleQuickConsume(entries: StockEntry[], amount: number) {
 		const best = pickBestEntry(entries);
 		if (!best) return;
-		await consumeStock.mutateAsync({
-			stockEntryId: best.id,
-			quantity: amount.toString(),
-		});
+		const name = getProductName(best.productId);
+		try {
+			await consumeStock.mutateAsync({
+				stockEntryId: best.id,
+				quantity: amount.toString(),
+			});
+			toast.success(`${name} consumed`);
+		} catch {
+			toast.error(`Failed to consume ${name}`);
+		}
 	}
 
 	function getProductName(id: string) {
