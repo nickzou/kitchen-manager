@@ -236,6 +236,7 @@ describe("ProductDetail", () => {
 					name: "Cherry Tomatoes",
 					description: "Fresh red tomatoes",
 					categoryIds: ["c1"],
+					isFood: true,
 					defaultQuantityUnitId: undefined,
 					minStockAmount: undefined,
 					defaultExpirationDays: undefined,
