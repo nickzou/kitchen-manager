@@ -352,7 +352,7 @@ function Profile() {
 				<div className="min-w-0 flex-1">
 					<Island
 						as="section"
-						className="animate-rise-in rounded-2xl p-6 sm:p-8"
+						className="animate-rise-in sm:rounded-2xl p-6 sm:p-8"
 					>
 						{activeSection === "profile" && (
 							<>
