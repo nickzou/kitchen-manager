@@ -19,6 +19,7 @@ import { useToast } from "#src/components/Toast";
 import { authClient } from "#src/lib/auth-client";
 import { useBrands, useCreateBrand } from "#src/lib/hooks/use-brands";
 import { useProductCategories } from "#src/lib/hooks/use-categories";
+import { useProductUnitConversions } from "#src/lib/hooks/use-product-unit-conversions";
 import { useProducts } from "#src/lib/hooks/use-products";
 import { useQuantityUnits } from "#src/lib/hooks/use-quantity-units";
 import {
@@ -30,6 +31,11 @@ import {
 } from "#src/lib/hooks/use-stock-entries";
 import { useStockLogs } from "#src/lib/hooks/use-stock-logs";
 import { useStores } from "#src/lib/hooks/use-stores";
+import { useUnitConversions } from "#src/lib/hooks/use-unit-conversions";
+import {
+	buildConversionGraph,
+	tryConvert,
+} from "#src/lib/recipe-utils/conversion-graph";
 import { pickBestEntry } from "#src/lib/stock-utils";
 import { cn } from "#src/lib/utils";
 
@@ -46,6 +52,9 @@ function StockPage() {
 	const { data: quantityUnits } = useQuantityUnits();
 	const { data: stockEntries, isLoading: entriesLoading } = useStockEntries();
 	const { data: stockLogs } = useStockLogs();
+	const { data: globalConversions } = useUnitConversions();
+	const productIds = (products ?? []).map((p) => p.id);
+	const { data: productConversions } = useProductUnitConversions(productIds);
 	const deleteStockEntry = useDeleteStockEntry();
 	const consumeStock = useConsumeStock();
 
@@ -157,6 +166,8 @@ function StockPage() {
 					stores={stores ?? []}
 					brands={brands ?? []}
 					quantityUnits={quantityUnits ?? []}
+					productConversions={productConversions ?? []}
+					globalConversions={globalConversions ?? []}
 				/>
 
 				{/* Tab bar */}
@@ -295,10 +306,15 @@ function StockPage() {
 					entry={editingEntry}
 					stores={stores ?? []}
 					brands={brands ?? []}
-					unitAbbr={getUnitAbbr(
+					defaultUnitId={
 						products?.find((p) => p.id === editingEntry.productId)
-							?.defaultQuantityUnitId ?? null,
+							?.defaultQuantityUnitId ?? null
+					}
+					quantityUnits={quantityUnits ?? []}
+					productConversions={(productConversions ?? []).filter(
+						(c) => c.productId === editingEntry.productId,
 					)}
+					globalConversions={globalConversions ?? []}
 					onClose={() => setEditingEntry(null)}
 				/>
 			)}
@@ -310,19 +326,34 @@ function EditStockModal({
 	entry,
 	stores,
 	brands,
-	unitAbbr,
+	defaultUnitId,
+	quantityUnits,
+	productConversions,
+	globalConversions,
 	onClose,
 }: {
 	entry: StockEntry;
 	stores: { id: string; name: string }[];
 	brands: { id: string; name: string }[];
-	unitAbbr: string;
+	defaultUnitId: string | null;
+	quantityUnits: { id: string; abbreviation: string | null; name: string }[];
+	productConversions: {
+		fromUnitId: string;
+		toUnitId: string;
+		factor: string | number;
+	}[];
+	globalConversions: {
+		fromUnitId: string;
+		toUnitId: string;
+		factor: string | number;
+	}[];
 	onClose: () => void;
 }) {
 	const updateStockEntry = useUpdateStockEntry(entry.id);
 	const deleteStockEntry = useDeleteStockEntry();
 	const createBrand = useCreateBrand();
 	const [quantity, setQuantity] = useState(entry.quantity);
+	const [unitId, setUnitId] = useState(defaultUnitId ?? "");
 	const [expirationDate, setExpirationDate] = useState(
 		entry.expirationDate?.slice(0, 10) ?? "",
 	);
@@ -333,10 +364,44 @@ function EditStockModal({
 	const [storeId, setStoreId] = useState(entry.storeId ?? "");
 	const [brandId, setBrandId] = useState(entry.brandId ?? "");
 
+	const allConversions = [...productConversions, ...globalConversions];
+	const graph = buildConversionGraph(allConversions);
+
+	const convertibleUnitIds = new Set<string>();
+	if (defaultUnitId) {
+		convertibleUnitIds.add(defaultUnitId);
+		const edges = graph.get(defaultUnitId);
+		if (edges) {
+			for (const neighborId of edges.keys()) {
+				convertibleUnitIds.add(neighborId);
+			}
+		}
+	}
+
+	const unitOptions = quantityUnits
+		.filter((u) => convertibleUnitIds.has(u.id))
+		.map((u) => ({
+			value: u.id,
+			label: u.abbreviation ?? u.name,
+		}));
+
 	async function handleSubmit(e: FormEvent) {
 		e.preventDefault();
+
+		let finalQuantity = quantity;
+		if (unitId && defaultUnitId && unitId !== defaultUnitId) {
+			const converted = tryConvert(
+				graph,
+				Number.parseFloat(quantity),
+				unitId,
+				defaultUnitId,
+			);
+			if (converted === null) return;
+			finalQuantity = String(converted);
+		}
+
 		await updateStockEntry.mutateAsync({
-			quantity,
+			quantity: finalQuantity,
 			expirationDate: expirationDate || undefined,
 			purchaseDate: purchaseDate || undefined,
 			price: price || undefined,
@@ -364,9 +429,20 @@ function EditStockModal({
 							onChange={(e) => setQuantity(e.target.value)}
 							className="flex-1"
 						/>
-						{unitAbbr && (
-							<span className="text-xs text-(--sea-ink-soft)">{unitAbbr}</span>
-						)}
+						{unitOptions.length > 1 ? (
+							<Combobox
+								value={unitId}
+								onChange={setUnitId}
+								options={unitOptions}
+								placeholder="Unit"
+								portal
+								className="w-24"
+							/>
+						) : unitOptions.length === 1 ? (
+							<span className="text-xs text-(--sea-ink-soft)">
+								{unitOptions[0].label}
+							</span>
+						) : null}
 					</div>
 				</label>
 				<label className="flex flex-col gap-1 text-sm font-medium text-(--sea-ink)">
