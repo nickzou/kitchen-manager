@@ -7,6 +7,7 @@ export function StockProductContent({
 	consumeAmounts,
 	onConsumeAmountChange,
 	onConsume,
+	onConsumeAll,
 	consumePending,
 	onEdit,
 	onDelete,
@@ -19,6 +20,7 @@ export function StockProductContent({
 	consumeAmounts: Record<string, string>;
 	onConsumeAmountChange: (entryId: string, value: string) => void;
 	onConsume: (entryId: string) => void;
+	onConsumeAll: (entryId: string) => void;
 	consumePending: boolean;
 	onEdit: (entry: StockEntry) => void;
 	onDelete: (entryId: string) => void;
@@ -46,6 +48,7 @@ export function StockProductContent({
 						onConsumeAmountChange(entry.id, value)
 					}
 					onConsume={() => onConsume(entry.id)}
+					onConsumeAll={() => onConsumeAll(entry.id)}
 					consumePending={consumePending}
 					onEdit={() => onEdit(entry)}
 					onDelete={() => onDelete(entry.id)}

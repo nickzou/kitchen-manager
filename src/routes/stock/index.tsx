@@ -85,6 +85,21 @@ function StockPage() {
 		}
 	}
 
+	async function handleConsumeAll(stockEntryId: string) {
+		const entry = (stockEntries ?? []).find((e) => e.id === stockEntryId);
+		if (!entry || Number.parseFloat(entry.quantity) <= 0) return;
+		const name = getProductName(entry.productId);
+		try {
+			await consumeStock.mutateAsync({
+				stockEntryId,
+				quantity: entry.quantity,
+			});
+			toast.success(`All ${name} consumed`);
+		} catch {
+			toast.error(`Failed to consume ${name}`);
+		}
+	}
+
 	async function handleQuickConsume(entries: StockEntry[], amount: number) {
 		const best = pickBestEntry(entries);
 		if (!best) return;
@@ -263,6 +278,7 @@ function StockPage() {
 											}))
 										}
 										onConsume={handleConsume}
+										onConsumeAll={handleConsumeAll}
 										consumePending={consumeStock.isPending}
 										onEdit={setEditingEntry}
 										onDelete={(id) => deleteStockEntry.mutate(id)}

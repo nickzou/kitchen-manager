@@ -9,6 +9,7 @@ export function StockEntryRow({
 	consumeAmount,
 	onConsumeAmountChange,
 	onConsume,
+	onConsumeAll,
 	consumePending,
 	onEdit,
 	onDelete,
@@ -21,6 +22,7 @@ export function StockEntryRow({
 	consumeAmount: string;
 	onConsumeAmountChange: (value: string) => void;
 	onConsume: () => void;
+	onConsumeAll: () => void;
 	consumePending: boolean;
 	onEdit: () => void;
 	onDelete: () => void;
@@ -82,6 +84,16 @@ export function StockEntryRow({
 				>
 					<UtensilsCrossed size={12} className="sm:hidden" />
 					<span className="hidden sm:inline">Consume</span>
+				</AmberButton>
+				<AmberButton
+					type="button"
+					onClick={onConsumeAll}
+					disabled={consumePending || Number.parseFloat(entry.quantity) <= 0}
+					title="Consume all remaining stock"
+					className="flex items-center gap-1 bg-amber-700"
+				>
+					<span className="sm:hidden">All</span>
+					<span className="hidden sm:inline">Consume All</span>
 				</AmberButton>
 			</div>
 		</div>
