@@ -19,7 +19,6 @@
     "db:pull": "drizzle-kit pull",
     "db:studio": "drizzle-kit studio",
     "db:seed-units": "tsx src/db/seed-units.ts",
-    "scripts:reprocess-images": "tsx scripts/reprocess-images.ts",
     "prepare": "husky"
   },
   "dependencies": {
