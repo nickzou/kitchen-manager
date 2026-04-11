@@ -590,7 +590,9 @@ describe("StockPage", () => {
 			fireEvent.click(consumeAllBtn!);
 
 			await waitFor(() => {
-				expect(mockToast.success).toHaveBeenCalledWith("All Tomatoes consumed");
+				expect(mockToast.success).toHaveBeenCalledWith(
+					"10 kg Tomatoes consumed",
+				);
 			});
 		});
 	});

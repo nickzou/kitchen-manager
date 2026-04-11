@@ -116,6 +116,7 @@ const mockProduct: Product = {
 	isFood: true,
 	defaultExpirationDays: null,
 	defaultConsumeAmount: null,
+	defaultConsumeUnitId: null,
 	calories: null,
 	protein: null,
 	fat: null,
@@ -238,10 +239,19 @@ describe("ProductDetail", () => {
 					categoryIds: ["c1"],
 					isFood: true,
 					defaultQuantityUnitId: undefined,
+					defaultConsumeUnitId: undefined,
 					minStockAmount: undefined,
 					defaultExpirationDays: undefined,
 				});
 			});
+		});
+
+		it("shows consume unit dropdown in edit form", () => {
+			renderPage();
+
+			fireEvent.click(screen.getByTitle("Edit"));
+
+			expect(screen.getByPlaceholderText("Same as stock unit")).toBeDefined();
 		});
 	});
 

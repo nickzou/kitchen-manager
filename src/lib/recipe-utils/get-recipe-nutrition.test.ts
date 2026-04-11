@@ -16,6 +16,7 @@ function makeProduct(overrides: Partial<Product> = {}): Product {
 		isFood: true,
 		defaultExpirationDays: null,
 		defaultConsumeAmount: null,
+		defaultConsumeUnitId: null,
 		calories: null,
 		protein: null,
 		fat: null,

@@ -249,6 +249,12 @@ export const product = pgTable(
 		isFood: boolean("is_food").default(true).notNull(),
 		defaultExpirationDays: integer("default_expiration_days"),
 		defaultConsumeAmount: numeric("default_consume_amount"),
+		defaultConsumeUnitId: text("default_consume_unit_id").references(
+			() => quantityUnit.id,
+			{
+				onDelete: "set null",
+			},
+		),
 		calories: numeric("calories"),
 		protein: numeric("protein"),
 		fat: numeric("fat"),
@@ -277,6 +283,12 @@ export const productRelations = relations(product, ({ one, many }) => ({
 	defaultQuantityUnit: one(quantityUnit, {
 		fields: [product.defaultQuantityUnitId],
 		references: [quantityUnit.id],
+		relationName: "defaultQuantityUnit",
+	}),
+	defaultConsumeUnit: one(quantityUnit, {
+		fields: [product.defaultConsumeUnitId],
+		references: [quantityUnit.id],
+		relationName: "defaultConsumeUnit",
 	}),
 	unitConversions: many(productUnitConversion),
 }));
