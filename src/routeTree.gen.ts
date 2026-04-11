@@ -57,6 +57,7 @@ import { Route as ApiUploadsFilenameRouteImport } from './routes/api/uploads/$fi
 import { Route as ApiUnitConversionsIdRouteImport } from './routes/api/unit-conversions/$id'
 import { Route as ApiStoresIdRouteImport } from './routes/api/stores/$id'
 import { Route as ApiStockLogsIdRouteImport } from './routes/api/stock-logs/$id'
+import { Route as ApiStockEntriesSpoilRouteImport } from './routes/api/stock-entries/spoil'
 import { Route as ApiStockEntriesConsumeRouteImport } from './routes/api/stock-entries/consume'
 import { Route as ApiStockEntriesIdRouteImport } from './routes/api/stock-entries/$id'
 import { Route as ApiRecipesCookRouteImport } from './routes/api/recipes/cook'
@@ -325,6 +326,11 @@ const ApiStockLogsIdRoute = ApiStockLogsIdRouteImport.update({
   path: '/api/stock-logs/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiStockEntriesSpoilRoute = ApiStockEntriesSpoilRouteImport.update({
+  id: '/api/stock-entries/spoil',
+  path: '/api/stock-entries/spoil',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiStockEntriesConsumeRoute = ApiStockEntriesConsumeRouteImport.update({
   id: '/api/stock-entries/consume',
   path: '/api/stock-entries/consume',
@@ -498,6 +504,7 @@ export interface FileRoutesByFullPath {
   '/api/recipes/cook': typeof ApiRecipesCookRoute
   '/api/stock-entries/$id': typeof ApiStockEntriesIdRoute
   '/api/stock-entries/consume': typeof ApiStockEntriesConsumeRoute
+  '/api/stock-entries/spoil': typeof ApiStockEntriesSpoilRoute
   '/api/stock-logs/$id': typeof ApiStockLogsIdRoute
   '/api/stores/$id': typeof ApiStoresIdRoute
   '/api/unit-conversions/$id': typeof ApiUnitConversionsIdRoute
@@ -572,6 +579,7 @@ export interface FileRoutesByTo {
   '/api/recipes/cook': typeof ApiRecipesCookRoute
   '/api/stock-entries/$id': typeof ApiStockEntriesIdRoute
   '/api/stock-entries/consume': typeof ApiStockEntriesConsumeRoute
+  '/api/stock-entries/spoil': typeof ApiStockEntriesSpoilRoute
   '/api/stock-logs/$id': typeof ApiStockLogsIdRoute
   '/api/stores/$id': typeof ApiStoresIdRoute
   '/api/unit-conversions/$id': typeof ApiUnitConversionsIdRoute
@@ -647,6 +655,7 @@ export interface FileRoutesById {
   '/api/recipes/cook': typeof ApiRecipesCookRoute
   '/api/stock-entries/$id': typeof ApiStockEntriesIdRoute
   '/api/stock-entries/consume': typeof ApiStockEntriesConsumeRoute
+  '/api/stock-entries/spoil': typeof ApiStockEntriesSpoilRoute
   '/api/stock-logs/$id': typeof ApiStockLogsIdRoute
   '/api/stores/$id': typeof ApiStoresIdRoute
   '/api/unit-conversions/$id': typeof ApiUnitConversionsIdRoute
@@ -723,6 +732,7 @@ export interface FileRouteTypes {
     | '/api/recipes/cook'
     | '/api/stock-entries/$id'
     | '/api/stock-entries/consume'
+    | '/api/stock-entries/spoil'
     | '/api/stock-logs/$id'
     | '/api/stores/$id'
     | '/api/unit-conversions/$id'
@@ -797,6 +807,7 @@ export interface FileRouteTypes {
     | '/api/recipes/cook'
     | '/api/stock-entries/$id'
     | '/api/stock-entries/consume'
+    | '/api/stock-entries/spoil'
     | '/api/stock-logs/$id'
     | '/api/stores/$id'
     | '/api/unit-conversions/$id'
@@ -871,6 +882,7 @@ export interface FileRouteTypes {
     | '/api/recipes/cook'
     | '/api/stock-entries/$id'
     | '/api/stock-entries/consume'
+    | '/api/stock-entries/spoil'
     | '/api/stock-logs/$id'
     | '/api/stores/$id'
     | '/api/unit-conversions/$id'
@@ -946,6 +958,7 @@ export interface RootRouteChildren {
   ApiRecipesCookRoute: typeof ApiRecipesCookRoute
   ApiStockEntriesIdRoute: typeof ApiStockEntriesIdRoute
   ApiStockEntriesConsumeRoute: typeof ApiStockEntriesConsumeRoute
+  ApiStockEntriesSpoilRoute: typeof ApiStockEntriesSpoilRoute
   ApiStockLogsIdRoute: typeof ApiStockLogsIdRoute
   ApiStoresIdRoute: typeof ApiStoresIdRoute
   ApiUnitConversionsIdRoute: typeof ApiUnitConversionsIdRoute
@@ -1309,6 +1322,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiStockLogsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/stock-entries/spoil': {
+      id: '/api/stock-entries/spoil'
+      path: '/api/stock-entries/spoil'
+      fullPath: '/api/stock-entries/spoil'
+      preLoaderRoute: typeof ApiStockEntriesSpoilRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/stock-entries/consume': {
       id: '/api/stock-entries/consume'
       path: '/api/stock-entries/consume'
@@ -1561,6 +1581,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiRecipesCookRoute: ApiRecipesCookRoute,
   ApiStockEntriesIdRoute: ApiStockEntriesIdRoute,
   ApiStockEntriesConsumeRoute: ApiStockEntriesConsumeRoute,
+  ApiStockEntriesSpoilRoute: ApiStockEntriesSpoilRoute,
   ApiStockLogsIdRoute: ApiStockLogsIdRoute,
   ApiStoresIdRoute: ApiStoresIdRoute,
   ApiUnitConversionsIdRoute: ApiUnitConversionsIdRoute,

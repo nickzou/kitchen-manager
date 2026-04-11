@@ -5,6 +5,7 @@ import {
 	useConsumeStock,
 	useCreateStockEntry,
 	useDeleteStockEntry,
+	useSpoilStock,
 	useStockEntries,
 	useUpdateStockEntry,
 } from "./use-stock-entries";
@@ -156,6 +157,49 @@ describe("useConsumeStock", () => {
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({ stockEntryId: "se1", quantity: "3" }),
 		});
+	});
+});
+
+describe("useSpoilStock", () => {
+	it("calls POST /api/stock-entries/spoil with input", async () => {
+		vi.mocked(fetch).mockResolvedValueOnce({
+			ok: true,
+			json: () => Promise.resolve({ success: true }),
+		} as Response);
+
+		const { result } = renderHook(() => useSpoilStock(), {
+			wrapper: createTestWrapper(),
+		});
+
+		await waitFor(() =>
+			result.current.mutateAsync({
+				stockEntryId: "se1",
+				quantity: "3",
+			}),
+		);
+
+		expect(fetch).toHaveBeenCalledWith("/api/stock-entries/spoil", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ stockEntryId: "se1", quantity: "3" }),
+		});
+	});
+});
+
+describe("useSpoilStock error handling", () => {
+	it("throws when response is not ok", async () => {
+		vi.mocked(fetch).mockResolvedValueOnce({
+			ok: false,
+			json: () => Promise.resolve({ error: "Failed" }),
+		} as Response);
+
+		const { result } = renderHook(() => useSpoilStock(), {
+			wrapper: createTestWrapper(),
+		});
+
+		await expect(
+			result.current.mutateAsync({ stockEntryId: "se1", quantity: "3" }),
+		).rejects.toThrow("Failed to spoil stock");
 	});
 });
 

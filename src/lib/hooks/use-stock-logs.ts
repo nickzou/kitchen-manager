@@ -4,7 +4,7 @@ export interface StockLog {
 	id: string;
 	stockEntryId: string | null;
 	productId: string;
-	transactionType: "add" | "consume" | "remove";
+	transactionType: "add" | "consume" | "remove" | "spoiled";
 	quantity: string;
 	userId: string;
 	createdAt: string;
@@ -13,7 +13,7 @@ export interface StockLog {
 
 export type UpdateStockLogInput = {
 	quantity?: string;
-	transactionType?: "add" | "consume" | "remove";
+	transactionType?: "add" | "consume" | "remove" | "spoiled";
 };
 
 export function useStockLogs(productId?: string) {

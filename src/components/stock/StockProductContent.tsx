@@ -12,6 +12,9 @@ export function StockProductContent({
 	onEdit,
 	onDelete,
 	deletePending,
+	onSpoil,
+	onSpoilAll,
+	spoilPending,
 	storeNames,
 	brandNames,
 }: {
@@ -25,6 +28,9 @@ export function StockProductContent({
 	onEdit: (entry: StockEntry) => void;
 	onDelete: (entryId: string) => void;
 	deletePending: boolean;
+	onSpoil: (entryId: string) => void;
+	onSpoilAll: (entryId: string) => void;
+	spoilPending: boolean;
 	storeNames: Record<string, string>;
 	brandNames: Record<string, string>;
 }) {
@@ -53,6 +59,9 @@ export function StockProductContent({
 					onEdit={() => onEdit(entry)}
 					onDelete={() => onDelete(entry.id)}
 					deletePending={deletePending}
+					onSpoil={() => onSpoil(entry.id)}
+					onSpoilAll={() => onSpoilAll(entry.id)}
+					spoilPending={spoilPending}
 					storeName={entry.storeId ? (storeNames[entry.storeId] ?? null) : null}
 					brandName={entry.brandId ? (brandNames[entry.brandId] ?? null) : null}
 				/>

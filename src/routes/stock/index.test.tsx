@@ -19,6 +19,7 @@ const mockUseStockLogs = vi.fn();
 const mockUseCreateStockEntry = vi.fn();
 const mockUseDeleteStockEntry = vi.fn();
 const mockUseConsumeStock = vi.fn();
+const mockUseSpoilStock = vi.fn();
 const mockUseStores = vi.fn();
 const mockUseUpdateStockEntry = vi.fn();
 const mockUseBrands = vi.fn();
@@ -61,6 +62,7 @@ vi.mock("#src/lib/hooks/use-stock-entries", () => ({
 	useUpdateStockEntry: (...args: unknown[]) => mockUseUpdateStockEntry(...args),
 	useDeleteStockEntry: (...args: unknown[]) => mockUseDeleteStockEntry(...args),
 	useConsumeStock: (...args: unknown[]) => mockUseConsumeStock(...args),
+	useSpoilStock: (...args: unknown[]) => mockUseSpoilStock(...args),
 }));
 
 vi.mock("#src/lib/hooks/use-stock-logs", () => ({
@@ -215,6 +217,10 @@ beforeEach(() => {
 		isPending: false,
 	});
 	mockUseConsumeStock.mockReturnValue({
+		mutateAsync: mockMutateAsync,
+		isPending: false,
+	});
+	mockUseSpoilStock.mockReturnValue({
 		mutateAsync: mockMutateAsync,
 		isPending: false,
 	});
@@ -389,6 +395,158 @@ describe("StockPage", () => {
 					storeId: undefined,
 					brandId: undefined,
 				});
+			});
+		});
+	});
+
+	describe("spoil", () => {
+		it("spoils by the entered quantity amount", async () => {
+			const mockSpoilMutateAsync = vi.fn().mockResolvedValue({});
+			mockUseSpoilStock.mockReturnValue({
+				mutateAsync: mockSpoilMutateAsync,
+				isPending: false,
+			});
+
+			renderPage();
+
+			fireEvent.click(screen.getByRole("button", { name: /Tomatoes/ }));
+
+			const spoilBtn = screen
+				.getAllByRole("button", { name: /Spoil/ })
+				.find((btn) => btn.title === "Mark amount as spoiled");
+			expect(spoilBtn).toBeDefined();
+			fireEvent.click(spoilBtn!);
+
+			await waitFor(() => {
+				expect(mockSpoilMutateAsync).toHaveBeenCalledWith({
+					stockEntryId: "se1",
+					quantity: "1",
+				});
+			});
+		});
+
+		it("spoils all remaining quantity with Spoil All button", async () => {
+			const mockSpoilMutateAsync = vi.fn().mockResolvedValue({});
+			mockUseSpoilStock.mockReturnValue({
+				mutateAsync: mockSpoilMutateAsync,
+				isPending: false,
+			});
+
+			renderPage();
+
+			fireEvent.click(screen.getByRole("button", { name: /Tomatoes/ }));
+
+			const spoilAllBtn = screen
+				.getAllByRole("button", { name: /Spoil All|Spoil/ })
+				.find((btn) => btn.title === "Mark all as spoiled");
+			expect(spoilAllBtn).toBeDefined();
+			fireEvent.click(spoilAllBtn!);
+
+			await waitFor(() => {
+				expect(mockSpoilMutateAsync).toHaveBeenCalledWith({
+					stockEntryId: "se1",
+					quantity: "10",
+				});
+			});
+		});
+
+		it("shows success toast after spoiling by amount", async () => {
+			const mockToast = { success: vi.fn(), error: vi.fn() };
+			mockUseToast.mockReturnValue(mockToast);
+			const mockSpoilMutateAsync = vi.fn().mockResolvedValue({});
+			mockUseSpoilStock.mockReturnValue({
+				mutateAsync: mockSpoilMutateAsync,
+				isPending: false,
+			});
+
+			renderPage();
+
+			fireEvent.click(screen.getByRole("button", { name: /Tomatoes/ }));
+
+			const spoilBtn = screen
+				.getAllByRole("button", { name: /Spoil/ })
+				.find((btn) => btn.title === "Mark amount as spoiled");
+			fireEvent.click(spoilBtn!);
+
+			await waitFor(() => {
+				expect(mockToast.success).toHaveBeenCalledWith(
+					"Tomatoes marked as spoiled",
+				);
+			});
+		});
+
+		it("shows error toast when spoil by amount fails", async () => {
+			const mockToast = { success: vi.fn(), error: vi.fn() };
+			mockUseToast.mockReturnValue(mockToast);
+			const mockSpoilMutateAsync = vi.fn().mockRejectedValue(new Error("fail"));
+			mockUseSpoilStock.mockReturnValue({
+				mutateAsync: mockSpoilMutateAsync,
+				isPending: false,
+			});
+
+			renderPage();
+
+			fireEvent.click(screen.getByRole("button", { name: /Tomatoes/ }));
+
+			const spoilBtn = screen
+				.getAllByRole("button", { name: /Spoil/ })
+				.find((btn) => btn.title === "Mark amount as spoiled");
+			fireEvent.click(spoilBtn!);
+
+			await waitFor(() => {
+				expect(mockToast.error).toHaveBeenCalledWith(
+					"Failed to mark Tomatoes as spoiled",
+				);
+			});
+		});
+
+		it("shows success toast after spoiling all", async () => {
+			const mockToast = { success: vi.fn(), error: vi.fn() };
+			mockUseToast.mockReturnValue(mockToast);
+			const mockSpoilMutateAsync = vi.fn().mockResolvedValue({});
+			mockUseSpoilStock.mockReturnValue({
+				mutateAsync: mockSpoilMutateAsync,
+				isPending: false,
+			});
+
+			renderPage();
+
+			fireEvent.click(screen.getByRole("button", { name: /Tomatoes/ }));
+
+			const spoilAllBtn = screen
+				.getAllByRole("button", { name: /Spoil All|Spoil/ })
+				.find((btn) => btn.title === "Mark all as spoiled");
+			fireEvent.click(spoilAllBtn!);
+
+			await waitFor(() => {
+				expect(mockToast.success).toHaveBeenCalledWith(
+					"All Tomatoes marked as spoiled",
+				);
+			});
+		});
+
+		it("shows error toast when spoil all fails", async () => {
+			const mockToast = { success: vi.fn(), error: vi.fn() };
+			mockUseToast.mockReturnValue(mockToast);
+			const mockSpoilMutateAsync = vi.fn().mockRejectedValue(new Error("fail"));
+			mockUseSpoilStock.mockReturnValue({
+				mutateAsync: mockSpoilMutateAsync,
+				isPending: false,
+			});
+
+			renderPage();
+
+			fireEvent.click(screen.getByRole("button", { name: /Tomatoes/ }));
+
+			const spoilAllBtn = screen
+				.getAllByRole("button", { name: /Spoil All|Spoil/ })
+				.find((btn) => btn.title === "Mark all as spoiled");
+			fireEvent.click(spoilAllBtn!);
+
+			await waitFor(() => {
+				expect(mockToast.error).toHaveBeenCalledWith(
+					"Failed to mark Tomatoes as spoiled",
+				);
 			});
 		});
 	});

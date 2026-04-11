@@ -4,6 +4,7 @@ const transactionColor: Record<string, "green" | "amber" | "red"> = {
 	add: "green",
 	consume: "amber",
 	remove: "red",
+	spoiled: "red",
 };
 
 export function StockActivityRow({

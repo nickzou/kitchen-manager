@@ -1,4 +1,4 @@
-import { Pencil, Trash2, UtensilsCrossed } from "lucide-react";
+import { Pencil, Skull, Trash2, UtensilsCrossed } from "lucide-react";
 import { NumberInput } from "#src/components/NumberInput";
 import { AmberButton } from "#src/components/stock/AmberButton";
 import type { StockEntry } from "#src/lib/hooks/use-stock-entries";
@@ -14,6 +14,9 @@ export function StockEntryRow({
 	onEdit,
 	onDelete,
 	deletePending,
+	onSpoil,
+	onSpoilAll,
+	spoilPending,
 	storeName,
 	brandName,
 }: {
@@ -27,6 +30,9 @@ export function StockEntryRow({
 	onEdit: () => void;
 	onDelete: () => void;
 	deletePending: boolean;
+	onSpoil: () => void;
+	onSpoilAll: () => void;
+	spoilPending: boolean;
 	storeName: string | null;
 	brandName: string | null;
 }) {
@@ -75,6 +81,26 @@ export function StockEntryRow({
 					className="flex h-7 w-7 items-center justify-center rounded-full border border-red-200 text-xs font-semibold text-red-600 transition hover:bg-red-50 disabled:opacity-50 dark:border-red-900 dark:hover:bg-red-950 sm:w-auto sm:gap-1 sm:px-2.5"
 				>
 					<Trash2 size={12} />
+				</button>
+				<button
+					type="button"
+					onClick={onSpoil}
+					disabled={spoilPending || !consumeAmount}
+					title="Mark amount as spoiled"
+					className="flex h-7 w-7 items-center justify-center rounded-full border border-red-200 bg-red-50 text-xs font-semibold text-red-600 transition hover:bg-red-100 disabled:opacity-50 dark:border-red-900 dark:bg-red-950 dark:hover:bg-red-900 sm:w-auto sm:gap-1 sm:px-2.5"
+				>
+					<Skull size={12} />
+					<span className="hidden sm:inline">Spoil</span>
+				</button>
+				<button
+					type="button"
+					onClick={onSpoilAll}
+					disabled={spoilPending || Number.parseFloat(entry.quantity) <= 0}
+					title="Mark all as spoiled"
+					className="flex h-7 w-7 items-center justify-center rounded-full border border-red-200 bg-red-50 text-xs font-semibold text-red-600 transition hover:bg-red-100 disabled:opacity-50 dark:border-red-900 dark:bg-red-950 dark:hover:bg-red-900 sm:w-auto sm:gap-1 sm:px-2.5"
+				>
+					<span className="sm:hidden">All</span>
+					<span className="hidden sm:inline">Spoil All</span>
 				</button>
 				<AmberButton
 					type="button"

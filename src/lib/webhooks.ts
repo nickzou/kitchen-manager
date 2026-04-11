@@ -7,6 +7,7 @@ export const WEBHOOK_EVENTS = [
 	"stock.entry.updated",
 	"stock.entry.deleted",
 	"stock.entry.consumed",
+	"stock.entry.spoiled",
 	"meal_plan.entry.created",
 	"meal_plan.entry.updated",
 	"meal_plan.entry.deleted",
