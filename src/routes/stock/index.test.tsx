@@ -400,7 +400,7 @@ describe("StockPage", () => {
 	});
 
 	describe("spoil", () => {
-		it("spoils the full remaining quantity of an entry", async () => {
+		it("spoils by the entered quantity amount", async () => {
 			const mockSpoilMutateAsync = vi.fn().mockResolvedValue({});
 			mockUseSpoilStock.mockReturnValue({
 				mutateAsync: mockSpoilMutateAsync,
@@ -413,9 +413,34 @@ describe("StockPage", () => {
 
 			const spoilBtn = screen
 				.getAllByRole("button", { name: /Spoil/ })
-				.find((btn) => btn.title === "Mark as spoiled");
+				.find((btn) => btn.title === "Mark amount as spoiled");
 			expect(spoilBtn).toBeDefined();
 			fireEvent.click(spoilBtn!);
+
+			await waitFor(() => {
+				expect(mockSpoilMutateAsync).toHaveBeenCalledWith({
+					stockEntryId: "se1",
+					quantity: "1",
+				});
+			});
+		});
+
+		it("spoils all remaining quantity with Spoil All button", async () => {
+			const mockSpoilMutateAsync = vi.fn().mockResolvedValue({});
+			mockUseSpoilStock.mockReturnValue({
+				mutateAsync: mockSpoilMutateAsync,
+				isPending: false,
+			});
+
+			renderPage();
+
+			fireEvent.click(screen.getByRole("button", { name: /Tomatoes/ }));
+
+			const spoilAllBtn = screen
+				.getAllByRole("button", { name: /Spoil All|Spoil/ })
+				.find((btn) => btn.title === "Mark all as spoiled");
+			expect(spoilAllBtn).toBeDefined();
+			fireEvent.click(spoilAllBtn!);
 
 			await waitFor(() => {
 				expect(mockSpoilMutateAsync).toHaveBeenCalledWith({
@@ -425,7 +450,7 @@ describe("StockPage", () => {
 			});
 		});
 
-		it("shows success toast after spoiling", async () => {
+		it("shows success toast after spoiling all", async () => {
 			const mockToast = { success: vi.fn(), error: vi.fn() };
 			mockUseToast.mockReturnValue(mockToast);
 			const mockSpoilMutateAsync = vi.fn().mockResolvedValue({});
@@ -438,14 +463,14 @@ describe("StockPage", () => {
 
 			fireEvent.click(screen.getByRole("button", { name: /Tomatoes/ }));
 
-			const spoilBtn = screen
-				.getAllByRole("button", { name: /Spoil/ })
-				.find((btn) => btn.title === "Mark as spoiled");
-			fireEvent.click(spoilBtn!);
+			const spoilAllBtn = screen
+				.getAllByRole("button", { name: /Spoil All|Spoil/ })
+				.find((btn) => btn.title === "Mark all as spoiled");
+			fireEvent.click(spoilAllBtn!);
 
 			await waitFor(() => {
 				expect(mockToast.success).toHaveBeenCalledWith(
-					"Tomatoes marked as spoiled",
+					"All Tomatoes marked as spoiled",
 				);
 			});
 		});

@@ -103,6 +103,19 @@ function StockPage() {
 	}
 
 	async function handleSpoil(stockEntryId: string) {
+		const amount = consumeAmounts[stockEntryId] ?? "1";
+		if (!amount) return;
+		const entry = (stockEntries ?? []).find((e) => e.id === stockEntryId);
+		const name = entry ? getProductName(entry.productId) : "Stock";
+		try {
+			await spoilStock.mutateAsync({ stockEntryId, quantity: amount });
+			toast.success(`${name} marked as spoiled`);
+		} catch {
+			toast.error(`Failed to mark ${name} as spoiled`);
+		}
+	}
+
+	async function handleSpoilAll(stockEntryId: string) {
 		const entry = (stockEntries ?? []).find((e) => e.id === stockEntryId);
 		if (!entry || Number.parseFloat(entry.quantity) <= 0) return;
 		const name = getProductName(entry.productId);
@@ -111,7 +124,7 @@ function StockPage() {
 				stockEntryId,
 				quantity: entry.quantity,
 			});
-			toast.success(`${name} marked as spoiled`);
+			toast.success(`All ${name} marked as spoiled`);
 		} catch {
 			toast.error(`Failed to mark ${name} as spoiled`);
 		}
@@ -301,6 +314,7 @@ function StockPage() {
 										onDelete={(id) => deleteStockEntry.mutate(id)}
 										deletePending={deleteStockEntry.isPending}
 										onSpoil={handleSpoil}
+										onSpoilAll={handleSpoilAll}
 										spoilPending={spoilStock.isPending}
 										storeNames={Object.fromEntries(
 											(stores ?? []).map((s) => [s.id, s.name]),

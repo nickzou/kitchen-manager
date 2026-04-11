@@ -15,6 +15,7 @@ export function StockEntryRow({
 	onDelete,
 	deletePending,
 	onSpoil,
+	onSpoilAll,
 	spoilPending,
 	storeName,
 	brandName,
@@ -30,6 +31,7 @@ export function StockEntryRow({
 	onDelete: () => void;
 	deletePending: boolean;
 	onSpoil: () => void;
+	onSpoilAll: () => void;
 	spoilPending: boolean;
 	storeName: string | null;
 	brandName: string | null;
@@ -83,12 +85,22 @@ export function StockEntryRow({
 				<button
 					type="button"
 					onClick={onSpoil}
-					disabled={spoilPending || Number.parseFloat(entry.quantity) <= 0}
-					title="Mark as spoiled"
+					disabled={spoilPending || !consumeAmount}
+					title="Mark amount as spoiled"
 					className="flex h-7 w-7 items-center justify-center rounded-full border border-red-200 bg-red-50 text-xs font-semibold text-red-600 transition hover:bg-red-100 disabled:opacity-50 dark:border-red-900 dark:bg-red-950 dark:hover:bg-red-900 sm:w-auto sm:gap-1 sm:px-2.5"
 				>
 					<Skull size={12} />
 					<span className="hidden sm:inline">Spoil</span>
+				</button>
+				<button
+					type="button"
+					onClick={onSpoilAll}
+					disabled={spoilPending || Number.parseFloat(entry.quantity) <= 0}
+					title="Mark all as spoiled"
+					className="flex h-7 w-7 items-center justify-center rounded-full border border-red-200 bg-red-100 text-xs font-semibold text-red-700 transition hover:bg-red-200 disabled:opacity-50 dark:border-red-900 dark:bg-red-900 dark:hover:bg-red-800 sm:w-auto sm:gap-1 sm:px-2.5"
+				>
+					<Skull size={12} className="sm:hidden" />
+					<span className="hidden sm:inline">Spoil All</span>
 				</button>
 				<AmberButton
 					type="button"
