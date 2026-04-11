@@ -20,6 +20,12 @@ const mockUseCreateStockEntry = vi.fn();
 const mockUseDeleteStockEntry = vi.fn();
 const mockUseConsumeStock = vi.fn();
 const mockUseStores = vi.fn();
+const mockUseUpdateStockEntry = vi.fn();
+const mockUseBrands = vi.fn();
+const mockUseCreateBrand = vi.fn();
+const mockUseUnitConversions = vi.fn();
+const mockUseProductUnitConversions = vi.fn();
+const mockUseToast = vi.fn();
 
 vi.mock("@tanstack/react-router", () => ({
 	createFileRoute: () => (opts: { component: ComponentType }) => ({
@@ -52,6 +58,7 @@ vi.mock("#src/lib/hooks/use-quantity-units", () => ({
 vi.mock("#src/lib/hooks/use-stock-entries", () => ({
 	useStockEntries: (...args: unknown[]) => mockUseStockEntries(...args),
 	useCreateStockEntry: (...args: unknown[]) => mockUseCreateStockEntry(...args),
+	useUpdateStockEntry: (...args: unknown[]) => mockUseUpdateStockEntry(...args),
 	useDeleteStockEntry: (...args: unknown[]) => mockUseDeleteStockEntry(...args),
 	useConsumeStock: (...args: unknown[]) => mockUseConsumeStock(...args),
 }));
@@ -62,6 +69,25 @@ vi.mock("#src/lib/hooks/use-stock-logs", () => ({
 
 vi.mock("#src/lib/hooks/use-stores", () => ({
 	useStores: (...args: unknown[]) => mockUseStores(...args),
+}));
+
+vi.mock("#src/lib/hooks/use-brands", () => ({
+	useBrands: (...args: unknown[]) => mockUseBrands(...args),
+	useCreateBrand: (...args: unknown[]) => mockUseCreateBrand(...args),
+}));
+
+vi.mock("#src/lib/hooks/use-unit-conversions", () => ({
+	useUnitConversions: (...args: unknown[]) => mockUseUnitConversions(...args),
+}));
+
+vi.mock("#src/lib/hooks/use-product-unit-conversions", () => ({
+	useProductUnitConversions: (...args: unknown[]) =>
+		mockUseProductUnitConversions(...args),
+}));
+
+vi.mock("#src/components/Toast", () => ({
+	useToast: (...args: unknown[]) => mockUseToast(...args),
+	ToastProvider: ({ children }: { children: ReactNode }) => children,
 }));
 
 vi.mock("#src/lib/utils", () => ({
@@ -193,6 +219,21 @@ beforeEach(() => {
 		isPending: false,
 	});
 	mockUseStores.mockReturnValue({ data: [] });
+	mockUseBrands.mockReturnValue({ data: [] });
+	mockUseCreateBrand.mockReturnValue({
+		mutateAsync: vi.fn(),
+		isPending: false,
+	});
+	mockUseUpdateStockEntry.mockReturnValue({
+		mutateAsync: vi.fn(),
+		isPending: false,
+	});
+	mockUseUnitConversions.mockReturnValue({ data: [] });
+	mockUseProductUnitConversions.mockReturnValue({ data: [] });
+	mockUseToast.mockReturnValue({
+		success: vi.fn(),
+		error: vi.fn(),
+	});
 });
 
 afterEach(() => {
@@ -348,6 +389,50 @@ describe("StockPage", () => {
 					storeId: undefined,
 					brandId: undefined,
 				});
+			});
+		});
+	});
+
+	describe("consume all", () => {
+		it("consumes the full remaining quantity of an entry", async () => {
+			renderPage();
+
+			// Expand the Tomatoes accordion
+			fireEvent.click(screen.getByRole("button", { name: /Tomatoes/ }));
+
+			// Click "Consume All" button
+			const consumeAllButtons = screen.getAllByRole("button", {
+				name: /Consume All|All/,
+			});
+			const consumeAllBtn = consumeAllButtons.find(
+				(btn) => btn.title === "Consume all remaining stock",
+			);
+			expect(consumeAllBtn).toBeDefined();
+			fireEvent.click(consumeAllBtn!);
+
+			await waitFor(() => {
+				expect(mockMutateAsync).toHaveBeenCalledWith({
+					stockEntryId: "se1",
+					quantity: "10",
+				});
+			});
+		});
+
+		it("shows success toast after consuming all", async () => {
+			const mockToast = { success: vi.fn(), error: vi.fn() };
+			mockUseToast.mockReturnValue(mockToast);
+
+			renderPage();
+
+			fireEvent.click(screen.getByRole("button", { name: /Tomatoes/ }));
+
+			const consumeAllBtn = screen
+				.getAllByRole("button", { name: /Consume All|All/ })
+				.find((btn) => btn.title === "Consume all remaining stock");
+			fireEvent.click(consumeAllBtn!);
+
+			await waitFor(() => {
+				expect(mockToast.success).toHaveBeenCalledWith("All Tomatoes consumed");
 			});
 		});
 	});
