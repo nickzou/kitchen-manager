@@ -99,7 +99,7 @@ export function StockEntryRow({
 					title="Mark all as spoiled"
 					className="flex h-7 w-7 items-center justify-center rounded-full border border-red-200 bg-red-50 text-xs font-semibold text-red-600 transition hover:bg-red-100 disabled:opacity-50 dark:border-red-900 dark:bg-red-950 dark:hover:bg-red-900 sm:w-auto sm:gap-1 sm:px-2.5"
 				>
-					<Skull size={12} className="sm:hidden" />
+					<span className="sm:hidden">All</span>
 					<span className="hidden sm:inline">Spoil All</span>
 				</button>
 				<AmberButton
