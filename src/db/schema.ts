@@ -17,6 +17,7 @@ export const transactionTypeEnum = pgEnum("transaction_type", [
 	"add",
 	"consume",
 	"remove",
+	"spoiled",
 ]);
 
 export const webhookStatusEnum = pgEnum("webhook_status", [

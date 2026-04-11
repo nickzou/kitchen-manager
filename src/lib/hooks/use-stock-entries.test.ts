@@ -5,6 +5,7 @@ import {
 	useConsumeStock,
 	useCreateStockEntry,
 	useDeleteStockEntry,
+	useSpoilStock,
 	useStockEntries,
 	useUpdateStockEntry,
 } from "./use-stock-entries";
@@ -152,6 +153,32 @@ describe("useConsumeStock", () => {
 		);
 
 		expect(fetch).toHaveBeenCalledWith("/api/stock-entries/consume", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ stockEntryId: "se1", quantity: "3" }),
+		});
+	});
+});
+
+describe("useSpoilStock", () => {
+	it("calls POST /api/stock-entries/spoil with input", async () => {
+		vi.mocked(fetch).mockResolvedValueOnce({
+			ok: true,
+			json: () => Promise.resolve({ success: true }),
+		} as Response);
+
+		const { result } = renderHook(() => useSpoilStock(), {
+			wrapper: createTestWrapper(),
+		});
+
+		await waitFor(() =>
+			result.current.mutateAsync({
+				stockEntryId: "se1",
+				quantity: "3",
+			}),
+		);
+
+		expect(fetch).toHaveBeenCalledWith("/api/stock-entries/spoil", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({ stockEntryId: "se1", quantity: "3" }),

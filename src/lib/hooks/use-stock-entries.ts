@@ -39,6 +39,11 @@ export type ConsumeStockInput = {
 	quantity: string;
 };
 
+export type SpoilStockInput = {
+	stockEntryId: string;
+	quantity: string;
+};
+
 export function useStockEntries(productId?: string) {
 	return useQuery<StockEntry[]>({
 		queryKey: productId ? ["stock-entries", { productId }] : ["stock-entries"],
@@ -119,17 +124,11 @@ export function useConsumeStock() {
 			if (!res.ok) throw new Error("Failed to consume stock");
 			return res.json();
 		},
-		// 1. Before the request fires, optimistically update the cache
 		onMutate: async (input) => {
-			// Cancel any in-flight refetches so they don't overwrite our optimistic update
 			await queryClient.cancelQueries({ queryKey: ["stock-entries"] });
-
-			// Snapshot the current cache value (used to roll back on error)
 			const previous = queryClient.getQueryData<StockEntry[]>([
 				"stock-entries",
 			]);
-
-			// Write the optimistic value into the cache
 			queryClient.setQueryData<StockEntry[]>(["stock-entries"], (old) =>
 				(old ?? [])
 					.map((entry) =>
@@ -143,20 +142,61 @@ export function useConsumeStock() {
 								}
 							: entry,
 					)
-					// Remove entries that hit zero or below
 					.filter((entry) => Number.parseFloat(entry.quantity) > 0),
 			);
-
-			// Return the snapshot so onError can use it
 			return { previous };
 		},
-		// 2. If the request fails, roll back to the snapshot
 		onError: (_err, _input, context) => {
 			if (context?.previous) {
 				queryClient.setQueryData(["stock-entries"], context.previous);
 			}
 		},
-		// 3. After either success or error, refetch to ensure we're in sync
+		onSettled: () => {
+			queryClient.invalidateQueries({ queryKey: ["stock-entries"] });
+			queryClient.invalidateQueries({ queryKey: ["stock-logs"] });
+		},
+	});
+}
+
+export function useSpoilStock() {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: async (input: SpoilStockInput) => {
+			const res = await fetch("/api/stock-entries/spoil", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify(input),
+			});
+			if (!res.ok) throw new Error("Failed to spoil stock");
+			return res.json();
+		},
+		onMutate: async (input) => {
+			await queryClient.cancelQueries({ queryKey: ["stock-entries"] });
+			const previous = queryClient.getQueryData<StockEntry[]>([
+				"stock-entries",
+			]);
+			queryClient.setQueryData<StockEntry[]>(["stock-entries"], (old) =>
+				(old ?? [])
+					.map((entry) =>
+						entry.id === input.stockEntryId
+							? {
+									...entry,
+									quantity: (
+										Number.parseFloat(entry.quantity) -
+										Number.parseFloat(input.quantity)
+									).toString(),
+								}
+							: entry,
+					)
+					.filter((entry) => Number.parseFloat(entry.quantity) > 0),
+			);
+			return { previous };
+		},
+		onError: (_err, _input, context) => {
+			if (context?.previous) {
+				queryClient.setQueryData(["stock-entries"], context.previous);
+			}
+		},
 		onSettled: () => {
 			queryClient.invalidateQueries({ queryKey: ["stock-entries"] });
 			queryClient.invalidateQueries({ queryKey: ["stock-logs"] });

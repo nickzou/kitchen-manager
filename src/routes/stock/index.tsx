@@ -26,6 +26,7 @@ import {
 	type StockEntry,
 	useConsumeStock,
 	useDeleteStockEntry,
+	useSpoilStock,
 	useStockEntries,
 	useUpdateStockEntry,
 } from "#src/lib/hooks/use-stock-entries";
@@ -57,6 +58,7 @@ function StockPage() {
 	const { data: productConversions } = useProductUnitConversions(productIds);
 	const deleteStockEntry = useDeleteStockEntry();
 	const consumeStock = useConsumeStock();
+	const spoilStock = useSpoilStock();
 
 	const toast = useToast();
 	const [search, setSearch] = useState("");
@@ -97,6 +99,21 @@ function StockPage() {
 			toast.success(`All ${name} consumed`);
 		} catch {
 			toast.error(`Failed to consume ${name}`);
+		}
+	}
+
+	async function handleSpoil(stockEntryId: string) {
+		const entry = (stockEntries ?? []).find((e) => e.id === stockEntryId);
+		if (!entry || Number.parseFloat(entry.quantity) <= 0) return;
+		const name = getProductName(entry.productId);
+		try {
+			await spoilStock.mutateAsync({
+				stockEntryId,
+				quantity: entry.quantity,
+			});
+			toast.success(`${name} marked as spoiled`);
+		} catch {
+			toast.error(`Failed to mark ${name} as spoiled`);
 		}
 	}
 
@@ -283,6 +300,8 @@ function StockPage() {
 										onEdit={setEditingEntry}
 										onDelete={(id) => deleteStockEntry.mutate(id)}
 										deletePending={deleteStockEntry.isPending}
+										onSpoil={handleSpoil}
+										spoilPending={spoilStock.isPending}
 										storeNames={Object.fromEntries(
 											(stores ?? []).map((s) => [s.id, s.name]),
 										)}
