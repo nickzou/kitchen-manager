@@ -76,6 +76,7 @@ export function makeProduct(overrides?: Record<string, unknown>) {
 		minStockAmount: "0",
 		defaultExpirationDays: null,
 		defaultConsumeAmount: null,
+		defaultConsumeUnitId: null,
 		calories: null,
 		protein: null,
 		fat: null,

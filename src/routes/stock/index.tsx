@@ -79,9 +79,15 @@ function StockPage() {
 		if (!amount) return;
 		const entry = (stockEntries ?? []).find((e) => e.id === stockEntryId);
 		const name = entry ? getProductName(entry.productId) : "Stock";
+		const unit = entry
+			? getUnitAbbr(
+					products?.find((p) => p.id === entry.productId)
+						?.defaultQuantityUnitId ?? null,
+				)
+			: "";
 		try {
 			await consumeStock.mutateAsync({ stockEntryId, quantity: amount });
-			toast.success(`${name} consumed`);
+			toast.success(`${amount}${unit ? ` ${unit}` : ""} ${name} consumed`);
 		} catch {
 			toast.error(`Failed to consume ${name}`);
 		}
@@ -91,12 +97,18 @@ function StockPage() {
 		const entry = (stockEntries ?? []).find((e) => e.id === stockEntryId);
 		if (!entry || Number.parseFloat(entry.quantity) <= 0) return;
 		const name = getProductName(entry.productId);
+		const unit = getUnitAbbr(
+			products?.find((p) => p.id === entry.productId)?.defaultQuantityUnitId ??
+				null,
+		);
 		try {
 			await consumeStock.mutateAsync({
 				stockEntryId,
 				quantity: entry.quantity,
 			});
-			toast.success(`All ${name} consumed`);
+			toast.success(
+				`${entry.quantity}${unit ? ` ${unit}` : ""} ${name} consumed`,
+			);
 		} catch {
 			toast.error(`Failed to consume ${name}`);
 		}
@@ -133,13 +145,44 @@ function StockPage() {
 	async function handleQuickConsume(entries: StockEntry[], amount: number) {
 		const best = pickBestEntry(entries);
 		if (!best) return;
-		const name = getProductName(best.productId);
+		const product = products?.find((p) => p.id === best.productId);
+		const name = product?.name ?? "Unknown";
+
+		let finalAmount = amount;
+		if (
+			product?.defaultConsumeUnitId &&
+			product.defaultQuantityUnitId &&
+			product.defaultConsumeUnitId !== product.defaultQuantityUnitId
+		) {
+			const allConversions = [
+				...(productConversions ?? []).filter((c) => c.productId === product.id),
+				...(globalConversions ?? []),
+			];
+			const graph = buildConversionGraph(allConversions);
+			const converted = tryConvert(
+				graph,
+				amount,
+				product.defaultConsumeUnitId,
+				product.defaultQuantityUnitId,
+			);
+			if (converted === null) {
+				toast.error(`Cannot convert consume unit to stock unit for ${name}`);
+				return;
+			}
+			finalAmount = converted;
+		}
+
 		try {
 			await consumeStock.mutateAsync({
 				stockEntryId: best.id,
-				quantity: amount.toString(),
+				quantity: finalAmount.toString(),
 			});
-			toast.success(`${name} consumed`);
+			const consumeUnit = product?.defaultConsumeUnitId
+				? getUnitAbbr(product.defaultConsumeUnitId)
+				: getUnitAbbr(product?.defaultQuantityUnitId ?? null);
+			toast.success(
+				`${amount}${consumeUnit ? ` ${consumeUnit}` : ""} ${name} consumed`,
+			);
 		} catch {
 			toast.error(`Failed to consume ${name}`);
 		}
@@ -292,7 +335,7 @@ function StockPage() {
 											className="flex shrink-0 items-center gap-1"
 										>
 											<UtensilsCrossed size={12} className="sm:hidden" />
-											<span className="hidden sm:inline">Consume {amount}</span>
+											<span className="hidden sm:inline">Consume</span>
 										</AmberButton>
 									);
 								}}

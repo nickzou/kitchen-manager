@@ -63,6 +63,8 @@ export const Route = createFileRoute("/api/products/$id")({
 					updates.defaultExpirationDays = body.defaultExpirationDays;
 				if (body.defaultConsumeAmount !== undefined)
 					updates.defaultConsumeAmount = body.defaultConsumeAmount;
+				if (body.defaultConsumeUnitId !== undefined)
+					updates.defaultConsumeUnitId = body.defaultConsumeUnitId;
 				if (body.calories !== undefined) updates.calories = body.calories;
 				if (body.protein !== undefined) updates.protein = body.protein;
 				if (body.fat !== undefined) updates.fat = body.fat;

@@ -159,6 +159,22 @@ describe("PUT /api/products/:id", () => {
 		expect(data.categoryIds).toEqual([]);
 	});
 
+	it("updates defaultConsumeUnitId", async () => {
+		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
+		const updated = makeProduct({ defaultConsumeUnitId: "unit-2" });
+		mockUpdateReturning.mockResolvedValue([updated]);
+		mockSelectWhere.mockResolvedValueOnce([]);
+		const request = makePutRequest("/api/products/product-1", {
+			defaultConsumeUnitId: "unit-2",
+		});
+
+		const response = await PUT({ request, params } as never);
+
+		expect(response.status).toBe(200);
+		const data = await response.json();
+		expect(data.defaultConsumeUnitId).toBe("unit-2");
+	});
+
 	it("updates categoryIds via join table", async () => {
 		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
 		const updated = makeProduct();

@@ -218,6 +218,13 @@
       "when": 1775881397534,
       "tag": "0030_add-spoiled-transaction-type",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1775917919497,
+      "tag": "0031_add-default-consume-unit",
+      "breakpoints": true
     }
   ]
 }

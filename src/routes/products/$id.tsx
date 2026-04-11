@@ -87,6 +87,7 @@ function ProductDetail() {
 		minStockAmount: "",
 		defaultExpirationDays: "",
 		defaultConsumeAmount: "",
+		defaultConsumeUnitId: "",
 		calories: "",
 		protein: "",
 		fat: "",
@@ -160,6 +161,7 @@ function ProductDetail() {
 					? String(product.defaultExpirationDays)
 					: "",
 			defaultConsumeAmount: product.defaultConsumeAmount ?? "",
+			defaultConsumeUnitId: product.defaultConsumeUnitId || "",
 			calories: product.calories ?? "",
 			protein: product.protein ?? "",
 			fat: product.fat ?? "",
@@ -183,6 +185,7 @@ function ProductDetail() {
 					? Number.parseInt(form.defaultExpirationDays, 10)
 					: undefined,
 				defaultConsumeAmount: form.defaultConsumeAmount || undefined,
+				defaultConsumeUnitId: form.defaultConsumeUnitId || undefined,
 				calories: form.calories || undefined,
 				protein: form.protein || undefined,
 				fat: form.fat || undefined,
@@ -399,16 +402,34 @@ function ProductDetail() {
 									>
 										Default Consume Amount
 									</label>
-									<NumberInput
-										id={`${htmlId}-defaultConsumeAmount`}
-										step="any"
-										min="0"
-										value={form.defaultConsumeAmount}
-										onChange={(e) =>
-											setForm({ ...form, defaultConsumeAmount: e.target.value })
-										}
-										className="w-full"
-									/>
+									<div className="flex items-center gap-2">
+										<NumberInput
+											id={`${htmlId}-defaultConsumeAmount`}
+											step="any"
+											min="0"
+											value={form.defaultConsumeAmount}
+											onChange={(e) =>
+												setForm({
+													...form,
+													defaultConsumeAmount: e.target.value,
+												})
+											}
+											className="flex-1"
+										/>
+										<Combobox
+											value={form.defaultConsumeUnitId}
+											onChange={(v) =>
+												setForm({ ...form, defaultConsumeUnitId: v })
+											}
+											options={(quantityUnits ?? []).map((u) => ({
+												value: u.id,
+												label: u.abbreviation
+													? `${u.name} (${u.abbreviation})`
+													: u.name,
+											}))}
+											placeholder="Same as stock unit"
+										/>
+									</div>
 								</div>
 
 								{form.isFood && (
@@ -614,7 +635,7 @@ function ProductDetail() {
 										</dt>
 										<dd className="mt-0.5 text-(--sea-ink)">
 											{product.defaultConsumeAmount
-												? Number.parseFloat(product.defaultConsumeAmount)
+												? `${Number.parseFloat(product.defaultConsumeAmount)}${product.defaultConsumeUnitId ? ` ${getUnitName(product.defaultConsumeUnitId) ?? ""}` : ""}`
 												: "—"}
 										</dd>
 									</div>
