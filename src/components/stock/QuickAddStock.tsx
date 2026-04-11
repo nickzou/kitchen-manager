@@ -1,5 +1,5 @@
 import { Plus } from "lucide-react";
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useEffect, useState } from "react";
 import { Button } from "#src/components/Button";
 import { Combobox } from "#src/components/Combobox";
 import { DatePicker } from "#src/components/DatePicker";
@@ -7,6 +7,16 @@ import { Modal } from "#src/components/Modal";
 import { NumberInput } from "#src/components/NumberInput";
 import { useCreateBrand } from "#src/lib/hooks/use-brands";
 import { useCreateStockEntry } from "#src/lib/hooks/use-stock-entries";
+import {
+	buildConversionGraph,
+	tryConvert,
+} from "#src/lib/recipe-utils/conversion-graph";
+
+interface ConversionData {
+	fromUnitId: string;
+	toUnitId: string;
+	factor: string | number;
+}
 
 interface QuickAddStockProps {
 	products: {
@@ -17,6 +27,8 @@ interface QuickAddStockProps {
 	stores: { id: string; name: string }[];
 	brands: { id: string; name: string }[];
 	quantityUnits: { id: string; abbreviation: string | null; name: string }[];
+	productConversions: (ConversionData & { productId: string })[];
+	globalConversions: ConversionData[];
 }
 
 export function QuickAddStock({
@@ -24,6 +36,8 @@ export function QuickAddStock({
 	stores,
 	brands,
 	quantityUnits,
+	productConversions,
+	globalConversions,
 }: QuickAddStockProps) {
 	const createStockEntry = useCreateStockEntry();
 	const createBrand = useCreateBrand();
@@ -31,17 +45,64 @@ export function QuickAddStock({
 	const [open, setOpen] = useState(false);
 	const [productId, setProductId] = useState("");
 	const [quantity, setQuantity] = useState("");
+	const [unitId, setUnitId] = useState("");
 	const [expirationDate, setExpirationDate] = useState("");
 	const [price, setPrice] = useState("");
 	const [storeId, setStoreId] = useState("");
 	const [brandId, setBrandId] = useState("");
 
+	const selectedProduct = products.find((p) => p.id === productId);
+	const defaultUnitId = selectedProduct?.defaultQuantityUnitId ?? "";
+
+	// Reset unitId when product changes
+	useEffect(() => {
+		setUnitId(defaultUnitId);
+	}, [defaultUnitId]);
+
+	// Build conversion graph and find convertible units
+	const relevantProductConversions = productConversions.filter(
+		(c) => c.productId === productId,
+	);
+	const allConversions = [...relevantProductConversions, ...globalConversions];
+	const graph = buildConversionGraph(allConversions);
+
+	const convertibleUnitIds = new Set<string>();
+	if (defaultUnitId) {
+		convertibleUnitIds.add(defaultUnitId);
+		const edges = graph.get(defaultUnitId);
+		if (edges) {
+			for (const neighborId of edges.keys()) {
+				convertibleUnitIds.add(neighborId);
+			}
+		}
+	}
+
+	const unitOptions = quantityUnits
+		.filter((u) => convertibleUnitIds.has(u.id))
+		.map((u) => ({
+			value: u.id,
+			label: u.abbreviation ?? u.name,
+		}));
+
 	async function handleSubmit(e: FormEvent) {
 		e.preventDefault();
 		if (!productId || !quantity) return;
+
+		let finalQuantity = quantity;
+		if (unitId && defaultUnitId && unitId !== defaultUnitId) {
+			const converted = tryConvert(
+				graph,
+				Number.parseFloat(quantity),
+				unitId,
+				defaultUnitId,
+			);
+			if (converted === null) return;
+			finalQuantity = String(converted);
+		}
+
 		await createStockEntry.mutateAsync({
 			productId,
-			quantity,
+			quantity: finalQuantity,
 			expirationDate: expirationDate || undefined,
 			purchaseDate: new Date().toISOString().slice(0, 10),
 			price: price || undefined,
@@ -49,18 +110,13 @@ export function QuickAddStock({
 			brandId: brandId || undefined,
 		});
 		setQuantity("");
+		setUnitId(defaultUnitId);
 		setExpirationDate("");
 		setPrice("");
 		setStoreId("");
 		setBrandId("");
 		setOpen(false);
 	}
-
-	const selectedProduct = products.find((p) => p.id === productId);
-	const selectedUnit = selectedProduct?.defaultQuantityUnitId
-		? quantityUnits.find((u) => u.id === selectedProduct.defaultQuantityUnitId)
-		: null;
-	const unitLabel = selectedUnit?.abbreviation ?? selectedUnit?.name ?? "";
 
 	const formFields = (
 		<>
@@ -85,9 +141,19 @@ export function QuickAddStock({
 					onChange={(e) => setQuantity(e.target.value)}
 					className="w-28 sm:w-28"
 				/>
-				{unitLabel && (
-					<span className="text-sm text-(--sea-ink-soft)">{unitLabel}</span>
-				)}
+				{unitOptions.length > 1 ? (
+					<Combobox
+						value={unitId}
+						onChange={setUnitId}
+						options={unitOptions}
+						placeholder="Unit"
+						className="w-24 sm:w-24"
+					/>
+				) : unitOptions.length === 1 ? (
+					<span className="text-sm text-(--sea-ink-soft)">
+						{unitOptions[0].label}
+					</span>
+				) : null}
 			</div>
 			<DatePicker
 				value={expirationDate}
