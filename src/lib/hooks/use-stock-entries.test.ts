@@ -186,6 +186,23 @@ describe("useSpoilStock", () => {
 	});
 });
 
+describe("useSpoilStock error handling", () => {
+	it("throws when response is not ok", async () => {
+		vi.mocked(fetch).mockResolvedValueOnce({
+			ok: false,
+			json: () => Promise.resolve({ error: "Failed" }),
+		} as Response);
+
+		const { result } = renderHook(() => useSpoilStock(), {
+			wrapper: createTestWrapper(),
+		});
+
+		await expect(
+			result.current.mutateAsync({ stockEntryId: "se1", quantity: "3" }),
+		).rejects.toThrow("Failed to spoil stock");
+	});
+});
+
 describe("error handling", () => {
 	it("throws when response is not ok", async () => {
 		vi.mocked(fetch).mockResolvedValueOnce({
