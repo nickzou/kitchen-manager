@@ -1,7 +1,24 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { createFileRoute } from "@tanstack/react-router";
+import sharp from "sharp";
 import { getAuthSession } from "#src/lib/auth-session";
+
+async function processImage(
+	buffer: Buffer,
+	mimeType: string,
+): Promise<{ buffer: Buffer; ext: string }> {
+	if (mimeType === "image/svg+xml") {
+		return { buffer, ext: ".svg" };
+	}
+
+	const processed = await sharp(buffer)
+		.resize(1200, 1200, { fit: "inside", withoutEnlargement: true })
+		.webp({ quality: 80 })
+		.toBuffer();
+
+	return { buffer: processed, ext: ".webp" };
+}
 
 const UPLOADS_DIR = join(process.cwd(), "uploads");
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -11,18 +28,6 @@ function json(data: unknown, init?: { status?: number }) {
 		status: init?.status ?? 200,
 		headers: { "Content-Type": "application/json" },
 	});
-}
-
-function getExtension(mimeType: string): string {
-	const map: Record<string, string> = {
-		"image/jpeg": ".jpg",
-		"image/png": ".png",
-		"image/gif": ".gif",
-		"image/webp": ".webp",
-		"image/svg+xml": ".svg",
-		"image/avif": ".avif",
-	};
-	return map[mimeType] || ".bin";
 }
 
 export const Route = createFileRoute("/api/uploads/")({
@@ -54,10 +59,13 @@ export const Route = createFileRoute("/api/uploads/")({
 						return json({ error: "File must be under 5MB" }, { status: 400 });
 					}
 
-					const ext = getExtension(file.type);
-					const filename = `${crypto.randomUUID()}${ext}`;
 					const buffer = Buffer.from(await file.arrayBuffer());
-					await writeFile(join(UPLOADS_DIR, filename), buffer);
+					const { buffer: processed, ext } = await processImage(
+						buffer,
+						file.type,
+					);
+					const filename = `${crypto.randomUUID()}${ext}`;
+					await writeFile(join(UPLOADS_DIR, filename), processed);
 
 					return json({ url: `/api/uploads/${filename}` }, { status: 201 });
 				}
@@ -101,9 +109,13 @@ export const Route = createFileRoute("/api/uploads/")({
 					);
 				}
 
-				const ext = getExtension(respContentType);
+				const buffer = Buffer.from(arrayBuffer);
+				const { buffer: processed, ext } = await processImage(
+					buffer,
+					respContentType,
+				);
 				const filename = `${crypto.randomUUID()}${ext}`;
-				await writeFile(join(UPLOADS_DIR, filename), Buffer.from(arrayBuffer));
+				await writeFile(join(UPLOADS_DIR, filename), processed);
 
 				return json({ url: `/api/uploads/${filename}` }, { status: 201 });
 			},
