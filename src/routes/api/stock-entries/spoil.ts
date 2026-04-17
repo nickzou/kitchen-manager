@@ -61,20 +61,27 @@ export const Route = createFileRoute("/api/stock-entries/spoil")({
 
 					const newQuantity = (available - spoilQty).toString();
 
-					await tx.insert(stockLog).values({
-						stockEntryId: entry.id,
-						productId: entry.productId,
-						transactionType: "spoiled",
-						quantity: quantity.toString(),
-						userId: session.user.id,
-					});
+					const [log] = await tx
+						.insert(stockLog)
+						.values({
+							stockEntryId: entry.id,
+							productId: entry.productId,
+							transactionType: "spoiled",
+							quantity: quantity.toString(),
+							userId: session.user.id,
+						})
+						.returning();
 
 					if (newQuantity === "0") {
 						const [deleted] = await tx
 							.delete(stockEntry)
 							.where(eq(stockEntry.id, stockEntryId))
 							.returning();
-						return { entry: { ...deleted, quantity: "0" }, status: 200 };
+						return {
+							entry: { ...deleted, quantity: "0" },
+							stockLogId: log.id,
+							status: 200,
+						};
 					}
 
 					const [updated] = await tx
@@ -83,7 +90,7 @@ export const Route = createFileRoute("/api/stock-entries/spoil")({
 						.where(eq(stockEntry.id, stockEntryId))
 						.returning();
 
-					return { entry: updated, status: 200 };
+					return { entry: updated, stockLogId: log.id, status: 200 };
 				});
 
 				if ("error" in result) {
@@ -94,7 +101,7 @@ export const Route = createFileRoute("/api/stock-entries/spoil")({
 				}
 
 				dispatchWebhook(session.user.id, "stock.entry.spoiled", result.entry);
-				return json(result.entry);
+				return json({ ...result.entry, stockLogId: result.stockLogId });
 			},
 		},
 	},

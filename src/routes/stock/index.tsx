@@ -30,7 +30,10 @@ import {
 	useStockEntries,
 	useUpdateStockEntry,
 } from "#src/lib/hooks/use-stock-entries";
-import { useStockLogs } from "#src/lib/hooks/use-stock-logs";
+import {
+	useReverseStockLog,
+	useStockLogs,
+} from "#src/lib/hooks/use-stock-logs";
 import { useStores } from "#src/lib/hooks/use-stores";
 import { useUnitConversions } from "#src/lib/hooks/use-unit-conversions";
 import {
@@ -59,6 +62,7 @@ function StockPage() {
 	const deleteStockEntry = useDeleteStockEntry();
 	const consumeStock = useConsumeStock();
 	const spoilStock = useSpoilStock();
+	const reverseStockLog = useReverseStockLog();
 
 	const toast = useToast();
 	const [search, setSearch] = useState("");
@@ -86,8 +90,18 @@ function StockPage() {
 				)
 			: "";
 		try {
-			await consumeStock.mutateAsync({ stockEntryId, quantity: amount });
-			toast.success(`${amount}${unit ? ` ${unit}` : ""} ${name} consumed`);
+			const result = await consumeStock.mutateAsync({
+				stockEntryId,
+				quantity: amount,
+			});
+			toast.success(`${amount}${unit ? ` ${unit}` : ""} ${name} consumed`, {
+				label: "Undo",
+				onClick: () =>
+					reverseStockLog.mutate({
+						stockLogId: result.stockLogId,
+						stockEntryId,
+					}),
+			});
 		} catch {
 			toast.error(`Failed to consume ${name}`);
 		}
@@ -102,12 +116,20 @@ function StockPage() {
 				null,
 		);
 		try {
-			await consumeStock.mutateAsync({
+			const result = await consumeStock.mutateAsync({
 				stockEntryId,
 				quantity: entry.quantity,
 			});
 			toast.success(
 				`${entry.quantity}${unit ? ` ${unit}` : ""} ${name} consumed`,
+				{
+					label: "Undo",
+					onClick: () =>
+						reverseStockLog.mutate({
+							stockLogId: result.stockLogId,
+							stockEntryId,
+						}),
+				},
 			);
 		} catch {
 			toast.error(`Failed to consume ${name}`);
@@ -120,8 +142,18 @@ function StockPage() {
 		const entry = (stockEntries ?? []).find((e) => e.id === stockEntryId);
 		const name = entry ? getProductName(entry.productId) : "Stock";
 		try {
-			await spoilStock.mutateAsync({ stockEntryId, quantity: amount });
-			toast.success(`${name} marked as spoiled`);
+			const result = await spoilStock.mutateAsync({
+				stockEntryId,
+				quantity: amount,
+			});
+			toast.success(`${name} marked as spoiled`, {
+				label: "Undo",
+				onClick: () =>
+					reverseStockLog.mutate({
+						stockLogId: result.stockLogId,
+						stockEntryId,
+					}),
+			});
 		} catch {
 			toast.error(`Failed to mark ${name} as spoiled`);
 		}
@@ -132,11 +164,18 @@ function StockPage() {
 		if (!entry || Number.parseFloat(entry.quantity) <= 0) return;
 		const name = getProductName(entry.productId);
 		try {
-			await spoilStock.mutateAsync({
+			const result = await spoilStock.mutateAsync({
 				stockEntryId,
 				quantity: entry.quantity,
 			});
-			toast.success(`All ${name} marked as spoiled`);
+			toast.success(`All ${name} marked as spoiled`, {
+				label: "Undo",
+				onClick: () =>
+					reverseStockLog.mutate({
+						stockLogId: result.stockLogId,
+						stockEntryId,
+					}),
+			});
 		} catch {
 			toast.error(`Failed to mark ${name} as spoiled`);
 		}
@@ -173,7 +212,7 @@ function StockPage() {
 		}
 
 		try {
-			await consumeStock.mutateAsync({
+			const result = await consumeStock.mutateAsync({
 				stockEntryId: best.id,
 				quantity: finalAmount.toString(),
 			});
@@ -182,6 +221,14 @@ function StockPage() {
 				: getUnitAbbr(product?.defaultQuantityUnitId ?? null);
 			toast.success(
 				`${amount}${consumeUnit ? ` ${consumeUnit}` : ""} ${name} consumed`,
+				{
+					label: "Undo",
+					onClick: () =>
+						reverseStockLog.mutate({
+							stockLogId: result.stockLogId,
+							stockEntryId: best.id,
+						}),
+				},
 			);
 		} catch {
 			toast.error(`Failed to consume ${name}`);
@@ -386,6 +433,12 @@ function StockPage() {
 											?.defaultQuantityUnitId ?? null,
 									)}
 									createdAt={log.createdAt}
+									onUndo={() =>
+										reverseStockLog.mutate({
+											stockLogId: log.id,
+											stockEntryId: log.stockEntryId ?? undefined,
+										})
+									}
 								/>
 							))}
 						</div>

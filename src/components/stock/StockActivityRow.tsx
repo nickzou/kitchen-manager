@@ -1,3 +1,4 @@
+import { Undo2 } from "lucide-react";
 import { Badge } from "#src/components/Badge";
 
 const transactionColor: Record<string, "green" | "amber" | "red"> = {
@@ -13,12 +14,14 @@ export function StockActivityRow({
 	quantity,
 	unitAbbr,
 	createdAt,
+	onUndo,
 }: {
 	transactionType: string;
 	productName: string;
 	quantity: string;
 	unitAbbr: string;
 	createdAt: string;
+	onUndo?: () => void;
 }) {
 	return (
 		<div className="flex items-center gap-3 rounded-lg py-2 text-sm">
@@ -38,6 +41,16 @@ export function StockActivityRow({
 				{quantity}
 				{unitAbbr ? ` ${unitAbbr}` : ""}
 			</span>
+			{onUndo && (
+				<button
+					type="button"
+					onClick={onUndo}
+					title="Undo"
+					className="shrink-0 rounded-md p-1 text-(--sea-ink-soft) transition hover:bg-(--line) hover:text-(--sea-ink)"
+				>
+					<Undo2 size={14} />
+				</button>
+			)}
 		</div>
 	);
 }
