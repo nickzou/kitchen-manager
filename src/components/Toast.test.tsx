@@ -67,15 +67,15 @@ describe("Toast", () => {
 	it("applies success variant styling", () => {
 		renderWithProvider();
 		clickSuccess();
-		const toast = screen.getByText("Item added");
-		expect(toast.className).toContain("border-green-200");
+		const toast = screen.getByText("Item added").closest("div");
+		expect(toast?.className).toContain("border-green-200");
 	});
 
 	it("applies error variant styling", () => {
 		renderWithProvider();
 		clickError();
-		const toast = screen.getByText("Something failed");
-		expect(toast.className).toContain("border-red-200");
+		const toast = screen.getByText("Something failed").closest("div");
+		expect(toast?.className).toContain("border-red-200");
 	});
 
 	it("auto-dismisses after 3 seconds", () => {

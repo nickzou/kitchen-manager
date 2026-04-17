@@ -56,6 +56,7 @@ import { Route as ApiWebhooksIdRouteImport } from './routes/api/webhooks/$id'
 import { Route as ApiUploadsFilenameRouteImport } from './routes/api/uploads/$filename'
 import { Route as ApiUnitConversionsIdRouteImport } from './routes/api/unit-conversions/$id'
 import { Route as ApiStoresIdRouteImport } from './routes/api/stores/$id'
+import { Route as ApiStockLogsReverseRouteImport } from './routes/api/stock-logs/reverse'
 import { Route as ApiStockLogsIdRouteImport } from './routes/api/stock-logs/$id'
 import { Route as ApiStockEntriesSpoilRouteImport } from './routes/api/stock-entries/spoil'
 import { Route as ApiStockEntriesConsumeRouteImport } from './routes/api/stock-entries/consume'
@@ -321,6 +322,11 @@ const ApiStoresIdRoute = ApiStoresIdRouteImport.update({
   path: '/api/stores/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiStockLogsReverseRoute = ApiStockLogsReverseRouteImport.update({
+  id: '/api/stock-logs/reverse',
+  path: '/api/stock-logs/reverse',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiStockLogsIdRoute = ApiStockLogsIdRouteImport.update({
   id: '/api/stock-logs/$id',
   path: '/api/stock-logs/$id',
@@ -506,6 +512,7 @@ export interface FileRoutesByFullPath {
   '/api/stock-entries/consume': typeof ApiStockEntriesConsumeRoute
   '/api/stock-entries/spoil': typeof ApiStockEntriesSpoilRoute
   '/api/stock-logs/$id': typeof ApiStockLogsIdRoute
+  '/api/stock-logs/reverse': typeof ApiStockLogsReverseRoute
   '/api/stores/$id': typeof ApiStoresIdRoute
   '/api/unit-conversions/$id': typeof ApiUnitConversionsIdRoute
   '/api/uploads/$filename': typeof ApiUploadsFilenameRoute
@@ -581,6 +588,7 @@ export interface FileRoutesByTo {
   '/api/stock-entries/consume': typeof ApiStockEntriesConsumeRoute
   '/api/stock-entries/spoil': typeof ApiStockEntriesSpoilRoute
   '/api/stock-logs/$id': typeof ApiStockLogsIdRoute
+  '/api/stock-logs/reverse': typeof ApiStockLogsReverseRoute
   '/api/stores/$id': typeof ApiStoresIdRoute
   '/api/unit-conversions/$id': typeof ApiUnitConversionsIdRoute
   '/api/uploads/$filename': typeof ApiUploadsFilenameRoute
@@ -657,6 +665,7 @@ export interface FileRoutesById {
   '/api/stock-entries/consume': typeof ApiStockEntriesConsumeRoute
   '/api/stock-entries/spoil': typeof ApiStockEntriesSpoilRoute
   '/api/stock-logs/$id': typeof ApiStockLogsIdRoute
+  '/api/stock-logs/reverse': typeof ApiStockLogsReverseRoute
   '/api/stores/$id': typeof ApiStoresIdRoute
   '/api/unit-conversions/$id': typeof ApiUnitConversionsIdRoute
   '/api/uploads/$filename': typeof ApiUploadsFilenameRoute
@@ -734,6 +743,7 @@ export interface FileRouteTypes {
     | '/api/stock-entries/consume'
     | '/api/stock-entries/spoil'
     | '/api/stock-logs/$id'
+    | '/api/stock-logs/reverse'
     | '/api/stores/$id'
     | '/api/unit-conversions/$id'
     | '/api/uploads/$filename'
@@ -809,6 +819,7 @@ export interface FileRouteTypes {
     | '/api/stock-entries/consume'
     | '/api/stock-entries/spoil'
     | '/api/stock-logs/$id'
+    | '/api/stock-logs/reverse'
     | '/api/stores/$id'
     | '/api/unit-conversions/$id'
     | '/api/uploads/$filename'
@@ -884,6 +895,7 @@ export interface FileRouteTypes {
     | '/api/stock-entries/consume'
     | '/api/stock-entries/spoil'
     | '/api/stock-logs/$id'
+    | '/api/stock-logs/reverse'
     | '/api/stores/$id'
     | '/api/unit-conversions/$id'
     | '/api/uploads/$filename'
@@ -960,6 +972,7 @@ export interface RootRouteChildren {
   ApiStockEntriesConsumeRoute: typeof ApiStockEntriesConsumeRoute
   ApiStockEntriesSpoilRoute: typeof ApiStockEntriesSpoilRoute
   ApiStockLogsIdRoute: typeof ApiStockLogsIdRoute
+  ApiStockLogsReverseRoute: typeof ApiStockLogsReverseRoute
   ApiStoresIdRoute: typeof ApiStoresIdRoute
   ApiUnitConversionsIdRoute: typeof ApiUnitConversionsIdRoute
   ApiUploadsFilenameRoute: typeof ApiUploadsFilenameRoute
@@ -1315,6 +1328,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiStoresIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/stock-logs/reverse': {
+      id: '/api/stock-logs/reverse'
+      path: '/api/stock-logs/reverse'
+      fullPath: '/api/stock-logs/reverse'
+      preLoaderRoute: typeof ApiStockLogsReverseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/stock-logs/$id': {
       id: '/api/stock-logs/$id'
       path: '/api/stock-logs/$id'
@@ -1583,6 +1603,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiStockEntriesConsumeRoute: ApiStockEntriesConsumeRoute,
   ApiStockEntriesSpoilRoute: ApiStockEntriesSpoilRoute,
   ApiStockLogsIdRoute: ApiStockLogsIdRoute,
+  ApiStockLogsReverseRoute: ApiStockLogsReverseRoute,
   ApiStoresIdRoute: ApiStoresIdRoute,
   ApiUnitConversionsIdRoute: ApiUnitConversionsIdRoute,
   ApiUploadsFilenameRoute: ApiUploadsFilenameRoute,

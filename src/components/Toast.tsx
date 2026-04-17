@@ -11,14 +11,24 @@ import { cn } from "#src/lib/utils";
 
 type ToastVariant = "success" | "error";
 
+interface ToastAction {
+	label: string;
+	onClick: () => void;
+}
+
 interface Toast {
 	id: string;
 	message: string;
 	variant: ToastVariant;
+	action?: ToastAction;
 }
 
 interface ToastContextValue {
-	addToast: (message: string, variant: ToastVariant) => void;
+	addToast: (
+		message: string,
+		variant: ToastVariant,
+		action?: ToastAction,
+	) => void;
 }
 
 const ToastContext = createContext<ToastContextValue | null>(null);
@@ -27,7 +37,8 @@ export function useToast() {
 	const ctx = useContext(ToastContext);
 	if (!ctx) throw new Error("useToast must be used within ToastProvider");
 	return {
-		success: (message: string) => ctx.addToast(message, "success"),
+		success: (message: string, action?: ToastAction) =>
+			ctx.addToast(message, "success", action),
 		error: (message: string) => ctx.addToast(message, "error"),
 	};
 }
@@ -38,16 +49,40 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 		new Map(),
 	);
 
-	const addToast = useCallback((message: string, variant: ToastVariant) => {
-		const id = crypto.randomUUID();
-		setToasts((prev) => [...prev, { id, message, variant }]);
-
-		const timer = setTimeout(() => {
-			setToasts((prev) => prev.filter((t) => t.id !== id));
+	const removeToast = useCallback((id: string) => {
+		setToasts((prev) => prev.filter((t) => t.id !== id));
+		const timer = timersRef.current.get(id);
+		if (timer) {
+			clearTimeout(timer);
 			timersRef.current.delete(id);
-		}, 3000);
-		timersRef.current.set(id, timer);
+		}
 	}, []);
+
+	const addToast = useCallback(
+		(message: string, variant: ToastVariant, action?: ToastAction) => {
+			const id = crypto.randomUUID();
+			const wrappedAction = action
+				? {
+						label: action.label,
+						onClick: () => {
+							action.onClick();
+							removeToast(id);
+						},
+					}
+				: undefined;
+			setToasts((prev) => [
+				...prev,
+				{ id, message, variant, action: wrappedAction },
+			]);
+
+			const timer = setTimeout(() => {
+				setToasts((prev) => prev.filter((t) => t.id !== id));
+				timersRef.current.delete(id);
+			}, 3000);
+			timersRef.current.set(id, timer);
+		},
+		[removeToast],
+	);
 
 	useEffect(() => {
 		const timers = timersRef.current;
@@ -80,12 +115,21 @@ function ToastContainer({ toasts }: { toasts: Toast[] }) {
 				<div
 					key={toast.id}
 					className={cn(
-						"w-full rounded-lg border px-4 py-3 text-sm font-medium shadow-lg sm:w-auto",
+						"flex w-full items-center gap-3 rounded-lg border px-4 py-3 text-sm font-medium shadow-lg sm:w-auto",
 						"animate-in fade-in-0 slide-in-from-bottom-4",
 						variantClasses[toast.variant],
 					)}
 				>
-					{toast.message}
+					<span>{toast.message}</span>
+					{toast.action && (
+						<button
+							type="button"
+							onClick={toast.action.onClick}
+							className="shrink-0 underline underline-offset-2 opacity-80 hover:opacity-100"
+						>
+							{toast.action.label}
+						</button>
+					)}
 				</div>
 			))}
 		</div>

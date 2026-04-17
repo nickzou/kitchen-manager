@@ -115,7 +115,9 @@ export function useDeleteStockEntry() {
 export function useConsumeStock() {
 	const queryClient = useQueryClient();
 	return useMutation({
-		mutationFn: async (input: ConsumeStockInput) => {
+		mutationFn: async (
+			input: ConsumeStockInput,
+		): Promise<StockEntry & { stockLogId: string }> => {
 			const res = await fetch("/api/stock-entries/consume", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
@@ -161,7 +163,9 @@ export function useConsumeStock() {
 export function useSpoilStock() {
 	const queryClient = useQueryClient();
 	return useMutation({
-		mutationFn: async (input: SpoilStockInput) => {
+		mutationFn: async (
+			input: SpoilStockInput,
+		): Promise<StockEntry & { stockLogId: string }> => {
 			const res = await fetch("/api/stock-entries/spoil", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },

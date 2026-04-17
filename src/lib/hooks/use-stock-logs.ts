@@ -48,6 +48,28 @@ export function useUpdateStockLog(id: string) {
 	});
 }
 
+export function useReverseStockLog() {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: async (input: {
+			stockLogId: string;
+			stockEntryId?: string;
+		}) => {
+			const res = await fetch("/api/stock-logs/reverse", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify(input),
+			});
+			if (!res.ok) throw new Error("Failed to reverse stock log");
+			return res.json();
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["stock-entries"] });
+			queryClient.invalidateQueries({ queryKey: ["stock-logs"] });
+		},
+	});
+}
+
 export function useDeleteStockLog() {
 	const queryClient = useQueryClient();
 	return useMutation({

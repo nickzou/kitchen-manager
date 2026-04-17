@@ -14,7 +14,9 @@ vi.mock("#src/db/schema", () => ({
 const mockTxSelectWhere = vi.fn();
 const mockTxUpdateReturning = vi.fn();
 const mockTxDeleteReturning = vi.fn();
-const mockTxInsertValues = vi.fn(() => ({}));
+const mockTxInsertValues = vi.fn(() => ({
+	returning: vi.fn(() => Promise.resolve([{ id: "log-1" }])),
+}));
 
 vi.mock("#src/db", () => ({
 	db: {
@@ -143,6 +145,7 @@ describe("POST /api/stock-entries/spoil", () => {
 		expect(response.status).toBe(200);
 		const data = await response.json();
 		expect(data.quantity).toBe("0");
+		expect(data.stockLogId).toBe("log-1");
 	});
 
 	it("returns 200 with updated entry after partial spoil", async () => {
@@ -160,5 +163,6 @@ describe("POST /api/stock-entries/spoil", () => {
 		expect(response.status).toBe(200);
 		const data = await response.json();
 		expect(data.quantity).toBe("7");
+		expect(data.stockLogId).toBe("log-1");
 	});
 });

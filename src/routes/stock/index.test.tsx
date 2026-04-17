@@ -26,6 +26,7 @@ const mockUseBrands = vi.fn();
 const mockUseCreateBrand = vi.fn();
 const mockUseUnitConversions = vi.fn();
 const mockUseProductUnitConversions = vi.fn();
+const mockUseReverseStockLog = vi.fn();
 const mockUseToast = vi.fn();
 
 vi.mock("@tanstack/react-router", () => ({
@@ -67,6 +68,7 @@ vi.mock("#src/lib/hooks/use-stock-entries", () => ({
 
 vi.mock("#src/lib/hooks/use-stock-logs", () => ({
 	useStockLogs: (...args: unknown[]) => mockUseStockLogs(...args),
+	useReverseStockLog: (...args: unknown[]) => mockUseReverseStockLog(...args),
 }));
 
 vi.mock("#src/lib/hooks/use-stores", () => ({
@@ -186,7 +188,7 @@ const mockStockLog = {
 	updatedAt: "2026-03-01T00:00:00Z",
 };
 
-const mockMutateAsync = vi.fn().mockResolvedValue({});
+const mockMutateAsync = vi.fn().mockResolvedValue({ stockLogId: "log-1" });
 
 beforeEach(() => {
 	vi.clearAllMocks();
@@ -207,6 +209,10 @@ beforeEach(() => {
 		isLoading: false,
 	});
 	mockUseStockLogs.mockReturnValue({ data: [mockStockLog] });
+	mockUseReverseStockLog.mockReturnValue({
+		mutate: vi.fn(),
+		isPending: false,
+	});
 	mockUseCreateStockEntry.mockReturnValue({
 		mutateAsync: mockMutateAsync,
 		isPending: false,
@@ -453,7 +459,9 @@ describe("StockPage", () => {
 		it("shows success toast after spoiling by amount", async () => {
 			const mockToast = { success: vi.fn(), error: vi.fn() };
 			mockUseToast.mockReturnValue(mockToast);
-			const mockSpoilMutateAsync = vi.fn().mockResolvedValue({});
+			const mockSpoilMutateAsync = vi
+				.fn()
+				.mockResolvedValue({ stockLogId: "log-1" });
 			mockUseSpoilStock.mockReturnValue({
 				mutateAsync: mockSpoilMutateAsync,
 				isPending: false,
@@ -471,6 +479,7 @@ describe("StockPage", () => {
 			await waitFor(() => {
 				expect(mockToast.success).toHaveBeenCalledWith(
 					"Tomatoes marked as spoiled",
+					expect.objectContaining({ label: "Undo" }),
 				);
 			});
 		});
@@ -503,7 +512,9 @@ describe("StockPage", () => {
 		it("shows success toast after spoiling all", async () => {
 			const mockToast = { success: vi.fn(), error: vi.fn() };
 			mockUseToast.mockReturnValue(mockToast);
-			const mockSpoilMutateAsync = vi.fn().mockResolvedValue({});
+			const mockSpoilMutateAsync = vi
+				.fn()
+				.mockResolvedValue({ stockLogId: "log-1" });
 			mockUseSpoilStock.mockReturnValue({
 				mutateAsync: mockSpoilMutateAsync,
 				isPending: false,
@@ -521,6 +532,7 @@ describe("StockPage", () => {
 			await waitFor(() => {
 				expect(mockToast.success).toHaveBeenCalledWith(
 					"All Tomatoes marked as spoiled",
+					expect.objectContaining({ label: "Undo" }),
 				);
 			});
 		});
@@ -592,6 +604,7 @@ describe("StockPage", () => {
 			await waitFor(() => {
 				expect(mockToast.success).toHaveBeenCalledWith(
 					"10 kg Tomatoes consumed",
+					expect.objectContaining({ label: "Undo" }),
 				);
 			});
 		});
