@@ -1,8 +1,6 @@
 import { Link } from "@tanstack/react-router";
-import { Skull, UtensilsCrossed } from "lucide-react";
 import { Badge } from "#src/components/Badge";
-import { NumberInput } from "#src/components/NumberInput";
-import { AmberButton } from "#src/components/stock/AmberButton";
+import { StockActions } from "#src/components/stock/StockActions";
 import type { Product } from "#src/lib/hooks/use-products";
 import type { QuantityUnit } from "#src/lib/hooks/use-quantity-units";
 import type { StockEntry } from "#src/lib/hooks/use-stock-entries";
@@ -139,60 +137,19 @@ export function ExpiringStockList({
 								</span>
 							</div>
 							<div className="mt-1.5 flex items-center gap-1.5 pl-0 sm:pl-[calc(4.5rem+0.75rem)]">
-								<NumberInput
-									placeholder="Qty"
-									step="any"
-									min="0.01"
-									max={entry.quantity}
-									value={consumeAmounts[entry.id] ?? ""}
-									onChange={(e) =>
-										onConsumeAmountChange(entry.id, e.target.value)
+								<StockActions
+									quantity={entry.quantity}
+									consumeAmount={consumeAmounts[entry.id] ?? ""}
+									onConsumeAmountChange={(value) =>
+										onConsumeAmountChange(entry.id, value)
 									}
-									className="h-7 w-16 rounded border bg-white px-2 text-xs sm:w-20 dark:bg-(--surface)"
+									onConsume={() => onConsume(entry.id)}
+									onConsumeAll={() => onConsumeAll(entry.id)}
+									consumePending={consumePending}
+									onSpoil={() => onSpoil(entry.id)}
+									onSpoilAll={() => onSpoilAll(entry.id)}
+									spoilPending={spoilPending}
 								/>
-								<button
-									type="button"
-									onClick={() => onSpoil(entry.id)}
-									disabled={spoilPending || !consumeAmounts[entry.id]}
-									title="Mark amount as spoiled"
-									className="flex h-7 w-7 items-center justify-center rounded-full border border-red-200 bg-red-50 text-xs font-semibold text-red-600 transition hover:bg-red-100 disabled:opacity-50 dark:border-red-900 dark:bg-red-950 dark:hover:bg-red-900 sm:w-auto sm:gap-1 sm:px-2.5"
-								>
-									<Skull size={12} />
-									<span className="hidden sm:inline">Spoil</span>
-								</button>
-								<button
-									type="button"
-									onClick={() => onSpoilAll(entry.id)}
-									disabled={
-										spoilPending || Number.parseFloat(entry.quantity) <= 0
-									}
-									title="Mark all as spoiled"
-									className="flex h-7 w-7 items-center justify-center rounded-full border border-red-200 bg-red-50 text-xs font-semibold text-red-600 transition hover:bg-red-100 disabled:opacity-50 dark:border-red-900 dark:bg-red-950 dark:hover:bg-red-900 sm:w-auto sm:gap-1 sm:px-2.5"
-								>
-									<span className="sm:hidden">All</span>
-									<span className="hidden sm:inline">Spoil All</span>
-								</button>
-								<AmberButton
-									type="button"
-									onClick={() => onConsume(entry.id)}
-									disabled={consumePending || !consumeAmounts[entry.id]}
-									className="flex items-center gap-1"
-								>
-									<UtensilsCrossed size={12} className="sm:hidden" />
-									<span className="hidden sm:inline">Consume</span>
-								</AmberButton>
-								<AmberButton
-									type="button"
-									onClick={() => onConsumeAll(entry.id)}
-									disabled={
-										consumePending || Number.parseFloat(entry.quantity) <= 0
-									}
-									title="Consume all remaining stock"
-									className="flex items-center gap-1 bg-amber-700"
-								>
-									<span className="sm:hidden">All</span>
-									<span className="hidden sm:inline">Consume All</span>
-								</AmberButton>
 							</div>
 						</li>
 					);
