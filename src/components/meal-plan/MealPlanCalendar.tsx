@@ -79,7 +79,7 @@ export function MealPlanCalendar({
 			<div
 				className="grid gap-px bg-(--line) rounded-xl overflow-hidden border border-(--line)"
 				style={{
-					gridTemplateColumns: `5rem repeat(7, 1fr)`,
+					gridTemplateColumns: `5rem repeat(7, minmax(0, 1fr))`,
 				}}
 			>
 				{/* Header row */}
