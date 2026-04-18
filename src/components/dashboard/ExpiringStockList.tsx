@@ -136,7 +136,7 @@ export function ExpiringStockList({
 									{formatDate(entry.expirationDate!)}
 								</span>
 							</div>
-							<div className="mt-1.5 flex items-center gap-1.5 pl-0 sm:pl-[calc(4.5rem+0.75rem)]">
+							<div className="mt-1.5 flex items-center justify-end gap-1.5">
 								<StockActions
 									quantity={entry.quantity}
 									consumeAmount={consumeAmounts[entry.id] ?? ""}
