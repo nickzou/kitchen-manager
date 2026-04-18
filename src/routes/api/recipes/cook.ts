@@ -9,6 +9,7 @@ import {
 	stockLog,
 } from "#src/db/schema";
 import { getAuthSession } from "#src/lib/auth-session";
+import { roundQty } from "#src/lib/round-qty";
 
 function json(data: unknown, init?: { status?: number }) {
 	return new Response(JSON.stringify(data), {
@@ -135,7 +136,7 @@ export const Route = createFileRoute("/api/recipes/cook")({
 
 							const available = Number(stock.quantity);
 							const deduct = Math.min(available, remaining);
-							const newQty = (available - deduct).toString();
+							const newQty = roundQty(available - deduct).toString();
 
 							await tx
 								.update(stockEntry)

@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { roundQty } from "#src/lib/round-qty";
 
 export interface StockEntry {
 	id: string;
@@ -137,9 +138,9 @@ export function useConsumeStock() {
 						entry.id === input.stockEntryId
 							? {
 									...entry,
-									quantity: (
+									quantity: roundQty(
 										Number.parseFloat(entry.quantity) -
-										Number.parseFloat(input.quantity)
+											Number.parseFloat(input.quantity),
 									).toString(),
 								}
 							: entry,
@@ -185,9 +186,9 @@ export function useSpoilStock() {
 						entry.id === input.stockEntryId
 							? {
 									...entry,
-									quantity: (
+									quantity: roundQty(
 										Number.parseFloat(entry.quantity) -
-										Number.parseFloat(input.quantity)
+											Number.parseFloat(input.quantity),
 									).toString(),
 								}
 							: entry,

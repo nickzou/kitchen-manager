@@ -9,6 +9,7 @@ import {
 	stockLog,
 } from "#src/db/schema";
 import { getAuthSession } from "#src/lib/auth-session";
+import { roundQty } from "#src/lib/round-qty";
 import { dispatchWebhook } from "#src/lib/webhooks";
 
 function json(data: unknown, init?: { status?: number }) {
@@ -110,7 +111,9 @@ export const Route = createFileRoute("/api/meal-plan-entries/cook")({
 									.where(eq(stockEntry.id, log.stockEntryId));
 
 								if (stock) {
-									const newQty = (Number(stock.quantity) + restore).toString();
+									const newQty = roundQty(
+										Number(stock.quantity) + restore,
+									).toString();
 									await tx
 										.update(stockEntry)
 										.set({ quantity: newQty })
@@ -165,7 +168,7 @@ export const Route = createFileRoute("/api/meal-plan-entries/cook")({
 								if (stock) {
 									const newQty = Math.max(
 										0,
-										Number(stock.quantity) - remove,
+										roundQty(Number(stock.quantity) - remove),
 									).toString();
 									await tx
 										.update(stockEntry)
@@ -324,7 +327,7 @@ export const Route = createFileRoute("/api/meal-plan-entries/cook")({
 
 							const available = Number(stock.quantity);
 							const deduct = Math.min(available, remaining);
-							const newQty = (available - deduct).toString();
+							const newQty = roundQty(available - deduct).toString();
 
 							await tx
 								.update(stockEntry)

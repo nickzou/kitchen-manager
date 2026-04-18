@@ -165,4 +165,21 @@ describe("POST /api/stock-entries/consume", () => {
 		expect(data.quantity).toBe("7");
 		expect(data.stockLogId).toBe("log-1");
 	});
+
+	it("does not produce floating-point noise (e.g. 1.0 - 0.7 = 0.3)", async () => {
+		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
+		mockTxSelectWhere.mockResolvedValue([makeStockEntry({ quantity: "1" })]);
+		const updated = makeStockEntry({ quantity: "0.3" });
+		mockTxUpdateReturning.mockResolvedValue([updated]);
+		const request = makePostRequest("/api/stock-entries/consume", {
+			stockEntryId: "stock-entry-1",
+			quantity: "0.7",
+		});
+
+		const response = await POST({ request } as never);
+
+		expect(response.status).toBe(200);
+		const data = await response.json();
+		expect(data.quantity).toBe("0.3");
+	});
 });
