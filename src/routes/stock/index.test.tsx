@@ -403,6 +403,30 @@ describe("StockPage", () => {
 				});
 			});
 		});
+
+		it("clears form fields after successful submit", async () => {
+			renderPage();
+
+			const productSelect = screen.getByRole("combobox", {
+				name: "Select product *",
+			}) as HTMLSelectElement;
+			const quantityInput = screen.getByPlaceholderText(
+				"Quantity *",
+			) as HTMLInputElement;
+
+			fireEvent.change(productSelect, { target: { value: "p1" } });
+			fireEvent.change(quantityInput, { target: { value: "5" } });
+			fireEvent.click(screen.getAllByRole("button", { name: /Add Stock/ })[0]);
+
+			await waitFor(() => {
+				expect(mockMutateAsync).toHaveBeenCalled();
+			});
+
+			await waitFor(() => {
+				expect(productSelect.value).toBe("");
+				expect(quantityInput.value).toBe("");
+			});
+		});
 	});
 
 	describe("spoil", () => {
