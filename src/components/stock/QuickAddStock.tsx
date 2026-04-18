@@ -109,8 +109,9 @@ export function QuickAddStock({
 			storeId: storeId || undefined,
 			brandId: brandId || undefined,
 		});
+		setProductId("");
 		setQuantity("");
-		setUnitId(defaultUnitId);
+		setUnitId("");
 		setExpirationDate("");
 		setPrice("");
 		setStoreId("");
