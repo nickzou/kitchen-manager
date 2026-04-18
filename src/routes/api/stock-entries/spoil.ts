@@ -3,6 +3,7 @@ import { and, eq } from "drizzle-orm";
 import { db } from "#src/db";
 import { stockEntry, stockLog } from "#src/db/schema";
 import { getAuthSession } from "#src/lib/auth-session";
+import { roundQty } from "#src/lib/round-qty";
 import { dispatchWebhook } from "#src/lib/webhooks";
 
 function json(data: unknown, init?: { status?: number }) {
@@ -59,7 +60,7 @@ export const Route = createFileRoute("/api/stock-entries/spoil")({
 						};
 					}
 
-					const newQuantity = (available - spoilQty).toString();
+					const newQuantity = roundQty(available - spoilQty).toString();
 
 					const [log] = await tx
 						.insert(stockLog)

@@ -3,6 +3,7 @@ import { and, eq } from "drizzle-orm";
 import { db } from "#src/db";
 import { stockEntry, stockLog } from "#src/db/schema";
 import { getAuthSession } from "#src/lib/auth-session";
+import { roundQty } from "#src/lib/round-qty";
 import { dispatchWebhook } from "#src/lib/webhooks";
 
 function json(data: unknown, init?: { status?: number }) {
@@ -90,7 +91,7 @@ export const Route = createFileRoute("/api/stock-logs/reverse")({
 							.where(eq(stockEntry.id, entryId));
 
 						if (existing) {
-							const newQty = Number(existing.quantity) - logQty;
+							const newQty = roundQty(Number(existing.quantity) - logQty);
 							if (newQty <= 0) {
 								await tx.delete(stockEntry).where(eq(stockEntry.id, entryId));
 							} else {
@@ -114,7 +115,9 @@ export const Route = createFileRoute("/api/stock-logs/reverse")({
 							.where(eq(stockEntry.id, entryId));
 
 						if (existing) {
-							const newQty = (Number(existing.quantity) + logQty).toString();
+							const newQty = roundQty(
+								Number(existing.quantity) + logQty,
+							).toString();
 							await tx
 								.update(stockEntry)
 								.set({ quantity: newQty })
