@@ -1,6 +1,5 @@
-import { Pencil, Skull, Trash2, UtensilsCrossed } from "lucide-react";
-import { NumberInput } from "#src/components/NumberInput";
-import { AmberButton } from "#src/components/stock/AmberButton";
+import { Pencil, Trash2 } from "lucide-react";
+import { StockActions } from "#src/components/stock/StockActions";
 import type { StockEntry } from "#src/lib/hooks/use-stock-entries";
 
 export function StockEntryRow({
@@ -58,14 +57,16 @@ export function StockEntryRow({
 				{storeName && <span>{storeName}</span>}
 			</div>
 			<div className="flex items-center gap-1.5 sm:ml-auto">
-				<NumberInput
-					placeholder="Qty"
-					step="any"
-					min="0.01"
-					max={entry.quantity}
-					value={consumeAmount}
-					onChange={(e) => onConsumeAmountChange(e.target.value)}
-					className="h-7 flex-1 rounded border bg-white px-2 text-xs sm:w-20 sm:flex-none dark:bg-(--surface)"
+				<StockActions
+					quantity={entry.quantity}
+					consumeAmount={consumeAmount}
+					onConsumeAmountChange={onConsumeAmountChange}
+					onConsume={onConsume}
+					onConsumeAll={onConsumeAll}
+					consumePending={consumePending}
+					onSpoil={onSpoil}
+					onSpoilAll={onSpoilAll}
+					spoilPending={spoilPending}
 				/>
 				<button
 					type="button"
@@ -82,45 +83,6 @@ export function StockEntryRow({
 				>
 					<Trash2 size={12} />
 				</button>
-				<button
-					type="button"
-					onClick={onSpoil}
-					disabled={spoilPending || !consumeAmount}
-					title="Mark amount as spoiled"
-					className="flex h-7 w-7 items-center justify-center rounded-full border border-red-200 bg-red-50 text-xs font-semibold text-red-600 transition hover:bg-red-100 disabled:opacity-50 dark:border-red-900 dark:bg-red-950 dark:hover:bg-red-900 sm:w-auto sm:gap-1 sm:px-2.5"
-				>
-					<Skull size={12} />
-					<span className="hidden sm:inline">Spoil</span>
-				</button>
-				<button
-					type="button"
-					onClick={onSpoilAll}
-					disabled={spoilPending || Number.parseFloat(entry.quantity) <= 0}
-					title="Mark all as spoiled"
-					className="flex h-7 w-7 items-center justify-center rounded-full border border-red-200 bg-red-50 text-xs font-semibold text-red-600 transition hover:bg-red-100 disabled:opacity-50 dark:border-red-900 dark:bg-red-950 dark:hover:bg-red-900 sm:w-auto sm:gap-1 sm:px-2.5"
-				>
-					<span className="sm:hidden">All</span>
-					<span className="hidden sm:inline">Spoil All</span>
-				</button>
-				<AmberButton
-					type="button"
-					onClick={onConsume}
-					disabled={consumePending || !consumeAmount}
-					className="flex items-center gap-1"
-				>
-					<UtensilsCrossed size={12} className="sm:hidden" />
-					<span className="hidden sm:inline">Consume</span>
-				</AmberButton>
-				<AmberButton
-					type="button"
-					onClick={onConsumeAll}
-					disabled={consumePending || Number.parseFloat(entry.quantity) <= 0}
-					title="Consume all remaining stock"
-					className="flex items-center gap-1 bg-amber-700"
-				>
-					<span className="sm:hidden">All</span>
-					<span className="hidden sm:inline">Consume All</span>
-				</AmberButton>
 			</div>
 		</div>
 	);

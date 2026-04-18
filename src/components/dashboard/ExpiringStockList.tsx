@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { Badge } from "#src/components/Badge";
+import { StockActions } from "#src/components/stock/StockActions";
 import type { Product } from "#src/lib/hooks/use-products";
 import type { QuantityUnit } from "#src/lib/hooks/use-quantity-units";
 import type { StockEntry } from "#src/lib/hooks/use-stock-entries";
@@ -53,10 +54,26 @@ export function ExpiringStockList({
 	entries,
 	products,
 	quantityUnits,
+	consumeAmounts,
+	onConsumeAmountChange,
+	onConsume,
+	onConsumeAll,
+	onSpoil,
+	onSpoilAll,
+	consumePending,
+	spoilPending,
 }: {
 	entries: StockEntry[];
 	products: Product[];
 	quantityUnits: QuantityUnit[];
+	consumeAmounts: Record<string, string>;
+	onConsumeAmountChange: (entryId: string, value: string) => void;
+	onConsume: (entryId: string) => void;
+	onConsumeAll: (entryId: string) => void;
+	onSpoil: (entryId: string) => void;
+	onSpoilAll: (entryId: string) => void;
+	consumePending: boolean;
+	spoilPending: boolean;
 }) {
 	const productMap = new Map(products.map((p) => [p.id, p]));
 	const unitMap = new Map(quantityUnits.map((u) => [u.id, u]));
@@ -103,23 +120,37 @@ export function ExpiringStockList({
 					const product = productMap.get(entry.productId);
 					const unitAbbr = getUnitAbbr(entry.productId);
 					return (
-						<li
-							key={entry.id}
-							className="flex items-center gap-3 py-2.5 text-sm"
-						>
-							<Badge color={bucketColor[bucket]} className="w-18 shrink-0">
-								{bucketLabel[bucket]}
-							</Badge>
-							<span className="min-w-0 flex-1 truncate font-medium text-(--sea-ink)">
-								{product?.name ?? "Unknown"}
-							</span>
-							<span className="shrink-0 text-(--sea-ink-soft)">
-								{entry.quantity}
-								{unitAbbr ? ` ${unitAbbr}` : ""}
-							</span>
-							<span className="shrink-0 text-xs text-(--sea-ink-soft)">
-								{formatDate(entry.expirationDate!)}
-							</span>
+						<li key={entry.id} className="py-2.5 text-sm">
+							<div className="flex items-center gap-3">
+								<Badge color={bucketColor[bucket]} className="w-18 shrink-0">
+									{bucketLabel[bucket]}
+								</Badge>
+								<span className="min-w-0 flex-1 truncate font-medium text-(--sea-ink)">
+									{product?.name ?? "Unknown"}
+								</span>
+								<span className="shrink-0 text-(--sea-ink-soft)">
+									{entry.quantity}
+									{unitAbbr ? ` ${unitAbbr}` : ""}
+								</span>
+								<span className="shrink-0 text-xs text-(--sea-ink-soft)">
+									{formatDate(entry.expirationDate!)}
+								</span>
+							</div>
+							<div className="mt-1.5 flex items-center justify-end gap-1.5">
+								<StockActions
+									quantity={entry.quantity}
+									consumeAmount={consumeAmounts[entry.id] ?? ""}
+									onConsumeAmountChange={(value) =>
+										onConsumeAmountChange(entry.id, value)
+									}
+									onConsume={() => onConsume(entry.id)}
+									onConsumeAll={() => onConsumeAll(entry.id)}
+									consumePending={consumePending}
+									onSpoil={() => onSpoil(entry.id)}
+									onSpoilAll={() => onSpoilAll(entry.id)}
+									spoilPending={spoilPending}
+								/>
+							</div>
 						</li>
 					);
 				})}
