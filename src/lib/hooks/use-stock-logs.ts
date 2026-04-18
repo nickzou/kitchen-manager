@@ -16,13 +16,21 @@ export type UpdateStockLogInput = {
 	transactionType?: "add" | "consume" | "remove" | "spoiled";
 };
 
-export function useStockLogs(productId?: string) {
-	return useQuery<StockLog[]>({
-		queryKey: productId ? ["stock-logs", { productId }] : ["stock-logs"],
+export function useStockLogs(options?: {
+	productId?: string;
+	limit?: number;
+	offset?: number;
+}) {
+	const { productId, limit, offset } = options ?? {};
+	return useQuery<{ logs: StockLog[]; total: number }>({
+		queryKey: ["stock-logs", { productId, limit, offset }],
 		queryFn: async () => {
-			const url = productId
-				? `/api/stock-logs?productId=${productId}`
-				: "/api/stock-logs";
+			const params = new URLSearchParams();
+			if (productId) params.set("productId", productId);
+			if (limit != null) params.set("limit", String(limit));
+			if (offset != null) params.set("offset", String(offset));
+			const query = params.toString();
+			const url = `/api/stock-logs${query ? `?${query}` : ""}`;
 			const res = await fetch(url);
 			if (!res.ok) throw new Error("Failed to fetch stock logs");
 			return res.json();
