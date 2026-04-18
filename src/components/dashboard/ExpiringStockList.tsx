@@ -1,5 +1,8 @@
 import { Link } from "@tanstack/react-router";
+import { Skull, UtensilsCrossed } from "lucide-react";
 import { Badge } from "#src/components/Badge";
+import { NumberInput } from "#src/components/NumberInput";
+import { AmberButton } from "#src/components/stock/AmberButton";
 import type { Product } from "#src/lib/hooks/use-products";
 import type { QuantityUnit } from "#src/lib/hooks/use-quantity-units";
 import type { StockEntry } from "#src/lib/hooks/use-stock-entries";
@@ -53,10 +56,26 @@ export function ExpiringStockList({
 	entries,
 	products,
 	quantityUnits,
+	consumeAmounts,
+	onConsumeAmountChange,
+	onConsume,
+	onConsumeAll,
+	onSpoil,
+	onSpoilAll,
+	consumePending,
+	spoilPending,
 }: {
 	entries: StockEntry[];
 	products: Product[];
 	quantityUnits: QuantityUnit[];
+	consumeAmounts: Record<string, string>;
+	onConsumeAmountChange: (entryId: string, value: string) => void;
+	onConsume: (entryId: string) => void;
+	onConsumeAll: (entryId: string) => void;
+	onSpoil: (entryId: string) => void;
+	onSpoilAll: (entryId: string) => void;
+	consumePending: boolean;
+	spoilPending: boolean;
 }) {
 	const productMap = new Map(products.map((p) => [p.id, p]));
 	const unitMap = new Map(quantityUnits.map((u) => [u.id, u]));
@@ -103,23 +122,78 @@ export function ExpiringStockList({
 					const product = productMap.get(entry.productId);
 					const unitAbbr = getUnitAbbr(entry.productId);
 					return (
-						<li
-							key={entry.id}
-							className="flex items-center gap-3 py-2.5 text-sm"
-						>
-							<Badge color={bucketColor[bucket]} className="w-18 shrink-0">
-								{bucketLabel[bucket]}
-							</Badge>
-							<span className="min-w-0 flex-1 truncate font-medium text-(--sea-ink)">
-								{product?.name ?? "Unknown"}
-							</span>
-							<span className="shrink-0 text-(--sea-ink-soft)">
-								{entry.quantity}
-								{unitAbbr ? ` ${unitAbbr}` : ""}
-							</span>
-							<span className="shrink-0 text-xs text-(--sea-ink-soft)">
-								{formatDate(entry.expirationDate!)}
-							</span>
+						<li key={entry.id} className="py-2.5 text-sm">
+							<div className="flex items-center gap-3">
+								<Badge color={bucketColor[bucket]} className="w-18 shrink-0">
+									{bucketLabel[bucket]}
+								</Badge>
+								<span className="min-w-0 flex-1 truncate font-medium text-(--sea-ink)">
+									{product?.name ?? "Unknown"}
+								</span>
+								<span className="shrink-0 text-(--sea-ink-soft)">
+									{entry.quantity}
+									{unitAbbr ? ` ${unitAbbr}` : ""}
+								</span>
+								<span className="shrink-0 text-xs text-(--sea-ink-soft)">
+									{formatDate(entry.expirationDate!)}
+								</span>
+							</div>
+							<div className="mt-1.5 flex items-center gap-1.5 pl-0 sm:pl-[calc(4.5rem+0.75rem)]">
+								<NumberInput
+									placeholder="Qty"
+									step="any"
+									min="0.01"
+									max={entry.quantity}
+									value={consumeAmounts[entry.id] ?? ""}
+									onChange={(e) =>
+										onConsumeAmountChange(entry.id, e.target.value)
+									}
+									className="h-7 w-16 rounded border bg-white px-2 text-xs sm:w-20 dark:bg-(--surface)"
+								/>
+								<button
+									type="button"
+									onClick={() => onSpoil(entry.id)}
+									disabled={spoilPending || !consumeAmounts[entry.id]}
+									title="Mark amount as spoiled"
+									className="flex h-7 w-7 items-center justify-center rounded-full border border-red-200 bg-red-50 text-xs font-semibold text-red-600 transition hover:bg-red-100 disabled:opacity-50 dark:border-red-900 dark:bg-red-950 dark:hover:bg-red-900 sm:w-auto sm:gap-1 sm:px-2.5"
+								>
+									<Skull size={12} />
+									<span className="hidden sm:inline">Spoil</span>
+								</button>
+								<button
+									type="button"
+									onClick={() => onSpoilAll(entry.id)}
+									disabled={
+										spoilPending || Number.parseFloat(entry.quantity) <= 0
+									}
+									title="Mark all as spoiled"
+									className="flex h-7 w-7 items-center justify-center rounded-full border border-red-200 bg-red-50 text-xs font-semibold text-red-600 transition hover:bg-red-100 disabled:opacity-50 dark:border-red-900 dark:bg-red-950 dark:hover:bg-red-900 sm:w-auto sm:gap-1 sm:px-2.5"
+								>
+									<span className="sm:hidden">All</span>
+									<span className="hidden sm:inline">Spoil All</span>
+								</button>
+								<AmberButton
+									type="button"
+									onClick={() => onConsume(entry.id)}
+									disabled={consumePending || !consumeAmounts[entry.id]}
+									className="flex items-center gap-1"
+								>
+									<UtensilsCrossed size={12} className="sm:hidden" />
+									<span className="hidden sm:inline">Consume</span>
+								</AmberButton>
+								<AmberButton
+									type="button"
+									onClick={() => onConsumeAll(entry.id)}
+									disabled={
+										consumePending || Number.parseFloat(entry.quantity) <= 0
+									}
+									title="Consume all remaining stock"
+									className="flex items-center gap-1 bg-amber-700"
+								>
+									<span className="sm:hidden">All</span>
+									<span className="hidden sm:inline">Consume All</span>
+								</AmberButton>
+							</div>
 						</li>
 					);
 				})}
