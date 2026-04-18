@@ -208,7 +208,9 @@ beforeEach(() => {
 		data: [mockStockEntry],
 		isLoading: false,
 	});
-	mockUseStockLogs.mockReturnValue({ data: [mockStockLog] });
+	mockUseStockLogs.mockReturnValue({
+		data: { logs: [mockStockLog], total: 1 },
+	});
 	mockUseReverseStockLog.mockReturnValue({
 		mutate: vi.fn(),
 		isPending: false,

@@ -20,13 +20,15 @@ const mockStockLogs = [
 	},
 ];
 
+const mockResponse = { logs: mockStockLogs, total: 1 };
+
 beforeEach(() => {
 	vi.stubGlobal(
 		"fetch",
 		vi.fn(() =>
 			Promise.resolve({
 				ok: true,
-				json: () => Promise.resolve(mockStockLogs),
+				json: () => Promise.resolve(mockResponse),
 			}),
 		),
 	);
@@ -45,17 +47,28 @@ describe("useStockLogs", () => {
 		await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
 		expect(fetch).toHaveBeenCalledWith("/api/stock-logs");
-		expect(result.current.data).toEqual(mockStockLogs);
+		expect(result.current.data).toEqual(mockResponse);
 	});
 
 	it("calls GET /api/stock-logs with productId filter", async () => {
-		const { result } = renderHook(() => useStockLogs("p1"), {
+		const { result } = renderHook(() => useStockLogs({ productId: "p1" }), {
 			wrapper: createTestWrapper(),
 		});
 
 		await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
 		expect(fetch).toHaveBeenCalledWith("/api/stock-logs?productId=p1");
+	});
+
+	it("includes limit and offset params in the URL", async () => {
+		const { result } = renderHook(
+			() => useStockLogs({ limit: 10, offset: 20 }),
+			{ wrapper: createTestWrapper() },
+		);
+
+		await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+		expect(fetch).toHaveBeenCalledWith("/api/stock-logs?limit=10&offset=20");
 	});
 });
 

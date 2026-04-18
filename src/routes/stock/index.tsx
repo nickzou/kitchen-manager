@@ -55,7 +55,12 @@ function StockPage() {
 	const { data: stores } = useStores();
 	const { data: quantityUnits } = useQuantityUnits();
 	const { data: stockEntries, isLoading: entriesLoading } = useStockEntries();
-	const { data: stockLogs } = useStockLogs();
+	const [activityPage, setActivityPage] = useState(0);
+	const PAGE_SIZE = 20;
+	const { data: stockLogsData } = useStockLogs({
+		limit: PAGE_SIZE,
+		offset: activityPage * PAGE_SIZE,
+	});
 	const { data: globalConversions } = useUnitConversions();
 	const productIds = (products ?? []).map((p) => p.id);
 	const { data: productConversions } = useProductUnitConversions(productIds);
@@ -276,12 +281,9 @@ function StockPage() {
 			)
 		: productStockList;
 
-	const recentLogs = [...(stockLogs ?? [])]
-		.sort(
-			(a, b) =>
-				new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-		)
-		.slice(0, 20);
+	const recentLogs = stockLogsData?.logs ?? [];
+	const totalLogs = stockLogsData?.total ?? 0;
+	const totalPages = Math.ceil(totalLogs / PAGE_SIZE);
 
 	return (
 		<Page as="main" className="sm:pb-8 sm:pt-14">
@@ -421,27 +423,52 @@ function StockPage() {
 
 				{activeTab === "activity" &&
 					(recentLogs.length > 0 ? (
-						<div className="flex flex-col gap-1">
-							{recentLogs.map((log) => (
-								<StockActivityRow
-									key={log.id}
-									transactionType={log.transactionType}
-									productName={getProductName(log.productId)}
-									quantity={log.quantity}
-									unitAbbr={getUnitAbbr(
-										products?.find((p) => p.id === log.productId)
-											?.defaultQuantityUnitId ?? null,
-									)}
-									createdAt={log.createdAt}
-									onUndo={() =>
-										reverseStockLog.mutate({
-											stockLogId: log.id,
-											stockEntryId: log.stockEntryId ?? undefined,
-										})
-									}
-								/>
-							))}
-						</div>
+						<>
+							<div className="flex flex-col gap-1">
+								{recentLogs.map((log) => (
+									<StockActivityRow
+										key={log.id}
+										transactionType={log.transactionType}
+										productName={getProductName(log.productId)}
+										quantity={log.quantity}
+										unitAbbr={getUnitAbbr(
+											products?.find((p) => p.id === log.productId)
+												?.defaultQuantityUnitId ?? null,
+										)}
+										createdAt={log.createdAt}
+										onUndo={() =>
+											reverseStockLog.mutate({
+												stockLogId: log.id,
+												stockEntryId: log.stockEntryId ?? undefined,
+											})
+										}
+									/>
+								))}
+							</div>
+							{totalPages > 1 && (
+								<div className="mt-4 flex items-center justify-between">
+									<button
+										type="button"
+										disabled={activityPage === 0}
+										onClick={() => setActivityPage((p) => p - 1)}
+										className="h-9 rounded-full border border-(--line) px-4 text-sm font-semibold text-(--sea-ink-soft) transition hover:bg-(--line) disabled:opacity-40 disabled:hover:bg-transparent"
+									>
+										Previous
+									</button>
+									<span className="text-sm text-(--sea-ink-soft)">
+										Page {activityPage + 1} of {totalPages}
+									</span>
+									<button
+										type="button"
+										disabled={activityPage >= totalPages - 1}
+										onClick={() => setActivityPage((p) => p + 1)}
+										className="h-9 rounded-full border border-(--line) px-4 text-sm font-semibold text-(--sea-ink-soft) transition hover:bg-(--line) disabled:opacity-40 disabled:hover:bg-transparent"
+									>
+										Next
+									</button>
+								</div>
+							)}
+						</>
 					) : (
 						<p className="text-sm text-(--sea-ink-soft)">No recent activity.</p>
 					))}
