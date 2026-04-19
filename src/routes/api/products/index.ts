@@ -73,6 +73,7 @@ export const Route = createFileRoute("/api/products/")({
 							protein: body.protein ?? null,
 							fat: body.fat ?? null,
 							carbs: body.carbs ?? null,
+							defaultTareWeight: body.defaultTareWeight ?? null,
 							userId: session.user.id,
 						})
 						.returning();

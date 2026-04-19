@@ -259,6 +259,7 @@ export const product = pgTable(
 		protein: numeric("protein"),
 		fat: numeric("fat"),
 		carbs: numeric("carbs"),
+		defaultTareWeight: numeric("default_tare_weight"),
 		userId: text("user_id")
 			.notNull()
 			.references(() => user.id, { onDelete: "cascade" }),
@@ -420,6 +421,7 @@ export const stockEntry = pgTable(
 		brandId: text("brand_id").references(() => brand.id, {
 			onDelete: "set null",
 		}),
+		tareWeight: numeric("tare_weight"),
 		userId: text("user_id")
 			.notNull()
 			.references(() => user.id, { onDelete: "cascade" }),

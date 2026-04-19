@@ -482,6 +482,10 @@ function StockPage() {
 						products?.find((p) => p.id === editingEntry.productId)
 							?.defaultQuantityUnitId ?? null
 					}
+					productTareWeight={
+						products?.find((p) => p.id === editingEntry.productId)
+							?.defaultTareWeight ?? null
+					}
 					quantityUnits={quantityUnits ?? []}
 					productConversions={(productConversions ?? []).filter(
 						(c) => c.productId === editingEntry.productId,
@@ -499,6 +503,7 @@ function EditStockModal({
 	stores,
 	brands,
 	defaultUnitId,
+	productTareWeight,
 	quantityUnits,
 	productConversions,
 	globalConversions,
@@ -508,6 +513,7 @@ function EditStockModal({
 	stores: { id: string; name: string }[];
 	brands: { id: string; name: string }[];
 	defaultUnitId: string | null;
+	productTareWeight: string | null;
 	quantityUnits: { id: string; abbreviation: string | null; name: string }[];
 	productConversions: {
 		fromUnitId: string;
@@ -526,6 +532,11 @@ function EditStockModal({
 	const createBrand = useCreateBrand();
 	const [quantity, setQuantity] = useState(entry.quantity);
 	const [unitId, setUnitId] = useState(defaultUnitId ?? "");
+	const [useScaleWeight, setUseScaleWeight] = useState(false);
+	const [scaleWeight, setScaleWeight] = useState("");
+	const [tareWeightOverride, setTareWeightOverride] = useState(
+		entry.tareWeight ?? productTareWeight ?? "",
+	);
 	const [expirationDate, setExpirationDate] = useState(
 		entry.expirationDate?.slice(0, 10) ?? "",
 	);
@@ -557,14 +568,29 @@ function EditStockModal({
 			label: u.abbreviation ?? u.name,
 		}));
 
+	const effectiveTare = useScaleWeight
+		? Number.parseFloat(tareWeightOverride) || 0
+		: 0;
+	const netWeight = useScaleWeight
+		? Math.max(0, (Number.parseFloat(scaleWeight) || 0) - effectiveTare)
+		: null;
+
 	async function handleSubmit(e: FormEvent) {
 		e.preventDefault();
 
-		let finalQuantity = quantity;
+		let rawQuantity: string;
+		if (useScaleWeight) {
+			if (!scaleWeight) return;
+			rawQuantity = String(netWeight);
+		} else {
+			rawQuantity = quantity;
+		}
+
+		let finalQuantity = rawQuantity;
 		if (unitId && defaultUnitId && unitId !== defaultUnitId) {
 			const converted = tryConvert(
 				graph,
-				Number.parseFloat(quantity),
+				Number.parseFloat(rawQuantity),
 				unitId,
 				defaultUnitId,
 			);
@@ -579,6 +605,7 @@ function EditStockModal({
 			price: price || undefined,
 			storeId: storeId || undefined,
 			brandId: brandId || undefined,
+			tareWeight: useScaleWeight ? tareWeightOverride || undefined : undefined,
 		});
 		onClose();
 	}
@@ -590,17 +617,29 @@ function EditStockModal({
 			title="Edit Stock Entry"
 		>
 			<form onSubmit={handleSubmit} className="flex flex-col gap-4">
-				<label className="flex flex-col gap-1 text-sm font-medium text-(--sea-ink)">
-					Quantity
+				<div className="flex flex-col gap-1 text-sm font-medium text-(--sea-ink)">
+					{useScaleWeight ? "Scale Weight" : "Quantity"}
 					<div className="flex items-center gap-2">
-						<NumberInput
-							required
-							step="any"
-							min="0.01"
-							value={quantity}
-							onChange={(e) => setQuantity(e.target.value)}
-							className="flex-1"
-						/>
+						{useScaleWeight ? (
+							<NumberInput
+								required
+								step="any"
+								min="0.01"
+								value={scaleWeight}
+								onChange={(e) => setScaleWeight(e.target.value)}
+								className="flex-1"
+								placeholder="Gross weight"
+							/>
+						) : (
+							<NumberInput
+								required
+								step="any"
+								min="0.01"
+								value={quantity}
+								onChange={(e) => setQuantity(e.target.value)}
+								className="flex-1"
+							/>
+						)}
 						{unitOptions.length > 1 ? (
 							<Combobox
 								value={unitId}
@@ -616,7 +655,42 @@ function EditStockModal({
 							</span>
 						) : null}
 					</div>
-				</label>
+					{productTareWeight && (
+						<button
+							type="button"
+							onClick={() => {
+								setUseScaleWeight(!useScaleWeight);
+								if (!useScaleWeight) {
+									setTareWeightOverride(
+										entry.tareWeight ?? productTareWeight ?? "",
+									);
+								}
+							}}
+							className="text-xs font-medium text-(--lagoon-deep) hover:underline self-start mt-1"
+						>
+							{useScaleWeight ? "Enter quantity directly" : "Weigh from scale"}
+						</button>
+					)}
+					{useScaleWeight && (
+						<div className="flex items-center gap-2 mt-1">
+							<label className="flex items-center gap-1 text-xs text-(--sea-ink-soft)">
+								Tare:
+								<NumberInput
+									step="any"
+									min="0"
+									value={tareWeightOverride}
+									onChange={(e) => setTareWeightOverride(e.target.value)}
+									className="w-20 !h-6 !text-xs"
+								/>
+							</label>
+							{scaleWeight && (
+								<span className="text-xs font-medium text-(--sea-ink-soft)">
+									net = {netWeight}
+								</span>
+							)}
+						</div>
+					)}
+				</div>
 				<label className="flex flex-col gap-1 text-sm font-medium text-(--sea-ink)">
 					Expiration Date
 					<DatePicker

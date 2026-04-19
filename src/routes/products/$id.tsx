@@ -92,6 +92,8 @@ function ProductDetail() {
 		protein: "",
 		fat: "",
 		carbs: "",
+		hasTareWeight: false,
+		defaultTareWeight: "",
 	});
 	const [newConversion, setNewConversion] = useState({
 		fromUnitId: "",
@@ -166,6 +168,8 @@ function ProductDetail() {
 			protein: product.protein ?? "",
 			fat: product.fat ?? "",
 			carbs: product.carbs ?? "",
+			hasTareWeight: product.defaultTareWeight != null,
+			defaultTareWeight: product.defaultTareWeight ?? "",
 		});
 		setEditing(true);
 	}
@@ -190,6 +194,9 @@ function ProductDetail() {
 				protein: form.protein || undefined,
 				fat: form.fat || undefined,
 				carbs: form.carbs || undefined,
+				defaultTareWeight: form.hasTareWeight
+					? form.defaultTareWeight || undefined
+					: null,
 			});
 			setEditing(false);
 		} catch {
@@ -394,6 +401,62 @@ function ProductDetail() {
 										className="w-full"
 									/>
 								</div>
+
+								<label className="flex items-center justify-between gap-3">
+									<div>
+										<p className="text-sm font-medium text-(--sea-ink)">
+											Has container weight
+										</p>
+										<p className="text-xs text-(--sea-ink-soft)">
+											Subtract container weight when weighing on a scale
+										</p>
+									</div>
+									<button
+										type="button"
+										role="switch"
+										aria-checked={form.hasTareWeight}
+										onClick={() =>
+											setForm({
+												...form,
+												hasTareWeight: !form.hasTareWeight,
+											})
+										}
+										className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-(--lagoon) focus-visible:ring-offset-2 ${
+											form.hasTareWeight ? "bg-(--lagoon)" : "bg-(--line)"
+										}`}
+									>
+										<span
+											className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+												form.hasTareWeight ? "translate-x-5" : "translate-x-0"
+											}`}
+										/>
+									</button>
+								</label>
+
+								{form.hasTareWeight && (
+									<div className="flex flex-col gap-1.5">
+										<label
+											htmlFor={`${htmlId}-defaultTareWeight`}
+											className="text-sm font-medium text-(--sea-ink)"
+										>
+											Container Weight
+										</label>
+										<NumberInput
+											id={`${htmlId}-defaultTareWeight`}
+											step="any"
+											min="0"
+											value={form.defaultTareWeight}
+											onChange={(e) =>
+												setForm({
+													...form,
+													defaultTareWeight: e.target.value,
+												})
+											}
+											className="w-full"
+											placeholder={`Weight in ${getUnitName(form.defaultQuantityUnitId) ?? "units"}`}
+										/>
+									</div>
+								)}
 
 								<div className="flex flex-col gap-1.5">
 									<label
@@ -629,6 +692,17 @@ function ProductDetail() {
 												: "—"}
 										</dd>
 									</div>
+									{product.defaultTareWeight != null && (
+										<div>
+											<dt className="font-medium text-(--sea-ink-soft)">
+												Container Weight
+											</dt>
+											<dd className="mt-0.5 text-(--sea-ink)">
+												{product.defaultTareWeight}
+												{unitName ? ` ${unitName}` : ""}
+											</dd>
+										</div>
+									)}
 									<div>
 										<dt className="font-medium text-(--sea-ink-soft)">
 											Default Consume

@@ -11,6 +11,7 @@ export interface StockEntry {
 	unitCost: string | null;
 	storeId: string | null;
 	brandId: string | null;
+	tareWeight: string | null;
 	userId: string;
 	createdAt: string;
 	updatedAt: string;
@@ -24,6 +25,7 @@ export type CreateStockEntryInput = {
 	price?: string;
 	storeId?: string;
 	brandId?: string;
+	tareWeight?: string;
 };
 
 export type UpdateStockEntryInput = {
@@ -33,6 +35,7 @@ export type UpdateStockEntryInput = {
 	price?: string;
 	storeId?: string;
 	brandId?: string;
+	tareWeight?: string;
 };
 
 export type ConsumeStockInput = {
