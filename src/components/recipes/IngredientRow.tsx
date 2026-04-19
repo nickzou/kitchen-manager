@@ -1,4 +1,11 @@
-import { Check, CircleCheck, CircleX, Pencil, Trash2 } from "lucide-react";
+import {
+	Check,
+	CircleCheck,
+	CircleX,
+	Pencil,
+	Trash2,
+	UtensilsCrossed,
+} from "lucide-react";
 import type { IngredientFormState } from "#src/components/AddIngredientForm";
 import { Button } from "#src/components/Button";
 import { Combobox } from "#src/components/Combobox";
@@ -26,6 +33,9 @@ export interface IngredientRowProps {
 	onCreateProduct: (name: string) => Promise<string>;
 	onEdit: () => void;
 	onDelete: () => void;
+	onConsume?: () => void;
+	isConsuming?: boolean;
+	canConsume?: boolean;
 	productOptions: { value: string; label: string }[];
 	unitOptions: { value: string; label: string }[];
 }
@@ -47,6 +57,9 @@ export function IngredientRow({
 	onCreateProduct,
 	onEdit,
 	onDelete,
+	onConsume,
+	isConsuming,
+	canConsume,
 	productOptions,
 	unitOptions,
 }: IngredientRowProps) {
@@ -185,6 +198,18 @@ export function IngredientRow({
 				</span>
 			</div>
 			<div className="flex gap-0.5">
+				{onConsume && (
+					<button
+						type="button"
+						onClick={onConsume}
+						disabled={isConsuming || !canConsume}
+						className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-600 text-xs font-semibold text-white transition hover:opacity-90 disabled:opacity-50 sm:w-auto sm:rounded-full sm:px-2.5"
+						title="Consume ingredient"
+					>
+						<UtensilsCrossed size={12} className="sm:hidden" />
+						<span className="hidden sm:inline">Consume</span>
+					</button>
+				)}
 				<button
 					type="button"
 					onClick={onEdit}
