@@ -250,6 +250,101 @@ describe("ProductDetail", () => {
 			});
 		});
 
+		it("shows container weight toggle in edit form", () => {
+			renderPage();
+
+			fireEvent.click(screen.getByTitle("Edit"));
+
+			expect(screen.getByText("Has container weight")).toBeDefined();
+		});
+
+		it("shows container weight input when toggle is enabled", () => {
+			renderPage();
+
+			fireEvent.click(screen.getByTitle("Edit"));
+
+			const toggle = screen.getByRole("switch", {
+				name: /has container weight/i,
+			});
+			fireEvent.click(toggle);
+
+			expect(screen.getByPlaceholderText(/weight in/i)).toBeDefined();
+		});
+
+		it("sends defaultTareWeight when container weight is set", async () => {
+			renderPage();
+
+			fireEvent.click(screen.getByTitle("Edit"));
+
+			const toggle = screen.getByRole("switch", {
+				name: /has container weight/i,
+			});
+			fireEvent.click(toggle);
+
+			const input = screen.getByPlaceholderText(/weight in/i);
+			fireEvent.change(input, { target: { value: "200" } });
+
+			fireEvent.click(screen.getByText("Save changes"));
+
+			await waitFor(() => {
+				expect(mockUpdateMutateAsync).toHaveBeenCalledWith(
+					expect.objectContaining({
+						defaultTareWeight: "200",
+					}),
+				);
+			});
+		});
+
+		it("sends null defaultTareWeight when toggle is off", async () => {
+			mockUseProduct.mockReturnValue({
+				data: { ...mockProduct, defaultTareWeight: "200" },
+				isLoading: false,
+				error: null,
+			});
+
+			renderPage();
+
+			fireEvent.click(screen.getByTitle("Edit"));
+
+			// Toggle should be on since product has tare weight
+			const toggle = screen.getByRole("switch", {
+				name: /has container weight/i,
+			});
+			expect(toggle.getAttribute("aria-checked")).toBe("true");
+
+			// Turn it off
+			fireEvent.click(toggle);
+
+			fireEvent.click(screen.getByText("Save changes"));
+
+			await waitFor(() => {
+				expect(mockUpdateMutateAsync).toHaveBeenCalledWith(
+					expect.objectContaining({
+						defaultTareWeight: null,
+					}),
+				);
+			});
+		});
+
+		it("displays container weight in read-only view when set", () => {
+			mockUseProduct.mockReturnValue({
+				data: { ...mockProduct, defaultTareWeight: "200" },
+				isLoading: false,
+				error: null,
+			});
+
+			renderPage();
+
+			expect(screen.getByText("Container Weight")).toBeDefined();
+			expect(screen.getByText("200")).toBeDefined();
+		});
+
+		it("hides container weight in read-only view when null", () => {
+			renderPage();
+
+			expect(screen.queryByText("Container Weight")).toBeNull();
+		});
+
 		it("shows consume unit dropdown in edit form", () => {
 			renderPage();
 
