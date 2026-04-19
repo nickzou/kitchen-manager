@@ -276,9 +276,14 @@ function StockPage() {
 	});
 
 	const filteredProductStockList = search.trim()
-		? productStockList.filter((item) =>
-				item.product.name.toLowerCase().includes(search.toLowerCase()),
-			)
+		? productStockList.filter((item) => {
+				const term = search.toLowerCase();
+				if (item.product.name.toLowerCase().includes(term)) return true;
+				return item.product.categoryIds.some((id) => {
+					const cat = categories?.find((c) => c.id === id);
+					return cat?.name.toLowerCase().includes(term);
+				});
+			})
 		: productStockList;
 
 	const recentLogs = stockLogsData?.logs ?? [];
