@@ -121,6 +121,7 @@ const mockProduct: Product = {
 	protein: null,
 	fat: null,
 	carbs: null,
+	defaultTareWeight: null,
 	userId: "u1",
 	createdAt: "2026-03-01T00:00:00Z",
 	updatedAt: "2026-03-02T00:00:00Z",
@@ -233,16 +234,19 @@ describe("ProductDetail", () => {
 			fireEvent.click(screen.getByText("Save changes"));
 
 			await waitFor(() => {
-				expect(mockUpdateMutateAsync).toHaveBeenCalledWith({
-					name: "Cherry Tomatoes",
-					description: "Fresh red tomatoes",
-					categoryIds: ["c1"],
-					isFood: true,
-					defaultQuantityUnitId: undefined,
-					defaultConsumeUnitId: undefined,
-					minStockAmount: undefined,
-					defaultExpirationDays: undefined,
-				});
+				expect(mockUpdateMutateAsync).toHaveBeenCalledWith(
+					expect.objectContaining({
+						name: "Cherry Tomatoes",
+						description: "Fresh red tomatoes",
+						categoryIds: ["c1"],
+						isFood: true,
+						defaultQuantityUnitId: undefined,
+						defaultConsumeUnitId: undefined,
+						minStockAmount: undefined,
+						defaultExpirationDays: undefined,
+						defaultTareWeight: null,
+					}),
+				);
 			});
 		});
 

@@ -19,6 +19,7 @@
     "db:pull": "drizzle-kit pull",
     "db:studio": "drizzle-kit studio",
     "db:seed-units": "tsx src/db/seed-units.ts",
+    "deploy:staging": "git push && gh workflow run deploy.yml -f environment=staging --ref $(git branch --show-current)",
     "prepare": "husky"
   },
   "dependencies": {

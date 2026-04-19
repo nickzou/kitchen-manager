@@ -69,6 +69,8 @@ export const Route = createFileRoute("/api/products/$id")({
 				if (body.protein !== undefined) updates.protein = body.protein;
 				if (body.fat !== undefined) updates.fat = body.fat;
 				if (body.carbs !== undefined) updates.carbs = body.carbs;
+				if (body.defaultTareWeight !== undefined)
+					updates.defaultTareWeight = body.defaultTareWeight;
 
 				let updated: typeof product.$inferSelect | undefined;
 				try {

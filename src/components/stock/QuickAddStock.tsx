@@ -23,6 +23,7 @@ interface QuickAddStockProps {
 		id: string;
 		name: string;
 		defaultQuantityUnitId: string | null;
+		defaultTareWeight: string | null;
 	}[];
 	stores: { id: string; name: string }[];
 	brands: { id: string; name: string }[];
@@ -50,14 +51,21 @@ export function QuickAddStock({
 	const [price, setPrice] = useState("");
 	const [storeId, setStoreId] = useState("");
 	const [brandId, setBrandId] = useState("");
+	const [useScaleWeight, setUseScaleWeight] = useState(false);
+	const [scaleWeight, setScaleWeight] = useState("");
+	const [tareWeightOverride, setTareWeightOverride] = useState("");
 
 	const selectedProduct = products.find((p) => p.id === productId);
 	const defaultUnitId = selectedProduct?.defaultQuantityUnitId ?? "";
+	const productTareWeight = selectedProduct?.defaultTareWeight ?? null;
 
-	// Reset unitId when product changes
+	// Reset unitId and scale weight mode when product changes
 	useEffect(() => {
 		setUnitId(defaultUnitId);
-	}, [defaultUnitId]);
+		setUseScaleWeight(false);
+		setScaleWeight("");
+		setTareWeightOverride(productTareWeight ?? "");
+	}, [defaultUnitId, productTareWeight]);
 
 	// Build conversion graph and find convertible units
 	const relevantProductConversions = productConversions.filter(
@@ -84,15 +92,31 @@ export function QuickAddStock({
 			label: u.abbreviation ?? u.name,
 		}));
 
+	const effectiveTare = useScaleWeight
+		? Number.parseFloat(tareWeightOverride) || 0
+		: 0;
+	const netWeight = useScaleWeight
+		? Math.max(0, (Number.parseFloat(scaleWeight) || 0) - effectiveTare)
+		: null;
+
 	async function handleSubmit(e: FormEvent) {
 		e.preventDefault();
-		if (!productId || !quantity) return;
+		if (!productId) return;
 
-		let finalQuantity = quantity;
+		let rawQuantity: string;
+		if (useScaleWeight) {
+			if (!scaleWeight) return;
+			rawQuantity = String(netWeight);
+		} else {
+			if (!quantity) return;
+			rawQuantity = quantity;
+		}
+
+		let finalQuantity = rawQuantity;
 		if (unitId && defaultUnitId && unitId !== defaultUnitId) {
 			const converted = tryConvert(
 				graph,
-				Number.parseFloat(quantity),
+				Number.parseFloat(rawQuantity),
 				unitId,
 				defaultUnitId,
 			);
@@ -108,6 +132,7 @@ export function QuickAddStock({
 			price: price || undefined,
 			storeId: storeId || undefined,
 			brandId: brandId || undefined,
+			tareWeight: useScaleWeight ? tareWeightOverride || undefined : undefined,
 		});
 		setProductId("");
 		setQuantity("");
@@ -116,6 +141,9 @@ export function QuickAddStock({
 		setPrice("");
 		setStoreId("");
 		setBrandId("");
+		setUseScaleWeight(false);
+		setScaleWeight("");
+		setTareWeightOverride("");
 		setOpen(false);
 	}
 
@@ -132,29 +160,76 @@ export function QuickAddStock({
 				required
 				className="flex-1 min-w-40"
 			/>
-			<div className="flex items-center gap-1.5">
-				<NumberInput
-					placeholder="Quantity *"
-					required
-					step="any"
-					min="0.01"
-					value={quantity}
-					onChange={(e) => setQuantity(e.target.value)}
-					className="w-28 sm:w-28"
-				/>
-				{unitOptions.length > 1 ? (
-					<Combobox
-						value={unitId}
-						onChange={setUnitId}
-						options={unitOptions}
-						placeholder="Unit"
-						className="w-24 sm:w-24"
-					/>
-				) : unitOptions.length === 1 ? (
-					<span className="text-sm text-(--sea-ink-soft)">
-						{unitOptions[0].label}
-					</span>
-				) : null}
+			<div className="flex flex-col gap-1">
+				<div className="flex items-center gap-1.5">
+					{useScaleWeight ? (
+						<NumberInput
+							placeholder="Scale weight *"
+							required
+							step="any"
+							min="0.01"
+							value={scaleWeight}
+							onChange={(e) => setScaleWeight(e.target.value)}
+							className="w-28 sm:w-28"
+						/>
+					) : (
+						<NumberInput
+							placeholder="Quantity *"
+							required
+							step="any"
+							min="0.01"
+							value={quantity}
+							onChange={(e) => setQuantity(e.target.value)}
+							className="w-28 sm:w-28"
+						/>
+					)}
+					{unitOptions.length > 1 ? (
+						<Combobox
+							value={unitId}
+							onChange={setUnitId}
+							options={unitOptions}
+							placeholder="Unit"
+							className="w-24 sm:w-24"
+						/>
+					) : unitOptions.length === 1 ? (
+						<span className="text-sm text-(--sea-ink-soft)">
+							{unitOptions[0].label}
+						</span>
+					) : null}
+				</div>
+				{productTareWeight && (
+					<button
+						type="button"
+						onClick={() => {
+							setUseScaleWeight(!useScaleWeight);
+							if (!useScaleWeight) {
+								setTareWeightOverride(productTareWeight);
+							}
+						}}
+						className="text-xs font-medium text-(--lagoon-deep) hover:underline self-start"
+					>
+						{useScaleWeight ? "Enter quantity directly" : "Weigh from scale"}
+					</button>
+				)}
+				{useScaleWeight && (
+					<div className="flex items-center gap-2">
+						<label className="flex items-center gap-1 text-xs text-(--sea-ink-soft)">
+							Tare:
+							<NumberInput
+								step="any"
+								min="0"
+								value={tareWeightOverride}
+								onChange={(e) => setTareWeightOverride(e.target.value)}
+								className="w-20 !h-6 !text-xs"
+							/>
+						</label>
+						{scaleWeight && (
+							<span className="text-xs font-medium text-(--sea-ink-soft)">
+								net = {netWeight}
+							</span>
+						)}
+					</div>
+				)}
 			</div>
 			<DatePicker
 				value={expirationDate}

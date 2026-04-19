@@ -225,6 +225,13 @@
       "when": 1775917919497,
       "tag": "0031_add-default-consume-unit",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1776634280170,
+      "tag": "0032_add-tare-weight",
+      "breakpoints": true
     }
   ]
 }

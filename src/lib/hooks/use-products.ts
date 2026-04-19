@@ -16,6 +16,7 @@ export interface Product {
 	protein: string | null;
 	fat: string | null;
 	carbs: string | null;
+	defaultTareWeight: string | null;
 	userId: string;
 	createdAt: string;
 	updatedAt: string;
@@ -36,6 +37,7 @@ export type CreateProductInput = {
 	protein?: string;
 	fat?: string;
 	carbs?: string;
+	defaultTareWeight?: string | null;
 };
 
 export type UpdateProductInput = Partial<CreateProductInput>;
