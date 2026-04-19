@@ -33,6 +33,7 @@ import { IngredientRow } from "#src/components/recipes/IngredientRow";
 import { PrepStepRow } from "#src/components/recipes/PrepStepRow";
 import { SectionHeading } from "#src/components/SectionHeading";
 import { Textarea } from "#src/components/Textarea";
+import { useToast } from "#src/components/Toast";
 import { authClient } from "#src/lib/auth-client";
 import { useRecipeCategories } from "#src/lib/hooks/use-categories";
 import { useCookRecipe } from "#src/lib/hooks/use-cook-recipe";
@@ -60,7 +61,11 @@ import {
 	useRecipe,
 	useUpdateRecipe,
 } from "#src/lib/hooks/use-recipes";
-import { useStockEntries } from "#src/lib/hooks/use-stock-entries";
+import {
+	useConsumeStock,
+	useStockEntries,
+} from "#src/lib/hooks/use-stock-entries";
+import { useReverseStockLog } from "#src/lib/hooks/use-stock-logs";
 import { useUnitConversions } from "#src/lib/hooks/use-unit-conversions";
 import { useUserSettings } from "#src/lib/hooks/use-user-settings";
 import {
@@ -68,6 +73,11 @@ import {
 	getRecipeCost,
 	getRecipeNutrition,
 } from "#src/lib/recipe-utils";
+import {
+	buildConversionGraph,
+	tryConvert,
+} from "#src/lib/recipe-utils/conversion-graph";
+import { pickBestEntry } from "#src/lib/stock-utils";
 
 export const Route = createFileRoute("/recipes/$id")({
 	component: RecipeDetail,
@@ -98,6 +108,9 @@ function RecipeDetail() {
 	const { data: stockEntries } = useStockEntries();
 	const { data: recipeAvailability } = useRecipeAvailability();
 	const { data: settings } = useUserSettings();
+	const consumeStock = useConsumeStock();
+	const reverseStockLog = useReverseStockLog();
+	const toast = useToast();
 
 	const [editing, setEditing] = useState(false);
 	const [confirmDelete, setConfirmDelete] = useState(false);
@@ -531,6 +544,76 @@ function RecipeDetail() {
 
 	async function handleDeleteIngredient(ingredientId: string) {
 		await deleteIngredient.mutateAsync(ingredientId);
+	}
+
+	async function handleConsumeIngredient(ing: {
+		productId: string | null;
+		quantity: string;
+		quantityUnitId: string | null;
+	}) {
+		if (!ing.productId) return;
+		const product = products?.find((p) => p.id === ing.productId);
+		if (!product) return;
+
+		const productEntries = (stockEntries ?? []).filter(
+			(e) => e.productId === ing.productId,
+		);
+		const best = pickBestEntry(productEntries);
+		if (!best) {
+			toast.error(`No stock entries available for ${product.name}`);
+			return;
+		}
+
+		const scaledQuantity = Number(ing.quantity) * scaleFactor;
+		let finalAmount = scaledQuantity;
+
+		if (
+			ing.quantityUnitId &&
+			product.defaultQuantityUnitId &&
+			ing.quantityUnitId !== product.defaultQuantityUnitId
+		) {
+			const allConversions = [
+				...(allProductConversions ?? []).filter(
+					(c) => c.productId === product.id,
+				),
+				...(unitConversions ?? []),
+			];
+			const graph = buildConversionGraph(allConversions);
+			const converted = tryConvert(
+				graph,
+				scaledQuantity,
+				ing.quantityUnitId,
+				product.defaultQuantityUnitId,
+			);
+			if (converted === null) {
+				toast.error(
+					`Cannot convert ingredient unit to stock unit for ${product.name}`,
+				);
+				return;
+			}
+			finalAmount = converted;
+		}
+
+		try {
+			const result = await consumeStock.mutateAsync({
+				stockEntryId: best.id,
+				quantity: finalAmount.toString(),
+			});
+			const unitLabel = getUnitLabel(ing.quantityUnitId);
+			toast.success(
+				`${scaledQuantity}${unitLabel ? ` ${unitLabel}` : ""} ${product.name} consumed`,
+				{
+					label: "Undo",
+					onClick: () =>
+						reverseStockLog.mutate({
+							stockLogId: result.stockLogId,
+							stockEntryId: best.id,
+						}),
+				},
+			);
+		} catch {
+			toast.error(`Failed to consume ${product.name}`);
+		}
 	}
 
 	function startEditingIngredient(ing: {
@@ -1513,6 +1596,15 @@ function RecipeDetail() {
 											onCreateProduct={handleCreateProduct}
 											onEdit={() => startEditingIngredient(ing)}
 											onDelete={() => handleDeleteIngredient(ing.id)}
+											onConsume={
+												ing.productId
+													? () => handleConsumeIngredient(ing)
+													: undefined
+											}
+											isConsuming={consumeStock.isPending}
+											canConsume={
+												ingredientAvailability.get(ing.id) === "sufficient"
+											}
 											productOptions={productOptions}
 											unitOptions={unitOptions}
 										/>
@@ -1559,6 +1651,12 @@ function RecipeDetail() {
 													onCreateProduct: handleCreateProduct,
 													onEdit: () => startEditingIngredient(ing),
 													onDelete: () => handleDeleteIngredient(ing.id),
+													onConsume: ing.productId
+														? () => handleConsumeIngredient(ing)
+														: undefined,
+													isConsuming: consumeStock.isPending,
+													canConsume:
+														ingredientAvailability.get(ing.id) === "sufficient",
 													productOptions,
 													unitOptions,
 												}))}
