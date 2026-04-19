@@ -115,6 +115,8 @@ function RecipeDetail() {
 	const [editing, setEditing] = useState(false);
 	const [confirmDelete, setConfirmDelete] = useState(false);
 	const [adjustedServings, setAdjustedServings] = useState<number | null>(null);
+	const [editingServings, setEditingServings] = useState(false);
+	const [servingsInput, setServingsInput] = useState("");
 	const [cookResult, setCookResult] = useState<{
 		deductions: {
 			productId: string;
@@ -1202,9 +1204,51 @@ function RecipeDetail() {
 														>
 															<Minus size={12} />
 														</button>
-														<span data-testid="adjusted-servings">
-															{currentServings}
-														</span>
+														{editingServings ? (
+															<input
+																type="number"
+																min="1"
+																value={servingsInput}
+																onChange={(e) =>
+																	setServingsInput(e.target.value)
+																}
+																onBlur={() => {
+																	const val = Number.parseInt(
+																		servingsInput,
+																		10,
+																	);
+																	if (val >= 1) setAdjustedServings(val);
+																	setEditingServings(false);
+																}}
+																onKeyDown={(e) => {
+																	if (e.key === "Enter") {
+																		(e.target as HTMLInputElement).blur();
+																	} else if (e.key === "Escape") {
+																		setEditingServings(false);
+																	}
+																}}
+																ref={(el) => el?.focus()}
+																className="h-6 w-14 rounded border border-(--line) bg-transparent px-1 text-center text-sm text-(--sea-ink) outline-none focus:border-(--lagoon)"
+																data-testid="adjusted-servings"
+															/>
+														) : (
+															<button
+																type="button"
+																onClick={() => {
+																	setServingsInput(
+																		String(
+																			currentServings ?? recipe?.servings ?? 1,
+																		),
+																	);
+																	setEditingServings(true);
+																}}
+																className="cursor-text tabular-nums hover:underline"
+																data-testid="adjusted-servings"
+																title="Click to type a value"
+															>
+																{currentServings}
+															</button>
+														)}
 														<button
 															type="button"
 															onClick={() =>
