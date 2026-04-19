@@ -175,6 +175,38 @@ describe("PUT /api/products/:id", () => {
 		expect(data.defaultConsumeUnitId).toBe("unit-2");
 	});
 
+	it("updates defaultTareWeight", async () => {
+		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
+		const updated = makeProduct({ defaultTareWeight: "150" });
+		mockUpdateReturning.mockResolvedValue([updated]);
+		mockSelectWhere.mockResolvedValueOnce([]);
+		const request = makePutRequest("/api/products/product-1", {
+			defaultTareWeight: "150",
+		});
+
+		const response = await PUT({ request, params } as never);
+
+		expect(response.status).toBe(200);
+		const data = await response.json();
+		expect(data.defaultTareWeight).toBe("150");
+	});
+
+	it("clears defaultTareWeight when set to null", async () => {
+		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
+		const updated = makeProduct({ defaultTareWeight: null });
+		mockUpdateReturning.mockResolvedValue([updated]);
+		mockSelectWhere.mockResolvedValueOnce([]);
+		const request = makePutRequest("/api/products/product-1", {
+			defaultTareWeight: null,
+		});
+
+		const response = await PUT({ request, params } as never);
+
+		expect(response.status).toBe(200);
+		const data = await response.json();
+		expect(data.defaultTareWeight).toBeNull();
+	});
+
 	it("updates categoryIds via join table", async () => {
 		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
 		const updated = makeProduct();

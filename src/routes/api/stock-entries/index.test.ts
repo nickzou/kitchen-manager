@@ -134,4 +134,38 @@ describe("POST /api/stock-entries/", () => {
 		expect(data.quantity).toBe("5");
 		expect(data.productId).toBe("product-1");
 	});
+
+	it("accepts tareWeight when creating entry", async () => {
+		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
+		const created = makeStockEntry({ quantity: "250", tareWeight: "200" });
+		mockTxInsertReturning.mockResolvedValue([created]);
+		const request = makePostRequest("/api/stock-entries", {
+			productId: "product-1",
+			quantity: "250",
+			tareWeight: "200",
+		});
+
+		const response = await POST({ request } as never);
+
+		expect(response.status).toBe(201);
+		const data = await response.json();
+		expect(data.quantity).toBe("250");
+		expect(data.tareWeight).toBe("200");
+	});
+
+	it("defaults tareWeight to null when not provided", async () => {
+		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
+		const created = makeStockEntry({ quantity: "5" });
+		mockTxInsertReturning.mockResolvedValue([created]);
+		const request = makePostRequest("/api/stock-entries", {
+			productId: "product-1",
+			quantity: "5",
+		});
+
+		const response = await POST({ request } as never);
+
+		expect(response.status).toBe(201);
+		const data = await response.json();
+		expect(data.tareWeight).toBeNull();
+	});
 });

@@ -149,6 +149,21 @@ describe("PUT /api/stock-entries/:id", () => {
 		const data = await response.json();
 		expect(data.quantity).toBe("20");
 	});
+
+	it("updates tareWeight", async () => {
+		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
+		const updated = makeStockEntry({ tareWeight: "180" });
+		mockUpdateReturning.mockResolvedValue([updated]);
+		const request = makePutRequest("/api/stock-entries/stock-entry-1", {
+			tareWeight: "180",
+		});
+
+		const response = await PUT({ request, params } as never);
+
+		expect(response.status).toBe(200);
+		const data = await response.json();
+		expect(data.tareWeight).toBe("180");
+	});
 });
 
 describe("DELETE /api/stock-entries/:id", () => {

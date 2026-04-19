@@ -194,4 +194,33 @@ describe("POST /api/products/", () => {
 		expect(data.minStockAmount).toBe("5");
 		expect(data.defaultExpirationDays).toBe(7);
 	});
+
+	it("accepts defaultTareWeight", async () => {
+		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
+		const created = makeProduct({ defaultTareWeight: "200" });
+		mockReturning.mockResolvedValue([created]);
+		const request = makePostRequest("/api/products", {
+			name: "Soy Sauce",
+			defaultTareWeight: "200",
+		});
+
+		const response = await POST({ request } as never);
+
+		expect(response.status).toBe(201);
+		const data = await response.json();
+		expect(data.defaultTareWeight).toBe("200");
+	});
+
+	it("defaults defaultTareWeight to null when not provided", async () => {
+		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
+		const created = makeProduct();
+		mockReturning.mockResolvedValue([created]);
+		const request = makePostRequest("/api/products", { name: "Milk" });
+
+		const response = await POST({ request } as never);
+
+		expect(response.status).toBe(201);
+		const data = await response.json();
+		expect(data.defaultTareWeight).toBeNull();
+	});
 });
