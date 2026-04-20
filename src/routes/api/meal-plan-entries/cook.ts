@@ -79,7 +79,7 @@ export const Route = createFileRoute("/api/meal-plan-entries/cook")({
 					for (const ingredient of ingredients) {
 						if (!ingredient.productId) continue;
 
-						const needed = Number(ingredient.quantity) * scaleFactor;
+						const needed = roundQty(Number(ingredient.quantity) * scaleFactor);
 
 						// Find the consume logs created around cookedAt for this product
 						const logs = await tx
@@ -125,7 +125,7 @@ export const Route = createFileRoute("/api/meal-plan-entries/cook")({
 								stockEntryId: log.stockEntryId,
 								productId: ingredient.productId,
 								transactionType: "add",
-								quantity: restore.toString(),
+								quantity: roundQty(restore).toString(),
 								userId: session.user.id,
 							});
 
@@ -135,7 +135,9 @@ export const Route = createFileRoute("/api/meal-plan-entries/cook")({
 
 					// Reverse production: if recipe produces a product, remove the produced stock
 					if (rec.producedProductId && rec.producedQuantity) {
-						const producedQty = Number(rec.producedQuantity) * scaleFactor;
+						const producedQty = roundQty(
+							Number(rec.producedQuantity) * scaleFactor,
+						);
 
 						// Find the add log created around cookedAt for the produced product
 						const addLogs = await tx
@@ -181,7 +183,7 @@ export const Route = createFileRoute("/api/meal-plan-entries/cook")({
 								stockEntryId: log.stockEntryId,
 								productId: rec.producedProductId,
 								transactionType: "remove",
-								quantity: remove.toString(),
+								quantity: roundQty(remove).toString(),
 								userId: session.user.id,
 							});
 
@@ -304,7 +306,7 @@ export const Route = createFileRoute("/api/meal-plan-entries/cook")({
 						if (!ingredient.productId) continue;
 						if (skipIds.has(ingredient.id)) continue;
 
-						const needed = Number(ingredient.quantity) * scaleFactor;
+						const needed = roundQty(Number(ingredient.quantity) * scaleFactor);
 
 						// Get stock entries ordered by expiration (FIFO - oldest first)
 						const stocks = await tx
@@ -338,7 +340,7 @@ export const Route = createFileRoute("/api/meal-plan-entries/cook")({
 								stockEntryId: stock.id,
 								productId: ingredient.productId,
 								transactionType: "consume",
-								quantity: deduct.toString(),
+								quantity: roundQty(deduct).toString(),
 								userId: session.user.id,
 							});
 
@@ -363,7 +365,9 @@ export const Route = createFileRoute("/api/meal-plan-entries/cook")({
 					let produced: { productId: string; quantity: number } | undefined;
 
 					if (rec.producedProductId && rec.producedQuantity) {
-						const producedQty = Number(rec.producedQuantity) * scaleFactor;
+						const producedQty = roundQty(
+							Number(rec.producedQuantity) * scaleFactor,
+						);
 
 						const [newEntry] = await tx
 							.insert(stockEntry)

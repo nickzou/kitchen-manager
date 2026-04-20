@@ -11,6 +11,7 @@ import {
 	buildConversionGraph,
 	tryConvert,
 } from "#src/lib/recipe-utils/conversion-graph";
+import { roundQty } from "#src/lib/round-qty";
 
 interface ConversionData {
 	fromUnitId: string;
@@ -121,7 +122,7 @@ export function QuickAddStock({
 				defaultUnitId,
 			);
 			if (converted === null) return;
-			finalQuantity = String(converted);
+			finalQuantity = String(roundQty(converted));
 		}
 
 		await createStockEntry.mutateAsync({

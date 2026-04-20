@@ -40,6 +40,7 @@ import {
 	buildConversionGraph,
 	tryConvert,
 } from "#src/lib/recipe-utils/conversion-graph";
+import { roundQty } from "#src/lib/round-qty";
 import { pickBestEntry } from "#src/lib/stock-utils";
 import { cn } from "#src/lib/utils";
 
@@ -213,7 +214,7 @@ function StockPage() {
 				toast.error(`Cannot convert consume unit to stock unit for ${name}`);
 				return;
 			}
-			finalAmount = converted;
+			finalAmount = roundQty(converted);
 		}
 
 		try {
@@ -600,7 +601,7 @@ function EditStockModal({
 				defaultUnitId,
 			);
 			if (converted === null) return;
-			finalQuantity = String(converted);
+			finalQuantity = String(roundQty(converted));
 		}
 
 		await updateStockEntry.mutateAsync({

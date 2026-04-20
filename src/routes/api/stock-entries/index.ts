@@ -3,6 +3,7 @@ import { and, eq, ne } from "drizzle-orm";
 import { db } from "#src/db";
 import { stockEntry, stockLog } from "#src/db/schema";
 import { getAuthSession } from "#src/lib/auth-session";
+import { roundQty } from "#src/lib/round-qty";
 import { dispatchWebhook } from "#src/lib/webhooks";
 
 function json(data: unknown, init?: { status?: number }) {
@@ -65,8 +66,10 @@ export const Route = createFileRoute("/api/stock-entries/")({
 								body.quantity &&
 								Number.parseFloat(body.quantity) > 0
 									? String(
-											Number.parseFloat(body.price) /
-												Number.parseFloat(body.quantity),
+											roundQty(
+												Number.parseFloat(body.price) /
+													Number.parseFloat(body.quantity),
+											),
 										)
 									: null,
 							storeId: body.storeId ?? null,
