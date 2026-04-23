@@ -51,6 +51,7 @@ function ShoppingListPage() {
 		summary?.ingredients.filter((i) => i.status === "sufficient") ?? [];
 	const unknownUnit =
 		summary?.ingredients.filter((i) => i.status === "unknown_unit") ?? [];
+	const restock = summary?.restock ?? [];
 
 	const statusBadge: Record<string, string> = {
 		deficit: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
@@ -58,6 +59,8 @@ function ShoppingListPage() {
 			"bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
 		unknown_unit:
 			"bg-gray-100 text-gray-600 dark:bg-gray-800/30 dark:text-gray-400",
+		restock:
+			"bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
 	};
 
 	return (
@@ -93,9 +96,11 @@ function ShoppingListPage() {
 				{isLoading ? (
 					<p className="text-sm text-(--sea-ink-soft)">Loading...</p>
 				) : !summary?.ingredients.length &&
-					!summary?.unlinkedIngredients.length ? (
+					!summary?.unlinkedIngredients.length &&
+					!summary?.restock.length ? (
 					<p className="text-sm text-(--sea-ink-soft)">
-						No meals planned for this date range.
+						Nothing to buy — no planned meals and all tracked staples are at
+						min.
 					</p>
 				) : (
 					<div className="flex flex-col gap-6">
@@ -111,6 +116,24 @@ function ShoppingListPage() {
 											key={`${item.productId}-${item.quantityUnitId}`}
 											item={item}
 											badgeClass={statusBadge.deficit}
+										/>
+									))}
+								</div>
+							</div>
+						)}
+
+						{/* Restock: tracked staples below their min stock */}
+						{restock.length > 0 && (
+							<div>
+								<h2 className="mb-3 text-sm font-semibold text-amber-600 dark:text-amber-400">
+									Restock ({restock.length})
+								</h2>
+								<div className="flex flex-col gap-1">
+									{restock.map((item) => (
+										<RestockRow
+											key={`restock-${item.productId}`}
+											item={item}
+											badgeClass={statusBadge.restock}
 										/>
 									))}
 								</div>
@@ -181,6 +204,48 @@ function ShoppingListPage() {
 	);
 }
 
+function RestockRow({
+	item,
+	badgeClass,
+}: {
+	item: {
+		productName: string;
+		minStock: number;
+		stockQuantity: number;
+		unitAbbreviation: string | null;
+		unitName: string | null;
+	};
+	badgeClass: string;
+}) {
+	const unitLabel = item.unitAbbreviation ?? item.unitName ?? "";
+	const shortfall = item.minStock - item.stockQuantity;
+
+	return (
+		<div className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-(--surface)">
+			<span className="flex-1 font-medium text-(--sea-ink)">
+				{item.productName}
+			</span>
+			<span className="text-(--sea-ink-soft)">
+				Min: {item.minStock.toFixed(1)}
+				{unitLabel ? ` ${unitLabel}` : ""}
+			</span>
+			<span className="text-(--sea-ink-soft)">
+				Have: {item.stockQuantity.toFixed(1)}
+				{unitLabel ? ` ${unitLabel}` : ""}
+			</span>
+			<span
+				className={cn(
+					"rounded-full px-2 py-0.5 text-xs font-semibold",
+					badgeClass,
+				)}
+			>
+				Buy {shortfall.toFixed(1)}
+				{unitLabel ? ` ${unitLabel}` : ""}
+			</span>
+		</div>
+	);
+}
+
 function IngredientRow({
 	item,
 	badgeClass,
@@ -188,6 +253,7 @@ function IngredientRow({
 	item: {
 		productName: string;
 		neededQuantity: number;
+		minStockBuffer: number;
 		stockQuantity: number;
 		unitAbbreviation: string | null;
 		unitName: string | null;
@@ -196,12 +262,20 @@ function IngredientRow({
 	badgeClass: string;
 }) {
 	const unitLabel = item.unitAbbreviation ?? item.unitName ?? "";
-	const diff = item.stockQuantity - item.neededQuantity;
+	const target = item.neededQuantity + item.minStockBuffer;
+	const shortfall = Math.max(0, target - item.stockQuantity);
+	const hasBuffer = item.minStockBuffer > 0;
 
 	return (
 		<div className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-(--surface)">
 			<span className="flex-1 font-medium text-(--sea-ink)">
 				{item.productName}
+				{hasBuffer && item.status === "deficit" && (
+					<span className="ml-2 text-xs text-(--sea-ink-soft)">
+						(keeps {item.minStockBuffer.toFixed(1)}
+						{unitLabel ? ` ${unitLabel}` : ""} min)
+					</span>
+				)}
 			</span>
 			<span className="text-(--sea-ink-soft)">
 				Need: {item.neededQuantity.toFixed(1)}
@@ -213,12 +287,12 @@ function IngredientRow({
 			</span>
 			<span
 				className={cn(
-					"rounded-full px-2 py-0.5 text-xs font-semibold capitalize",
+					"rounded-full px-2 py-0.5 text-xs font-semibold",
 					badgeClass,
 				)}
 			>
 				{item.status === "deficit"
-					? `Need ${Math.abs(diff).toFixed(1)} more`
+					? `Buy ${shortfall.toFixed(1)}${unitLabel ? ` ${unitLabel}` : ""}`
 					: item.status === "sufficient"
 						? "OK"
 						: "Check units"}

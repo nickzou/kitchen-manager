@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { and, eq, gte, inArray, lte, sql } from "drizzle-orm";
+import { and, eq, gt, gte, inArray, lte, sql } from "drizzle-orm";
 import { db } from "#src/db";
 import {
 	mealPlanEntry,
@@ -30,8 +30,23 @@ interface AggregatedIngredient {
 	unitName: string | null;
 	unitAbbreviation: string | null;
 	neededQuantity: number;
+	// Extra quantity to buy on top of `neededQuantity` so stock stays at
+	// or above the product's min after the planned meals are cooked. Zero
+	// when the product has no min, or when the check was skipped because
+	// of a unit-conversion gap.
+	minStockBuffer: number;
 	stockQuantity: number;
 	status: "sufficient" | "deficit" | "unknown_unit";
+}
+
+interface RestockItem {
+	productId: string;
+	productName: string;
+	quantityUnitId: string | null;
+	unitName: string | null;
+	unitAbbreviation: string | null;
+	minStock: number;
+	stockQuantity: number;
 }
 
 export const Route = createFileRoute(
@@ -119,12 +134,41 @@ export const Route = createFileRoute(
 				}
 
 				// Get product info and stock for linked ingredients
-				const productIds = [
+				const linkedProductIds = [
 					...new Set([...linked.values()].map((v) => v.productId)),
 				];
 
+				// Tracked products (minStockAmount > 0) for the restock list
+				const trackedProducts = await db
+					.select()
+					.from(product)
+					.where(
+						and(
+							eq(product.userId, session.user.id),
+							gt(product.minStockAmount, "0"),
+						),
+					);
+
+				// Products we need to materialize: linked ingredients ∪ tracked-for-restock
+				const productIds = [
+					...new Set([
+						...linkedProductIds,
+						...trackedProducts.map((p) => p.id),
+					]),
+				];
+
+				const units = await db
+					.select()
+					.from(quantityUnit)
+					.where(eq(quantityUnit.userId, session.user.id));
+				const unitMap = new Map(units.map((u) => [u.id, u]));
+
 				if (productIds.length === 0) {
-					return json({ ingredients: [], unlinkedIngredients: unlinked });
+					return json({
+						ingredients: [],
+						unlinkedIngredients: unlinked,
+						restock: [],
+					});
 				}
 
 				const products = await db
@@ -156,16 +200,10 @@ export const Route = createFileRoute(
 					.from(unitConversion)
 					.where(eq(unitConversion.userId, session.user.id));
 
-				const units = await db
-					.select()
-					.from(quantityUnit)
-					.where(eq(quantityUnit.userId, session.user.id));
-
 				const productMap = new Map(products.map((p) => [p.id, p]));
 				const stockMap = new Map(
 					stock.map((s) => [s.productId, Number(s.totalQuantity)]),
 				);
-				const unitMap = new Map(units.map((u) => [u.id, u]));
 
 				const graph = buildConversionGraph(conversions);
 
@@ -187,15 +225,37 @@ export const Route = createFileRoute(
 					);
 
 					let status: AggregatedIngredient["status"];
+					let minStockBuffer = 0;
 					if (
 						agg.unitId !== p.defaultQuantityUnitId &&
 						neededInStockUnit === null
 					) {
+						// Can't compare across units — leave min-stock out rather than
+						// mixing values in incompatible units.
 						status = "unknown_unit";
 						neededInStockUnit = agg.quantity;
 					} else {
 						const needed = neededInStockUnit ?? agg.quantity;
-						status = stockQty >= needed ? "sufficient" : "deficit";
+						const minStock = Number(p.minStockAmount);
+						const target = needed + minStock;
+						status = stockQty >= target ? "sufficient" : "deficit";
+						// Report the buffer in the ingredient's unit so it composes
+						// with neededQuantity in the UI. Comparison above is in the
+						// default unit; reporting happens in whatever unit the
+						// recipe uses.
+						if (minStock > 0) {
+							if (agg.unitId === p.defaultQuantityUnitId) {
+								minStockBuffer = minStock;
+							} else {
+								minStockBuffer =
+									tryConvert(
+										graph,
+										minStock,
+										p.defaultQuantityUnitId,
+										agg.unitId,
+									) ?? minStock;
+							}
+						}
 					}
 
 					ingredients.push({
@@ -205,12 +265,39 @@ export const Route = createFileRoute(
 						unitName: unit?.name ?? null,
 						unitAbbreviation: unit?.abbreviation ?? null,
 						neededQuantity: agg.quantity,
+						minStockBuffer,
 						stockQuantity: stockQty,
 						status,
 					});
 				}
 
-				return json({ ingredients, unlinkedIngredients: unlinked });
+				// Restock: products with a min threshold, below min, not already listed
+				const linkedIdSet = new Set(linkedProductIds);
+				const restock: RestockItem[] = [];
+				for (const p of trackedProducts) {
+					if (linkedIdSet.has(p.id)) continue;
+					const stockQty = stockMap.get(p.id) ?? 0;
+					const minStock = Number(p.minStockAmount);
+					if (stockQty >= minStock) continue;
+					const unit = p.defaultQuantityUnitId
+						? unitMap.get(p.defaultQuantityUnitId)
+						: null;
+					restock.push({
+						productId: p.id,
+						productName: p.name,
+						quantityUnitId: p.defaultQuantityUnitId,
+						unitName: unit?.name ?? null,
+						unitAbbreviation: unit?.abbreviation ?? null,
+						minStock,
+						stockQuantity: stockQty,
+					});
+				}
+
+				return json({
+					ingredients,
+					unlinkedIngredients: unlinked,
+					restock,
+				});
 			},
 		},
 	},
