@@ -18,6 +18,7 @@ vi.mock("#src/db/schema", () => ({
 
 const mockWhere = vi.fn();
 const mockReturning = vi.fn();
+const mockValues = vi.fn(() => ({ returning: mockReturning }));
 
 vi.mock("#src/db", () => ({
 	db: {
@@ -27,9 +28,7 @@ vi.mock("#src/db", () => ({
 			})),
 		})),
 		insert: vi.fn(() => ({
-			values: vi.fn(() => ({
-				returning: mockReturning,
-			})),
+			values: mockValues,
 		})),
 	},
 }));
@@ -147,5 +146,36 @@ describe("POST /api/recipes/:id/ingredients/", () => {
 		const data = await response.json();
 		expect(data.userId).toBe(session.user.id);
 		expect(data.userId).not.toBe("attacker-id");
+	});
+
+	it("persists optional: true when provided in the body", async () => {
+		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
+		mockReturning.mockResolvedValue([makeRecipeIngredient({ optional: true })]);
+		const request = makePostRequest("/api/recipes/recipe-1/ingredients", {
+			quantity: "2",
+			productId: "product-1",
+			optional: true,
+		});
+
+		await POST({ request, params } as never);
+
+		expect(mockValues).toHaveBeenCalledWith(
+			expect.objectContaining({ optional: true }),
+		);
+	});
+
+	it("defaults optional to false when the body omits it", async () => {
+		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
+		mockReturning.mockResolvedValue([makeRecipeIngredient()]);
+		const request = makePostRequest("/api/recipes/recipe-1/ingredients", {
+			quantity: "2",
+			productId: "product-1",
+		});
+
+		await POST({ request, params } as never);
+
+		expect(mockValues).toHaveBeenCalledWith(
+			expect.objectContaining({ optional: false }),
+		);
 	});
 });
