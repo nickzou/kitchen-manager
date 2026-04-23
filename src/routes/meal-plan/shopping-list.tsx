@@ -253,6 +253,7 @@ function IngredientRow({
 	item: {
 		productName: string;
 		neededQuantity: number;
+		minStockBuffer: number;
 		stockQuantity: number;
 		unitAbbreviation: string | null;
 		unitName: string | null;
@@ -261,12 +262,20 @@ function IngredientRow({
 	badgeClass: string;
 }) {
 	const unitLabel = item.unitAbbreviation ?? item.unitName ?? "";
-	const diff = item.stockQuantity - item.neededQuantity;
+	const target = item.neededQuantity + item.minStockBuffer;
+	const shortfall = Math.max(0, target - item.stockQuantity);
+	const hasBuffer = item.minStockBuffer > 0;
 
 	return (
 		<div className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-(--surface)">
 			<span className="flex-1 font-medium text-(--sea-ink)">
 				{item.productName}
+				{hasBuffer && item.status === "deficit" && (
+					<span className="ml-2 text-xs text-(--sea-ink-soft)">
+						(keeps {item.minStockBuffer.toFixed(1)}
+						{unitLabel ? ` ${unitLabel}` : ""} min)
+					</span>
+				)}
 			</span>
 			<span className="text-(--sea-ink-soft)">
 				Need: {item.neededQuantity.toFixed(1)}
@@ -278,12 +287,12 @@ function IngredientRow({
 			</span>
 			<span
 				className={cn(
-					"rounded-full px-2 py-0.5 text-xs font-semibold capitalize",
+					"rounded-full px-2 py-0.5 text-xs font-semibold",
 					badgeClass,
 				)}
 			>
 				{item.status === "deficit"
-					? `Need ${Math.abs(diff).toFixed(1)} more`
+					? `Buy ${shortfall.toFixed(1)}${unitLabel ? ` ${unitLabel}` : ""}`
 					: item.status === "sufficient"
 						? "OK"
 						: "Check units"}

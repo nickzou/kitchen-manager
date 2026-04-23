@@ -7,6 +7,7 @@ export interface IngredientSummaryItem {
 	unitName: string | null;
 	unitAbbreviation: string | null;
 	neededQuantity: number;
+	minStockBuffer: number;
 	stockQuantity: number;
 	status: "sufficient" | "deficit" | "unknown_unit";
 }

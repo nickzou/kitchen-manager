@@ -223,6 +223,150 @@ describe("GET /api/meal-plan-entries/ingredient-summary restock", () => {
 		expect(ids).not.toContain("p-eggs");
 	});
 
+	it("flags a planned ingredient as deficit when stock covers need but falls below min after cooking", async () => {
+		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
+		const flour = makeProduct({
+			id: "p-flour",
+			name: "Flour",
+			minStockAmount: "500",
+		});
+		mockResults[0] = [
+			{
+				entryServings: null,
+				recipeServings: 4,
+				ingredientProductId: "p-flour",
+				ingredientQuantity: "100",
+				ingredientUnitId: null,
+				ingredientNotes: null,
+			},
+		];
+		mockResults[1] = []; // no need to list as tracked — already planned
+		mockResults[2] = [];
+		mockResults[3] = [flour];
+		mockResults[4] = [{ productId: "p-flour", totalQuantity: "200" }]; // enough for recipe, below min after
+		mockResults[5] = [];
+
+		const response = await GET({ request: summaryRequest() } as never);
+
+		const data = await response.json();
+		expect(data.ingredients).toHaveLength(1);
+		expect(data.ingredients[0]).toMatchObject({
+			status: "deficit",
+			neededQuantity: 100,
+			minStockBuffer: 500,
+			stockQuantity: 200,
+		});
+	});
+
+	it("marks a planned ingredient sufficient when stock covers need plus min", async () => {
+		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
+		const flour = makeProduct({
+			id: "p-flour",
+			name: "Flour",
+			minStockAmount: "500",
+		});
+		mockResults[0] = [
+			{
+				entryServings: null,
+				recipeServings: 4,
+				ingredientProductId: "p-flour",
+				ingredientQuantity: "100",
+				ingredientUnitId: null,
+				ingredientNotes: null,
+			},
+		];
+		mockResults[1] = [];
+		mockResults[2] = [];
+		mockResults[3] = [flour];
+		mockResults[4] = [{ productId: "p-flour", totalQuantity: "700" }]; // 100 needed + 500 min buffer + 100 spare
+		mockResults[5] = [];
+
+		const response = await GET({ request: summaryRequest() } as never);
+
+		const data = await response.json();
+		expect(data.ingredients[0]).toMatchObject({
+			status: "sufficient",
+			minStockBuffer: 500,
+		});
+	});
+
+	it("reports zero buffer when the product has no min stock threshold", async () => {
+		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
+		const salt = makeProduct({
+			id: "p-salt",
+			name: "Salt",
+			minStockAmount: "0",
+		});
+		mockResults[0] = [
+			{
+				entryServings: null,
+				recipeServings: 4,
+				ingredientProductId: "p-salt",
+				ingredientQuantity: "5",
+				ingredientUnitId: null,
+				ingredientNotes: null,
+			},
+		];
+		mockResults[1] = [];
+		mockResults[2] = [];
+		mockResults[3] = [salt];
+		mockResults[4] = [{ productId: "p-salt", totalQuantity: "5" }];
+		mockResults[5] = [];
+
+		const response = await GET({ request: summaryRequest() } as never);
+
+		const data = await response.json();
+		expect(data.ingredients[0]).toMatchObject({
+			status: "sufficient",
+			minStockBuffer: 0,
+		});
+	});
+
+	it("converts the min-stock buffer into the ingredient's unit for display", async () => {
+		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
+		const ml = makeQuantityUnit({
+			id: "unit-ml",
+			name: "Millilitres",
+			abbreviation: "ml",
+		});
+		const cups = makeQuantityUnit({
+			id: "unit-cups",
+			name: "Cups",
+			abbreviation: "c",
+		});
+		const milk = makeProduct({
+			id: "p-milk",
+			name: "Milk",
+			minStockAmount: "480", // 480ml (product's default unit)
+			defaultQuantityUnitId: "unit-ml",
+		});
+		mockResults[0] = [
+			{
+				entryServings: null,
+				recipeServings: 4,
+				ingredientProductId: "p-milk",
+				ingredientQuantity: "1", // 1 cup in the recipe
+				ingredientUnitId: "unit-cups",
+				ingredientNotes: null,
+			},
+		];
+		mockResults[1] = [];
+		mockResults[2] = [ml, cups];
+		mockResults[3] = [milk];
+		mockResults[4] = [{ productId: "p-milk", totalQuantity: "200" }]; // 200ml stock, well below need+min
+		mockResults[5] = [
+			{ fromUnitId: "unit-cups", toUnitId: "unit-ml", factor: "240" },
+		];
+
+		const response = await GET({ request: summaryRequest() } as never);
+
+		const data = await response.json();
+		expect(data.ingredients[0].status).toBe("deficit");
+		// 480ml → 480/240 = 2 cups
+		expect(data.ingredients[0].minStockBuffer).toBeCloseTo(2);
+		expect(data.ingredients[0].neededQuantity).toBe(1);
+	});
+
 	it("populates unit labels for restock items from the product's default unit", async () => {
 		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
 		const grams = makeQuantityUnit({

@@ -30,6 +30,11 @@ interface AggregatedIngredient {
 	unitName: string | null;
 	unitAbbreviation: string | null;
 	neededQuantity: number;
+	// Extra quantity to buy on top of `neededQuantity` so stock stays at
+	// or above the product's min after the planned meals are cooked. Zero
+	// when the product has no min, or when the check was skipped because
+	// of a unit-conversion gap.
+	minStockBuffer: number;
 	stockQuantity: number;
 	status: "sufficient" | "deficit" | "unknown_unit";
 }
@@ -220,15 +225,37 @@ export const Route = createFileRoute(
 					);
 
 					let status: AggregatedIngredient["status"];
+					let minStockBuffer = 0;
 					if (
 						agg.unitId !== p.defaultQuantityUnitId &&
 						neededInStockUnit === null
 					) {
+						// Can't compare across units — leave min-stock out rather than
+						// mixing values in incompatible units.
 						status = "unknown_unit";
 						neededInStockUnit = agg.quantity;
 					} else {
 						const needed = neededInStockUnit ?? agg.quantity;
-						status = stockQty >= needed ? "sufficient" : "deficit";
+						const minStock = Number(p.minStockAmount);
+						const target = needed + minStock;
+						status = stockQty >= target ? "sufficient" : "deficit";
+						// Report the buffer in the ingredient's unit so it composes
+						// with neededQuantity in the UI. Comparison above is in the
+						// default unit; reporting happens in whatever unit the
+						// recipe uses.
+						if (minStock > 0) {
+							if (agg.unitId === p.defaultQuantityUnitId) {
+								minStockBuffer = minStock;
+							} else {
+								minStockBuffer =
+									tryConvert(
+										graph,
+										minStock,
+										p.defaultQuantityUnitId,
+										agg.unitId,
+									) ?? minStock;
+							}
+						}
 					}
 
 					ingredients.push({
@@ -238,6 +265,7 @@ export const Route = createFileRoute(
 						unitName: unit?.name ?? null,
 						unitAbbreviation: unit?.abbreviation ?? null,
 						neededQuantity: agg.quantity,
+						minStockBuffer,
 						stockQuantity: stockQty,
 						status,
 					});
