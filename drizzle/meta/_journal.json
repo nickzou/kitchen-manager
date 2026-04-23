@@ -232,6 +232,13 @@
       "when": 1776634280170,
       "tag": "0032_add-tare-weight",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1776906707770,
+      "tag": "0033_add-optional-ingredient",
+      "breakpoints": true
     }
   ]
 }

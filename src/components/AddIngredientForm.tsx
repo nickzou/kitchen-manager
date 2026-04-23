@@ -11,6 +11,7 @@ export type IngredientFormState = {
 	quantity: string;
 	quantityUnitId: string;
 	notes: string;
+	optional: boolean;
 };
 
 type ComboboxOption = { value: string; label: string };
@@ -20,7 +21,7 @@ export function AddIngredientForm({
 	unitOptions,
 	onAdd,
 	isPending,
-	newIngredient: { productId, quantity, quantityUnitId, notes },
+	newIngredient: { productId, quantity, quantityUnitId, notes, optional },
 	setNewIngredient,
 	onCreateProduct,
 	onProductChange,
@@ -58,6 +59,7 @@ export function AddIngredientForm({
 			quantity,
 			quantityUnitId,
 			notes,
+			optional,
 			...partial,
 		});
 	}
@@ -119,7 +121,7 @@ export function AddIngredientForm({
 				/>
 			)}
 
-			<div className="grid grid-cols-[1fr_1fr] gap-2 sm:grid-cols-[2fr_5rem_1fr_1fr_auto]">
+			<div className="grid grid-cols-[1fr_1fr] gap-2 sm:grid-cols-[2fr_5rem_1fr_1fr_auto_auto]">
 				<Combobox
 					value={productId}
 					onChange={(v) => {
@@ -158,6 +160,15 @@ export function AddIngredientForm({
 					value={notes}
 					onChange={(e) => update({ notes: e.target.value })}
 				/>
+				<label className="flex items-center gap-1.5 text-sm text-(--sea-ink-soft) cursor-pointer select-none">
+					<input
+						type="checkbox"
+						checked={optional}
+						onChange={(e) => update({ optional: e.target.checked })}
+						className="accent-(--lagoon)"
+					/>
+					Optional
+				</label>
 				<Button
 					type="button"
 					onClick={onAdd}

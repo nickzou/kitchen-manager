@@ -105,6 +105,11 @@ export function IngredientGroup({
 							<span className="rounded-full bg-(--surface) px-1.5 py-0.5 text-xs text-(--sea-ink-soft)">
 								{ingredientCount}
 							</span>
+							{ingredientRows.every((r) => r.ingredient.optional) && (
+								<span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-900 dark:text-amber-300">
+									Optional
+								</span>
+							)}
 						</div>
 						<div className="flex gap-0.5">
 							<button
