@@ -18,9 +18,20 @@ export interface UnlinkedIngredient {
 	scaleFactor: number;
 }
 
+export interface RestockItem {
+	productId: string;
+	productName: string;
+	quantityUnitId: string | null;
+	unitName: string | null;
+	unitAbbreviation: string | null;
+	minStock: number;
+	stockQuantity: number;
+}
+
 export interface IngredientSummaryResponse {
 	ingredients: IngredientSummaryItem[];
 	unlinkedIngredients: UnlinkedIngredient[];
+	restock: RestockItem[];
 }
 
 export function useIngredientSummary(startDate: string, endDate: string) {
