@@ -15,6 +15,7 @@ const baseIngredient: RecipeIngredient = {
 	quantityUnitId: "unit-1",
 	notes: null,
 	groupName: null,
+	optional: false,
 	sortOrder: 0,
 	userId: "user-1",
 	createdAt: "2026-01-01T00:00:00Z",
@@ -26,6 +27,7 @@ const defaultEditState = {
 	quantity: "",
 	quantityUnitId: "",
 	notes: "",
+	optional: false,
 	groupName: "",
 };
 

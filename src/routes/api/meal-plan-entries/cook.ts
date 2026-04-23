@@ -354,7 +354,7 @@ export const Route = createFileRoute("/api/meal-plan-entries/cook")({
 							deducted: totalDeducted,
 						});
 
-						if (remaining > 0) {
+						if (remaining > 0 && !ingredient.optional) {
 							warnings.push(
 								`Insufficient stock for product ${ingredient.productId}: needed ${needed}, only deducted ${totalDeducted}`,
 							);

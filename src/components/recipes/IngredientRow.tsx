@@ -132,6 +132,20 @@ export function IngredientRow({
 							})
 						}
 					/>
+					<label className="flex items-center gap-1.5 text-sm text-(--sea-ink-soft) cursor-pointer select-none">
+						<input
+							type="checkbox"
+							checked={editState.optional}
+							onChange={(e) =>
+								onEditStateChange({
+									...editState,
+									optional: e.target.checked,
+								})
+							}
+							className="accent-(--lagoon)"
+						/>
+						Optional
+					</label>
 				</div>
 				{conversionHint && (
 					<p
@@ -193,6 +207,11 @@ export function IngredientRow({
 					{ingredient.notes && (
 						<span className="ml-2 text-xs text-(--sea-ink-soft)">
 							({ingredient.notes})
+						</span>
+					)}
+					{ingredient.optional && (
+						<span className="ml-2 inline-block rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-900 dark:text-amber-300">
+							Optional
 						</span>
 					)}
 				</span>

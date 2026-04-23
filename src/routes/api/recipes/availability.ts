@@ -45,6 +45,7 @@ export const Route = createFileRoute("/api/recipes/availability")({
 						quantity: recipeIngredient.quantity,
 						quantityUnitId: recipeIngredient.quantityUnitId,
 						groupName: recipeIngredient.groupName,
+						optional: recipeIngredient.optional,
 					})
 					.from(recipeIngredient)
 					.where(eq(recipeIngredient.userId, userId));
@@ -190,10 +191,10 @@ export const Route = createFileRoute("/api/recipes/availability")({
 
 					let allSufficient = true;
 
-					// Check ungrouped: all must be sufficient
+					// Check ungrouped: all must be sufficient (skip optional)
 					for (const ing of ungrouped) {
 						const { sufficient, trackable } = checkIngredient(ing);
-						if (trackable && !sufficient) {
+						if (trackable && !sufficient && !ing.optional) {
 							allSufficient = false;
 							break;
 						}
@@ -204,6 +205,8 @@ export const Route = createFileRoute("/api/recipes/availability")({
 						for (const groupIngs of groups.values()) {
 							const anyTrackable = groupIngs.some((i) => i.productId);
 							if (!anyTrackable) continue;
+							// Skip group if all ingredients are optional
+							if (groupIngs.every((i) => i.optional)) continue;
 
 							const anySufficient = groupIngs.some(
 								(i) => checkIngredient(i).sufficient,

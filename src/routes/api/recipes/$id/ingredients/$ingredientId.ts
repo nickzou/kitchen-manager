@@ -32,6 +32,7 @@ export const Route = createFileRoute(
 				if (body.notes !== undefined) updates.notes = body.notes;
 				if (body.groupName !== undefined) updates.groupName = body.groupName;
 				if (body.sortOrder !== undefined) updates.sortOrder = body.sortOrder;
+				if (body.optional !== undefined) updates.optional = body.optional;
 
 				const [updated] = await db
 					.update(recipeIngredient)

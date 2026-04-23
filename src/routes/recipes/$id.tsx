@@ -148,6 +148,7 @@ function RecipeDetail() {
 		quantity: "",
 		quantityUnitId: "",
 		notes: "",
+		optional: false,
 	});
 	const [addMode, setAddMode] = useState<"ingredient" | "group">("ingredient");
 	const [pendingGroupName, setPendingGroupName] = useState("");
@@ -174,6 +175,7 @@ function RecipeDetail() {
 		quantity: "",
 		quantityUnitId: "",
 		notes: "",
+		optional: false,
 		groupName: "",
 	});
 	const [addToGroup, setAddToGroup] = useState<string | null>(null);
@@ -449,12 +451,14 @@ function RecipeDetail() {
 				quantityUnitId: newIngredient.quantityUnitId || undefined,
 				notes: newIngredient.notes || undefined,
 				groupName: addToGroup,
+				optional: newIngredient.optional,
 			});
 			setNewIngredient({
 				productId: "",
 				quantity: "",
 				quantityUnitId: "",
 				notes: "",
+				optional: false,
 			});
 			setAddToGroup(null);
 			return;
@@ -474,6 +478,7 @@ function RecipeDetail() {
 				quantity: "",
 				quantityUnitId: "",
 				notes: "",
+				optional: false,
 			});
 			return;
 		}
@@ -482,12 +487,14 @@ function RecipeDetail() {
 			quantity: newIngredient.quantity,
 			quantityUnitId: newIngredient.quantityUnitId || undefined,
 			notes: newIngredient.notes || undefined,
+			optional: newIngredient.optional,
 		});
 		setNewIngredient({
 			productId: "",
 			quantity: "",
 			quantityUnitId: "",
 			notes: "",
+			optional: false,
 		});
 	}
 
@@ -625,12 +632,14 @@ function RecipeDetail() {
 		quantityUnitId: string | null;
 		notes: string | null;
 		groupName: string | null;
+		optional: boolean;
 	}) {
 		setEditIngredient({
 			productId: ing.productId ?? "",
 			quantity: ing.quantity,
 			quantityUnitId: ing.quantityUnitId ?? "",
 			notes: ing.notes ?? "",
+			optional: ing.optional,
 			groupName: ing.groupName ?? "",
 		});
 		setEditingIngredientId(ing.id);
@@ -644,6 +653,7 @@ function RecipeDetail() {
 			quantity: editIngredient.quantity,
 			quantityUnitId: editIngredient.quantityUnitId || undefined,
 			notes: editIngredient.notes || undefined,
+			optional: editIngredient.optional,
 			groupName: editIngredient.groupName || undefined,
 		});
 		setEditingIngredientId(null);
