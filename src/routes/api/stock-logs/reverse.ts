@@ -64,7 +64,9 @@ export const Route = createFileRoute("/api/stock-logs/reverse")({
 							.where(eq(stockEntry.id, entryId));
 
 						if (existing) {
-							const newQty = (Number(existing.quantity) + logQty).toString();
+							const newQty = roundQty(
+								Number(existing.quantity) + logQty,
+							).toString();
 							await tx
 								.update(stockEntry)
 								.set({ quantity: newQty })

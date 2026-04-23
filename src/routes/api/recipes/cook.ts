@@ -114,7 +114,7 @@ export const Route = createFileRoute("/api/recipes/cook")({
 						if (!ingredient.productId) continue;
 						if (skipIds.has(ingredient.id)) continue;
 
-						const needed = Number(ingredient.quantity) * scaleFactor;
+						const needed = roundQty(Number(ingredient.quantity) * scaleFactor);
 
 						const stocks = await tx
 							.select()
@@ -147,7 +147,7 @@ export const Route = createFileRoute("/api/recipes/cook")({
 								stockEntryId: stock.id,
 								productId: ingredient.productId,
 								transactionType: "consume",
-								quantity: deduct.toString(),
+								quantity: roundQty(deduct).toString(),
 								userId: session.user.id,
 							});
 
@@ -178,7 +178,9 @@ export const Route = createFileRoute("/api/recipes/cook")({
 						| undefined;
 
 					if (rec.producedProductId && rec.producedQuantity) {
-						const producedQty = Number(rec.producedQuantity) * scaleFactor;
+						const producedQty = roundQty(
+							Number(rec.producedQuantity) * scaleFactor,
+						);
 
 						const [newEntry] = await tx
 							.insert(stockEntry)
