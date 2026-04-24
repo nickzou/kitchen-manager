@@ -64,6 +64,10 @@ export function DateRangePicker({
 	const fromDate = parseDate(startDate ?? "");
 	const toDate = parseDate(endDate ?? "");
 
+	const currentYear = new Date().getFullYear();
+	const startMonth = new Date(currentYear - 1, 0);
+	const endMonth = new Date(currentYear + 10, 11);
+
 	let displayText = "Select date range";
 	if (fromDate && toDate) {
 		const sameYear = fromDate.getFullYear() === toDate.getFullYear();
@@ -109,6 +113,9 @@ export function DateRangePicker({
 						onSelect={handleSelect}
 						defaultMonth={fromDate}
 						numberOfMonths={2}
+						captionLayout="dropdown"
+						startMonth={startMonth}
+						endMonth={endMonth}
 						style={
 							{
 								"--rdp-accent-color": "var(--lagoon)",
