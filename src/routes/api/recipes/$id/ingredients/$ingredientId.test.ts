@@ -18,15 +18,14 @@ vi.mock("#src/db/schema", () => ({
 
 const mockUpdateReturning = vi.fn();
 const mockDeleteReturning = vi.fn();
+const mockUpdateSet = vi.fn(() => ({
+	where: vi.fn(() => ({ returning: mockUpdateReturning })),
+}));
 
 vi.mock("#src/db", () => ({
 	db: {
 		update: vi.fn(() => ({
-			set: vi.fn(() => ({
-				where: vi.fn(() => ({
-					returning: mockUpdateReturning,
-				})),
-			})),
+			set: mockUpdateSet,
 		})),
 		delete: vi.fn(() => ({
 			where: vi.fn(() => ({
@@ -93,6 +92,49 @@ describe("PUT /api/recipes/:id/ingredients/:ingredientId", () => {
 		expect(response.status).toBe(200);
 		const data = await response.json();
 		expect(data.quantity).toBe("5");
+	});
+
+	it("applies optional: true when toggled on", async () => {
+		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
+		mockUpdateReturning.mockResolvedValue([
+			makeRecipeIngredient({ optional: true }),
+		]);
+		const request = makePutRequest(
+			"/api/recipes/recipe-1/ingredients/recipe-ingredient-1",
+			{ optional: true },
+		);
+
+		await PUT({ request, params } as never);
+
+		expect(mockUpdateSet).toHaveBeenCalledWith({ optional: true });
+	});
+
+	it("applies optional: false when toggled off", async () => {
+		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
+		mockUpdateReturning.mockResolvedValue([makeRecipeIngredient()]);
+		const request = makePutRequest(
+			"/api/recipes/recipe-1/ingredients/recipe-ingredient-1",
+			{ optional: false },
+		);
+
+		await PUT({ request, params } as never);
+
+		expect(mockUpdateSet).toHaveBeenCalledWith({ optional: false });
+	});
+
+	it("does not touch optional when the body omits it", async () => {
+		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
+		mockUpdateReturning.mockResolvedValue([makeRecipeIngredient()]);
+		const request = makePutRequest(
+			"/api/recipes/recipe-1/ingredients/recipe-ingredient-1",
+			{ quantity: "5" },
+		);
+
+		await PUT({ request, params } as never);
+
+		expect(mockUpdateSet).toHaveBeenCalledWith(
+			expect.not.objectContaining({ optional: expect.anything() }),
+		);
 	});
 });
 

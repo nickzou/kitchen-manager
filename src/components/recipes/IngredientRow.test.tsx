@@ -85,6 +85,18 @@ describe("IngredientRow", () => {
 			renderRow();
 			expect(screen.queryByText(/\(/)).toBeNull();
 		});
+
+		it("shows the Optional badge when ingredient.optional is true", () => {
+			renderRow({
+				ingredient: { ...baseIngredient, optional: true },
+			});
+			expect(screen.getByText("Optional")).toBeDefined();
+		});
+
+		it("does not show the Optional badge when ingredient.optional is false", () => {
+			renderRow();
+			expect(screen.queryByText("Optional")).toBeNull();
+		});
 	});
 
 	describe("status icons", () => {
@@ -232,6 +244,28 @@ describe("IngredientRow", () => {
 				canConsume: true,
 			});
 			expect(findButton("Consume ingredient")).toBeUndefined();
+		});
+
+		it("reflects editState.optional on the Optional checkbox", () => {
+			renderRow({
+				isEditing: true,
+				editState: { ...defaultEditState, optional: true },
+			});
+			const checkbox = screen.getByLabelText("Optional") as HTMLInputElement;
+			expect(checkbox.checked).toBe(true);
+		});
+
+		it("calls onEditStateChange with the flipped optional value when toggled", () => {
+			const onEditStateChange = vi.fn();
+			renderRow({
+				isEditing: true,
+				editState: { ...defaultEditState, optional: false },
+				onEditStateChange,
+			});
+			fireEvent.click(screen.getByLabelText("Optional"));
+			expect(onEditStateChange).toHaveBeenCalledWith(
+				expect.objectContaining({ optional: true }),
+			);
 		});
 	});
 });
