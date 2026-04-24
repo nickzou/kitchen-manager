@@ -22,6 +22,10 @@ export function DatePicker({
 
 	const selected = value ? new Date(`${value}T00:00:00`) : undefined;
 
+	const currentYear = new Date().getFullYear();
+	const startMonth = new Date(currentYear - 1, 0);
+	const endMonth = new Date(currentYear + 10, 11);
+
 	useEffect(() => {
 		function handleClickOutside(e: MouseEvent) {
 			if (
@@ -79,6 +83,9 @@ export function DatePicker({
 						selected={selected}
 						onSelect={handleSelect}
 						defaultMonth={selected}
+						captionLayout="dropdown"
+						startMonth={startMonth}
+						endMonth={endMonth}
 						style={
 							{
 								"--rdp-accent-color": "var(--lagoon)",
