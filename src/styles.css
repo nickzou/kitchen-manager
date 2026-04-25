@@ -158,7 +158,9 @@
   --color-sidebar-ring: var(--sidebar-ring);
   --animate-rise-in: rise-in 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
   --container-max: 1080px;
+}
 
+@theme {
   --color-cream-50: #fbf6ee;
   --color-cream-100: #f3ece1;
   --color-cream-200: #e6d7b8;
