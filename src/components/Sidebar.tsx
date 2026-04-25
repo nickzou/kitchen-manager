@@ -110,12 +110,12 @@ function SidebarNavLink({
 			activeOptions={item.exact ? { exact: true } : undefined}
 			title={collapsed ? item.label : undefined}
 			className={cn(
-				"flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-(--sea-ink-soft) dark:text-cream-100 no-underline transition hover:bg-cream-950 hover:text-cream-100",
+				"flex items-center gap-3 rounded-lg border border-transparent px-3 py-2 text-sm font-medium text-(--sea-ink-soft) dark:text-cream-100 no-underline transition hover:bg-cream-950 hover:text-cream-100",
 				collapsed && "justify-center px-0",
 			)}
 			activeProps={{
 				className: cn(
-					"flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-semibold bg-cream-900 text-cream-100 no-underline",
+					"flex items-center gap-3 rounded-lg border border-cream-800 px-3 py-2 text-sm font-semibold bg-cream-900 text-cream-100 no-underline",
 					collapsed && "justify-center px-0",
 				),
 			}}
