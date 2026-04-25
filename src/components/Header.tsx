@@ -35,7 +35,7 @@ export default function Header() {
 							activeOptions={{ exact: true }}
 							onClick={() => setMenuOpen(false)}
 						>
-							Home
+							Dashboard
 						</MobileNavLink>
 						<MobileNavLink to="/stock" onClick={() => setMenuOpen(false)}>
 							Stock

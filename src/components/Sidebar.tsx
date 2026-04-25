@@ -5,7 +5,7 @@ import {
 	ChefHat,
 	ChevronLeft,
 	ChevronRight,
-	Home,
+	LayoutDashboard,
 	type LucideIcon,
 	Package,
 } from "lucide-react";
@@ -22,7 +22,7 @@ type NavItem = {
 };
 
 const NAV_ITEMS: NavItem[] = [
-	{ to: "/", label: "Home", icon: Home, exact: true },
+	{ to: "/", label: "Dashboard", icon: LayoutDashboard, exact: true },
 	{ to: "/stock", label: "Stock", icon: Package },
 	{ to: "/products", label: "Products", icon: Box },
 	{ to: "/recipes", label: "Recipes", icon: ChefHat },
@@ -110,12 +110,12 @@ function SidebarNavLink({
 			activeOptions={item.exact ? { exact: true } : undefined}
 			title={collapsed ? item.label : undefined}
 			className={cn(
-				"flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-(--sea-ink-soft) dark:text-cream-100 no-underline transition hover:bg-(--surface) hover:text-(--sea-ink)",
+				"flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-(--sea-ink-soft) dark:text-cream-100 no-underline transition hover:bg-cream-950 hover:text-cream-100",
 				collapsed && "justify-center px-0",
 			)}
 			activeProps={{
 				className: cn(
-					"flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-semibold bg-(--surface) text-(--sea-ink) dark:text-cream-100 no-underline",
+					"flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-semibold bg-cream-900 text-cream-100 no-underline",
 					collapsed && "justify-center px-0",
 				),
 			}}
