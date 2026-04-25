@@ -219,6 +219,7 @@ const RUST_SCALE: [string, string][] = [
 	["800", "#771f00"],
 	["900", "#541500"],
 	["950", "#300c00"],
+	["975", "#110c09"],
 ];
 
 function PalettePreview() {

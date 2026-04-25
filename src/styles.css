@@ -75,8 +75,8 @@
   --line: rgba(141, 229, 219, 0.18);
   --inset-glint: rgba(194, 247, 238, 0.14);
   --kicker: #b8efe5;
-  --bg-base: #0a1418;
-  --header-bg: rgba(10, 20, 24, 0.8);
+  --bg-base: #300c00;
+  --header-bg: #110c09;
   --chip-bg: rgba(13, 28, 32, 0.9);
   --chip-line: rgba(141, 229, 219, 0.24);
   --link-bg-hover: rgba(24, 44, 49, 0.8);
@@ -182,6 +182,7 @@
   --color-rust-800: #771f00;
   --color-rust-900: #541500;
   --color-rust-950: #300c00;
+  --color-rust-975: #110c09;
 }
 
 html,
