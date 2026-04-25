@@ -186,7 +186,77 @@ function Dashboard() {
 						spoilPending={spoilStock.isPending}
 					/>
 				</div>
+
+				<PalettePreview />
 			</Island>
 		</Page>
+	);
+}
+
+const CREAM_SCALE: [string, string][] = [
+	["50", "#fbf6ee"],
+	["100", "#f3ece1"],
+	["200", "#e6d7b8"],
+	["300", "#dabe89"],
+	["400", "#cea057"],
+	["500", "#b8853f"],
+	["600", "#9b6b33"],
+	["700", "#7b522c"],
+	["800", "#5f3f25"],
+	["900", "#41281b"],
+	["950", "#231510"],
+];
+
+const RUST_SCALE: [string, string][] = [
+	["50", "#fdf4ee"],
+	["100", "#fbe0cc"],
+	["200", "#f7bf98"],
+	["300", "#f19459"],
+	["400", "#e86b2c"],
+	["500", "#d04d13"],
+	["600", "#ac3c0d"],
+	["700", "#892f0a"],
+	["800", "#771f00"],
+	["900", "#541500"],
+	["950", "#300c00"],
+];
+
+function PalettePreview() {
+	return (
+		<div className="mt-8 border-t border-(--line) pt-6">
+			<h2 className="mb-3 text-base font-semibold text-(--sea-ink)">
+				Palette preview (temporary)
+			</h2>
+			<Swatches name="cream" scale={CREAM_SCALE} />
+			<div className="h-3" />
+			<Swatches name="rust" scale={RUST_SCALE} />
+		</div>
+	);
+}
+
+function Swatches({
+	name,
+	scale,
+}: {
+	name: string;
+	scale: [string, string][];
+}) {
+	return (
+		<div>
+			<p className="mb-1 text-xs font-medium text-(--sea-ink-soft)">{name}</p>
+			<div className="flex flex-wrap gap-1">
+				{scale.map(([step, hex]) => (
+					<div key={step} className="flex flex-col items-center">
+						<div
+							className="h-10 w-10 rounded-md border border-(--line)"
+							style={{ backgroundColor: hex }}
+						/>
+						<span className="mt-1 text-[0.65rem] text-(--sea-ink-soft)">
+							{step}
+						</span>
+					</div>
+				))}
+			</div>
+		</div>
 	);
 }
