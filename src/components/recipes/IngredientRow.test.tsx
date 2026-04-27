@@ -16,6 +16,7 @@ const baseIngredient: RecipeIngredient = {
 	notes: null,
 	groupName: null,
 	optional: false,
+	skipStockDeduction: false,
 	sortOrder: 0,
 	userId: "user-1",
 	createdAt: "2026-01-01T00:00:00Z",
@@ -28,6 +29,7 @@ const defaultEditState = {
 	quantityUnitId: "",
 	notes: "",
 	optional: false,
+	skipStockDeduction: false,
 	groupName: "",
 };
 
@@ -96,6 +98,18 @@ describe("IngredientRow", () => {
 		it("does not show the Optional badge when ingredient.optional is false", () => {
 			renderRow();
 			expect(screen.queryByText("Optional")).toBeNull();
+		});
+
+		it("shows the Not tracked badge when ingredient.skipStockDeduction is true", () => {
+			renderRow({
+				ingredient: { ...baseIngredient, skipStockDeduction: true },
+			});
+			expect(screen.getByText("Not tracked")).toBeDefined();
+		});
+
+		it("does not show the Not tracked badge when skipStockDeduction is false", () => {
+			renderRow();
+			expect(screen.queryByText("Not tracked")).toBeNull();
 		});
 	});
 
@@ -265,6 +279,28 @@ describe("IngredientRow", () => {
 			fireEvent.click(screen.getByLabelText("Optional"));
 			expect(onEditStateChange).toHaveBeenCalledWith(
 				expect.objectContaining({ optional: true }),
+			);
+		});
+
+		it("reflects editState.skipStockDeduction on the Don't track checkbox", () => {
+			renderRow({
+				isEditing: true,
+				editState: { ...defaultEditState, skipStockDeduction: true },
+			});
+			const checkbox = screen.getByLabelText("Don't track") as HTMLInputElement;
+			expect(checkbox.checked).toBe(true);
+		});
+
+		it("calls onEditStateChange with the flipped skipStockDeduction value when toggled", () => {
+			const onEditStateChange = vi.fn();
+			renderRow({
+				isEditing: true,
+				editState: { ...defaultEditState, skipStockDeduction: false },
+				onEditStateChange,
+			});
+			fireEvent.click(screen.getByLabelText("Don't track"));
+			expect(onEditStateChange).toHaveBeenCalledWith(
+				expect.objectContaining({ skipStockDeduction: true }),
 			);
 		});
 	});

@@ -9,6 +9,7 @@ export interface RecipeIngredient {
 	notes: string | null;
 	groupName: string | null;
 	optional: boolean;
+	skipStockDeduction: boolean;
 	sortOrder: number;
 	userId: string;
 	createdAt: string;
@@ -22,6 +23,7 @@ export type CreateRecipeIngredientInput = {
 	notes?: string;
 	groupName?: string;
 	optional?: boolean;
+	skipStockDeduction?: boolean;
 	sortOrder?: number;
 };
 

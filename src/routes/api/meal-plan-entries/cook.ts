@@ -305,6 +305,9 @@ export const Route = createFileRoute("/api/meal-plan-entries/cook")({
 					for (const ingredient of ingredients) {
 						if (!ingredient.productId) continue;
 						if (skipIds.has(ingredient.id)) continue;
+						// Pantry-style ingredients (e.g. salt to taste) are still
+						// linked to a product but we don't deplete stock for them.
+						if (ingredient.skipStockDeduction) continue;
 
 						const needed = roundQty(Number(ingredient.quantity) * scaleFactor);
 

@@ -149,6 +149,7 @@ function RecipeDetail() {
 		quantityUnitId: "",
 		notes: "",
 		optional: false,
+		skipStockDeduction: false,
 	});
 	const [addMode, setAddMode] = useState<"ingredient" | "group">("ingredient");
 	const [pendingGroupName, setPendingGroupName] = useState("");
@@ -176,6 +177,7 @@ function RecipeDetail() {
 		quantityUnitId: "",
 		notes: "",
 		optional: false,
+		skipStockDeduction: false,
 		groupName: "",
 	});
 	const [addToGroup, setAddToGroup] = useState<string | null>(null);
@@ -452,6 +454,7 @@ function RecipeDetail() {
 				notes: newIngredient.notes || undefined,
 				groupName: addToGroup,
 				optional: newIngredient.optional,
+				skipStockDeduction: newIngredient.skipStockDeduction,
 			});
 			setNewIngredient({
 				productId: "",
@@ -459,6 +462,7 @@ function RecipeDetail() {
 				quantityUnitId: "",
 				notes: "",
 				optional: false,
+				skipStockDeduction: false,
 			});
 			setAddToGroup(null);
 			return;
@@ -479,6 +483,7 @@ function RecipeDetail() {
 				quantityUnitId: "",
 				notes: "",
 				optional: false,
+				skipStockDeduction: false,
 			});
 			return;
 		}
@@ -488,6 +493,7 @@ function RecipeDetail() {
 			quantityUnitId: newIngredient.quantityUnitId || undefined,
 			notes: newIngredient.notes || undefined,
 			optional: newIngredient.optional,
+			skipStockDeduction: newIngredient.skipStockDeduction,
 		});
 		setNewIngredient({
 			productId: "",
@@ -495,6 +501,7 @@ function RecipeDetail() {
 			quantityUnitId: "",
 			notes: "",
 			optional: false,
+			skipStockDeduction: false,
 		});
 	}
 
@@ -633,6 +640,7 @@ function RecipeDetail() {
 		notes: string | null;
 		groupName: string | null;
 		optional: boolean;
+		skipStockDeduction: boolean;
 	}) {
 		setEditIngredient({
 			productId: ing.productId ?? "",
@@ -640,6 +648,7 @@ function RecipeDetail() {
 			quantityUnitId: ing.quantityUnitId ?? "",
 			notes: ing.notes ?? "",
 			optional: ing.optional,
+			skipStockDeduction: ing.skipStockDeduction,
 			groupName: ing.groupName ?? "",
 		});
 		setEditingIngredientId(ing.id);
@@ -654,6 +663,7 @@ function RecipeDetail() {
 			quantityUnitId: editIngredient.quantityUnitId || undefined,
 			notes: editIngredient.notes || undefined,
 			optional: editIngredient.optional,
+			skipStockDeduction: editIngredient.skipStockDeduction,
 			groupName: editIngredient.groupName || undefined,
 		});
 		setEditingIngredientId(null);

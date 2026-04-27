@@ -146,6 +146,23 @@ export function IngredientRow({
 						/>
 						Optional
 					</label>
+					<label
+						className="flex items-center gap-1.5 text-sm text-(--sea-ink-soft) cursor-pointer select-none"
+						title="Don't deduct from stock when this recipe is cooked (e.g. salt to taste)"
+					>
+						<input
+							type="checkbox"
+							checked={editState.skipStockDeduction}
+							onChange={(e) =>
+								onEditStateChange({
+									...editState,
+									skipStockDeduction: e.target.checked,
+								})
+							}
+							className="accent-(--lagoon)"
+						/>
+						Don't track
+					</label>
 				</div>
 				{conversionHint && (
 					<p
@@ -212,6 +229,14 @@ export function IngredientRow({
 					{ingredient.optional && (
 						<span className="ml-2 inline-block rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-900 dark:text-amber-300">
 							Optional
+						</span>
+					)}
+					{ingredient.skipStockDeduction && (
+						<span
+							className="ml-2 inline-block rounded-full bg-(--surface) px-2 py-0.5 text-xs font-medium text-(--sea-ink-soft)"
+							title="Stock isn't deducted when cooked"
+						>
+							Not tracked
 						</span>
 					)}
 				</span>

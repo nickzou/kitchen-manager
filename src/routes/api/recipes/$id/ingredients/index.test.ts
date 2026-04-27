@@ -178,4 +178,37 @@ describe("POST /api/recipes/:id/ingredients/", () => {
 			expect.objectContaining({ optional: false }),
 		);
 	});
+
+	it("persists skipStockDeduction: true when provided in the body", async () => {
+		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
+		mockReturning.mockResolvedValue([
+			makeRecipeIngredient({ skipStockDeduction: true }),
+		]);
+		const request = makePostRequest("/api/recipes/recipe-1/ingredients", {
+			quantity: "2",
+			productId: "product-1",
+			skipStockDeduction: true,
+		});
+
+		await POST({ request, params } as never);
+
+		expect(mockValues).toHaveBeenCalledWith(
+			expect.objectContaining({ skipStockDeduction: true }),
+		);
+	});
+
+	it("defaults skipStockDeduction to false when the body omits it", async () => {
+		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
+		mockReturning.mockResolvedValue([makeRecipeIngredient()]);
+		const request = makePostRequest("/api/recipes/recipe-1/ingredients", {
+			quantity: "2",
+			productId: "product-1",
+		});
+
+		await POST({ request, params } as never);
+
+		expect(mockValues).toHaveBeenCalledWith(
+			expect.objectContaining({ skipStockDeduction: false }),
+		);
+	});
 });

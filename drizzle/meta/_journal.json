@@ -239,6 +239,13 @@
       "when": 1776906707770,
       "tag": "0033_add-optional-ingredient",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1777311371004,
+      "tag": "0034_add-skip-stock-deduction-ingredient",
+      "breakpoints": true
     }
   ]
 }
