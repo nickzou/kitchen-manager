@@ -179,7 +179,7 @@ export function AddIngredientForm({
 					Optional
 				</label>
 				<label
-					className="flex items-center gap-1.5 text-sm text-(--sea-ink-soft) cursor-pointer select-none"
+					className="flex text-nowrap items-center gap-1.5 text-sm text-(--sea-ink-soft) cursor-pointer select-none"
 					title="Don't deduct from stock when this recipe is cooked (e.g. salt to taste)"
 				>
 					<input
