@@ -42,6 +42,7 @@ function makeIngredient(
 		notes: null,
 		groupName: null,
 		optional: false,
+		skipStockDeduction: false,
 		sortOrder: 0,
 		userId: "u1",
 		createdAt: "2026-01-01T00:00:00Z",

@@ -574,6 +574,9 @@ export const recipeIngredient = pgTable(
 		notes: text("notes"),
 		groupName: text("group_name"),
 		optional: boolean("optional").default(false).notNull(),
+		skipStockDeduction: boolean("skip_stock_deduction")
+			.default(false)
+			.notNull(),
 		sortOrder: integer("sort_order").default(0).notNull(),
 		userId: text("user_id")
 			.notNull()

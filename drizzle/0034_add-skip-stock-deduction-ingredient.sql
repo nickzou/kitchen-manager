@@ -1,0 +1,1 @@
+ALTER TABLE "recipe_ingredient" ADD COLUMN "skip_stock_deduction" boolean DEFAULT false NOT NULL;

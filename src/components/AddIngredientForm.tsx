@@ -12,6 +12,7 @@ export type IngredientFormState = {
 	quantityUnitId: string;
 	notes: string;
 	optional: boolean;
+	skipStockDeduction: boolean;
 };
 
 type ComboboxOption = { value: string; label: string };
@@ -21,7 +22,14 @@ export function AddIngredientForm({
 	unitOptions,
 	onAdd,
 	isPending,
-	newIngredient: { productId, quantity, quantityUnitId, notes, optional },
+	newIngredient: {
+		productId,
+		quantity,
+		quantityUnitId,
+		notes,
+		optional,
+		skipStockDeduction,
+	},
 	setNewIngredient,
 	onCreateProduct,
 	onProductChange,
@@ -60,6 +68,7 @@ export function AddIngredientForm({
 			quantityUnitId,
 			notes,
 			optional,
+			skipStockDeduction,
 			...partial,
 		});
 	}
@@ -121,7 +130,7 @@ export function AddIngredientForm({
 				/>
 			)}
 
-			<div className="grid grid-cols-[1fr_1fr] gap-2 sm:grid-cols-[2fr_5rem_1fr_1fr_auto_auto]">
+			<div className="grid grid-cols-[1fr_1fr] gap-2 sm:grid-cols-[2fr_5rem_1fr_1fr_auto_auto_auto]">
 				<Combobox
 					value={productId}
 					onChange={(v) => {
@@ -168,6 +177,18 @@ export function AddIngredientForm({
 						className="accent-(--lagoon)"
 					/>
 					Optional
+				</label>
+				<label
+					className="flex text-nowrap items-center gap-1.5 text-sm text-(--sea-ink-soft) cursor-pointer select-none"
+					title="Don't deduct from stock when this recipe is cooked (e.g. salt to taste)"
+				>
+					<input
+						type="checkbox"
+						checked={skipStockDeduction}
+						onChange={(e) => update({ skipStockDeduction: e.target.checked })}
+						className="accent-(--lagoon)"
+					/>
+					Don't track
 				</label>
 				<Button
 					type="button"

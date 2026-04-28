@@ -136,6 +136,49 @@ describe("PUT /api/recipes/:id/ingredients/:ingredientId", () => {
 			expect.not.objectContaining({ optional: expect.anything() }),
 		);
 	});
+
+	it("applies skipStockDeduction: true when toggled on", async () => {
+		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
+		mockUpdateReturning.mockResolvedValue([
+			makeRecipeIngredient({ skipStockDeduction: true }),
+		]);
+		const request = makePutRequest(
+			"/api/recipes/recipe-1/ingredients/recipe-ingredient-1",
+			{ skipStockDeduction: true },
+		);
+
+		await PUT({ request, params } as never);
+
+		expect(mockUpdateSet).toHaveBeenCalledWith({ skipStockDeduction: true });
+	});
+
+	it("applies skipStockDeduction: false when toggled off", async () => {
+		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
+		mockUpdateReturning.mockResolvedValue([makeRecipeIngredient()]);
+		const request = makePutRequest(
+			"/api/recipes/recipe-1/ingredients/recipe-ingredient-1",
+			{ skipStockDeduction: false },
+		);
+
+		await PUT({ request, params } as never);
+
+		expect(mockUpdateSet).toHaveBeenCalledWith({ skipStockDeduction: false });
+	});
+
+	it("does not touch skipStockDeduction when the body omits it", async () => {
+		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
+		mockUpdateReturning.mockResolvedValue([makeRecipeIngredient()]);
+		const request = makePutRequest(
+			"/api/recipes/recipe-1/ingredients/recipe-ingredient-1",
+			{ quantity: "5" },
+		);
+
+		await PUT({ request, params } as never);
+
+		expect(mockUpdateSet).toHaveBeenCalledWith(
+			expect.not.objectContaining({ skipStockDeduction: expect.anything() }),
+		);
+	});
 });
 
 describe("DELETE /api/recipes/:id/ingredients/:ingredientId", () => {
