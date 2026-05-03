@@ -1,12 +1,14 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ChevronDown, ChevronRight } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
+import { Accordion } from "#src/components/Accordion";
 import { DateRangePicker } from "#src/components/DateRangePicker";
 import { Island } from "#src/components/Island";
 import { Page } from "#src/components/Page";
 import { authClient } from "#src/lib/auth-client";
 import {
 	type IngredientRecipeRef,
+	type IngredientSummaryItem,
+	type UnlinkedIngredient,
 	useIngredientSummary,
 } from "#src/lib/hooks/use-ingredient-summary";
 import { cn } from "#src/lib/utils";
@@ -36,8 +38,6 @@ function useCheckedItems(startDate: string, endDate: string) {
 	const storageKey = checkedStorageKey(startDate, endDate);
 	const [checked, setChecked] = useState<Set<string>>(() => new Set());
 
-	// Hydrate from localStorage when the storage key changes (e.g. date range
-	// switches). SSR-safe: skip on server.
 	useEffect(() => {
 		if (typeof window === "undefined") return;
 		try {
@@ -84,6 +84,9 @@ function useCheckedItems(startDate: string, endDate: string) {
 	return { checked, toggle, reset };
 }
 
+type IngredientItem = IngredientSummaryItem & { key: string };
+type UnlinkedItem = UnlinkedIngredient & { key: string };
+
 function ShoppingListPage() {
 	const { data: session, isPending: sessionLoading } = authClient.useSession();
 	const navigate = useNavigate();
@@ -99,16 +102,6 @@ function ShoppingListPage() {
 
 	const { data: summary, isLoading } = useIngredientSummary(startDate, endDate);
 	const { checked, toggle, reset } = useCheckedItems(startDate, endDate);
-	const [expanded, setExpanded] = useState<Set<string>>(new Set());
-
-	function toggleExpanded(key: string) {
-		setExpanded((prev) => {
-			const next = new Set(prev);
-			if (next.has(key)) next.delete(key);
-			else next.add(key);
-			return next;
-		});
-	}
 
 	if (sessionLoading) return null;
 	if (!session) {
@@ -116,18 +109,30 @@ function ShoppingListPage() {
 		return null;
 	}
 
+	function withKey(item: IngredientSummaryItem): IngredientItem {
+		return { ...item, key: `${item.productId}-${item.quantityUnitId}` };
+	}
+
 	const deficit =
-		summary?.ingredients.filter((i) => i.status === "deficit") ?? [];
+		summary?.ingredients.filter((i) => i.status === "deficit").map(withKey) ??
+		[];
 	const sufficient =
-		summary?.ingredients.filter((i) => i.status === "sufficient") ?? [];
+		summary?.ingredients
+			.filter((i) => i.status === "sufficient")
+			.map(withKey) ?? [];
 	const unknownUnit =
-		summary?.ingredients.filter((i) => i.status === "unknown_unit") ?? [];
+		summary?.ingredients
+			.filter((i) => i.status === "unknown_unit")
+			.map(withKey) ?? [];
 	const restock = summary?.restock ?? [];
+	const unlinked: UnlinkedItem[] =
+		summary?.unlinkedIngredients.map((item) => ({
+			...item,
+			key: `unlinked-${item.notes}-${item.quantity}-${item.unitId}`,
+		})) ?? [];
 
 	const totalRows =
-		(summary?.ingredients.length ?? 0) +
-		restock.length +
-		(summary?.unlinkedIngredients.length ?? 0);
+		(summary?.ingredients.length ?? 0) + restock.length + unlinked.length;
 	const checkedCount = checked.size;
 
 	const statusBadge: Record<string, string> = {
@@ -139,6 +144,71 @@ function ShoppingListPage() {
 		restock:
 			"bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
 	};
+
+	function ingredientTrigger(item: IngredientItem) {
+		const unitLabel = item.unitAbbreviation ?? item.unitName ?? "";
+		const target = item.neededQuantity + item.minStockBuffer;
+		const shortfall = Math.max(0, target - item.stockQuantity);
+		const hasBuffer = item.minStockBuffer > 0;
+		const isChecked = checked.has(item.key);
+
+		return (
+			<>
+				<span
+					className={cn(
+						"flex-1 font-medium text-(--sea-ink)",
+						isChecked && "line-through",
+					)}
+				>
+					{item.productName}
+					{hasBuffer && item.status === "deficit" && (
+						<span className="ml-2 text-xs text-(--sea-ink-soft)">
+							(keeps {item.minStockBuffer.toFixed(1)}
+							{unitLabel ? ` ${unitLabel}` : ""} min)
+						</span>
+					)}
+				</span>
+				<span
+					className={cn("text-(--sea-ink-soft)", isChecked && "line-through")}
+				>
+					Need: {item.neededQuantity.toFixed(1)}
+					{unitLabel ? ` ${unitLabel}` : ""}
+				</span>
+				<span
+					className={cn("text-(--sea-ink-soft)", isChecked && "line-through")}
+				>
+					Have: {item.stockQuantity.toFixed(1)}
+					{unitLabel ? ` ${unitLabel}` : ""}
+				</span>
+				<span
+					className={cn(
+						"rounded-full px-2 py-0.5 text-xs font-semibold",
+						statusBadge[item.status],
+					)}
+				>
+					{item.status === "deficit"
+						? `Buy ${shortfall.toFixed(1)}${unitLabel ? ` ${unitLabel}` : ""}`
+						: item.status === "sufficient"
+							? "OK"
+							: "Check units"}
+				</span>
+			</>
+		);
+	}
+
+	function ingredientAction(item: IngredientItem) {
+		return (
+			<RowCheckbox
+				checked={checked.has(item.key)}
+				onChange={() => toggle(item.key)}
+			/>
+		);
+	}
+
+	function ingredientContent(item: IngredientItem) {
+		const unitLabel = item.unitAbbreviation ?? item.unitName ?? "";
+		return <RecipeList recipes={item.recipes} unitLabel={unitLabel} />;
+	}
 
 	return (
 		<Page as="main" className="pb-8 pt-14">
@@ -158,7 +228,6 @@ function ShoppingListPage() {
 					</Link>
 				</div>
 
-				{/* Date range picker */}
 				<div className="mb-6 border-b border-(--line) pb-6">
 					<DateRangePicker
 						startDate={startDate}
@@ -181,7 +250,6 @@ function ShoppingListPage() {
 					</p>
 				) : (
 					<div className="flex flex-col gap-6">
-						{/* Progress + reset */}
 						{totalRows > 0 && (
 							<div className="flex items-center justify-between text-xs text-(--sea-ink-soft)">
 								<span>
@@ -199,32 +267,21 @@ function ShoppingListPage() {
 							</div>
 						)}
 
-						{/* Deficit / Missing */}
 						{deficit.length > 0 && (
 							<div>
 								<h2 className="mb-3 text-sm font-semibold text-red-600 dark:text-red-400">
 									Missing ({deficit.length})
 								</h2>
-								<div className="flex flex-col gap-1">
-									{deficit.map((item) => {
-										const key = `${item.productId}-${item.quantityUnitId}`;
-										return (
-											<IngredientRow
-												key={key}
-												item={item}
-												badgeClass={statusBadge.deficit}
-												checked={checked.has(key)}
-												onToggle={() => toggle(key)}
-												expanded={expanded.has(key)}
-												onToggleExpand={() => toggleExpanded(key)}
-											/>
-										);
-									})}
-								</div>
+								<Accordion
+									type="multi"
+									items={deficit}
+									renderTrigger={ingredientTrigger}
+									renderAction={ingredientAction}
+									renderContent={ingredientContent}
+								/>
 							</div>
 						)}
 
-						{/* Restock: tracked staples below their min stock */}
 						{restock.length > 0 && (
 							<div>
 								<h2 className="mb-3 text-sm font-semibold text-amber-600 dark:text-amber-400">
@@ -247,116 +304,101 @@ function ShoppingListPage() {
 							</div>
 						)}
 
-						{/* Sufficient / In Stock */}
 						{sufficient.length > 0 && (
 							<div>
 								<h2 className="mb-3 text-sm font-semibold text-green-600 dark:text-green-400">
 									In Stock ({sufficient.length})
 								</h2>
-								<div className="flex flex-col gap-1">
-									{sufficient.map((item) => {
-										const key = `${item.productId}-${item.quantityUnitId}`;
-										return (
-											<IngredientRow
-												key={key}
-												item={item}
-												badgeClass={statusBadge.sufficient}
-												checked={checked.has(key)}
-												onToggle={() => toggle(key)}
-												expanded={expanded.has(key)}
-												onToggleExpand={() => toggleExpanded(key)}
-											/>
-										);
-									})}
-								</div>
+								<Accordion
+									type="multi"
+									items={sufficient}
+									renderTrigger={ingredientTrigger}
+									renderAction={ingredientAction}
+									renderContent={ingredientContent}
+								/>
 							</div>
 						)}
 
-						{/* Unknown units */}
 						{unknownUnit.length > 0 && (
 							<div>
 								<h2 className="mb-3 text-sm font-semibold text-gray-500">
 									Unknown Units ({unknownUnit.length})
 								</h2>
-								<div className="flex flex-col gap-1">
-									{unknownUnit.map((item) => {
-										const key = `${item.productId}-${item.quantityUnitId}`;
-										return (
-											<IngredientRow
-												key={key}
-												item={item}
-												badgeClass={statusBadge.unknown_unit}
-												checked={checked.has(key)}
-												onToggle={() => toggle(key)}
-												expanded={expanded.has(key)}
-												onToggleExpand={() => toggleExpanded(key)}
-											/>
-										);
-									})}
-								</div>
+								<Accordion
+									type="multi"
+									items={unknownUnit}
+									renderTrigger={ingredientTrigger}
+									renderAction={ingredientAction}
+									renderContent={ingredientContent}
+								/>
 							</div>
 						)}
 
-						{/* Unlinked ingredients */}
-						{summary && summary.unlinkedIngredients.length > 0 && (
+						{unlinked.length > 0 && (
 							<div className="border-t border-(--line) pt-4">
 								<h2 className="mb-3 text-sm font-semibold text-(--sea-ink-soft)">
 									Unlinked Ingredients
 								</h2>
-								<div className="flex flex-col gap-1">
-									{summary.unlinkedIngredients.map((item) => {
-										const key = `unlinked-${item.notes}-${item.quantity}-${item.unitId}`;
-										const isChecked = checked.has(key);
-										const isExpanded = expanded.has(key);
+								<Accordion
+									type="multi"
+									items={unlinked}
+									renderTrigger={(item) => {
+										const isChecked = checked.has(item.key);
 										return (
-											<div key={key}>
-												<div className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-(--sea-ink-soft) transition hover:bg-(--surface)">
-													<button
-														type="button"
-														onClick={() => toggle(key)}
-														className={cn(
-															"flex flex-1 items-center gap-3 text-left",
-															isChecked && "opacity-60",
-														)}
-													>
-														<input
-															type="checkbox"
-															checked={isChecked}
-															onChange={() => toggle(key)}
-															onClick={(e) => e.stopPropagation()}
-															className="accent-(--lagoon) shrink-0"
-														/>
-														<span
-															className={cn(
-																"font-medium text-(--sea-ink)",
-																isChecked && "line-through",
-															)}
-														>
-															{item.notes ?? "Unknown ingredient"}
-														</span>
-														<span className={cn(isChecked && "line-through")}>
-															{Number(item.quantity) * item.scaleFactor}
-														</span>
-													</button>
-													<ExpandToggle
-														expanded={isExpanded}
-														onClick={() => toggleExpanded(key)}
-														disabled={item.recipes.length === 0}
-													/>
-												</div>
-												{isExpanded && item.recipes.length > 0 && (
-													<RecipeList recipes={item.recipes} unitLabel="" />
-												)}
-											</div>
+											<>
+												<span
+													className={cn(
+														"font-medium text-(--sea-ink)",
+														isChecked && "line-through",
+													)}
+												>
+													{item.notes ?? "Unknown ingredient"}
+												</span>
+												<span
+													className={cn(
+														"text-(--sea-ink-soft)",
+														isChecked && "line-through",
+													)}
+												>
+													{Number(item.quantity) * item.scaleFactor}
+												</span>
+											</>
 										);
-									})}
-								</div>
+									}}
+									renderAction={(item) => (
+										<RowCheckbox
+											checked={checked.has(item.key)}
+											onChange={() => toggle(item.key)}
+										/>
+									)}
+									renderContent={(item) => (
+										<RecipeList recipes={item.recipes} unitLabel="" />
+									)}
+								/>
 							</div>
 						)}
 					</div>
 				)}
 			</Island>
 		</Page>
+	);
+}
+
+function RowCheckbox({
+	checked,
+	onChange,
+}: {
+	checked: boolean;
+	onChange: () => void;
+}) {
+	return (
+		<input
+			type="checkbox"
+			checked={checked}
+			onChange={onChange}
+			aria-label={checked ? "Uncheck item" : "Check item"}
+			className="accent-(--lagoon) shrink-0 h-4 w-4 mr-2"
+		/>
 	);
 }
 
@@ -425,135 +467,6 @@ function RestockRow({
 	);
 }
 
-function IngredientRow({
-	item,
-	badgeClass,
-	checked,
-	onToggle,
-	expanded,
-	onToggleExpand,
-}: {
-	item: {
-		productName: string;
-		neededQuantity: number;
-		minStockBuffer: number;
-		stockQuantity: number;
-		unitAbbreviation: string | null;
-		unitName: string | null;
-		status: string;
-		recipes: IngredientRecipeRef[];
-	};
-	badgeClass: string;
-	checked: boolean;
-	onToggle: () => void;
-	expanded: boolean;
-	onToggleExpand: () => void;
-}) {
-	const unitLabel = item.unitAbbreviation ?? item.unitName ?? "";
-	const target = item.neededQuantity + item.minStockBuffer;
-	const shortfall = Math.max(0, target - item.stockQuantity);
-	const hasBuffer = item.minStockBuffer > 0;
-	const hasRecipes = item.recipes.length > 0;
-
-	return (
-		<div>
-			<div
-				className={cn(
-					"flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition hover:bg-(--surface)",
-					checked && "opacity-60",
-				)}
-			>
-				<button
-					type="button"
-					onClick={onToggle}
-					className="flex flex-1 items-center gap-3 text-left"
-				>
-					<input
-						type="checkbox"
-						checked={checked}
-						onChange={onToggle}
-						onClick={(e) => e.stopPropagation()}
-						className="accent-(--lagoon) shrink-0"
-					/>
-					<span
-						className={cn(
-							"flex-1 font-medium text-(--sea-ink)",
-							checked && "line-through",
-						)}
-					>
-						{item.productName}
-						{hasBuffer && item.status === "deficit" && (
-							<span className="ml-2 text-xs text-(--sea-ink-soft)">
-								(keeps {item.minStockBuffer.toFixed(1)}
-								{unitLabel ? ` ${unitLabel}` : ""} min)
-							</span>
-						)}
-					</span>
-					<span
-						className={cn("text-(--sea-ink-soft)", checked && "line-through")}
-					>
-						Need: {item.neededQuantity.toFixed(1)}
-						{unitLabel ? ` ${unitLabel}` : ""}
-					</span>
-					<span
-						className={cn("text-(--sea-ink-soft)", checked && "line-through")}
-					>
-						Have: {item.stockQuantity.toFixed(1)}
-						{unitLabel ? ` ${unitLabel}` : ""}
-					</span>
-					<span
-						className={cn(
-							"rounded-full px-2 py-0.5 text-xs font-semibold",
-							badgeClass,
-						)}
-					>
-						{item.status === "deficit"
-							? `Buy ${shortfall.toFixed(1)}${unitLabel ? ` ${unitLabel}` : ""}`
-							: item.status === "sufficient"
-								? "OK"
-								: "Check units"}
-					</span>
-				</button>
-				<ExpandToggle
-					expanded={expanded}
-					onClick={onToggleExpand}
-					disabled={!hasRecipes}
-				/>
-			</div>
-			{expanded && hasRecipes && (
-				<RecipeList recipes={item.recipes} unitLabel={unitLabel} />
-			)}
-		</div>
-	);
-}
-
-function ExpandToggle({
-	expanded,
-	onClick,
-	disabled,
-}: {
-	expanded: boolean;
-	onClick: () => void;
-	disabled?: boolean;
-}) {
-	return (
-		<button
-			type="button"
-			onClick={(e) => {
-				e.stopPropagation();
-				onClick();
-			}}
-			disabled={disabled}
-			aria-label={
-				expanded ? "Hide recipes using this" : "Show recipes using this"
-			}
-			className="rounded-lg p-1 text-(--sea-ink-soft) transition hover:bg-(--surface) disabled:opacity-30 disabled:hover:bg-transparent"
-		>
-			{expanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-		</button>
-	);
-}
-
 function RecipeList({
 	recipes,
 	unitLabel,
@@ -561,11 +474,16 @@ function RecipeList({
 	recipes: IngredientRecipeRef[];
 	unitLabel: string;
 }) {
+	if (recipes.length === 0) {
+		return (
+			<p className="text-xs text-(--sea-ink-soft)">No recipes contributed.</p>
+		);
+	}
 	const sorted = [...recipes].sort((a, b) =>
 		a.mealPlanEntryDate.localeCompare(b.mealPlanEntryDate),
 	);
 	return (
-		<ul className="ml-9 mt-1 mb-1 flex flex-col gap-0.5 text-xs text-(--sea-ink-soft)">
+		<ul className="flex flex-col gap-0.5 text-xs text-(--sea-ink-soft)">
 			{sorted.map((r) => (
 				<li
 					key={`${r.mealPlanEntryId}-${r.recipeId}`}
