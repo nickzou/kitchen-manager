@@ -16,6 +16,8 @@ export interface Product {
 	protein: string | null;
 	fat: string | null;
 	carbs: string | null;
+	nutritionBaseAmount: string;
+	nutritionBaseUnitId: string | null;
 	defaultTareWeight: string | null;
 	userId: string;
 	createdAt: string;
@@ -37,6 +39,8 @@ export type CreateProductInput = {
 	protein?: string;
 	fat?: string;
 	carbs?: string;
+	nutritionBaseAmount?: string;
+	nutritionBaseUnitId?: string;
 	defaultTareWeight?: string | null;
 };
 

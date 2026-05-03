@@ -259,6 +259,13 @@ export const product = pgTable(
 		protein: numeric("protein"),
 		fat: numeric("fat"),
 		carbs: numeric("carbs"),
+		nutritionBaseAmount: numeric("nutrition_base_amount")
+			.default("1")
+			.notNull(),
+		nutritionBaseUnitId: text("nutrition_base_unit_id").references(
+			() => quantityUnit.id,
+			{ onDelete: "set null" },
+		),
 		defaultTareWeight: numeric("default_tare_weight"),
 		userId: text("user_id")
 			.notNull()

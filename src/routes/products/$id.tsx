@@ -92,6 +92,8 @@ function ProductDetail() {
 		protein: "",
 		fat: "",
 		carbs: "",
+		nutritionBaseAmount: "1",
+		nutritionBaseUnitId: "",
 		hasTareWeight: false,
 		defaultTareWeight: "",
 	});
@@ -168,6 +170,8 @@ function ProductDetail() {
 			protein: product.protein ?? "",
 			fat: product.fat ?? "",
 			carbs: product.carbs ?? "",
+			nutritionBaseAmount: product.nutritionBaseAmount ?? "1",
+			nutritionBaseUnitId: product.nutritionBaseUnitId ?? "",
 			hasTareWeight: product.defaultTareWeight != null,
 			defaultTareWeight: product.defaultTareWeight ?? "",
 		});
@@ -194,6 +198,8 @@ function ProductDetail() {
 				protein: form.protein || undefined,
 				fat: form.fat || undefined,
 				carbs: form.carbs || undefined,
+				nutritionBaseAmount: form.nutritionBaseAmount || "1",
+				nutritionBaseUnitId: form.nutritionBaseUnitId || undefined,
 				defaultTareWeight: form.hasTareWeight
 					? form.defaultTareWeight || undefined
 					: null,
@@ -521,9 +527,52 @@ function ProductDetail() {
 								{form.isFood && settings?.nutritionEnabled && (
 									<fieldset className="flex flex-col gap-3 rounded-lg border border-(--line) p-4">
 										<legend className="px-1 text-sm font-medium text-(--sea-ink)">
-											Nutrition (per{" "}
-											{getUnitName(form.defaultQuantityUnitId) ?? "unit"})
+											Nutrition
 										</legend>
+										<div className="flex items-end gap-2">
+											<div className="flex w-24 flex-col gap-1.5">
+												<label
+													htmlFor={`${htmlId}-nutrition-base-amount`}
+													className="text-sm font-medium text-(--sea-ink)"
+												>
+													Per
+												</label>
+												<NumberInput
+													id={`${htmlId}-nutrition-base-amount`}
+													step="any"
+													min="0"
+													value={form.nutritionBaseAmount}
+													onChange={(e) =>
+														setForm({
+															...form,
+															nutritionBaseAmount: e.target.value,
+														})
+													}
+													className="w-full"
+												/>
+											</div>
+											<div className="flex flex-1 flex-col gap-1.5">
+												<label
+													htmlFor={`${htmlId}-nutrition-base-unit`}
+													className="text-sm font-medium text-(--sea-ink)"
+												>
+													Unit
+												</label>
+												<Combobox
+													value={form.nutritionBaseUnitId}
+													onChange={(v) =>
+														setForm({ ...form, nutritionBaseUnitId: v })
+													}
+													options={(quantityUnits ?? []).map((u) => ({
+														value: u.id,
+														label: u.abbreviation
+															? `${u.name} (${u.abbreviation})`
+															: u.name,
+													}))}
+													placeholder="Same as stock unit"
+												/>
+											</div>
+										</div>
 										<div className="grid grid-cols-2 gap-3">
 											<div className="flex flex-col gap-1.5">
 												<label
@@ -749,7 +798,13 @@ function ProductDetail() {
 										product.carbs) && (
 										<div className="mt-4">
 											<h3 className="mb-2 text-sm font-semibold text-(--sea-ink)">
-												Nutrition (per {unitName ?? "unit"})
+												Nutrition (per{" "}
+												{Number.parseFloat(product.nutritionBaseAmount ?? "1")}{" "}
+												{getUnitName(
+													product.nutritionBaseUnitId ??
+														product.defaultQuantityUnitId,
+												) ?? "unit"}
+												)
 											</h3>
 											<dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm sm:grid-cols-4">
 												{product.calories && (

@@ -38,20 +38,25 @@ export function getRecipeNutrition(opts: {
 		if (!product.calories && !product.protein && !product.fat && !product.carbs)
 			continue;
 
-		// Convert ingredient quantity to the product's default unit
+		// Nutrition values are recorded "per nutritionBaseAmount of
+		// nutritionBaseUnitId". Convert the ingredient qty into that base
+		// unit, then divide by the base amount to get the multiplier.
+		const baseUnitId =
+			product.nutritionBaseUnitId ?? product.defaultQuantityUnitId;
+		const baseAmount = Number(product.nutritionBaseAmount ?? "1") || 1;
 		const convertedQty = tryConvert(
 			graph,
 			Number(ing.quantity),
 			ing.quantityUnitId,
-			product.defaultQuantityUnitId,
+			baseUnitId,
 		);
 		if (convertedQty === null) continue;
 
-		const qty = convertedQty * scaleFactor;
-		if (product.calories) calories += Number(product.calories) * qty;
-		if (product.protein) protein += Number(product.protein) * qty;
-		if (product.fat) fat += Number(product.fat) * qty;
-		if (product.carbs) carbs += Number(product.carbs) * qty;
+		const multiplier = (convertedQty * scaleFactor) / baseAmount;
+		if (product.calories) calories += Number(product.calories) * multiplier;
+		if (product.protein) protein += Number(product.protein) * multiplier;
+		if (product.fat) fat += Number(product.fat) * multiplier;
+		if (product.carbs) carbs += Number(product.carbs) * multiplier;
 		ingredientsWithNutrition++;
 	}
 
