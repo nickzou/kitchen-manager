@@ -116,10 +116,6 @@ function ShoppingListPage() {
 	const deficit =
 		summary?.ingredients.filter((i) => i.status === "deficit").map(withKey) ??
 		[];
-	const sufficient =
-		summary?.ingredients
-			.filter((i) => i.status === "sufficient")
-			.map(withKey) ?? [];
 	const unknownUnit =
 		summary?.ingredients
 			.filter((i) => i.status === "unknown_unit")
@@ -132,13 +128,11 @@ function ShoppingListPage() {
 		})) ?? [];
 
 	const totalRows =
-		(summary?.ingredients.length ?? 0) + restock.length + unlinked.length;
+		deficit.length + unknownUnit.length + restock.length + unlinked.length;
 	const checkedCount = checked.size;
 
 	const statusBadge: Record<string, string> = {
 		deficit: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
-		sufficient:
-			"bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
 		unknown_unit:
 			"bg-gray-100 text-gray-600 dark:bg-gray-800/30 dark:text-gray-400",
 		restock:
@@ -241,12 +235,10 @@ function ShoppingListPage() {
 
 				{isLoading ? (
 					<p className="text-sm text-(--sea-ink-soft)">Loading...</p>
-				) : !summary?.ingredients.length &&
-					!summary?.unlinkedIngredients.length &&
-					!summary?.restock.length ? (
+				) : totalRows === 0 ? (
 					<p className="text-sm text-(--sea-ink-soft)">
-						Nothing to buy — no planned meals and all tracked staples are at
-						min.
+						Nothing to buy — every planned ingredient is in stock and all
+						tracked staples are at min.
 					</p>
 				) : (
 					<div className="flex flex-col gap-6">
@@ -301,21 +293,6 @@ function ShoppingListPage() {
 										);
 									})}
 								</div>
-							</div>
-						)}
-
-						{sufficient.length > 0 && (
-							<div>
-								<h2 className="mb-3 text-sm font-semibold text-green-600 dark:text-green-400">
-									In Stock ({sufficient.length})
-								</h2>
-								<Accordion
-									type="multi"
-									items={sufficient}
-									renderTrigger={ingredientTrigger}
-									renderAction={ingredientAction}
-									renderContent={ingredientContent}
-								/>
 							</div>
 						)}
 
