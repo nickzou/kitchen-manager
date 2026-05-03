@@ -410,7 +410,7 @@ function RestockRow({
 	return (
 		<div
 			className={cn(
-				"flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition hover:bg-(--surface)",
+				"flex w-full items-center gap-3 rounded-lg py-2 text-sm transition hover:bg-(--surface)",
 				checked && "opacity-60",
 			)}
 		>
