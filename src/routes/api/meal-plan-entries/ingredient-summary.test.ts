@@ -398,39 +398,53 @@ describe("GET /api/meal-plan-entries/ingredient-summary restock", () => {
 		});
 	});
 
+	function groupRow(opts: {
+		mpe: string;
+		date: string;
+		ing: string;
+		productId: string;
+		quantity?: string;
+		group?: string;
+		sortOrder?: number;
+	}) {
+		return {
+			mealPlanEntryId: opts.mpe,
+			mealPlanEntryDate: opts.date,
+			entryServings: null,
+			recipeServings: 4,
+			ingredientId: opts.ing,
+			ingredientProductId: opts.productId,
+			ingredientQuantity: opts.quantity ?? "1",
+			ingredientUnitId: null,
+			ingredientNotes: null,
+			ingredientGroupName: opts.group ?? "Toppings",
+			ingredientSortOrder: opts.sortOrder ?? 0,
+		};
+	}
+
 	it("drops alternative group ingredients when one in the group is sufficiently stocked", async () => {
 		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
 		const cilantro = makeProduct({ id: "p-cilantro", name: "Cilantro" });
 		const lime = makeProduct({ id: "p-lime", name: "Lime" });
-		// Single meal-plan entry, recipe with a Toppings group of cilantro OR lime.
 		mockResults[0] = [
-			{
-				mealPlanEntryId: "mpe-1",
-				entryServings: null,
-				recipeServings: 4,
-				ingredientId: "ing-cilantro",
-				ingredientProductId: "p-cilantro",
-				ingredientQuantity: "1",
-				ingredientUnitId: null,
-				ingredientNotes: null,
-				ingredientGroupName: "Toppings",
-			},
-			{
-				mealPlanEntryId: "mpe-1",
-				entryServings: null,
-				recipeServings: 4,
-				ingredientId: "ing-lime",
-				ingredientProductId: "p-lime",
-				ingredientQuantity: "1",
-				ingredientUnitId: null,
-				ingredientNotes: null,
-				ingredientGroupName: "Toppings",
-			},
+			groupRow({
+				mpe: "mpe-1",
+				date: "2025-01-01",
+				ing: "ing-cilantro",
+				productId: "p-cilantro",
+			}),
+			groupRow({
+				mpe: "mpe-1",
+				date: "2025-01-01",
+				ing: "ing-lime",
+				productId: "p-lime",
+				sortOrder: 1,
+			}),
 		];
-		mockResults[1] = []; // no tracked products
-		mockResults[2] = []; // units
+		mockResults[1] = [];
+		mockResults[2] = [];
 		mockResults[3] = [cilantro, lime];
-		mockResults[4] = [{ productId: "p-cilantro", totalQuantity: "5" }]; // cilantro stocked, lime missing
+		mockResults[4] = [{ productId: "p-cilantro", totalQuantity: "5" }];
 		mockResults[5] = [];
 
 		const response = await GET({ request: summaryRequest() } as never);
@@ -445,28 +459,19 @@ describe("GET /api/meal-plan-entries/ingredient-summary restock", () => {
 		const cilantro = makeProduct({ id: "p-cilantro", name: "Cilantro" });
 		const lime = makeProduct({ id: "p-lime", name: "Lime" });
 		mockResults[0] = [
-			{
-				mealPlanEntryId: "mpe-1",
-				entryServings: null,
-				recipeServings: 4,
-				ingredientId: "ing-cilantro",
-				ingredientProductId: "p-cilantro",
-				ingredientQuantity: "1",
-				ingredientUnitId: null,
-				ingredientNotes: null,
-				ingredientGroupName: "Toppings",
-			},
-			{
-				mealPlanEntryId: "mpe-1",
-				entryServings: null,
-				recipeServings: 4,
-				ingredientId: "ing-lime",
-				ingredientProductId: "p-lime",
-				ingredientQuantity: "1",
-				ingredientUnitId: null,
-				ingredientNotes: null,
-				ingredientGroupName: "Toppings",
-			},
+			groupRow({
+				mpe: "mpe-1",
+				date: "2025-01-01",
+				ing: "ing-cilantro",
+				productId: "p-cilantro",
+			}),
+			groupRow({
+				mpe: "mpe-1",
+				date: "2025-01-01",
+				ing: "ing-lime",
+				productId: "p-lime",
+				sortOrder: 1,
+			}),
 		];
 		mockResults[1] = [];
 		mockResults[2] = [];
@@ -483,29 +488,39 @@ describe("GET /api/meal-plan-entries/ingredient-summary restock", () => {
 		expect(ids).toEqual(["p-cilantro", "p-lime"]);
 	});
 
-	it("evaluates the group rule per meal-plan-entry independently", async () => {
+	it("covers both nights when stock can cover multiple meals", async () => {
 		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
 		const cilantro = makeProduct({ id: "p-cilantro", name: "Cilantro" });
 		const lime = makeProduct({ id: "p-lime", name: "Lime" });
-		// Two separate meal-plan entries with the same Toppings group; cilantro
-		// stocked at 5 — under the simple-stock-check rule, cilantro covers
-		// the group on BOTH nights, so lime is dropped from both.
-		const mkRow = (mpe: string, ing: string, productId: string) => ({
-			mealPlanEntryId: mpe,
-			entryServings: null,
-			recipeServings: 4,
-			ingredientId: ing,
-			ingredientProductId: productId,
-			ingredientQuantity: "1",
-			ingredientUnitId: null,
-			ingredientNotes: null,
-			ingredientGroupName: "Toppings",
-		});
+		// Two taco nights, 5 cilantro on hand. Each meal needs 1 cilantro
+		// or 1 lime; cilantro covers both nights → lime dropped both times.
 		mockResults[0] = [
-			mkRow("mpe-1", "ing-cilantro-1", "p-cilantro"),
-			mkRow("mpe-1", "ing-lime-1", "p-lime"),
-			mkRow("mpe-2", "ing-cilantro-2", "p-cilantro"),
-			mkRow("mpe-2", "ing-lime-2", "p-lime"),
+			groupRow({
+				mpe: "mpe-1",
+				date: "2025-01-01",
+				ing: "ing-c1",
+				productId: "p-cilantro",
+			}),
+			groupRow({
+				mpe: "mpe-1",
+				date: "2025-01-01",
+				ing: "ing-l1",
+				productId: "p-lime",
+				sortOrder: 1,
+			}),
+			groupRow({
+				mpe: "mpe-2",
+				date: "2025-01-02",
+				ing: "ing-c2",
+				productId: "p-cilantro",
+			}),
+			groupRow({
+				mpe: "mpe-2",
+				date: "2025-01-02",
+				ing: "ing-l2",
+				productId: "p-lime",
+				sortOrder: 1,
+			}),
 		];
 		mockResults[1] = [];
 		mockResults[2] = [];
@@ -518,5 +533,57 @@ describe("GET /api/meal-plan-entries/ingredient-summary restock", () => {
 		const data = await response.json();
 		const ids = data.ingredients.map((i: { productId: string }) => i.productId);
 		expect(ids).toEqual(["p-cilantro"]);
+	});
+
+	it("only covers as many nights as stock allows; later meals retain their group alternatives", async () => {
+		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
+		const cilantro = makeProduct({ id: "p-cilantro", name: "Cilantro" });
+		const lime = makeProduct({ id: "p-lime", name: "Lime" });
+		// Two taco nights, 1 cilantro on hand. First night picks cilantro
+		// (and drops its lime). Second night sees cilantro depleted and lime
+		// still at 0 → no skip; both alternatives remain in the list.
+		mockResults[0] = [
+			groupRow({
+				mpe: "mpe-1",
+				date: "2025-01-01",
+				ing: "ing-c1",
+				productId: "p-cilantro",
+			}),
+			groupRow({
+				mpe: "mpe-1",
+				date: "2025-01-01",
+				ing: "ing-l1",
+				productId: "p-lime",
+				sortOrder: 1,
+			}),
+			groupRow({
+				mpe: "mpe-2",
+				date: "2025-01-02",
+				ing: "ing-c2",
+				productId: "p-cilantro",
+			}),
+			groupRow({
+				mpe: "mpe-2",
+				date: "2025-01-02",
+				ing: "ing-l2",
+				productId: "p-lime",
+				sortOrder: 1,
+			}),
+		];
+		mockResults[1] = [];
+		mockResults[2] = [];
+		mockResults[3] = [cilantro, lime];
+		mockResults[4] = [{ productId: "p-cilantro", totalQuantity: "1" }];
+		mockResults[5] = [];
+
+		const response = await GET({ request: summaryRequest() } as never);
+
+		const data = await response.json();
+		const ids = data.ingredients
+			.map((i: { productId: string }) => i.productId)
+			.sort();
+		// Cilantro appears (used by night 1 + still in night 2's group),
+		// lime appears (kept on night 2 since cilantro depleted).
+		expect(ids).toEqual(["p-cilantro", "p-lime"]);
 	});
 });

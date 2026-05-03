@@ -75,6 +75,7 @@ export const Route = createFileRoute(
 				const entries = await db
 					.select({
 						mealPlanEntryId: mealPlanEntry.id,
+						mealPlanEntryDate: mealPlanEntry.date,
 						entryServings: mealPlanEntry.servings,
 						recipeServings: recipe.servings,
 						ingredientId: recipeIngredient.id,
@@ -83,6 +84,7 @@ export const Route = createFileRoute(
 						ingredientUnitId: recipeIngredient.quantityUnitId,
 						ingredientNotes: recipeIngredient.notes,
 						ingredientGroupName: recipeIngredient.groupName,
+						ingredientSortOrder: recipeIngredient.sortOrder,
 					})
 					.from(mealPlanEntry)
 					.innerJoin(recipe, eq(mealPlanEntry.recipeId, recipe.id))
@@ -166,53 +168,110 @@ export const Route = createFileRoute(
 
 				const graph = buildConversionGraph(conversions);
 
-				// Group fulfillment rule: within a single meal-plan-entry × group,
-				// if any ingredient has enough stock to satisfy the recipe's scaled
-				// need, drop the OTHER ingredients in that group from the shopping
-				// list. Mirrors the "any sufficient" rule in availability.ts.
-				const skipKeys = new Set<string>();
-				const grouped = new Map<string, typeof entries>();
-				for (const e of entries) {
-					if (!e.ingredientGroupName) continue;
-					const k = `${e.mealPlanEntryId}::${e.ingredientGroupName}`;
-					const arr = grouped.get(k) ?? [];
+				// Group fulfillment rule with stock simulation: walk meal plan
+				// entries chronologically, maintain a running stock map, and for
+				// each (meal-plan-entry, group), pick the first ingredient whose
+				// remaining stock covers that recipe's scaled need. Decrement
+				// running stock for the picked winner so subsequent meals can't
+				// re-claim the same units; drop the other group ingredients from
+				// the shopping list. If no group ingredient is sufficient given
+				// the running stock, none is dropped — all alternatives remain
+				// in the aggregated shopping list. Ungrouped ingredients also
+				// decrement running stock (after groups, so a group's
+				// alternative gets first dibs on shared stock within a meal).
+				const sortedEntries = [...entries].sort((a, b) => {
+					const dateCmp = a.mealPlanEntryDate.localeCompare(
+						b.mealPlanEntryDate,
+					);
+					if (dateCmp !== 0) return dateCmp;
+					const mpeCmp = a.mealPlanEntryId.localeCompare(b.mealPlanEntryId);
+					if (mpeCmp !== 0) return mpeCmp;
+					return (a.ingredientSortOrder ?? 0) - (b.ingredientSortOrder ?? 0);
+				});
+
+				const entriesByMpe = new Map<string, typeof entries>();
+				for (const e of sortedEntries) {
+					const arr = entriesByMpe.get(e.mealPlanEntryId) ?? [];
 					arr.push(e);
-					grouped.set(k, arr);
+					entriesByMpe.set(e.mealPlanEntryId, arr);
 				}
-				for (const groupEntries of grouped.values()) {
-					if (groupEntries.length < 2) continue;
-					const sufficientIds: string[] = [];
-					for (const e of groupEntries) {
-						if (!e.ingredientProductId) continue;
-						const p = productMap.get(e.ingredientProductId);
-						if (!p) continue;
-						const scaleFactor =
-							(e.entryServings ?? e.recipeServings ?? 1) /
-							(e.recipeServings ?? 1);
-						const needed = Number(e.ingredientQuantity) * scaleFactor;
-						const neededInStockUnit = tryConvert(
-							graph,
-							needed,
-							e.ingredientUnitId,
-							p.defaultQuantityUnitId,
-						);
-						if (
-							e.ingredientUnitId !== p.defaultQuantityUnitId &&
-							neededInStockUnit === null
-						) {
-							continue;
+
+				const runningStock = new Map(stockMap);
+
+				type Entry = (typeof entries)[number];
+				function effectiveNeed(e: Entry): number | null {
+					if (!e.ingredientProductId) return null;
+					const p = productMap.get(e.ingredientProductId);
+					if (!p) return null;
+					const scaleFactor =
+						(e.entryServings ?? e.recipeServings ?? 1) /
+						(e.recipeServings ?? 1);
+					const needed = Number(e.ingredientQuantity) * scaleFactor;
+					const neededInStockUnit = tryConvert(
+						graph,
+						needed,
+						e.ingredientUnitId,
+						p.defaultQuantityUnitId,
+					);
+					if (
+						e.ingredientUnitId !== p.defaultQuantityUnitId &&
+						neededInStockUnit === null
+					) {
+						return null;
+					}
+					return neededInStockUnit ?? needed;
+				}
+
+				const skipKeys = new Set<string>();
+
+				for (const mpeEntries of entriesByMpe.values()) {
+					// Process groups first so the group's alternative gets first
+					// claim on stock before ungrouped consumption draws it down.
+					const groupsByName = new Map<string, Entry[]>();
+					for (const e of mpeEntries) {
+						if (!e.ingredientGroupName) continue;
+						const arr = groupsByName.get(e.ingredientGroupName) ?? [];
+						arr.push(e);
+						groupsByName.set(e.ingredientGroupName, arr);
+					}
+					for (const groupEntries of groupsByName.values()) {
+						if (groupEntries.length < 2) continue;
+						let winner: Entry | null = null;
+						let winnerNeed = 0;
+						for (const e of groupEntries) {
+							const need = effectiveNeed(e);
+							if (need === null || !e.ingredientProductId) continue;
+							const have = runningStock.get(e.ingredientProductId) ?? 0;
+							if (have >= need) {
+								winner = e;
+								winnerNeed = need;
+								break;
+							}
 						}
-						const effectiveNeed = neededInStockUnit ?? needed;
-						const stockQty = stockMap.get(e.ingredientProductId) ?? 0;
-						if (stockQty >= effectiveNeed) {
-							sufficientIds.push(e.ingredientId);
+						if (!winner || !winner.ingredientProductId) continue;
+						runningStock.set(
+							winner.ingredientProductId,
+							(runningStock.get(winner.ingredientProductId) ?? 0) - winnerNeed,
+						);
+						for (const e of groupEntries) {
+							if (e.ingredientId !== winner.ingredientId) {
+								skipKeys.add(`${e.mealPlanEntryId}::${e.ingredientId}`);
+							}
 						}
 					}
-					if (sufficientIds.length === 0) continue;
-					for (const e of groupEntries) {
-						if (!sufficientIds.includes(e.ingredientId)) {
-							skipKeys.add(`${e.mealPlanEntryId}::${e.ingredientId}`);
-						}
+
+					// Then ungrouped: decrement running stock so later meals see
+					// the depletion. Going negative is fine — represents a
+					// shortfall that the user will buy and use.
+					for (const e of mpeEntries) {
+						if (e.ingredientGroupName) continue;
+						if (!e.ingredientProductId) continue;
+						const need = effectiveNeed(e);
+						if (need === null) continue;
+						runningStock.set(
+							e.ingredientProductId,
+							(runningStock.get(e.ingredientProductId) ?? 0) - need,
+						);
 					}
 				}
 
