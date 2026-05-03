@@ -74,12 +74,15 @@ export const Route = createFileRoute(
 				// Get all entries in range with their recipe ingredients
 				const entries = await db
 					.select({
+						mealPlanEntryId: mealPlanEntry.id,
 						entryServings: mealPlanEntry.servings,
 						recipeServings: recipe.servings,
+						ingredientId: recipeIngredient.id,
 						ingredientProductId: recipeIngredient.productId,
 						ingredientQuantity: recipeIngredient.quantity,
 						ingredientUnitId: recipeIngredient.quantityUnitId,
 						ingredientNotes: recipeIngredient.notes,
+						ingredientGroupName: recipeIngredient.groupName,
 					})
 					.from(mealPlanEntry)
 					.innerJoin(recipe, eq(mealPlanEntry.recipeId, recipe.id))
@@ -92,52 +95,6 @@ export const Route = createFileRoute(
 						),
 					);
 
-				// Aggregate by (productId, quantityUnitId)
-				const linked = new Map<
-					string,
-					{ productId: string; unitId: string | null; quantity: number }
-				>();
-				const unlinked: {
-					notes: string | null;
-					quantity: string;
-					unitId: string | null;
-					scaleFactor: number;
-				}[] = [];
-
-				for (const entry of entries) {
-					const scaleFactor =
-						(entry.entryServings ?? entry.recipeServings ?? 1) /
-						(entry.recipeServings ?? 1);
-					const qty = Number(entry.ingredientQuantity) * scaleFactor;
-
-					if (!entry.ingredientProductId) {
-						unlinked.push({
-							notes: entry.ingredientNotes,
-							quantity: entry.ingredientQuantity,
-							unitId: entry.ingredientUnitId,
-							scaleFactor,
-						});
-						continue;
-					}
-
-					const key = `${entry.ingredientProductId}::${entry.ingredientUnitId ?? "null"}`;
-					const existing = linked.get(key);
-					if (existing) {
-						existing.quantity += qty;
-					} else {
-						linked.set(key, {
-							productId: entry.ingredientProductId,
-							unitId: entry.ingredientUnitId,
-							quantity: qty,
-						});
-					}
-				}
-
-				// Get product info and stock for linked ingredients
-				const linkedProductIds = [
-					...new Set([...linked.values()].map((v) => v.productId)),
-				];
-
 				// Tracked products (minStockAmount > 0) for the restock list
 				const trackedProducts = await db
 					.select()
@@ -149,12 +106,14 @@ export const Route = createFileRoute(
 						),
 					);
 
-				// Products we need to materialize: linked ingredients ∪ tracked-for-restock
+				// Product IDs we'll need maps for: anything an entry references plus
+				// the tracked-for-restock set. Built before aggregation because the
+				// group-fulfillment rule needs stock data to decide what to drop.
+				const entryProductIds = entries
+					.map((e) => e.ingredientProductId)
+					.filter((id): id is string => id != null);
 				const productIds = [
-					...new Set([
-						...linkedProductIds,
-						...trackedProducts.map((p) => p.id),
-					]),
+					...new Set([...entryProductIds, ...trackedProducts.map((p) => p.id)]),
 				];
 
 				const units = await db
@@ -166,7 +125,7 @@ export const Route = createFileRoute(
 				if (productIds.length === 0) {
 					return json({
 						ingredients: [],
-						unlinkedIngredients: unlinked,
+						unlinkedIngredients: [],
 						restock: [],
 					});
 				}
@@ -206,6 +165,105 @@ export const Route = createFileRoute(
 				);
 
 				const graph = buildConversionGraph(conversions);
+
+				// Group fulfillment rule: within a single meal-plan-entry × group,
+				// if any ingredient has enough stock to satisfy the recipe's scaled
+				// need, drop the OTHER ingredients in that group from the shopping
+				// list. Mirrors the "any sufficient" rule in availability.ts.
+				const skipKeys = new Set<string>();
+				const grouped = new Map<string, typeof entries>();
+				for (const e of entries) {
+					if (!e.ingredientGroupName) continue;
+					const k = `${e.mealPlanEntryId}::${e.ingredientGroupName}`;
+					const arr = grouped.get(k) ?? [];
+					arr.push(e);
+					grouped.set(k, arr);
+				}
+				for (const groupEntries of grouped.values()) {
+					if (groupEntries.length < 2) continue;
+					const sufficientIds: string[] = [];
+					for (const e of groupEntries) {
+						if (!e.ingredientProductId) continue;
+						const p = productMap.get(e.ingredientProductId);
+						if (!p) continue;
+						const scaleFactor =
+							(e.entryServings ?? e.recipeServings ?? 1) /
+							(e.recipeServings ?? 1);
+						const needed = Number(e.ingredientQuantity) * scaleFactor;
+						const neededInStockUnit = tryConvert(
+							graph,
+							needed,
+							e.ingredientUnitId,
+							p.defaultQuantityUnitId,
+						);
+						if (
+							e.ingredientUnitId !== p.defaultQuantityUnitId &&
+							neededInStockUnit === null
+						) {
+							continue;
+						}
+						const effectiveNeed = neededInStockUnit ?? needed;
+						const stockQty = stockMap.get(e.ingredientProductId) ?? 0;
+						if (stockQty >= effectiveNeed) {
+							sufficientIds.push(e.ingredientId);
+						}
+					}
+					if (sufficientIds.length === 0) continue;
+					for (const e of groupEntries) {
+						if (!sufficientIds.includes(e.ingredientId)) {
+							skipKeys.add(`${e.mealPlanEntryId}::${e.ingredientId}`);
+						}
+					}
+				}
+
+				// Aggregate by (productId, quantityUnitId) — skipping rows the
+				// group rule said are covered by an alternative.
+				const linked = new Map<
+					string,
+					{ productId: string; unitId: string | null; quantity: number }
+				>();
+				const unlinked: {
+					notes: string | null;
+					quantity: string;
+					unitId: string | null;
+					scaleFactor: number;
+				}[] = [];
+
+				for (const entry of entries) {
+					if (skipKeys.has(`${entry.mealPlanEntryId}::${entry.ingredientId}`)) {
+						continue;
+					}
+					const scaleFactor =
+						(entry.entryServings ?? entry.recipeServings ?? 1) /
+						(entry.recipeServings ?? 1);
+					const qty = Number(entry.ingredientQuantity) * scaleFactor;
+
+					if (!entry.ingredientProductId) {
+						unlinked.push({
+							notes: entry.ingredientNotes,
+							quantity: entry.ingredientQuantity,
+							unitId: entry.ingredientUnitId,
+							scaleFactor,
+						});
+						continue;
+					}
+
+					const key = `${entry.ingredientProductId}::${entry.ingredientUnitId ?? "null"}`;
+					const existing = linked.get(key);
+					if (existing) {
+						existing.quantity += qty;
+					} else {
+						linked.set(key, {
+							productId: entry.ingredientProductId,
+							unitId: entry.ingredientUnitId,
+							quantity: qty,
+						});
+					}
+				}
+
+				const linkedProductIds = [
+					...new Set([...linked.values()].map((v) => v.productId)),
+				];
 
 				const ingredients: AggregatedIngredient[] = [];
 
