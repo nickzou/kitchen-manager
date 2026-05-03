@@ -400,47 +400,49 @@ function RestockRow({
 	const shortfall = item.minStock - item.stockQuantity;
 
 	return (
-		<button
-			type="button"
-			onClick={onToggle}
+		<div
 			className={cn(
-				"flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm transition hover:bg-(--surface)",
+				"flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition hover:bg-(--surface)",
 				checked && "opacity-60",
 			)}
 		>
-			<input
-				type="checkbox"
-				checked={checked}
-				onChange={onToggle}
-				onClick={(e) => e.stopPropagation()}
-				className="accent-(--lagoon) shrink-0"
-			/>
-			<span
-				className={cn(
-					"flex-1 font-medium text-(--sea-ink)",
-					checked && "line-through",
-				)}
+			<button
+				type="button"
+				onClick={onToggle}
+				className="flex flex-1 items-center gap-3 text-left"
 			>
-				{item.productName}
-			</span>
-			<span className={cn("text-(--sea-ink-soft)", checked && "line-through")}>
-				Min: {item.minStock.toFixed(1)}
-				{unitLabel ? ` ${unitLabel}` : ""}
-			</span>
-			<span className={cn("text-(--sea-ink-soft)", checked && "line-through")}>
-				Have: {item.stockQuantity.toFixed(1)}
-				{unitLabel ? ` ${unitLabel}` : ""}
-			</span>
-			<span
-				className={cn(
-					"rounded-full px-2 py-0.5 text-xs font-semibold",
-					badgeClass,
-				)}
-			>
-				Buy {shortfall.toFixed(1)}
-				{unitLabel ? ` ${unitLabel}` : ""}
-			</span>
-		</button>
+				<span
+					className={cn(
+						"flex-1 font-medium text-(--sea-ink)",
+						checked && "line-through",
+					)}
+				>
+					{item.productName}
+				</span>
+				<span
+					className={cn("text-(--sea-ink-soft)", checked && "line-through")}
+				>
+					Min: {item.minStock.toFixed(1)}
+					{unitLabel ? ` ${unitLabel}` : ""}
+				</span>
+				<span
+					className={cn("text-(--sea-ink-soft)", checked && "line-through")}
+				>
+					Have: {item.stockQuantity.toFixed(1)}
+					{unitLabel ? ` ${unitLabel}` : ""}
+				</span>
+				<span
+					className={cn(
+						"rounded-full px-2 py-0.5 text-xs font-semibold",
+						badgeClass,
+					)}
+				>
+					Buy {shortfall.toFixed(1)}
+					{unitLabel ? ` ${unitLabel}` : ""}
+				</span>
+			</button>
+			<RowCheckbox checked={checked} onChange={onToggle} />
+		</div>
 	);
 }
 
