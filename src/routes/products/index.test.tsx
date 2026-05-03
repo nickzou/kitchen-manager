@@ -98,6 +98,8 @@ const mockProduct: Product = {
 	protein: null,
 	fat: null,
 	carbs: null,
+	nutritionBaseAmount: "1",
+	nutritionBaseUnitId: null,
 	defaultTareWeight: null,
 	userId: "u1",
 	createdAt: "2026-03-01T00:00:00Z",

@@ -69,6 +69,10 @@ export const Route = createFileRoute("/api/products/$id")({
 				if (body.protein !== undefined) updates.protein = body.protein;
 				if (body.fat !== undefined) updates.fat = body.fat;
 				if (body.carbs !== undefined) updates.carbs = body.carbs;
+				if (body.nutritionBaseAmount !== undefined)
+					updates.nutritionBaseAmount = body.nutritionBaseAmount;
+				if (body.nutritionBaseUnitId !== undefined)
+					updates.nutritionBaseUnitId = body.nutritionBaseUnitId;
 				if (body.defaultTareWeight !== undefined)
 					updates.defaultTareWeight = body.defaultTareWeight;
 

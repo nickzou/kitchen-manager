@@ -21,6 +21,8 @@ function makeProduct(overrides: Partial<Product> = {}): Product {
 		protein: null,
 		fat: null,
 		carbs: null,
+		nutritionBaseAmount: "1",
+		nutritionBaseUnitId: null,
 		defaultTareWeight: null,
 		userId: "u1",
 		createdAt: "2026-01-01T00:00:00Z",
@@ -216,5 +218,105 @@ describe("getRecipeNutrition", () => {
 			ingredientsWithNutrition: 1,
 			ingredientsTotal: 1,
 		});
+	});
+
+	it("treats nutrition values as 'per nutritionBaseAmount of nutritionBaseUnitId'", () => {
+		// Product: 350 cal per 100 g (default unit). Ingredient: 50 g.
+		// Expected: (50 / 100) * 350 = 175 cal.
+		const result = getRecipeNutrition({
+			ingredients: [
+				makeIngredient({ quantity: "50", quantityUnitId: "unit-1" }),
+			],
+			products: [
+				makeProduct({
+					defaultQuantityUnitId: "unit-1",
+					calories: "350",
+					protein: "10",
+					nutritionBaseAmount: "100",
+					nutritionBaseUnitId: "unit-1",
+				}),
+			],
+			unitConversions: [],
+			scaleFactor: 1,
+		});
+
+		expect(result?.calories).toBeCloseTo(175);
+		expect(result?.protein).toBeCloseTo(5);
+	});
+
+	it("converts ingredient unit into the nutrition base unit before applying", () => {
+		// Product: 60 cal per 100 ml (default ml). Ingredient: 1 cup; 1 cup = 240 ml.
+		// Expected multiplier = 240 / 100 = 2.4 → calories = 2.4 * 60 = 144.
+		const result = getRecipeNutrition({
+			ingredients: [
+				makeIngredient({ quantity: "1", quantityUnitId: "unit-cup" }),
+			],
+			products: [
+				makeProduct({
+					defaultQuantityUnitId: "unit-ml",
+					calories: "60",
+					nutritionBaseAmount: "100",
+					nutritionBaseUnitId: "unit-ml",
+				}),
+			],
+			unitConversions: [
+				{
+					id: "c1",
+					fromUnitId: "unit-cup",
+					toUnitId: "unit-ml",
+					factor: "240",
+					userId: "u1",
+					createdAt: "2026-01-01T00:00:00Z",
+					updatedAt: "2026-01-01T00:00:00Z",
+				},
+			],
+			scaleFactor: 1,
+		});
+
+		expect(result?.calories).toBeCloseTo(144);
+	});
+
+	it("falls back to defaultQuantityUnitId when nutritionBaseUnitId is null", () => {
+		// Product: 8 cal per 1 ml (legacy shape — nutritionBaseUnitId null).
+		// Ingredient: 50 ml. Expected: 50 * 8 = 400 cal.
+		const result = getRecipeNutrition({
+			ingredients: [
+				makeIngredient({ quantity: "50", quantityUnitId: "unit-ml" }),
+			],
+			products: [
+				makeProduct({
+					defaultQuantityUnitId: "unit-ml",
+					calories: "8",
+					nutritionBaseAmount: "1",
+					nutritionBaseUnitId: null,
+				}),
+			],
+			unitConversions: [],
+			scaleFactor: 1,
+		});
+
+		expect(result?.calories).toBeCloseTo(400);
+	});
+
+	it("scales the multiplier with scaleFactor when a base is set", () => {
+		// Product: 100 cal per 100 g. Ingredient: 50 g. Scale: 4.
+		// Expected: (50 * 4 / 100) * 100 = 200 cal.
+		const result = getRecipeNutrition({
+			ingredients: [
+				makeIngredient({ quantity: "50", quantityUnitId: "unit-1" }),
+			],
+			products: [
+				makeProduct({
+					defaultQuantityUnitId: "unit-1",
+					calories: "100",
+					nutritionBaseAmount: "100",
+					nutritionBaseUnitId: "unit-1",
+				}),
+			],
+			unitConversions: [],
+			scaleFactor: 4,
+		});
+
+		expect(result?.calories).toBeCloseTo(200);
 	});
 });
