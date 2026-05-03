@@ -147,7 +147,7 @@ function ShoppingListPage() {
 		const isChecked = checked.has(item.key);
 
 		return (
-			<>
+			<div className="flex min-w-0 flex-1 flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-3">
 				<span
 					className={cn(
 						"flex-1 font-medium text-(--sea-ink)",
@@ -162,31 +162,39 @@ function ShoppingListPage() {
 						</span>
 					)}
 				</span>
-				<span
-					className={cn("text-(--sea-ink-soft)", isChecked && "line-through")}
-				>
-					Need: {item.neededQuantity.toFixed(1)}
-					{unitLabel ? ` ${unitLabel}` : ""}
-				</span>
-				<span
-					className={cn("text-(--sea-ink-soft)", isChecked && "line-through")}
-				>
-					Have: {item.stockQuantity.toFixed(1)}
-					{unitLabel ? ` ${unitLabel}` : ""}
-				</span>
-				<span
-					className={cn(
-						"rounded-full px-2 py-0.5 text-xs font-semibold",
-						statusBadge[item.status],
-					)}
-				>
-					{item.status === "deficit"
-						? `Buy ${shortfall.toFixed(1)}${unitLabel ? ` ${unitLabel}` : ""}`
-						: item.status === "sufficient"
-							? "OK"
-							: "Check units"}
-				</span>
-			</>
+				<div className="flex items-center gap-3">
+					<span
+						className={cn(
+							"text-xs sm:text-sm text-(--sea-ink-soft)",
+							isChecked && "line-through",
+						)}
+					>
+						Need: {item.neededQuantity.toFixed(1)}
+						{unitLabel ? ` ${unitLabel}` : ""}
+					</span>
+					<span
+						className={cn(
+							"text-xs sm:text-sm text-(--sea-ink-soft)",
+							isChecked && "line-through",
+						)}
+					>
+						Have: {item.stockQuantity.toFixed(1)}
+						{unitLabel ? ` ${unitLabel}` : ""}
+					</span>
+					<span
+						className={cn(
+							"rounded-full px-2 py-0.5 text-xs font-semibold",
+							statusBadge[item.status],
+						)}
+					>
+						{item.status === "deficit"
+							? `Buy ${shortfall.toFixed(1)}${unitLabel ? ` ${unitLabel}` : ""}`
+							: item.status === "sufficient"
+								? "OK"
+								: "Check units"}
+					</span>
+				</div>
+			</div>
 		);
 	}
 
@@ -322,10 +330,10 @@ function ShoppingListPage() {
 									renderTrigger={(item) => {
 										const isChecked = checked.has(item.key);
 										return (
-											<>
+											<div className="flex min-w-0 flex-1 flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-3">
 												<span
 													className={cn(
-														"font-medium text-(--sea-ink)",
+														"flex-1 font-medium text-(--sea-ink)",
 														isChecked && "line-through",
 													)}
 												>
@@ -333,13 +341,13 @@ function ShoppingListPage() {
 												</span>
 												<span
 													className={cn(
-														"text-(--sea-ink-soft)",
+														"text-xs sm:text-sm text-(--sea-ink-soft)",
 														isChecked && "line-through",
 													)}
 												>
 													{Number(item.quantity) * item.scaleFactor}
 												</span>
-											</>
+											</div>
 										);
 									}}
 									renderAction={(item) => (
@@ -409,7 +417,7 @@ function RestockRow({
 			<button
 				type="button"
 				onClick={onToggle}
-				className="flex flex-1 items-center gap-3 text-left"
+				className="flex min-w-0 flex-1 flex-col gap-0.5 text-left sm:flex-row sm:items-center sm:gap-3"
 			>
 				<span
 					className={cn(
@@ -419,27 +427,35 @@ function RestockRow({
 				>
 					{item.productName}
 				</span>
-				<span
-					className={cn("text-(--sea-ink-soft)", checked && "line-through")}
-				>
-					Min: {item.minStock.toFixed(1)}
-					{unitLabel ? ` ${unitLabel}` : ""}
-				</span>
-				<span
-					className={cn("text-(--sea-ink-soft)", checked && "line-through")}
-				>
-					Have: {item.stockQuantity.toFixed(1)}
-					{unitLabel ? ` ${unitLabel}` : ""}
-				</span>
-				<span
-					className={cn(
-						"rounded-full px-2 py-0.5 text-xs font-semibold",
-						badgeClass,
-					)}
-				>
-					Buy {shortfall.toFixed(1)}
-					{unitLabel ? ` ${unitLabel}` : ""}
-				</span>
+				<div className="flex items-center gap-3">
+					<span
+						className={cn(
+							"text-xs sm:text-sm text-(--sea-ink-soft)",
+							checked && "line-through",
+						)}
+					>
+						Min: {item.minStock.toFixed(1)}
+						{unitLabel ? ` ${unitLabel}` : ""}
+					</span>
+					<span
+						className={cn(
+							"text-xs sm:text-sm text-(--sea-ink-soft)",
+							checked && "line-through",
+						)}
+					>
+						Have: {item.stockQuantity.toFixed(1)}
+						{unitLabel ? ` ${unitLabel}` : ""}
+					</span>
+					<span
+						className={cn(
+							"rounded-full px-2 py-0.5 text-xs font-semibold",
+							badgeClass,
+						)}
+					>
+						Buy {shortfall.toFixed(1)}
+						{unitLabel ? ` ${unitLabel}` : ""}
+					</span>
+				</div>
 			</button>
 			<RowCheckbox checked={checked} onChange={onToggle} />
 		</div>
