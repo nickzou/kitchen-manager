@@ -1,5 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 
+export interface IngredientRecipeRef {
+	recipeId: string;
+	recipeName: string;
+	mealPlanEntryId: string;
+	mealPlanEntryDate: string;
+	quantity: number;
+}
+
 export interface IngredientSummaryItem {
 	productId: string;
 	productName: string;
@@ -10,6 +18,7 @@ export interface IngredientSummaryItem {
 	minStockBuffer: number;
 	stockQuantity: number;
 	status: "sufficient" | "deficit" | "unknown_unit";
+	recipes: IngredientRecipeRef[];
 }
 
 export interface UnlinkedIngredient {
@@ -17,6 +26,7 @@ export interface UnlinkedIngredient {
 	quantity: string;
 	unitId: string | null;
 	scaleFactor: number;
+	recipes: IngredientRecipeRef[];
 }
 
 export interface RestockItem {
