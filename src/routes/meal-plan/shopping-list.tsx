@@ -1,16 +1,25 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useCallback, useEffect, useState } from "react";
+import { Plus } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Accordion } from "#src/components/Accordion";
 import { DateRangePicker } from "#src/components/DateRangePicker";
 import { Island } from "#src/components/Island";
+import { Modal } from "#src/components/Modal";
 import { Page } from "#src/components/Page";
+import { StockEntryForm } from "#src/components/stock/StockEntryForm";
 import { authClient } from "#src/lib/auth-client";
+import { useBrands } from "#src/lib/hooks/use-brands";
 import {
 	type IngredientRecipeRef,
 	type IngredientSummaryItem,
 	type UnlinkedIngredient,
 	useIngredientSummary,
 } from "#src/lib/hooks/use-ingredient-summary";
+import { useProductUnitConversions } from "#src/lib/hooks/use-product-unit-conversions";
+import { useProducts } from "#src/lib/hooks/use-products";
+import { useQuantityUnits } from "#src/lib/hooks/use-quantity-units";
+import { useStores } from "#src/lib/hooks/use-stores";
+import { useUnitConversions } from "#src/lib/hooks/use-unit-conversions";
 import { cn } from "#src/lib/utils";
 
 export const Route = createFileRoute("/meal-plan/shopping-list")({
@@ -102,6 +111,33 @@ function ShoppingListPage() {
 
 	const { data: summary, isLoading } = useIngredientSummary(startDate, endDate);
 	const { checked, toggle, reset } = useCheckedItems(startDate, endDate);
+
+	// Data for the StockEntryForm modal that opens when the user adds an
+	// item directly from the shopping list. Cached by React Query so this
+	// is cheap on visits where the user never opens the modal.
+	const { data: products } = useProducts();
+	const { data: stores } = useStores();
+	const { data: brands } = useBrands();
+	const { data: quantityUnits } = useQuantityUnits();
+	const { data: globalConversions } = useUnitConversions();
+	const summaryProductIds = useMemo(
+		() => [
+			...new Set([
+				...(summary?.ingredients ?? []).map((i) => i.productId),
+				...(summary?.restock ?? []).map((r) => r.productId),
+			]),
+		],
+		[summary],
+	);
+	const { data: productConversions } =
+		useProductUnitConversions(summaryProductIds);
+
+	const [stockingFor, setStockingFor] = useState<{
+		productId: string;
+		quantity: string;
+		unitId?: string;
+		productName: string;
+	} | null>(null);
 
 	if (sessionLoading) return null;
 	if (!session) {
@@ -198,12 +234,32 @@ function ShoppingListPage() {
 		);
 	}
 
+	function ingredientBuyQuantity(item: IngredientItem) {
+		const target = item.neededQuantity + item.minStockBuffer;
+		const shortfall = Math.max(0, target - item.stockQuantity);
+		return shortfall > 0
+			? shortfall.toFixed(2).replace(/\.?0+$/, "")
+			: item.neededQuantity.toFixed(2).replace(/\.?0+$/, "");
+	}
+
 	function ingredientAction(item: IngredientItem) {
 		return (
-			<RowCheckbox
-				checked={checked.has(item.key)}
-				onChange={() => toggle(item.key)}
-			/>
+			<div className="flex items-center gap-1">
+				<StockButton
+					onClick={() =>
+						setStockingFor({
+							productId: item.productId,
+							productName: item.productName,
+							quantity: ingredientBuyQuantity(item),
+							unitId: item.quantityUnitId ?? undefined,
+						})
+					}
+				/>
+				<RowCheckbox
+					checked={checked.has(item.key)}
+					onChange={() => toggle(item.key)}
+				/>
+			</div>
 		);
 	}
 
@@ -297,6 +353,19 @@ function ShoppingListPage() {
 												badgeClass={statusBadge.restock}
 												checked={checked.has(key)}
 												onToggle={() => toggle(key)}
+												onStock={() =>
+													setStockingFor({
+														productId: item.productId,
+														productName: item.productName,
+														quantity: Math.max(
+															0,
+															item.minStock - item.stockQuantity,
+														)
+															.toFixed(2)
+															.replace(/\.?0+$/, ""),
+														unitId: item.quantityUnitId ?? undefined,
+													})
+												}
 											/>
 										);
 									})}
@@ -365,6 +434,42 @@ function ShoppingListPage() {
 					</div>
 				)}
 			</Island>
+			<Modal
+				open={stockingFor !== null}
+				onOpenChange={(o) => {
+					if (!o) setStockingFor(null);
+				}}
+				title={
+					stockingFor ? `Add ${stockingFor.productName} to stock` : "Add stock"
+				}
+			>
+				{stockingFor && (
+					<StockEntryForm
+						products={products ?? []}
+						stores={stores ?? []}
+						brands={brands ?? []}
+						quantityUnits={quantityUnits ?? []}
+						productConversions={(productConversions ?? []).map((c) => ({
+							productId: c.productId,
+							fromUnitId: c.fromUnitId,
+							toUnitId: c.toUnitId,
+							factor: c.factor,
+						}))}
+						globalConversions={(globalConversions ?? []).map((c) => ({
+							fromUnitId: c.fromUnitId,
+							toUnitId: c.toUnitId,
+							factor: c.factor,
+						}))}
+						initial={{
+							productId: stockingFor.productId,
+							quantity: stockingFor.quantity,
+							unitId: stockingFor.unitId,
+						}}
+						className="flex flex-col gap-3"
+						onSuccess={() => setStockingFor(null)}
+					/>
+				)}
+			</Modal>
 		</Page>
 	);
 }
@@ -392,6 +497,7 @@ function RestockRow({
 	badgeClass,
 	checked,
 	onToggle,
+	onStock,
 }: {
 	item: {
 		productName: string;
@@ -403,6 +509,7 @@ function RestockRow({
 	badgeClass: string;
 	checked: boolean;
 	onToggle: () => void;
+	onStock: () => void;
 }) {
 	const unitLabel = item.unitAbbreviation ?? item.unitName ?? "";
 	const shortfall = item.minStock - item.stockQuantity;
@@ -457,8 +564,23 @@ function RestockRow({
 					</span>
 				</div>
 			</button>
+			<StockButton onClick={onStock} />
 			<RowCheckbox checked={checked} onChange={onToggle} />
 		</div>
+	);
+}
+
+function StockButton({ onClick }: { onClick: () => void }) {
+	return (
+		<button
+			type="button"
+			onClick={onClick}
+			title="Add to stock"
+			aria-label="Add to stock"
+			className="rounded-lg p-1 text-(--sea-ink-soft) transition hover:bg-(--surface) hover:text-(--sea-ink)"
+		>
+			<Plus size={16} />
+		</button>
 	);
 }
 
