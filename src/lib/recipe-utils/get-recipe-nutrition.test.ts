@@ -319,4 +319,141 @@ describe("getRecipeNutrition", () => {
 
 		expect(result?.calories).toBeCloseTo(200);
 	});
+
+	it("averages calories across alternatives in the same ingredient group", () => {
+		// Group "Toppings" has cilantro (50 cal) and lime (30 cal) at 1 unit each.
+		// Cook uses one — so the recipe total should reflect the average (40),
+		// not the sum (80).
+		const result = getRecipeNutrition({
+			ingredients: [
+				makeIngredient({
+					id: "i-cilantro",
+					productId: "p-cilantro",
+					quantity: "1",
+					groupName: "Toppings",
+				}),
+				makeIngredient({
+					id: "i-lime",
+					productId: "p-lime",
+					quantity: "1",
+					groupName: "Toppings",
+				}),
+			],
+			products: [
+				makeProduct({ id: "p-cilantro", calories: "50" }),
+				makeProduct({ id: "p-lime", calories: "30" }),
+			],
+			unitConversions: [],
+			scaleFactor: 1,
+		});
+
+		expect(result?.calories).toBeCloseTo(40);
+	});
+
+	it("sums ungrouped ingredients and only averages within each group", () => {
+		// Beef (200 cal) ungrouped + a Toppings group of cilantro (50) and lime (30).
+		// Expected: 200 + (50 + 30) / 2 = 240.
+		const result = getRecipeNutrition({
+			ingredients: [
+				makeIngredient({
+					id: "i-beef",
+					productId: "p-beef",
+					quantity: "1",
+				}),
+				makeIngredient({
+					id: "i-cilantro",
+					productId: "p-cilantro",
+					quantity: "1",
+					groupName: "Toppings",
+				}),
+				makeIngredient({
+					id: "i-lime",
+					productId: "p-lime",
+					quantity: "1",
+					groupName: "Toppings",
+				}),
+			],
+			products: [
+				makeProduct({ id: "p-beef", calories: "200" }),
+				makeProduct({ id: "p-cilantro", calories: "50" }),
+				makeProduct({ id: "p-lime", calories: "30" }),
+			],
+			unitConversions: [],
+			scaleFactor: 1,
+		});
+
+		expect(result?.calories).toBeCloseTo(240);
+	});
+
+	it("averages each group independently when a recipe has multiple groups", () => {
+		// Group A: 100, 200 → avg 150. Group B: 30, 50 → avg 40. Total 190.
+		const result = getRecipeNutrition({
+			ingredients: [
+				makeIngredient({
+					id: "i-a1",
+					productId: "p-a1",
+					quantity: "1",
+					groupName: "A",
+				}),
+				makeIngredient({
+					id: "i-a2",
+					productId: "p-a2",
+					quantity: "1",
+					groupName: "A",
+				}),
+				makeIngredient({
+					id: "i-b1",
+					productId: "p-b1",
+					quantity: "1",
+					groupName: "B",
+				}),
+				makeIngredient({
+					id: "i-b2",
+					productId: "p-b2",
+					quantity: "1",
+					groupName: "B",
+				}),
+			],
+			products: [
+				makeProduct({ id: "p-a1", calories: "100" }),
+				makeProduct({ id: "p-a2", calories: "200" }),
+				makeProduct({ id: "p-b1", calories: "30" }),
+				makeProduct({ id: "p-b2", calories: "50" }),
+			],
+			unitConversions: [],
+			scaleFactor: 1,
+		});
+
+		expect(result?.calories).toBeCloseTo(190);
+	});
+
+	it("only averages across alternatives that contributed nutrition data", () => {
+		// One alternative has nutrition (60), the other has none — averaging
+		// across only the contributor gives 60, not 30.
+		const result = getRecipeNutrition({
+			ingredients: [
+				makeIngredient({
+					id: "i-x",
+					productId: "p-x",
+					quantity: "1",
+					groupName: "Pick One",
+				}),
+				makeIngredient({
+					id: "i-y",
+					productId: "p-y",
+					quantity: "1",
+					groupName: "Pick One",
+				}),
+			],
+			products: [
+				makeProduct({ id: "p-x", calories: "60" }),
+				// p-y has no nutrition data
+				makeProduct({ id: "p-y" }),
+			],
+			unitConversions: [],
+			scaleFactor: 1,
+		});
+
+		expect(result?.calories).toBeCloseTo(60);
+	});
 });
