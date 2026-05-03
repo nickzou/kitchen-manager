@@ -74,6 +74,8 @@ export function useReverseStockLog() {
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["stock-entries"] });
 			queryClient.invalidateQueries({ queryKey: ["stock-logs"] });
+			queryClient.invalidateQueries({ queryKey: ["ingredient-summary"] });
+			queryClient.invalidateQueries({ queryKey: ["recipe-availability"] });
 		},
 	});
 }
