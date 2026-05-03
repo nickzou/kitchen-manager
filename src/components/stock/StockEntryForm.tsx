@@ -5,6 +5,7 @@ import { Combobox } from "#src/components/Combobox";
 import { DatePicker } from "#src/components/DatePicker";
 import { NumberInput } from "#src/components/NumberInput";
 import { useCreateBrand } from "#src/lib/hooks/use-brands";
+import { useCreateProduct } from "#src/lib/hooks/use-products";
 import { useCreateStockEntry } from "#src/lib/hooks/use-stock-entries";
 import {
 	buildConversionGraph,
@@ -54,6 +55,7 @@ export function StockEntryForm({
 }: StockEntryFormProps) {
 	const createStockEntry = useCreateStockEntry();
 	const createBrand = useCreateBrand();
+	const createProduct = useCreateProduct();
 
 	const [productId, setProductId] = useState(initial?.productId ?? "");
 	const [quantity, setQuantity] = useState(initial?.quantity ?? "");
@@ -178,6 +180,10 @@ export function StockEntryForm({
 				placeholder="Select product *"
 				required
 				className="flex-1 min-w-40"
+				onCreateNew={async (name) => {
+					const created = await createProduct.mutateAsync({ name });
+					setProductId(created.id);
+				}}
 			/>
 			<div className="flex flex-col gap-1">
 				<div className="flex items-center gap-1.5">
