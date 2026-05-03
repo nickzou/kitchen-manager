@@ -23,6 +23,14 @@ function json(data: unknown, init?: { status?: number }) {
 	});
 }
 
+interface IngredientRecipeRef {
+	recipeId: string;
+	recipeName: string;
+	mealPlanEntryId: string;
+	mealPlanEntryDate: string;
+	quantity: number;
+}
+
 interface AggregatedIngredient {
 	productId: string;
 	productName: string;
@@ -37,6 +45,7 @@ interface AggregatedIngredient {
 	minStockBuffer: number;
 	stockQuantity: number;
 	status: "sufficient" | "deficit" | "unknown_unit";
+	recipes: IngredientRecipeRef[];
 }
 
 interface RestockItem {
@@ -77,6 +86,8 @@ export const Route = createFileRoute(
 						mealPlanEntryId: mealPlanEntry.id,
 						mealPlanEntryDate: mealPlanEntry.date,
 						entryServings: mealPlanEntry.servings,
+						recipeId: recipe.id,
+						recipeName: recipe.name,
 						recipeServings: recipe.servings,
 						ingredientId: recipeIngredient.id,
 						ingredientProductId: recipeIngredient.productId,
@@ -279,13 +290,19 @@ export const Route = createFileRoute(
 				// group rule said are covered by an alternative.
 				const linked = new Map<
 					string,
-					{ productId: string; unitId: string | null; quantity: number }
+					{
+						productId: string;
+						unitId: string | null;
+						quantity: number;
+						recipes: IngredientRecipeRef[];
+					}
 				>();
 				const unlinked: {
 					notes: string | null;
 					quantity: string;
 					unitId: string | null;
 					scaleFactor: number;
+					recipes: IngredientRecipeRef[];
 				}[] = [];
 
 				for (const entry of entries) {
@@ -297,12 +314,21 @@ export const Route = createFileRoute(
 						(entry.recipeServings ?? 1);
 					const qty = Number(entry.ingredientQuantity) * scaleFactor;
 
+					const recipeRef: IngredientRecipeRef = {
+						recipeId: entry.recipeId,
+						recipeName: entry.recipeName,
+						mealPlanEntryId: entry.mealPlanEntryId,
+						mealPlanEntryDate: entry.mealPlanEntryDate,
+						quantity: qty,
+					};
+
 					if (!entry.ingredientProductId) {
 						unlinked.push({
 							notes: entry.ingredientNotes,
 							quantity: entry.ingredientQuantity,
 							unitId: entry.ingredientUnitId,
 							scaleFactor,
+							recipes: [recipeRef],
 						});
 						continue;
 					}
@@ -311,11 +337,13 @@ export const Route = createFileRoute(
 					const existing = linked.get(key);
 					if (existing) {
 						existing.quantity += qty;
+						existing.recipes.push(recipeRef);
 					} else {
 						linked.set(key, {
 							productId: entry.ingredientProductId,
 							unitId: entry.ingredientUnitId,
 							quantity: qty,
+							recipes: [recipeRef],
 						});
 					}
 				}
@@ -385,6 +413,7 @@ export const Route = createFileRoute(
 						minStockBuffer,
 						stockQuantity: stockQty,
 						status,
+						recipes: agg.recipes,
 					});
 				}
 
