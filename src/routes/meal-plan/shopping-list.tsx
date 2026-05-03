@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { DateRangePicker } from "#src/components/DateRangePicker";
 import { Island } from "#src/components/Island";
 import { Page } from "#src/components/Page";
@@ -24,6 +24,62 @@ function toDateString(d: Date): string {
 	return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
+function checkedStorageKey(startDate: string, endDate: string) {
+	return `shopping-list-checked:${startDate}:${endDate}`;
+}
+
+function useCheckedItems(startDate: string, endDate: string) {
+	const storageKey = checkedStorageKey(startDate, endDate);
+	const [checked, setChecked] = useState<Set<string>>(() => new Set());
+
+	// Hydrate from localStorage when the storage key changes (e.g. date range
+	// switches). SSR-safe: skip on server.
+	useEffect(() => {
+		if (typeof window === "undefined") return;
+		try {
+			const raw = window.localStorage.getItem(storageKey);
+			if (!raw) {
+				setChecked(new Set());
+				return;
+			}
+			const parsed = JSON.parse(raw) as unknown;
+			if (Array.isArray(parsed)) {
+				setChecked(
+					new Set(parsed.filter((x): x is string => typeof x === "string")),
+				);
+			} else {
+				setChecked(new Set());
+			}
+		} catch {
+			setChecked(new Set());
+		}
+	}, [storageKey]);
+
+	const toggle = useCallback(
+		(key: string) => {
+			setChecked((prev) => {
+				const next = new Set(prev);
+				if (next.has(key)) next.delete(key);
+				else next.add(key);
+				if (typeof window !== "undefined") {
+					window.localStorage.setItem(storageKey, JSON.stringify([...next]));
+				}
+				return next;
+			});
+		},
+		[storageKey],
+	);
+
+	const reset = useCallback(() => {
+		setChecked(new Set());
+		if (typeof window !== "undefined") {
+			window.localStorage.removeItem(storageKey);
+		}
+	}, [storageKey]);
+
+	return { checked, toggle, reset };
+}
+
 function ShoppingListPage() {
 	const { data: session, isPending: sessionLoading } = authClient.useSession();
 	const navigate = useNavigate();
@@ -38,6 +94,7 @@ function ShoppingListPage() {
 	});
 
 	const { data: summary, isLoading } = useIngredientSummary(startDate, endDate);
+	const { checked, toggle, reset } = useCheckedItems(startDate, endDate);
 
 	if (sessionLoading) return null;
 	if (!session) {
@@ -52,6 +109,12 @@ function ShoppingListPage() {
 	const unknownUnit =
 		summary?.ingredients.filter((i) => i.status === "unknown_unit") ?? [];
 	const restock = summary?.restock ?? [];
+
+	const totalRows =
+		(summary?.ingredients.length ?? 0) +
+		restock.length +
+		(summary?.unlinkedIngredients.length ?? 0);
+	const checkedCount = checked.size;
 
 	const statusBadge: Record<string, string> = {
 		deficit: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
@@ -104,6 +167,24 @@ function ShoppingListPage() {
 					</p>
 				) : (
 					<div className="flex flex-col gap-6">
+						{/* Progress + reset */}
+						{totalRows > 0 && (
+							<div className="flex items-center justify-between text-xs text-(--sea-ink-soft)">
+								<span>
+									{checkedCount} of {totalRows} crossed off
+								</span>
+								{checkedCount > 0 && (
+									<button
+										type="button"
+										onClick={reset}
+										className="rounded-lg border border-(--line) px-2 py-1 font-semibold transition hover:bg-(--surface)"
+									>
+										Reset
+									</button>
+								)}
+							</div>
+						)}
+
 						{/* Deficit / Missing */}
 						{deficit.length > 0 && (
 							<div>
@@ -111,13 +192,18 @@ function ShoppingListPage() {
 									Missing ({deficit.length})
 								</h2>
 								<div className="flex flex-col gap-1">
-									{deficit.map((item) => (
-										<IngredientRow
-											key={`${item.productId}-${item.quantityUnitId}`}
-											item={item}
-											badgeClass={statusBadge.deficit}
-										/>
-									))}
+									{deficit.map((item) => {
+										const key = `${item.productId}-${item.quantityUnitId}`;
+										return (
+											<IngredientRow
+												key={key}
+												item={item}
+												badgeClass={statusBadge.deficit}
+												checked={checked.has(key)}
+												onToggle={() => toggle(key)}
+											/>
+										);
+									})}
 								</div>
 							</div>
 						)}
@@ -129,13 +215,18 @@ function ShoppingListPage() {
 									Restock ({restock.length})
 								</h2>
 								<div className="flex flex-col gap-1">
-									{restock.map((item) => (
-										<RestockRow
-											key={`restock-${item.productId}`}
-											item={item}
-											badgeClass={statusBadge.restock}
-										/>
-									))}
+									{restock.map((item) => {
+										const key = `restock-${item.productId}`;
+										return (
+											<RestockRow
+												key={key}
+												item={item}
+												badgeClass={statusBadge.restock}
+												checked={checked.has(key)}
+												onToggle={() => toggle(key)}
+											/>
+										);
+									})}
 								</div>
 							</div>
 						)}
@@ -147,13 +238,18 @@ function ShoppingListPage() {
 									In Stock ({sufficient.length})
 								</h2>
 								<div className="flex flex-col gap-1">
-									{sufficient.map((item) => (
-										<IngredientRow
-											key={`${item.productId}-${item.quantityUnitId}`}
-											item={item}
-											badgeClass={statusBadge.sufficient}
-										/>
-									))}
+									{sufficient.map((item) => {
+										const key = `${item.productId}-${item.quantityUnitId}`;
+										return (
+											<IngredientRow
+												key={key}
+												item={item}
+												badgeClass={statusBadge.sufficient}
+												checked={checked.has(key)}
+												onToggle={() => toggle(key)}
+											/>
+										);
+									})}
 								</div>
 							</div>
 						)}
@@ -165,13 +261,18 @@ function ShoppingListPage() {
 									Unknown Units ({unknownUnit.length})
 								</h2>
 								<div className="flex flex-col gap-1">
-									{unknownUnit.map((item) => (
-										<IngredientRow
-											key={`${item.productId}-${item.quantityUnitId}`}
-											item={item}
-											badgeClass={statusBadge.unknown_unit}
-										/>
-									))}
+									{unknownUnit.map((item) => {
+										const key = `${item.productId}-${item.quantityUnitId}`;
+										return (
+											<IngredientRow
+												key={key}
+												item={item}
+												badgeClass={statusBadge.unknown_unit}
+												checked={checked.has(key)}
+												onToggle={() => toggle(key)}
+											/>
+										);
+									})}
 								</div>
 							</div>
 						)}
@@ -183,17 +284,40 @@ function ShoppingListPage() {
 									Unlinked Ingredients
 								</h2>
 								<div className="flex flex-col gap-1">
-									{summary.unlinkedIngredients.map((item) => (
-										<div
-											key={`unlinked-${item.notes}-${item.quantity}-${item.unitId}`}
-											className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-(--sea-ink-soft)"
-										>
-											<span className="font-medium text-(--sea-ink)">
-												{item.notes ?? "Unknown ingredient"}
-											</span>
-											<span>{Number(item.quantity) * item.scaleFactor}</span>
-										</div>
-									))}
+									{summary.unlinkedIngredients.map((item) => {
+										const key = `unlinked-${item.notes}-${item.quantity}-${item.unitId}`;
+										const isChecked = checked.has(key);
+										return (
+											<button
+												type="button"
+												key={key}
+												onClick={() => toggle(key)}
+												className={cn(
+													"flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-(--sea-ink-soft) transition hover:bg-(--surface)",
+													isChecked && "opacity-60",
+												)}
+											>
+												<input
+													type="checkbox"
+													checked={isChecked}
+													onChange={() => toggle(key)}
+													onClick={(e) => e.stopPropagation()}
+													className="accent-(--lagoon) shrink-0"
+												/>
+												<span
+													className={cn(
+														"font-medium text-(--sea-ink)",
+														isChecked && "line-through",
+													)}
+												>
+													{item.notes ?? "Unknown ingredient"}
+												</span>
+												<span className={cn(isChecked && "line-through")}>
+													{Number(item.quantity) * item.scaleFactor}
+												</span>
+											</button>
+										);
+									})}
 								</div>
 							</div>
 						)}
@@ -207,6 +331,8 @@ function ShoppingListPage() {
 function RestockRow({
 	item,
 	badgeClass,
+	checked,
+	onToggle,
 }: {
 	item: {
 		productName: string;
@@ -216,20 +342,41 @@ function RestockRow({
 		unitName: string | null;
 	};
 	badgeClass: string;
+	checked: boolean;
+	onToggle: () => void;
 }) {
 	const unitLabel = item.unitAbbreviation ?? item.unitName ?? "";
 	const shortfall = item.minStock - item.stockQuantity;
 
 	return (
-		<div className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-(--surface)">
-			<span className="flex-1 font-medium text-(--sea-ink)">
+		<button
+			type="button"
+			onClick={onToggle}
+			className={cn(
+				"flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm transition hover:bg-(--surface)",
+				checked && "opacity-60",
+			)}
+		>
+			<input
+				type="checkbox"
+				checked={checked}
+				onChange={onToggle}
+				onClick={(e) => e.stopPropagation()}
+				className="accent-(--lagoon) shrink-0"
+			/>
+			<span
+				className={cn(
+					"flex-1 font-medium text-(--sea-ink)",
+					checked && "line-through",
+				)}
+			>
 				{item.productName}
 			</span>
-			<span className="text-(--sea-ink-soft)">
+			<span className={cn("text-(--sea-ink-soft)", checked && "line-through")}>
 				Min: {item.minStock.toFixed(1)}
 				{unitLabel ? ` ${unitLabel}` : ""}
 			</span>
-			<span className="text-(--sea-ink-soft)">
+			<span className={cn("text-(--sea-ink-soft)", checked && "line-through")}>
 				Have: {item.stockQuantity.toFixed(1)}
 				{unitLabel ? ` ${unitLabel}` : ""}
 			</span>
@@ -242,13 +389,15 @@ function RestockRow({
 				Buy {shortfall.toFixed(1)}
 				{unitLabel ? ` ${unitLabel}` : ""}
 			</span>
-		</div>
+		</button>
 	);
 }
 
 function IngredientRow({
 	item,
 	badgeClass,
+	checked,
+	onToggle,
 }: {
 	item: {
 		productName: string;
@@ -260,6 +409,8 @@ function IngredientRow({
 		status: string;
 	};
 	badgeClass: string;
+	checked: boolean;
+	onToggle: () => void;
 }) {
 	const unitLabel = item.unitAbbreviation ?? item.unitName ?? "";
 	const target = item.neededQuantity + item.minStockBuffer;
@@ -267,8 +418,27 @@ function IngredientRow({
 	const hasBuffer = item.minStockBuffer > 0;
 
 	return (
-		<div className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-(--surface)">
-			<span className="flex-1 font-medium text-(--sea-ink)">
+		<button
+			type="button"
+			onClick={onToggle}
+			className={cn(
+				"flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm transition hover:bg-(--surface)",
+				checked && "opacity-60",
+			)}
+		>
+			<input
+				type="checkbox"
+				checked={checked}
+				onChange={onToggle}
+				onClick={(e) => e.stopPropagation()}
+				className="accent-(--lagoon) shrink-0"
+			/>
+			<span
+				className={cn(
+					"flex-1 font-medium text-(--sea-ink)",
+					checked && "line-through",
+				)}
+			>
 				{item.productName}
 				{hasBuffer && item.status === "deficit" && (
 					<span className="ml-2 text-xs text-(--sea-ink-soft)">
@@ -277,11 +447,11 @@ function IngredientRow({
 					</span>
 				)}
 			</span>
-			<span className="text-(--sea-ink-soft)">
+			<span className={cn("text-(--sea-ink-soft)", checked && "line-through")}>
 				Need: {item.neededQuantity.toFixed(1)}
 				{unitLabel ? ` ${unitLabel}` : ""}
 			</span>
-			<span className="text-(--sea-ink-soft)">
+			<span className={cn("text-(--sea-ink-soft)", checked && "line-through")}>
 				Have: {item.stockQuantity.toFixed(1)}
 				{unitLabel ? ` ${unitLabel}` : ""}
 			</span>
@@ -297,6 +467,6 @@ function IngredientRow({
 						? "OK"
 						: "Check units"}
 			</span>
-		</div>
+		</button>
 	);
 }
