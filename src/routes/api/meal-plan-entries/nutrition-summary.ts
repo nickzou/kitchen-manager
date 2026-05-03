@@ -46,12 +46,16 @@ export const Route = createFileRoute(
 				const rows = await db
 					.select({
 						date: mealPlanEntry.date,
+						mealPlanEntryId: mealPlanEntry.id,
 						entryServings: mealPlanEntry.servings,
 						recipeServings: recipe.servings,
 						ingredientQuantity: recipeIngredient.quantity,
 						ingredientUnitId: recipeIngredient.quantityUnitId,
+						ingredientGroupName: recipeIngredient.groupName,
 						productId: recipeIngredient.productId,
 						productDefaultUnitId: product.defaultQuantityUnitId,
+						productNutritionBaseAmount: product.nutritionBaseAmount,
+						productNutritionBaseUnitId: product.nutritionBaseUnitId,
 						productCalories: product.calories,
 						productProtein: product.protein,
 						productFat: product.fat,
@@ -76,10 +80,27 @@ export const Route = createFileRoute(
 
 				const graph = buildConversionGraph(conversions);
 
-				const summary: Record<
+				type Nutrition = {
+					calories: number;
+					protein: number;
+					fat: number;
+					carbs: number;
+				};
+				const blank = (): Nutrition => ({
+					calories: 0,
+					protein: 0,
+					fat: 0,
+					carbs: 0,
+				});
+
+				const summary: Record<string, Nutrition> = {};
+				// Group alternatives are bucketed per (date, entry, group) so each
+				// recipe occurrence's group is averaged independently. Sums of
+				// each bucket roll into the day's total after averaging.
+				const groupBuckets = new Map<
 					string,
-					{ calories: number; protein: number; fat: number; carbs: number }
-				> = {};
+					{ date: string; contributions: Nutrition[] }
+				>();
 
 				for (const row of rows) {
 					if (
@@ -94,32 +115,59 @@ export const Route = createFileRoute(
 						(row.entryServings ?? row.recipeServings ?? 1) /
 						(row.recipeServings ?? 1);
 
+					// Honor the product's nutrition base (e.g. "350 cal per 100 g").
+					// Convert the ingredient qty into that base unit, then divide by
+					// the base amount to get the multiplier.
+					const baseUnitId =
+						row.productNutritionBaseUnitId ?? row.productDefaultUnitId;
+					const baseAmount = Number(row.productNutritionBaseAmount ?? "1") || 1;
 					const convertedQty = tryConvert(
 						graph,
 						Number(row.ingredientQuantity),
 						row.ingredientUnitId,
-						row.productDefaultUnitId,
+						baseUnitId,
 					);
 					if (convertedQty === null) continue;
 
-					const qty = convertedQty * scaleFactor;
+					const multiplier = (convertedQty * scaleFactor) / baseAmount;
+					const contribution: Nutrition = {
+						calories: row.productCalories
+							? Number(row.productCalories) * multiplier
+							: 0,
+						protein: row.productProtein
+							? Number(row.productProtein) * multiplier
+							: 0,
+						fat: row.productFat ? Number(row.productFat) * multiplier : 0,
+						carbs: row.productCarbs ? Number(row.productCarbs) * multiplier : 0,
+					};
 
-					if (!summary[row.date]) {
-						summary[row.date] = {
-							calories: 0,
-							protein: 0,
-							fat: 0,
-							carbs: 0,
+					if (row.ingredientGroupName) {
+						const key = `${row.mealPlanEntryId}::${row.ingredientGroupName}`;
+						const bucket = groupBuckets.get(key) ?? {
+							date: row.date,
+							contributions: [],
 						};
+						bucket.contributions.push(contribution);
+						groupBuckets.set(key, bucket);
+					} else {
+						const day = summary[row.date] ?? blank();
+						day.calories += contribution.calories;
+						day.protein += contribution.protein;
+						day.fat += contribution.fat;
+						day.carbs += contribution.carbs;
+						summary[row.date] = day;
 					}
+				}
 
-					const day = summary[row.date];
-					if (row.productCalories)
-						day.calories += Number(row.productCalories) * qty;
-					if (row.productProtein)
-						day.protein += Number(row.productProtein) * qty;
-					if (row.productFat) day.fat += Number(row.productFat) * qty;
-					if (row.productCarbs) day.carbs += Number(row.productCarbs) * qty;
+				for (const { date, contributions } of groupBuckets.values()) {
+					if (contributions.length === 0) continue;
+					const n = contributions.length;
+					const day = summary[date] ?? blank();
+					day.calories += contributions.reduce((s, c) => s + c.calories, 0) / n;
+					day.protein += contributions.reduce((s, c) => s + c.protein, 0) / n;
+					day.fat += contributions.reduce((s, c) => s + c.fat, 0) / n;
+					day.carbs += contributions.reduce((s, c) => s + c.carbs, 0) / n;
+					summary[date] = day;
 				}
 
 				return json(summary);
