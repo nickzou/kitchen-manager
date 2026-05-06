@@ -1,4 +1,4 @@
-import { Link, Link as RouterLink } from "@tanstack/react-router";
+import { Link as RouterLink } from "@tanstack/react-router";
 import {
 	Box,
 	Calendar,
@@ -6,20 +6,13 @@ import {
 	ChevronLeft,
 	ChevronRight,
 	LayoutDashboard,
-	type LucideIcon,
 	Package,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import BetterAuthHeader from "../integrations/better-auth/header-user.tsx";
 import { cn } from "../lib/utils";
+import { type NavItem, SidebarNavLink } from "./sidebar/SidebarNavLink";
 import ThemeToggle from "./ThemeToggle";
-
-type NavItem = {
-	to: string;
-	label: string;
-	icon: LucideIcon;
-	exact?: boolean;
-};
 
 const NAV_ITEMS: NavItem[] = [
 	{ to: "/", label: "Dashboard", icon: LayoutDashboard, exact: true },
@@ -93,35 +86,5 @@ export function Sidebar() {
 				{collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
 			</button>
 		</aside>
-	);
-}
-
-function SidebarNavLink({
-	item,
-	collapsed,
-}: {
-	item: NavItem;
-	collapsed: boolean;
-}) {
-	const Icon = item.icon;
-	return (
-		<Link
-			to={item.to}
-			activeOptions={item.exact ? { exact: true } : undefined}
-			title={collapsed ? item.label : undefined}
-			className={cn(
-				"flex items-center gap-3 rounded-lg border border-transparent px-3 py-2 text-sm font-medium text-(--sea-ink-soft) dark:text-cream-100 no-underline transition hover:bg-cream-950 hover:text-cream-100",
-				collapsed && "justify-center px-0",
-			)}
-			activeProps={{
-				className: cn(
-					"flex items-center gap-3 rounded-lg border border-cream-800 px-3 py-2 text-sm font-semibold bg-cream-900 text-cream-100 no-underline",
-					collapsed && "justify-center px-0",
-				),
-			}}
-		>
-			<Icon size={18} className="shrink-0" />
-			{!collapsed && <span>{item.label}</span>}
-		</Link>
 	);
 }
