@@ -22,9 +22,18 @@ import { useCreateProduct, useProducts } from "#src/lib/hooks/use-products";
 import { useQuantityUnits } from "#src/lib/hooks/use-quantity-units";
 import { useStockEntries } from "#src/lib/hooks/use-stock-entries";
 
-export const Route = createFileRoute("/products/")({ component: ProductsPage });
+export const Route = createFileRoute("/products/")({
+	component: ProductsPage,
+	validateSearch: (search: Record<string, unknown>): { category?: string } => {
+		if (typeof search.category === "string") {
+			return { category: search.category };
+		}
+		return {};
+	},
+});
 
 function ProductsPage() {
+	const search = Route.useSearch();
 	const { data: products, isLoading } = useProducts();
 	const { data: categories } = useProductCategories();
 	const { data: quantityUnits } = useQuantityUnits();
@@ -36,8 +45,11 @@ function ProductsPage() {
 	const [view, setView] = useState<ViewMode>("grid");
 	const [name, setName] = useState("");
 	const [categoryIds, setCategoryIds] = useState<string[]>([]);
-	const [search, setSearch] = useState("");
+	const [searchTerm, setSearchTerm] = useState("");
 	const [showImages, setShowImages] = useState(true);
+	const [filterCategoryIds, setFilterCategoryIds] = useState<string[]>(() =>
+		search.category ? [search.category] : [],
+	);
 
 	const brandsByProduct = useMemo(() => {
 		const map = new Map<string, string[]>();
@@ -55,12 +67,16 @@ function ProductsPage() {
 	}, [stockEntries, brands]);
 
 	const filteredProducts = useMemo(() => {
-		if (!products || !search.trim()) return products;
-		const term = search.toLowerCase();
+		if (!products) return products;
+		const term = searchTerm.trim().toLowerCase();
 		const catMap = new Map(
 			(categories ?? []).map((c) => [c.id, c.name.toLowerCase()]),
 		);
+		const filterSet = new Set(filterCategoryIds);
 		return products.filter((p) => {
+			if (filterSet.size > 0 && !p.categoryIds.some((id) => filterSet.has(id)))
+				return false;
+			if (!term) return true;
 			if (p.name.toLowerCase().includes(term)) return true;
 			if (p.categoryIds.some((id) => catMap.get(id)?.includes(term)))
 				return true;
@@ -69,7 +85,7 @@ function ProductsPage() {
 				return true;
 			return false;
 		});
-	}, [products, search, categories, brandsByProduct]);
+	}, [products, searchTerm, categories, brandsByProduct, filterCategoryIds]);
 	async function handleSubmit(e: FormEvent) {
 		e.preventDefault();
 		if (!name.trim()) return;
@@ -150,9 +166,19 @@ function ProductsPage() {
 				<div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
 					<SearchInput
 						placeholder="Search..."
-						value={search}
-						onChange={(e) => setSearch(e.target.value)}
-						onClear={() => setSearch("")}
+						value={searchTerm}
+						onChange={(e) => setSearchTerm(e.target.value)}
+						onClear={() => setSearchTerm("")}
+					/>
+					<MultiCombobox
+						value={filterCategoryIds}
+						onChange={setFilterCategoryIds}
+						options={(categories ?? []).map((c) => ({
+							value: c.id,
+							label: c.name,
+						}))}
+						placeholder="Filter by category"
+						className="sm:w-56"
 					/>
 					<div className="flex items-center gap-2">
 						<ImageToggle

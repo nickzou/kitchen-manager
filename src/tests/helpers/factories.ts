@@ -46,6 +46,8 @@ export function makeProductCategory(overrides?: Record<string, unknown>) {
 		id: "category-1",
 		name: "Dairy",
 		description: "Dairy products",
+		minStockAmount: "0",
+		minStockUnitId: null,
 		userId: "user-1",
 		createdAt: new Date("2025-01-01"),
 		updatedAt: new Date("2025-01-01"),

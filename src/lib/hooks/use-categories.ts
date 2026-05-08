@@ -9,17 +9,29 @@ export interface Category {
 	updatedAt: string;
 }
 
+export interface ProductCategory extends Category {
+	minStockAmount: string;
+	minStockUnitId: string | null;
+}
+
 export type CreateCategoryInput = {
 	name: string;
 	description?: string;
 };
 
+export type CreateProductCategoryInput = CreateCategoryInput & {
+	minStockAmount?: string;
+	minStockUnitId?: string | null;
+};
+
 export type UpdateCategoryInput = Partial<CreateCategoryInput>;
+
+export type UpdateProductCategoryInput = Partial<CreateProductCategoryInput>;
 
 // Product categories
 
 export function useProductCategories() {
-	return useQuery<Category[]>({
+	return useQuery<ProductCategory[]>({
 		queryKey: ["product-categories"],
 		queryFn: async () => {
 			const res = await fetch("/api/product-categories");
@@ -30,7 +42,7 @@ export function useProductCategories() {
 }
 
 export function useProductCategory(id: string) {
-	return useQuery<Category>({
+	return useQuery<ProductCategory>({
 		queryKey: ["product-categories", id],
 		queryFn: async () => {
 			const res = await fetch(`/api/product-categories/${id}`);
@@ -43,7 +55,7 @@ export function useProductCategory(id: string) {
 export function useCreateProductCategory() {
 	const queryClient = useQueryClient();
 	return useMutation({
-		mutationFn: async (input: CreateCategoryInput) => {
+		mutationFn: async (input: CreateProductCategoryInput) => {
 			const res = await fetch("/api/product-categories", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
@@ -61,7 +73,7 @@ export function useCreateProductCategory() {
 export function useUpdateProductCategory(id: string) {
 	const queryClient = useQueryClient();
 	return useMutation({
-		mutationFn: async (input: UpdateCategoryInput) => {
+		mutationFn: async (input: UpdateProductCategoryInput) => {
 			const res = await fetch(`/api/product-categories/${id}`, {
 				method: "PUT",
 				headers: { "Content-Type": "application/json" },

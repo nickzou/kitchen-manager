@@ -44,6 +44,8 @@ export const Route = createFileRoute("/api/product-categories/")({
 					.values({
 						name: body.name,
 						description: body.description,
+						minStockAmount: body.minStockAmount ?? "0",
+						minStockUnitId: body.minStockUnitId ?? null,
 						userId: session.user.id,
 					})
 					.returning();

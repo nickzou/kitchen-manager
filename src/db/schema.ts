@@ -39,6 +39,13 @@ export const productCategoryType = pgTable(
 			.$defaultFn(() => crypto.randomUUID()),
 		name: text("name").notNull(),
 		description: text("description"),
+		minStockAmount: numeric("min_stock_amount").default("0").notNull(),
+		minStockUnitId: text("min_stock_unit_id").references(
+			() => quantityUnit.id,
+			{
+				onDelete: "set null",
+			},
+		),
 		userId: text("user_id")
 			.notNull()
 			.references(() => user.id, { onDelete: "cascade" }),

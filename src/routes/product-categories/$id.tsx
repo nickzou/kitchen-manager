@@ -3,9 +3,11 @@ import { ArrowLeft, Pencil, Trash2, X } from "lucide-react";
 import { type FormEvent, useState } from "react";
 import { AlertBox } from "#src/components/AlertBox";
 import { Button } from "#src/components/Button";
+import { Combobox } from "#src/components/Combobox";
 import { Input } from "#src/components/Input";
 import InventorySubNav from "#src/components/InventorySubNav";
 import { Island } from "#src/components/Island";
+import { NumberInput } from "#src/components/NumberInput";
 import { Page } from "#src/components/Page";
 import { Textarea } from "#src/components/Textarea";
 import {
@@ -13,6 +15,7 @@ import {
 	useProductCategory,
 	useUpdateProductCategory,
 } from "#src/lib/hooks/use-categories";
+import { useQuantityUnits } from "#src/lib/hooks/use-quantity-units";
 
 export const Route = createFileRoute("/product-categories/$id")({
 	component: ProductCategoryDetail,
@@ -23,6 +26,7 @@ function ProductCategoryDetail() {
 	const navigate = useNavigate();
 
 	const { data: category, isLoading, error } = useProductCategory(id);
+	const { data: quantityUnits } = useQuantityUnits();
 	const updateCategory = useUpdateProductCategory(id);
 	const deleteCategory = useDeleteProductCategory();
 
@@ -31,6 +35,8 @@ function ProductCategoryDetail() {
 	const [form, setForm] = useState({
 		name: "",
 		description: "",
+		minStockAmount: "",
+		minStockUnitId: "",
 	});
 	if (isLoading) {
 		return (
@@ -63,6 +69,11 @@ function ProductCategoryDetail() {
 		setForm({
 			name: category.name,
 			description: category.description || "",
+			minStockAmount:
+				Number.parseFloat(category.minStockAmount) > 0
+					? category.minStockAmount
+					: "",
+			minStockUnitId: category.minStockUnitId ?? "",
 		});
 		setEditing(true);
 	}
@@ -72,8 +83,16 @@ function ProductCategoryDetail() {
 		await updateCategory.mutateAsync({
 			name: form.name,
 			description: form.description || undefined,
+			minStockAmount: form.minStockAmount || "0",
+			minStockUnitId: form.minStockUnitId || null,
 		});
 		setEditing(false);
+	}
+
+	function getUnitName(unitId: string | null) {
+		if (!unitId) return null;
+		const u = quantityUnits?.find((q) => q.id === unitId);
+		return u ? (u.abbreviation ?? u.name) : null;
 	}
 
 	async function handleDelete() {
@@ -135,6 +154,38 @@ function ProductCategoryDetail() {
 							/>
 						</label>
 
+						<div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_1fr]">
+							<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
+								Min stock (across category)
+								<NumberInput
+									step="any"
+									min="0"
+									value={form.minStockAmount}
+									onChange={(e) =>
+										setForm({ ...form, minStockAmount: e.target.value })
+									}
+									placeholder="0"
+								/>
+							</label>
+							<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
+								Min stock unit
+								<Combobox
+									value={form.minStockUnitId}
+									onChange={(v) => setForm({ ...form, minStockUnitId: v })}
+									options={(quantityUnits ?? []).map((u) => ({
+										value: u.id,
+										label: u.abbreviation ?? u.name,
+									}))}
+									placeholder="Unit"
+								/>
+							</label>
+						</div>
+						<p className="-mt-1 text-xs text-(--sea-ink-soft)">
+							Total stock across all products in this category should stay at or
+							above this value. Products' own min-stock thresholds still apply
+							independently.
+						</p>
+
 						<Button
 							type="submit"
 							disabled={updateCategory.isPending}
@@ -178,6 +229,19 @@ function ProductCategoryDetail() {
 						)}
 
 						<dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
+							{Number.parseFloat(category.minStockAmount) > 0 && (
+								<div>
+									<dt className="font-medium text-(--sea-ink-soft)">
+										Min stock
+									</dt>
+									<dd className="mt-0.5 text-(--sea-ink)">
+										{Number.parseFloat(category.minStockAmount)}
+										{getUnitName(category.minStockUnitId)
+											? ` ${getUnitName(category.minStockUnitId)}`
+											: ""}
+									</dd>
+								</div>
+							)}
 							<div>
 								<dt className="font-medium text-(--sea-ink-soft)">Created</dt>
 								<dd className="mt-0.5 text-(--sea-ink)">

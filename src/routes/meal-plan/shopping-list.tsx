@@ -21,6 +21,7 @@ import { useToast } from "#src/components/Toast";
 import { getWeekStart } from "#src/lib/format-date";
 import { useBrands } from "#src/lib/hooks/use-brands";
 import {
+	type CategoryRestockItem,
 	type IngredientRecipeRef,
 	type IngredientSummaryItem,
 	type ProducibleIngredient,
@@ -211,6 +212,7 @@ function ShoppingListPage() {
 			.map(withKey) ?? [];
 	const restock = summary?.restock ?? [];
 	const producible = summary?.producible ?? [];
+	const categoryRestock = summary?.categoryRestock ?? [];
 	const unlinked: UnlinkedItem[] =
 		summary?.unlinkedIngredients.map((item) => ({
 			...item,
@@ -225,6 +227,7 @@ function ShoppingListPage() {
 		unknownUnit.length +
 		restock.length +
 		producible.length +
+		categoryRestock.length +
 		unlinked.length +
 		manual.length;
 	const checkedCount = checked.size;
@@ -449,6 +452,28 @@ function ShoppingListPage() {
 														unitId: item.quantityUnitId ?? undefined,
 													})
 												}
+											/>
+										);
+									})}
+								</div>
+							</div>
+						)}
+
+						{categoryRestock.length > 0 && (
+							<div>
+								<h2 className="mb-3 text-sm font-semibold text-amber-600 dark:text-amber-400">
+									Category restock ({categoryRestock.length})
+								</h2>
+								<div className="flex flex-col gap-1">
+									{categoryRestock.map((item) => {
+										const key = `category-restock-${item.categoryId}`;
+										return (
+											<CategoryRestockRow
+												key={key}
+												item={item}
+												badgeClass={statusBadge.restock}
+												checked={checked.has(key)}
+												onToggle={() => toggle(key)}
 											/>
 										);
 									})}
@@ -834,6 +859,83 @@ function RestockRow({
 				</div>
 			</button>
 			<StockButton onClick={onStock} />
+			<RowCheckbox checked={checked} onChange={onToggle} />
+		</div>
+	);
+}
+
+function CategoryRestockRow({
+	item,
+	badgeClass,
+	checked,
+	onToggle,
+}: {
+	item: CategoryRestockItem;
+	badgeClass: string;
+	checked: boolean;
+	onToggle: () => void;
+}) {
+	const unitLabel = item.unitAbbreviation ?? item.unitName ?? "";
+	const shortfall = Math.max(0, item.minStock - item.stockQuantity);
+
+	return (
+		<div
+			className={cn(
+				"flex w-full items-center gap-3 rounded-lg py-2 text-sm transition hover:bg-(--surface)",
+				checked && "opacity-60",
+			)}
+		>
+			<button
+				type="button"
+				onClick={onToggle}
+				className="flex min-w-0 flex-1 flex-col gap-0.5 text-left sm:flex-row sm:items-center sm:gap-3"
+			>
+				<span
+					className={cn(
+						"flex-1 font-medium text-(--sea-ink)",
+						checked && "line-through",
+					)}
+				>
+					{item.categoryName}
+				</span>
+				<div className="flex items-center gap-3">
+					<span
+						className={cn(
+							"text-xs sm:text-sm text-(--sea-ink-soft)",
+							checked && "line-through",
+						)}
+					>
+						Min: {item.minStock.toFixed(1)}
+						{unitLabel ? ` ${unitLabel}` : ""}
+					</span>
+					<span
+						className={cn(
+							"text-xs sm:text-sm text-(--sea-ink-soft)",
+							checked && "line-through",
+						)}
+					>
+						Have: {item.stockQuantity.toFixed(1)}
+						{unitLabel ? ` ${unitLabel}` : ""}
+					</span>
+					<span
+						className={cn(
+							"rounded-full px-2 py-0.5 text-xs font-semibold",
+							badgeClass,
+						)}
+					>
+						Buy {shortfall.toFixed(1)}
+						{unitLabel ? ` ${unitLabel}` : ""}
+					</span>
+				</div>
+			</button>
+			<Link
+				to="/products"
+				search={{ category: item.categoryId }}
+				className="rounded-lg border border-(--line) px-2 py-1 text-xs font-semibold text-(--sea-ink-soft) transition hover:bg-(--surface) hover:text-(--sea-ink)"
+				title={`Browse ${item.categoryName}`}
+			>
+				Browse
+			</Link>
 			<RowCheckbox checked={checked} onChange={onToggle} />
 		</div>
 	);
