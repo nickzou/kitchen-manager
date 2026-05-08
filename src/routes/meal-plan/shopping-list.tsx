@@ -17,6 +17,7 @@ import { Modal } from "#src/components/Modal";
 import { NumberInput } from "#src/components/NumberInput";
 import { Page } from "#src/components/Page";
 import { StockEntryForm } from "#src/components/stock/StockEntryForm";
+import { useToast } from "#src/components/Toast";
 import { getWeekStart } from "#src/lib/format-date";
 import { useBrands } from "#src/lib/hooks/use-brands";
 import {
@@ -154,6 +155,7 @@ function ShoppingListPage() {
 	const { data: productConversions } =
 		useProductUnitConversions(summaryProductIds);
 
+	const toast = useToast();
 	const [stockingFor, setStockingFor] = useState<{
 		productId: string;
 		quantity: string;
@@ -572,7 +574,10 @@ function ShoppingListPage() {
 							unitId: stockingFor.unitId,
 						}}
 						className="flex flex-col gap-3"
-						onSuccess={() => setStockingFor(null)}
+						onSuccess={() => {
+							toast.success(`${stockingFor.productName} added to stock`);
+							setStockingFor(null);
+						}}
 					/>
 				)}
 			</Modal>
