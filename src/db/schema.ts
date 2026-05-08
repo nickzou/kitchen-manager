@@ -872,3 +872,49 @@ export const userSettingsRelations = relations(userSettings, ({ one }) => ({
 		references: [user.id],
 	}),
 }));
+
+export const shoppingListItem = pgTable(
+	"shopping_list_item",
+	{
+		id: text("id")
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		productId: text("product_id")
+			.notNull()
+			.references(() => product.id, { onDelete: "cascade" }),
+		quantity: numeric("quantity").notNull(),
+		quantityUnitId: text("quantity_unit_id").references(() => quantityUnit.id, {
+			onDelete: "set null",
+		}),
+		userId: text("user_id")
+			.notNull()
+			.references(() => user.id, { onDelete: "cascade" }),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+		updatedAt: timestamp("updated_at")
+			.defaultNow()
+			.$onUpdate(() => new Date())
+			.notNull(),
+	},
+	(table) => [
+		index("shoppingListItem_userId_idx").on(table.userId),
+		index("shoppingListItem_productId_idx").on(table.productId),
+	],
+);
+
+export const shoppingListItemRelations = relations(
+	shoppingListItem,
+	({ one }) => ({
+		user: one(user, {
+			fields: [shoppingListItem.userId],
+			references: [user.id],
+		}),
+		product: one(product, {
+			fields: [shoppingListItem.productId],
+			references: [product.id],
+		}),
+		quantityUnit: one(quantityUnit, {
+			fields: [shoppingListItem.quantityUnitId],
+			references: [quantityUnit.id],
+		}),
+	}),
+);
