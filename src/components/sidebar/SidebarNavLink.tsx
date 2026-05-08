@@ -28,7 +28,7 @@ export function SidebarNavLink({
 			)}
 			activeProps={{
 				className: cn(
-					"flex items-center gap-3 rounded-lg border border-cream-800 px-3 py-2 text-sm font-semibold bg-cream-900 text-cream-100 no-underline",
+					"flex items-center gap-3 rounded-lg border border-cream-800 px-3 py-2 text-sm font-semibold bg-white text-cream-950 no-underline",
 					collapsed && "justify-center px-0",
 				),
 			}}
