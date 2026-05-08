@@ -15,7 +15,6 @@ import { NumberInput } from "#src/components/NumberInput";
 import { Page } from "#src/components/Page";
 import { PricingHistoryChart } from "#src/components/stock/PricingHistoryChart";
 import { Textarea } from "#src/components/Textarea";
-import { authClient } from "#src/lib/auth-client";
 import { useBrands } from "#src/lib/hooks/use-brands";
 import { useProductCategories } from "#src/lib/hooks/use-categories";
 import {
@@ -42,7 +41,6 @@ export const Route = createFileRoute("/products/$id")({
 function ProductDetail() {
 	const { id } = Route.useParams();
 	const navigate = useNavigate();
-	const { data: session, isPending: sessionLoading } = authClient.useSession();
 
 	const { data: product, isLoading, error } = useProduct(id);
 	const { data: categories } = useProductCategories();
@@ -102,13 +100,6 @@ function ProductDetail() {
 		toUnitId: "",
 		factor: "",
 	});
-
-	if (sessionLoading) return null;
-	if (!session) {
-		navigate({ to: "/sign-in" });
-		return null;
-	}
-
 	if (isLoading) {
 		return (
 			<Page as="main" className="pb-8 pt-14">

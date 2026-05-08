@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
 import { type FormEvent, useMemo, useState } from "react";
 import { AlertText } from "#src/components/AlertText";
@@ -15,7 +15,6 @@ import { SearchInput } from "#src/components/SearchInput";
 import { TableView } from "#src/components/TableView";
 import { useToast } from "#src/components/Toast";
 import { type ViewMode, ViewSwitcher } from "#src/components/ViewSwitcher";
-import { authClient } from "#src/lib/auth-client";
 import { formatDate } from "#src/lib/format-date";
 import { useBrands } from "#src/lib/hooks/use-brands";
 import { useProductCategories } from "#src/lib/hooks/use-categories";
@@ -26,9 +25,6 @@ import { useStockEntries } from "#src/lib/hooks/use-stock-entries";
 export const Route = createFileRoute("/products/")({ component: ProductsPage });
 
 function ProductsPage() {
-	const { data: session, isPending: sessionLoading } = authClient.useSession();
-	const navigate = useNavigate();
-
 	const { data: products, isLoading } = useProducts();
 	const { data: categories } = useProductCategories();
 	const { data: quantityUnits } = useQuantityUnits();
@@ -74,13 +70,6 @@ function ProductsPage() {
 			return false;
 		});
 	}, [products, search, categories, brandsByProduct]);
-
-	if (sessionLoading) return null;
-	if (!session) {
-		navigate({ to: "/sign-in" });
-		return null;
-	}
-
 	async function handleSubmit(e: FormEvent) {
 		e.preventDefault();
 		if (!name.trim()) return;

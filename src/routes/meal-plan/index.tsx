@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { Settings } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { Island } from "#src/components/Island";
@@ -6,7 +6,6 @@ import { MealPlanCalendar } from "#src/components/meal-plan/MealPlanCalendar";
 import { MealSlotManager } from "#src/components/meal-plan/MealSlotManager";
 import { WeekNavigation } from "#src/components/meal-plan/WeekNavigation";
 import { Page } from "#src/components/Page";
-import { authClient } from "#src/lib/auth-client";
 import {
 	useCookMealPlanEntry,
 	useCreateMealPlanEntry,
@@ -44,9 +43,6 @@ function toDateString(d: Date): string {
 }
 
 function MealPlanPage() {
-	const { data: session, isPending: sessionLoading } = authClient.useSession();
-	const navigate = useNavigate();
-
 	const { data: settings } = useUserSettings();
 	const weekStartDay = settings?.weekStartDay ?? 1;
 
@@ -111,13 +107,6 @@ function MealPlanPage() {
 		const today = new Date();
 		setSelectedDay((today.getDay() - weekStartDay + 7) % 7);
 	}, [weekStartDay]);
-
-	if (sessionLoading) return null;
-	if (!session) {
-		navigate({ to: "/sign-in" });
-		return null;
-	}
-
 	function handleAddRecipe(date: string, mealSlotId: string, recipeId: string) {
 		createEntry.mutate({ date, mealSlotId, recipeId });
 	}

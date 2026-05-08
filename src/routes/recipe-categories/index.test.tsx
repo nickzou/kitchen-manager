@@ -87,24 +87,6 @@ function renderPage() {
 }
 
 describe("RecipeCategoriesPage", () => {
-	describe("authentication", () => {
-		it("redirects to /sign-in when session is null", () => {
-			mockUseSession.mockReturnValue({ data: null, isPending: false });
-
-			renderPage();
-
-			expect(mockNavigate).toHaveBeenCalledWith({ to: "/sign-in" });
-		});
-
-		it("returns null when session is loading", () => {
-			mockUseSession.mockReturnValue({ data: null, isPending: true });
-
-			const { container } = renderPage();
-
-			expect(container.innerHTML).toBe("");
-		});
-	});
-
 	describe("loading and empty states", () => {
 		it("shows loading state when categories are loading", () => {
 			mockUseRecipeCategories.mockReturnValue({

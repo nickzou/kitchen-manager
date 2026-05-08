@@ -4,6 +4,7 @@ import {
 	createRootRouteWithContext,
 	HeadContent,
 	Link,
+	redirect,
 	Scripts,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
@@ -13,15 +14,37 @@ import Header from "../components/Header";
 import { ToastProvider } from "../components/Toast";
 import TanStackQueryDevtools from "../integrations/tanstack-query/devtools";
 import TanStackQueryProvider from "../integrations/tanstack-query/root-provider";
+import { authClient } from "../lib/auth-client";
 import appCss from "../styles.css?url";
 
 interface MyRouterContext {
 	queryClient: QueryClient;
 }
 
+// Routes that don't require an authenticated session.
+const PUBLIC_PATHS = new Set<string>([
+	"/sign-in",
+	"/sign-up",
+	"/verify-email",
+	"/forgot-password",
+	"/reset-password",
+]);
+
 const THEME_INIT_SCRIPT = `(function(){try{var stored=window.localStorage.getItem('theme');var mode=(stored==='light'||stored==='dark'||stored==='auto')?stored:'auto';var prefersDark=window.matchMedia('(prefers-color-scheme: dark)').matches;var resolved=mode==='auto'?(prefersDark?'dark':'light'):mode;var root=document.documentElement;root.classList.remove('light','dark');root.classList.add(resolved);if(mode==='auto'){root.removeAttribute('data-theme')}else{root.setAttribute('data-theme',mode)}root.style.colorScheme=resolved;}catch(e){}})();`;
 
 export const Route = createRootRouteWithContext<MyRouterContext>()({
+	beforeLoad: async ({ location }) => {
+		// Public auth screens skip the session check.
+		if (PUBLIC_PATHS.has(location.pathname)) return;
+		// Only run client-side. SSR doesn't need to gate; the page just
+		// renders shell, then the client re-runs beforeLoad on hydration
+		// and redirects if the session is missing.
+		if (typeof window === "undefined") return;
+		const { data: session } = await authClient.getSession();
+		if (!session) {
+			throw redirect({ to: "/sign-in" });
+		}
+	},
 	notFoundComponent: NotFound,
 	head: () => ({
 		meta: [

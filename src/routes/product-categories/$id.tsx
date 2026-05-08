@@ -8,7 +8,6 @@ import InventorySubNav from "#src/components/InventorySubNav";
 import { Island } from "#src/components/Island";
 import { Page } from "#src/components/Page";
 import { Textarea } from "#src/components/Textarea";
-import { authClient } from "#src/lib/auth-client";
 import {
 	useDeleteProductCategory,
 	useProductCategory,
@@ -22,7 +21,6 @@ export const Route = createFileRoute("/product-categories/$id")({
 function ProductCategoryDetail() {
 	const { id } = Route.useParams();
 	const navigate = useNavigate();
-	const { data: session, isPending: sessionLoading } = authClient.useSession();
 
 	const { data: category, isLoading, error } = useProductCategory(id);
 	const updateCategory = useUpdateProductCategory(id);
@@ -34,13 +32,6 @@ function ProductCategoryDetail() {
 		name: "",
 		description: "",
 	});
-
-	if (sessionLoading) return null;
-	if (!session) {
-		navigate({ to: "/sign-in" });
-		return null;
-	}
-
 	if (isLoading) {
 		return (
 			<Page as="main" className="pb-8 pt-14">

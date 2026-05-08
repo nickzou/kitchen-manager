@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
 import { type FormEvent, useMemo, useState } from "react";
 import { Button } from "#src/components/Button";
@@ -11,7 +11,6 @@ import { Page } from "#src/components/Page";
 import { SearchInput } from "#src/components/SearchInput";
 import { TableView } from "#src/components/TableView";
 import { type ViewMode, ViewSwitcher } from "#src/components/ViewSwitcher";
-import { authClient } from "#src/lib/auth-client";
 import { formatDate } from "#src/lib/format-date";
 import { useCreateStore, useStores } from "#src/lib/hooks/use-stores";
 
@@ -20,9 +19,6 @@ export const Route = createFileRoute("/stores/")({
 });
 
 function StoresPage() {
-	const { data: session, isPending: sessionLoading } = authClient.useSession();
-	const navigate = useNavigate();
-
 	const { data: stores, isLoading } = useStores();
 	const createStore = useCreateStore();
 
@@ -35,13 +31,6 @@ function StoresPage() {
 		const term = search.toLowerCase();
 		return stores.filter((s) => s.name.toLowerCase().includes(term));
 	}, [stores, search]);
-
-	if (sessionLoading) return null;
-	if (!session) {
-		navigate({ to: "/sign-in" });
-		return null;
-	}
-
 	async function handleSubmit(e: FormEvent) {
 		e.preventDefault();
 		if (!name.trim()) return;

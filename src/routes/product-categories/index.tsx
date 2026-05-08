@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
 import { type FormEvent, useMemo, useState } from "react";
 import { Button } from "#src/components/Button";
@@ -11,7 +11,6 @@ import { Page } from "#src/components/Page";
 import { SearchInput } from "#src/components/SearchInput";
 import { TableView } from "#src/components/TableView";
 import { type ViewMode, ViewSwitcher } from "#src/components/ViewSwitcher";
-import { authClient } from "#src/lib/auth-client";
 import { formatDate } from "#src/lib/format-date";
 import {
 	useCreateProductCategory,
@@ -23,9 +22,6 @@ export const Route = createFileRoute("/product-categories/")({
 });
 
 function ProductCategoriesPage() {
-	const { data: session, isPending: sessionLoading } = authClient.useSession();
-	const navigate = useNavigate();
-
 	const { data: categories, isLoading } = useProductCategories();
 	const createCategory = useCreateProductCategory();
 
@@ -43,13 +39,6 @@ function ProductCategoriesPage() {
 				c.description?.toLowerCase().includes(term),
 		);
 	}, [categories, search]);
-
-	if (sessionLoading) return null;
-	if (!session) {
-		navigate({ to: "/sign-in" });
-		return null;
-	}
-
 	async function handleSubmit(e: FormEvent) {
 		e.preventDefault();
 		if (!name.trim()) return;

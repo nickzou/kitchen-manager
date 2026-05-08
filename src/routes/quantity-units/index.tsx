@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { ChevronDown, Plus } from "lucide-react";
 import { type FormEvent, Fragment, useMemo, useState } from "react";
 import { Button } from "#src/components/Button";
@@ -10,7 +10,6 @@ import { Island } from "#src/components/Island";
 import { Page } from "#src/components/Page";
 import { SearchInput } from "#src/components/SearchInput";
 import { type ViewMode, ViewSwitcher } from "#src/components/ViewSwitcher";
-import { authClient } from "#src/lib/auth-client";
 import { formatDate } from "#src/lib/format-date";
 import {
 	type QuantityUnit,
@@ -40,9 +39,6 @@ function formatConversionFactor(
 }
 
 function QuantityUnitsPage() {
-	const { data: session, isPending: sessionLoading } = authClient.useSession();
-	const navigate = useNavigate();
-
 	const { data: quantityUnits, isLoading } = useQuantityUnits();
 	const { data: conversions } = useUnitConversions();
 	const createQuantityUnit = useCreateQuantityUnit();
@@ -61,13 +57,6 @@ function QuantityUnitsPage() {
 				u.abbreviation?.toLowerCase().includes(term),
 		);
 	}, [quantityUnits, search]);
-
-	if (sessionLoading) return null;
-	if (!session) {
-		navigate({ to: "/sign-in" });
-		return null;
-	}
-
 	function unitName(id: string) {
 		const u = quantityUnits?.find((u) => u.id === id);
 		if (!u) return id;
