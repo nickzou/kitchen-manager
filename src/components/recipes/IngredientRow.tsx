@@ -66,103 +66,109 @@ export function IngredientRow({
 	if (isEditing) {
 		return (
 			<div className="flex flex-col gap-3 rounded-lg border border-(--lagoon) p-3">
-				<div className="grid grid-cols-[1fr_1fr] gap-2 sm:grid-cols-[2fr_5rem_1fr_1fr_1fr]">
-					<Combobox
-						value={editState.productId}
-						onChange={(v) => {
-							onEditStateChange({
-								...editState,
-								productId: v,
-							});
-							onEditProductChange(v);
-						}}
-						options={productOptions}
-						placeholder="Product"
-						className="col-span-full sm:col-span-1"
-						onCreateNew={async (name) => {
-							const newId = await onCreateProduct(name);
-							onEditStateChange({
-								...editState,
-								productId: newId,
-							});
-						}}
-					/>
-					<NumberInput
-						step="any"
-						min="0"
-						placeholder="Qty"
-						value={editState.quantity}
-						onChange={(e) =>
-							onEditStateChange({
-								...editState,
-								quantity: e.target.value,
-							})
-						}
-					/>
-					<Combobox
-						value={editState.quantityUnitId}
-						onChange={(v) =>
-							onEditStateChange({
-								...editState,
-								quantityUnitId: v,
-							})
-						}
-						options={unitOptions}
-						placeholder="Unit"
-					/>
-					<Input
-						type="text"
-						placeholder="Notes"
-						value={editState.notes}
-						onChange={(e) =>
-							onEditStateChange({
-								...editState,
-								notes: e.target.value,
-							})
-						}
-					/>
-					<Input
-						type="text"
-						placeholder="Group"
-						value={editState.groupName}
-						onChange={(e) =>
-							onEditStateChange({
-								...editState,
-								groupName: e.target.value,
-							})
-						}
-					/>
-					<label className="flex items-center gap-1.5 text-sm text-(--sea-ink-soft) cursor-pointer select-none">
-						<input
-							type="checkbox"
-							checked={editState.optional}
+				<div className="flex flex-col gap-2">
+					<div className="grid grid-cols-[5rem_1fr] gap-2 sm:grid-cols-[1fr_5rem_8rem]">
+						<Combobox
+							value={editState.productId}
+							onChange={(v) => {
+								onEditStateChange({
+									...editState,
+									productId: v,
+								});
+								onEditProductChange(v);
+							}}
+							options={productOptions}
+							placeholder="Product"
+							className="col-span-full sm:col-span-1"
+							onCreateNew={async (name) => {
+								const newId = await onCreateProduct(name);
+								onEditStateChange({
+									...editState,
+									productId: newId,
+								});
+							}}
+						/>
+						<NumberInput
+							step="any"
+							min="0"
+							placeholder="Qty"
+							value={editState.quantity}
 							onChange={(e) =>
 								onEditStateChange({
 									...editState,
-									optional: e.target.checked,
+									quantity: e.target.value,
 								})
 							}
-							className="accent-(--lagoon)"
 						/>
-						Optional
-					</label>
-					<label
-						className="flex text-nowrap items-center gap-1.5 text-sm text-(--sea-ink-soft) cursor-pointer select-none"
-						title="Don't deduct from stock when this recipe is cooked (e.g. salt to taste)"
-					>
-						<input
-							type="checkbox"
-							checked={editState.skipStockDeduction}
+						<Combobox
+							value={editState.quantityUnitId}
+							onChange={(v) =>
+								onEditStateChange({
+									...editState,
+									quantityUnitId: v,
+								})
+							}
+							options={unitOptions}
+							placeholder="Unit"
+						/>
+					</div>
+					<div className="grid gap-2 sm:grid-cols-2">
+						<Input
+							type="text"
+							placeholder="Notes (optional)"
+							value={editState.notes}
 							onChange={(e) =>
 								onEditStateChange({
 									...editState,
-									skipStockDeduction: e.target.checked,
+									notes: e.target.value,
 								})
 							}
-							className="accent-(--lagoon)"
 						/>
-						Don't track
-					</label>
+						<Input
+							type="text"
+							placeholder="Group (optional)"
+							value={editState.groupName}
+							onChange={(e) =>
+								onEditStateChange({
+									...editState,
+									groupName: e.target.value,
+								})
+							}
+						/>
+					</div>
+					<div className="flex flex-wrap items-center gap-4">
+						<label className="flex items-center gap-1.5 text-sm text-(--sea-ink-soft) cursor-pointer select-none">
+							<input
+								type="checkbox"
+								checked={editState.optional}
+								onChange={(e) =>
+									onEditStateChange({
+										...editState,
+										optional: e.target.checked,
+									})
+								}
+								className="accent-(--lagoon)"
+							/>
+							Optional
+						</label>
+						<label
+							className="flex text-nowrap items-center gap-1.5 text-sm text-(--sea-ink-soft) cursor-pointer select-none"
+							title="Don't deduct from stock when this recipe is cooked (e.g. salt to taste)"
+						>
+							<input
+								type="checkbox"
+								checked={editState.skipStockDeduction}
+								onChange={(e) =>
+									onEditStateChange({
+										...editState,
+										skipStockDeduction: e.target.checked,
+									})
+								}
+								className="accent-(--lagoon)"
+							/>
+							Don't track
+						</label>
+					</div>
 				</div>
 				{conversionHint && (
 					<p

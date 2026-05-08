@@ -130,75 +130,83 @@ export function AddIngredientForm({
 				/>
 			)}
 
-			<div className="grid grid-cols-[1fr_1fr] gap-2 sm:grid-cols-[2fr_5rem_1fr_1fr_auto_auto_auto]">
-				<Combobox
-					value={productId}
-					onChange={(v) => {
-						update({ productId: v });
-						onProductChange?.(v);
-					}}
-					options={productOptions}
-					placeholder="Product"
-					className="col-span-full sm:col-span-1"
-					onCreateNew={
-						onCreateProduct
-							? async (name) => {
-									const newId = await onCreateProduct(name);
-									update({ productId: newId });
-								}
-							: undefined
-					}
-				/>
-				<NumberInput
-					id={`${htmlId}-ing-qty`}
-					step="any"
-					min="0"
-					placeholder="Qty"
-					value={quantity}
-					onChange={(e) => update({ quantity: e.target.value })}
-				/>
-				<Combobox
-					value={quantityUnitId}
-					onChange={(v) => update({ quantityUnitId: v })}
-					options={unitOptions}
-					placeholder="Unit"
-				/>
+			<div className="flex flex-col gap-2">
+				<div className="grid grid-cols-[5rem_1fr] gap-2 sm:grid-cols-[1fr_5rem_8rem]">
+					<Combobox
+						value={productId}
+						onChange={(v) => {
+							update({ productId: v });
+							onProductChange?.(v);
+						}}
+						options={productOptions}
+						placeholder="Product"
+						className="col-span-full sm:col-span-1"
+						onCreateNew={
+							onCreateProduct
+								? async (name) => {
+										const newId = await onCreateProduct(name);
+										update({ productId: newId });
+									}
+								: undefined
+						}
+					/>
+					<NumberInput
+						id={`${htmlId}-ing-qty`}
+						step="any"
+						min="0"
+						placeholder="Qty"
+						value={quantity}
+						onChange={(e) => update({ quantity: e.target.value })}
+					/>
+					<Combobox
+						value={quantityUnitId}
+						onChange={(v) => update({ quantityUnitId: v })}
+						options={unitOptions}
+						placeholder="Unit"
+					/>
+				</div>
 				<Input
 					type="text"
-					placeholder="Notes"
+					placeholder="Notes (optional)"
 					value={notes}
 					onChange={(e) => update({ notes: e.target.value })}
 				/>
-				<label className="flex items-center gap-1.5 text-sm text-(--sea-ink-soft) cursor-pointer select-none">
-					<input
-						type="checkbox"
-						checked={optional}
-						onChange={(e) => update({ optional: e.target.checked })}
-						className="accent-(--lagoon)"
-					/>
-					Optional
-				</label>
-				<label
-					className="flex text-nowrap items-center gap-1.5 text-sm text-(--sea-ink-soft) cursor-pointer select-none"
-					title="Don't deduct from stock when this recipe is cooked (e.g. salt to taste)"
-				>
-					<input
-						type="checkbox"
-						checked={skipStockDeduction}
-						onChange={(e) => update({ skipStockDeduction: e.target.checked })}
-						className="accent-(--lagoon)"
-					/>
-					Don't track
-				</label>
-				<Button
-					type="button"
-					onClick={onAdd}
-					disabled={isPending || !quantity}
-					className="flex items-center gap-1 px-3"
-				>
-					<Plus size={14} />
-					{addButtonLabel ?? "Add"}
-				</Button>
+				<div className="flex flex-wrap items-center justify-between gap-3">
+					<div className="flex flex-wrap items-center gap-4">
+						<label className="flex items-center gap-1.5 text-sm text-(--sea-ink-soft) cursor-pointer select-none">
+							<input
+								type="checkbox"
+								checked={optional}
+								onChange={(e) => update({ optional: e.target.checked })}
+								className="accent-(--lagoon)"
+							/>
+							Optional
+						</label>
+						<label
+							className="flex text-nowrap items-center gap-1.5 text-sm text-(--sea-ink-soft) cursor-pointer select-none"
+							title="Don't deduct from stock when this recipe is cooked (e.g. salt to taste)"
+						>
+							<input
+								type="checkbox"
+								checked={skipStockDeduction}
+								onChange={(e) =>
+									update({ skipStockDeduction: e.target.checked })
+								}
+								className="accent-(--lagoon)"
+							/>
+							Don't track
+						</label>
+					</div>
+					<Button
+						type="button"
+						onClick={onAdd}
+						disabled={isPending || !quantity}
+						className="flex items-center gap-1 px-3"
+					>
+						<Plus size={14} />
+						{addButtonLabel ?? "Add"}
+					</Button>
+				</div>
 			</div>
 			{unitHint && (
 				<p
