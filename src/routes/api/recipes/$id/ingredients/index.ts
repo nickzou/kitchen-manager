@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { and, eq } from "drizzle-orm";
 import { db } from "#src/db";
-import { recipeIngredient } from "#src/db/schema";
+import { product, recipeIngredient } from "#src/db/schema";
 import { getAuthSession } from "#src/lib/auth-session";
 
 function json(data: unknown, init?: { status?: number }) {
@@ -44,6 +44,24 @@ export const Route = createFileRoute("/api/recipes/$id/ingredients/")({
 					return json({ error: "Quantity is required" }, { status: 400 });
 				}
 
+				let skipStockDeduction: boolean = body.skipStockDeduction ?? false;
+				if (body.skipStockDeduction === undefined && body.productId) {
+					const [linkedProduct] = await db
+						.select({
+							defaultSkipStockDeduction: product.defaultSkipStockDeduction,
+						})
+						.from(product)
+						.where(
+							and(
+								eq(product.id, body.productId),
+								eq(product.userId, session.user.id),
+							),
+						);
+					if (linkedProduct) {
+						skipStockDeduction = linkedProduct.defaultSkipStockDeduction;
+					}
+				}
+
 				const [created] = await db
 					.insert(recipeIngredient)
 					.values({
@@ -54,7 +72,7 @@ export const Route = createFileRoute("/api/recipes/$id/ingredients/")({
 						notes: body.notes,
 						groupName: body.groupName,
 						optional: body.optional ?? false,
-						skipStockDeduction: body.skipStockDeduction ?? false,
+						skipStockDeduction,
 						sortOrder: body.sortOrder,
 						userId: session.user.id,
 					})

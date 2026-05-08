@@ -82,6 +82,7 @@ export function makeProduct(overrides?: Record<string, unknown>) {
 		fat: null,
 		carbs: null,
 		defaultTareWeight: null,
+		defaultSkipStockDeduction: false,
 		userId: "user-1",
 		createdAt: new Date("2025-01-01"),
 		updatedAt: new Date("2025-01-01"),

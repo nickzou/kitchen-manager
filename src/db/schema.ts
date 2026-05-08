@@ -267,6 +267,9 @@ export const product = pgTable(
 			{ onDelete: "set null" },
 		),
 		defaultTareWeight: numeric("default_tare_weight"),
+		defaultSkipStockDeduction: boolean("default_skip_stock_deduction")
+			.default(false)
+			.notNull(),
 		userId: text("user_id")
 			.notNull()
 			.references(() => user.id, { onDelete: "cascade" }),

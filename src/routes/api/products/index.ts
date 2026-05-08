@@ -77,6 +77,8 @@ export const Route = createFileRoute("/api/products/")({
 							nutritionBaseUnitId:
 								body.nutritionBaseUnitId ?? body.defaultQuantityUnitId ?? null,
 							defaultTareWeight: body.defaultTareWeight ?? null,
+							defaultSkipStockDeduction:
+								body.defaultSkipStockDeduction ?? false,
 							userId: session.user.id,
 						})
 						.returning();

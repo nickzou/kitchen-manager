@@ -75,6 +75,8 @@ export const Route = createFileRoute("/api/products/$id")({
 					updates.nutritionBaseUnitId = body.nutritionBaseUnitId;
 				if (body.defaultTareWeight !== undefined)
 					updates.defaultTareWeight = body.defaultTareWeight;
+				if (body.defaultSkipStockDeduction !== undefined)
+					updates.defaultSkipStockDeduction = body.defaultSkipStockDeduction;
 
 				let updated: typeof product.$inferSelect | undefined;
 				try {

@@ -19,6 +19,7 @@ export interface Product {
 	nutritionBaseAmount: string;
 	nutritionBaseUnitId: string | null;
 	defaultTareWeight: string | null;
+	defaultSkipStockDeduction: boolean;
 	userId: string;
 	createdAt: string;
 	updatedAt: string;
@@ -42,6 +43,7 @@ export type CreateProductInput = {
 	nutritionBaseAmount?: string;
 	nutritionBaseUnitId?: string;
 	defaultTareWeight?: string | null;
+	defaultSkipStockDeduction?: boolean;
 };
 
 export type UpdateProductInput = Partial<CreateProductInput>;

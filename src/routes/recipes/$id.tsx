@@ -701,27 +701,29 @@ function RecipeDetail() {
 	}
 
 	function handleEditProductChange(selectedProductId: string) {
-		if (editIngredient.quantityUnitId) return;
 		const product = products?.find((p) => p.id === selectedProductId);
-		if (product?.defaultQuantityUnitId) {
-			setEditIngredient({
-				...editIngredient,
-				productId: selectedProductId,
-				quantityUnitId: product.defaultQuantityUnitId,
-			});
-		}
+		setEditIngredient({
+			...editIngredient,
+			productId: selectedProductId,
+			quantityUnitId:
+				editIngredient.quantityUnitId ||
+				product?.defaultQuantityUnitId ||
+				editIngredient.quantityUnitId,
+			skipStockDeduction: product?.defaultSkipStockDeduction ?? false,
+		});
 	}
 
 	function handleProductChange(selectedProductId: string) {
-		if (newIngredient.quantityUnitId) return;
 		const product = products?.find((p) => p.id === selectedProductId);
-		if (product?.defaultQuantityUnitId) {
-			setNewIngredient({
-				...newIngredient,
-				productId: selectedProductId,
-				quantityUnitId: product.defaultQuantityUnitId,
-			});
-		}
+		setNewIngredient({
+			...newIngredient,
+			productId: selectedProductId,
+			quantityUnitId:
+				newIngredient.quantityUnitId ||
+				product?.defaultQuantityUnitId ||
+				newIngredient.quantityUnitId,
+			skipStockDeduction: product?.defaultSkipStockDeduction ?? false,
+		});
 	}
 
 	function getConversionHint(): string | undefined {
