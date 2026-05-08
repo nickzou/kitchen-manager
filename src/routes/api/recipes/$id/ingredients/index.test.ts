@@ -13,6 +13,7 @@ vi.mock("#src/lib/auth-session", () => ({
 }));
 
 vi.mock("#src/db/schema", () => ({
+	product: {},
 	recipeIngredient: {},
 }));
 
@@ -90,6 +91,9 @@ describe("GET /api/recipes/:id/ingredients/", () => {
 describe("POST /api/recipes/:id/ingredients/", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+		// Product lookup default — body without skipStockDeduction triggers a
+		// SELECT on product.defaultSkipStockDeduction; tests can override.
+		mockWhere.mockResolvedValue([{ defaultSkipStockDeduction: false }]);
 	});
 
 	it("returns 401 when not authenticated", async () => {
@@ -203,6 +207,41 @@ describe("POST /api/recipes/:id/ingredients/", () => {
 		const request = makePostRequest("/api/recipes/recipe-1/ingredients", {
 			quantity: "2",
 			productId: "product-1",
+		});
+
+		await POST({ request, params } as never);
+
+		expect(mockValues).toHaveBeenCalledWith(
+			expect.objectContaining({ skipStockDeduction: false }),
+		);
+	});
+
+	it("inherits skipStockDeduction from the product's default when body omits it", async () => {
+		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
+		mockWhere.mockResolvedValue([{ defaultSkipStockDeduction: true }]);
+		mockReturning.mockResolvedValue([
+			makeRecipeIngredient({ skipStockDeduction: true }),
+		]);
+		const request = makePostRequest("/api/recipes/recipe-1/ingredients", {
+			quantity: "2",
+			productId: "product-1",
+		});
+
+		await POST({ request, params } as never);
+
+		expect(mockValues).toHaveBeenCalledWith(
+			expect.objectContaining({ skipStockDeduction: true }),
+		);
+	});
+
+	it("respects explicit skipStockDeduction: false even if product defaults true", async () => {
+		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
+		mockWhere.mockResolvedValue([{ defaultSkipStockDeduction: true }]);
+		mockReturning.mockResolvedValue([makeRecipeIngredient()]);
+		const request = makePostRequest("/api/recipes/recipe-1/ingredients", {
+			quantity: "2",
+			productId: "product-1",
+			skipStockDeduction: false,
 		});
 
 		await POST({ request, params } as never);

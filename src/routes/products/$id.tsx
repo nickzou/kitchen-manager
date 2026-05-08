@@ -96,6 +96,7 @@ function ProductDetail() {
 		nutritionBaseUnitId: "",
 		hasTareWeight: false,
 		defaultTareWeight: "",
+		defaultSkipStockDeduction: false,
 	});
 	const [newConversion, setNewConversion] = useState({
 		fromUnitId: "",
@@ -167,6 +168,7 @@ function ProductDetail() {
 			nutritionBaseUnitId: product.nutritionBaseUnitId ?? "",
 			hasTareWeight: product.defaultTareWeight != null,
 			defaultTareWeight: product.defaultTareWeight ?? "",
+			defaultSkipStockDeduction: product.defaultSkipStockDeduction,
 		});
 		setEditing(true);
 	}
@@ -196,6 +198,7 @@ function ProductDetail() {
 				defaultTareWeight: form.hasTareWeight
 					? form.defaultTareWeight || undefined
 					: null,
+				defaultSkipStockDeduction: form.defaultSkipStockDeduction,
 			});
 			setEditing(false);
 		} catch {
@@ -456,6 +459,44 @@ function ProductDetail() {
 										/>
 									</div>
 								)}
+
+								<label className="flex items-center justify-between gap-3">
+									<div>
+										<p className="text-sm font-medium text-(--sea-ink)">
+											Don't track by default
+										</p>
+										<p className="text-xs text-(--sea-ink-soft)">
+											New recipe ingredients using this product will skip stock
+											deduction by default (you can still override per
+											ingredient)
+										</p>
+									</div>
+									<button
+										type="button"
+										role="switch"
+										aria-checked={form.defaultSkipStockDeduction}
+										onClick={() =>
+											setForm({
+												...form,
+												defaultSkipStockDeduction:
+													!form.defaultSkipStockDeduction,
+											})
+										}
+										className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-(--lagoon) focus-visible:ring-offset-2 ${
+											form.defaultSkipStockDeduction
+												? "bg-(--lagoon)"
+												: "bg-(--line)"
+										}`}
+									>
+										<span
+											className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+												form.defaultSkipStockDeduction
+													? "translate-x-5"
+													: "translate-x-0"
+											}`}
+										/>
+									</button>
+								</label>
 
 								<div className="flex flex-col gap-1.5">
 									<label
@@ -742,6 +783,16 @@ function ProductDetail() {
 											<dd className="mt-0.5 text-(--sea-ink)">
 												{product.defaultTareWeight}
 												{unitName ? ` ${unitName}` : ""}
+											</dd>
+										</div>
+									)}
+									{product.defaultSkipStockDeduction && (
+										<div>
+											<dt className="font-medium text-(--sea-ink-soft)">
+												Tracking
+											</dt>
+											<dd className="mt-0.5 text-(--sea-ink)">
+												Not tracked by default
 											</dd>
 										</div>
 									)}

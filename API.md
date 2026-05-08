@@ -66,7 +66,7 @@ All resources are scoped to the authenticated user — the API never crosses ten
 | Method | Path | Description |
 | --- | --- | --- |
 | `GET` | `/api/products` | List products with `categoryIds`. |
-| `POST` | `/api/products` | Create a product. Body: `{ name, description?, image?, isFood?, defaultQuantityUnitId?, minStockAmount?, defaultExpirationDays?, defaultConsumeAmount?, defaultConsumeUnitId?, calories?, protein?, fat?, carbs?, nutritionBaseAmount?, nutritionBaseUnitId?, defaultTareWeight?, categoryIds? }`. |
+| `POST` | `/api/products` | Create a product. Body: `{ name, description?, image?, isFood?, defaultQuantityUnitId?, minStockAmount?, defaultExpirationDays?, defaultConsumeAmount?, defaultConsumeUnitId?, calories?, protein?, fat?, carbs?, nutritionBaseAmount?, nutritionBaseUnitId?, defaultTareWeight?, defaultSkipStockDeduction?, categoryIds? }`. `defaultSkipStockDeduction` is the per-product default applied to new recipe ingredients that link to this product (the user can still override per-ingredient). |
 | `GET` | `/api/products/$id` | Fetch one product. |
 | `PUT` | `/api/products/$id` | Update any subset of fields. |
 | `DELETE` | `/api/products/$id` | Delete a product (cascades stock entries / recipe ingredient links). |

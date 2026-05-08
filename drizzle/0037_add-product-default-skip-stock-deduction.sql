@@ -1,0 +1,1 @@
+ALTER TABLE "product" ADD COLUMN "default_skip_stock_deduction" boolean DEFAULT false NOT NULL;

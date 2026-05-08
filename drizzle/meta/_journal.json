@@ -260,6 +260,13 @@
       "when": 1778210273103,
       "tag": "0036_add-shopping-list-item",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1778269996351,
+      "tag": "0037_add-product-default-skip-stock-deduction",
+      "breakpoints": true
     }
   ]
 }
