@@ -7,6 +7,7 @@ import { Island } from "#src/components/Island";
 import { Modal } from "#src/components/Modal";
 import { Page } from "#src/components/Page";
 import { StockEntryForm } from "#src/components/stock/StockEntryForm";
+import { getWeekStart } from "#src/lib/format-date";
 import { useBrands } from "#src/lib/hooks/use-brands";
 import {
 	type IngredientRecipeRef,
@@ -25,15 +26,6 @@ import { cn } from "#src/lib/utils";
 export const Route = createFileRoute("/meal-plan/shopping-list")({
 	component: ShoppingListPage,
 });
-
-function getWeekStart(d: Date, startDay: number): Date {
-	const date = new Date(d);
-	const day = date.getDay();
-	const diff = (day - startDay + 7) % 7;
-	date.setDate(date.getDate() - diff);
-	date.setHours(0, 0, 0, 0);
-	return date;
-}
 
 function toDateString(d: Date): string {
 	return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
