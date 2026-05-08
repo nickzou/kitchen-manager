@@ -1,0 +1,1 @@
+ALTER TABLE "recipe" ADD COLUMN "is_meal_prep" boolean DEFAULT false NOT NULL;

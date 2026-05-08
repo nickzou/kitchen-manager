@@ -55,6 +55,7 @@ export const Route = createFileRoute(
 						mealPlanEntryId: mealPlanEntry.id,
 						entryServings: mealPlanEntry.servings,
 						recipeServings: recipe.servings,
+						recipeIsMealPrep: recipe.isMealPrep,
 						ingredientQuantity: recipeIngredient.quantity,
 						ingredientUnitId: recipeIngredient.quantityUnitId,
 						ingredientGroupName: recipeIngredient.groupName,
@@ -272,6 +273,10 @@ export const Route = createFileRoute(
 				>();
 
 				for (const row of rows) {
+					// Meal-prep recipes are cooked-but-not-eaten on the planned day,
+					// so their macros shouldn't roll into that day's totals.
+					if (row.recipeIsMealPrep) continue;
+
 					let cal: number;
 					let prot: number;
 					let fat: number;

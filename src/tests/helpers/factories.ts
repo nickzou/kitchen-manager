@@ -171,6 +171,7 @@ export function makeRecipe(overrides?: Record<string, unknown>) {
 		cookTime: 15,
 		instructions: "Mix and cook",
 		categoryIds: [],
+		isMealPrep: false,
 		userId: "user-1",
 		createdAt: new Date("2025-01-01"),
 		updatedAt: new Date("2025-01-01"),

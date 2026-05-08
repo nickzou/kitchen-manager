@@ -60,6 +60,7 @@ type Row = {
 	mealPlanEntryId: string;
 	entryServings: number | null;
 	recipeServings: number | null;
+	recipeIsMealPrep: boolean;
 	ingredientQuantity: string;
 	ingredientUnitId: string | null;
 	ingredientGroupName: string | null;
@@ -79,6 +80,7 @@ function row(overrides: Partial<Row> & { productId: string }): Row {
 		mealPlanEntryId: "mpe-1",
 		entryServings: null,
 		recipeServings: 4,
+		recipeIsMealPrep: false,
 		ingredientQuantity: "1",
 		ingredientUnitId: null,
 		ingredientGroupName: null,
@@ -305,6 +307,30 @@ describe("GET /api/meal-plan-entries/nutrition-summary", () => {
 
 		const data = await response.json();
 		expect(data["2025-01-01"].calories).toBeCloseTo(66);
+	});
+
+	it("excludes meal-prep recipes from the day total", async () => {
+		// Two ingredient rows on the same day. The meal-prep one should be
+		// skipped; only the regular row contributes.
+		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
+		mockResults[0] = [
+			row({
+				productId: "p-rice",
+				productCalories: "100",
+			}),
+			row({
+				mealPlanEntryId: "mpe-prep",
+				productId: "p-chicken",
+				productCalories: "165",
+				recipeIsMealPrep: true,
+			}),
+		];
+		mockResults[1] = [];
+
+		const response = await GET({ request: summaryRequest() } as never);
+
+		const data = await response.json();
+		expect(data["2025-01-01"].calories).toBeCloseTo(100);
 	});
 
 	it("scales by entry/recipe servings ratio", async () => {

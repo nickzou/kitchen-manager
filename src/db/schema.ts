@@ -542,6 +542,7 @@ export const recipe = pgTable(
 			() => quantityUnit.id,
 			{ onDelete: "set null" },
 		),
+		isMealPrep: boolean("is_meal_prep").default(false).notNull(),
 		userId: text("user_id")
 			.notNull()
 			.references(() => user.id, { onDelete: "cascade" }),

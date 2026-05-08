@@ -133,6 +133,7 @@ const mockRecipe: Recipe = {
 	producedProductId: null,
 	producedQuantity: null,
 	producedQuantityUnitId: null,
+	isMealPrep: false,
 	categoryIds: ["c1"],
 	userId: "u1",
 	createdAt: "2026-03-01T00:00:00Z",
@@ -310,6 +311,7 @@ describe("RecipeDetail", () => {
 					producedProductId: null,
 					producedQuantity: null,
 					producedQuantityUnitId: null,
+					isMealPrep: false,
 				});
 			});
 		});

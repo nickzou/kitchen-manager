@@ -65,6 +65,7 @@ export const Route = createFileRoute("/api/recipes/$id")({
 					updates.producedQuantity = body.producedQuantity;
 				if (body.producedQuantityUnitId !== undefined)
 					updates.producedQuantityUnitId = body.producedQuantityUnitId;
+				if (body.isMealPrep !== undefined) updates.isMealPrep = body.isMealPrep;
 
 				const [updated] = await db
 					.update(recipe)
