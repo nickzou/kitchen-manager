@@ -1,12 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Accordion } from "#src/components/Accordion";
 import { DateRangePicker } from "#src/components/DateRangePicker";
 import { Island } from "#src/components/Island";
 import { Modal } from "#src/components/Modal";
 import { Page } from "#src/components/Page";
 import { StockEntryForm } from "#src/components/stock/StockEntryForm";
+import { getWeekStart } from "#src/lib/format-date";
 import { useBrands } from "#src/lib/hooks/use-brands";
 import {
 	type IngredientRecipeRef,
@@ -19,20 +20,12 @@ import { useProducts } from "#src/lib/hooks/use-products";
 import { useQuantityUnits } from "#src/lib/hooks/use-quantity-units";
 import { useStores } from "#src/lib/hooks/use-stores";
 import { useUnitConversions } from "#src/lib/hooks/use-unit-conversions";
+import { useUserSettings } from "#src/lib/hooks/use-user-settings";
 import { cn } from "#src/lib/utils";
 
 export const Route = createFileRoute("/meal-plan/shopping-list")({
 	component: ShoppingListPage,
 });
-
-function getMonday(d: Date): Date {
-	const date = new Date(d);
-	const day = date.getDay();
-	const diff = date.getDate() - day + (day === 0 ? -6 : 1);
-	date.setDate(diff);
-	date.setHours(0, 0, 0, 0);
-	return date;
-}
 
 function toDateString(d: Date): string {
 	return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -96,14 +89,31 @@ type IngredientItem = IngredientSummaryItem & { key: string };
 type UnlinkedItem = UnlinkedIngredient & { key: string };
 
 function ShoppingListPage() {
+	const { data: settings } = useUserSettings();
+	const weekStartDay = settings?.weekStartDay ?? 1;
+
 	const [startDate, setStartDate] = useState(() =>
-		toDateString(getMonday(new Date())),
+		toDateString(getWeekStart(new Date(), 1)),
 	);
 	const [endDate, setEndDate] = useState(() => {
-		const end = getMonday(new Date());
+		const end = getWeekStart(new Date(), 1);
 		end.setDate(end.getDate() + 6);
 		return toDateString(end);
 	});
+
+	// When user settings load, reset the default range to honor weekStartDay.
+	// Stops re-applying once the user has changed the range manually so we
+	// don't clobber their selection.
+	const settingsAppliedRef = useRef(false);
+	useEffect(() => {
+		if (!settings || settingsAppliedRef.current) return;
+		settingsAppliedRef.current = true;
+		const start = getWeekStart(new Date(), weekStartDay);
+		const end = getWeekStart(new Date(), weekStartDay);
+		end.setDate(end.getDate() + 6);
+		setStartDate(toDateString(start));
+		setEndDate(toDateString(end));
+	}, [settings, weekStartDay]);
 
 	const { data: summary, isLoading } = useIngredientSummary(startDate, endDate);
 	const { checked, toggle, reset } = useCheckedItems(startDate, endDate);

@@ -6,6 +6,7 @@ import { MealPlanCalendar } from "#src/components/meal-plan/MealPlanCalendar";
 import { MealSlotManager } from "#src/components/meal-plan/MealSlotManager";
 import { WeekNavigation } from "#src/components/meal-plan/WeekNavigation";
 import { Page } from "#src/components/Page";
+import { getWeekStart } from "#src/lib/format-date";
 import {
 	useCookMealPlanEntry,
 	useCreateMealPlanEntry,
@@ -28,15 +29,6 @@ import { useUserSettings } from "#src/lib/hooks/use-user-settings";
 export const Route = createFileRoute("/meal-plan/")({
 	component: MealPlanPage,
 });
-
-function getWeekStart(d: Date, startDay: number): Date {
-	const date = new Date(d);
-	const day = date.getDay();
-	const diff = (day - startDay + 7) % 7;
-	date.setDate(date.getDate() - diff);
-	date.setHours(0, 0, 0, 0);
-	return date;
-}
 
 function toDateString(d: Date): string {
 	return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
