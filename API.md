@@ -129,6 +129,7 @@ Conversions defined here override the global ones for the given product.
 | `DELETE` | `/api/meal-plan-entries/cook` | Uncook (reverse) an entry. Body: `{ mealPlanEntryId }`. Restores stock from the entry's consume logs. |
 | `GET` | `/api/meal-plan-entries/ingredient-summary` | Shopping-list summary for a date range. Query: `startDate`, `endDate`. Returns `{ ingredients, unlinkedIngredients, restock, producible }`. Applies group rule with running-stock simulation across all entries in the range. Each row carries a `recipes[]` of contributing meal-plan entries. Ingredients whose product is the output of a recipe (see `/api/products/$id/source-recipes`) are routed into `producible[]` (with `sourceRecipeId`/`sourceRecipeName`) instead of `ingredients[]` or `restock[]`, so they're surfaced for cooking rather than buying. |
 | `GET` | `/api/meal-plan-entries/nutrition-summary` | Aggregate nutrition for the date range. Query: `startDate`, `endDate`. When an ingredient's product has no own nutrition but is produced by a recipe, the macros are derived from that source recipe's ingredients (scaled by produced quantity). |
+| `GET` | `/api/meal-plan-entries/cost-summary` | Aggregate cost for the date range. Query: `startDate`, `endDate`. Returns `{ "YYYY-MM-DD": { total, complete } }`. Per-ingredient cost = avg `unit_cost` across the user's stock entries for that product × ingredient qty (converted to the product's default unit) × entry/recipe servings ratio. Ingredient groups are averaged across alternatives, mirroring the nutrition rollup. `complete: false` flags days where one or more ingredients had no priced stock entry or a unit-conversion gap. |
 
 ### Meal slots
 
@@ -272,6 +273,7 @@ meal-plan-entries/$id        GET, PUT, DELETE
 meal-plan-entries/cook       POST, DELETE    cook / uncook
 meal-plan-entries/ingredient-summary   GET   shopping list aggregate
 meal-plan-entries/nutrition-summary    GET   nutrition aggregate
+meal-plan-entries/cost-summary         GET   cost aggregate
 meal-slots/                  GET, POST
 meal-slots/$id               GET, PUT, DELETE
 meal-slots/reorder           PUT             bulk reorder

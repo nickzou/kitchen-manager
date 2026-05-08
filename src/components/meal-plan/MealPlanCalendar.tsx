@@ -1,4 +1,5 @@
 import { Fragment } from "react";
+import type { CostSummary } from "#src/lib/hooks/use-cost-summary";
 import type { MealPlanEntry } from "#src/lib/hooks/use-meal-plan-entries";
 import type { MealSlot } from "#src/lib/hooks/use-meal-slots";
 import type { NutritionSummary } from "#src/lib/hooks/use-nutrition-summary";
@@ -25,6 +26,7 @@ interface MealPlanCalendarProps {
 	selectedDay: number;
 	onSelectDay: (day: number) => void;
 	nutritionSummary?: NutritionSummary;
+	costSummary?: CostSummary;
 }
 
 const ALL_DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -68,10 +70,25 @@ export function MealPlanCalendar({
 	selectedDay,
 	onSelectDay,
 	nutritionSummary,
+	costSummary,
 }: MealPlanCalendarProps) {
 	const days = getDayDates(weekStart);
 	const dayNames = getDayNames(weekStartDay);
 	const today = new Date();
+
+	const weeklyCost =
+		costSummary !== undefined
+			? days.reduce((s, d) => s + (costSummary[toDateString(d)]?.total ?? 0), 0)
+			: null;
+	const weeklyComplete =
+		costSummary !== undefined
+			? days.every((d) => {
+					const c = costSummary[toDateString(d)];
+					return !c || c.complete;
+				})
+			: true;
+	const fmt = (n: number) =>
+		`$${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 	// Desktop grid
 	const desktopGrid = (
@@ -177,7 +194,63 @@ export function MealPlanCalendar({
 						})}
 					</>
 				)}
+
+				{/* Cost summary row */}
+				{costSummary && (
+					<>
+						<div className="flex items-start bg-(--surface-strong) p-2 text-xs font-semibold text-(--sea-ink-soft)">
+							Cost
+						</div>
+						{days.map((day, i) => {
+							const dateStr = toDateString(day);
+							const dayCost = costSummary[dateStr];
+							return (
+								<div
+									key={`cost-${dayNames[i]}`}
+									className={cn(
+										"bg-white p-2 dark:bg-[#1a2e30]",
+										isSameDay(day, today) &&
+											"bg-[rgba(79,184,178,0.04)] dark:bg-[rgba(79,184,178,0.06)]",
+									)}
+								>
+									{dayCost ? (
+										<div className="text-center">
+											<p className="text-sm font-bold text-(--sea-ink)">
+												{fmt(dayCost.total)}
+												{!dayCost.complete && (
+													<span
+														title="Some ingredients have no priced stock or unit-conversion gap; total is partial"
+														className="ml-1 text-amber-600 dark:text-amber-400"
+													>
+														*
+													</span>
+												)}
+											</p>
+										</div>
+									) : null}
+								</div>
+							);
+						})}
+					</>
+				)}
 			</div>
+
+			{costSummary && weeklyCost !== null && (
+				<div className="mt-3 flex items-baseline justify-end gap-2 text-sm">
+					<span className="text-(--sea-ink-soft)">Weekly total:</span>
+					<span className="font-bold text-(--sea-ink)">
+						{fmt(weeklyCost)}
+						{!weeklyComplete && (
+							<span
+								title="One or more days have a partial total — see the * marker"
+								className="ml-1 text-amber-600 dark:text-amber-400"
+							>
+								*
+							</span>
+						)}
+					</span>
+				</div>
+			)}
 		</div>
 	);
 
@@ -239,7 +312,38 @@ export function MealPlanCalendar({
 					);
 				})}
 
-				{nutritionSummary && nutritionSummary[mobileDateStr] && (
+				{costSummary?.[mobileDateStr] && (
+					<div className="mt-3 rounded-xl border border-(--line) bg-white p-3 text-center dark:bg-[#1a2e30]">
+						<p className="text-sm font-bold text-(--sea-ink)">
+							{fmt(costSummary[mobileDateStr].total)}
+							{!costSummary[mobileDateStr].complete && (
+								<span
+									title="Some ingredients have no priced stock or unit-conversion gap; total is partial"
+									className="ml-1 text-amber-600 dark:text-amber-400"
+								>
+									*
+								</span>
+							)}
+						</p>
+						<p className="text-xs text-(--sea-ink-soft)">Day total</p>
+					</div>
+				)}
+
+				{costSummary && weeklyCost !== null && (
+					<div className="mt-2 flex items-baseline justify-between rounded-xl border border-(--line) bg-white px-3 py-2 dark:bg-[#1a2e30]">
+						<span className="text-xs text-(--sea-ink-soft)">Weekly total</span>
+						<span className="text-sm font-bold text-(--sea-ink)">
+							{fmt(weeklyCost)}
+							{!weeklyComplete && (
+								<span className="ml-1 text-amber-600 dark:text-amber-400">
+									*
+								</span>
+							)}
+						</span>
+					</div>
+				)}
+
+				{nutritionSummary?.[mobileDateStr] && (
 					<div className="mt-3 rounded-xl border border-(--line) bg-white p-3 text-center dark:bg-[#1a2e30]">
 						<p className="text-sm font-bold text-(--sea-ink)">
 							{Math.round(nutritionSummary[mobileDateStr].calories)} cal

@@ -7,6 +7,7 @@ import { MealSlotManager } from "#src/components/meal-plan/MealSlotManager";
 import { WeekNavigation } from "#src/components/meal-plan/WeekNavigation";
 import { Page } from "#src/components/Page";
 import { getWeekStart } from "#src/lib/format-date";
+import { useCostSummary } from "#src/lib/hooks/use-cost-summary";
 import {
 	useCookMealPlanEntry,
 	useCreateMealPlanEntry,
@@ -62,6 +63,7 @@ function MealPlanPage() {
 	const { data: entries } = useMealPlanEntries(startStr, endStr);
 	const { data: recipes } = useRecipes();
 	const { data: nutritionSummary } = useNutritionSummary(startStr, endStr);
+	const { data: costSummary } = useCostSummary(startStr, endStr);
 
 	const createEntry = useCreateMealPlanEntry();
 	const updateEntry = useUpdateMealPlanEntry();
@@ -200,6 +202,7 @@ function MealPlanPage() {
 						nutritionSummary={
 							settings?.nutritionEnabled ? nutritionSummary : undefined
 						}
+						costSummary={costSummary}
 					/>
 				)}
 			</Island>
