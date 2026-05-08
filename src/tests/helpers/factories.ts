@@ -281,3 +281,16 @@ export function makeRecipePrepStep(overrides?: Record<string, unknown>) {
 		...overrides,
 	};
 }
+
+export function makeShoppingListItem(overrides?: Record<string, unknown>) {
+	return {
+		id: "shopping-list-item-1",
+		productId: "product-1",
+		quantity: "2",
+		quantityUnitId: null,
+		userId: "user-1",
+		createdAt: new Date("2025-01-01"),
+		updatedAt: new Date("2025-01-01"),
+		...overrides,
+	};
+}

@@ -190,6 +190,18 @@ Used as a fallback when no product-specific conversion exists.
 
 ---
 
+## Shopping List
+
+Manual additions to the shopping list — items the user wants to buy that aren't tied to a planned meal or a below-min staple.
+
+| Method | Path | Description |
+| --- | --- | --- |
+| `GET` | `/api/shopping-list-items` | List the user's manual shopping list items, newest first. |
+| `POST` | `/api/shopping-list-items` | Create one. Body: `{ productId, quantity, quantityUnitId? }`. `quantity` is stored as a string (numeric column). |
+| `GET` / `PUT` / `DELETE` | `/api/shopping-list-items/$id` | Standard CRUD. PUT accepts any subset of `productId`, `quantity`, `quantityUnitId`. |
+
+---
+
 ## Account
 
 ### User settings
@@ -283,6 +295,8 @@ stock-entries/spoil          POST
 stock-logs/                  GET             paginated
 stock-logs/$id               GET, PUT, DELETE
 stock-logs/reverse           POST            undo a log
+shopping-list-items/         GET, POST       manual list items
+shopping-list-items/$id      GET, PUT, DELETE
 stores/                      GET, POST
 stores/$id                   GET, PUT, DELETE
 unit-conversions/            GET, POST

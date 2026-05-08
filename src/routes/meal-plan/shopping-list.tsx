@@ -1,12 +1,23 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Plus } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Plus, X } from "lucide-react";
+import {
+	type FormEvent,
+	useCallback,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
 import { Accordion } from "#src/components/Accordion";
+import { Button } from "#src/components/Button";
+import { Combobox } from "#src/components/Combobox";
 import { DateRangePicker } from "#src/components/DateRangePicker";
 import { Island } from "#src/components/Island";
 import { Modal } from "#src/components/Modal";
+import { NumberInput } from "#src/components/NumberInput";
 import { Page } from "#src/components/Page";
 import { StockEntryForm } from "#src/components/stock/StockEntryForm";
+import { useToast } from "#src/components/Toast";
 import { getWeekStart } from "#src/lib/format-date";
 import { useBrands } from "#src/lib/hooks/use-brands";
 import {
@@ -16,8 +27,14 @@ import {
 	useIngredientSummary,
 } from "#src/lib/hooks/use-ingredient-summary";
 import { useProductUnitConversions } from "#src/lib/hooks/use-product-unit-conversions";
-import { useProducts } from "#src/lib/hooks/use-products";
+import { useCreateProduct, useProducts } from "#src/lib/hooks/use-products";
 import { useQuantityUnits } from "#src/lib/hooks/use-quantity-units";
+import {
+	type ShoppingListItem,
+	useCreateShoppingListItem,
+	useDeleteShoppingListItem,
+	useShoppingListItems,
+} from "#src/lib/hooks/use-shopping-list-items";
 import { useStores } from "#src/lib/hooks/use-stores";
 import { useUnitConversions } from "#src/lib/hooks/use-unit-conversions";
 import { useUserSettings } from "#src/lib/hooks/use-user-settings";
@@ -138,12 +155,48 @@ function ShoppingListPage() {
 	const { data: productConversions } =
 		useProductUnitConversions(summaryProductIds);
 
+	const toast = useToast();
 	const [stockingFor, setStockingFor] = useState<{
 		productId: string;
 		quantity: string;
 		unitId?: string;
 		productName: string;
 	} | null>(null);
+
+	const [addItemOpen, setAddItemOpen] = useState(false);
+	const [addItemProductId, setAddItemProductId] = useState("");
+	const [addItemQuantity, setAddItemQuantity] = useState("1");
+	const [addItemUnitId, setAddItemUnitId] = useState("");
+	const createShoppingListItem = useCreateShoppingListItem();
+	const deleteShoppingListItem = useDeleteShoppingListItem();
+	const createProduct = useCreateProduct();
+
+	const productMap = useMemo(
+		() => new Map((products ?? []).map((p) => [p.id, p])),
+		[products],
+	);
+	const unitMap = useMemo(
+		() => new Map((quantityUnits ?? []).map((u) => [u.id, u])),
+		[quantityUnits],
+	);
+
+	function resetAddItemForm() {
+		setAddItemProductId("");
+		setAddItemQuantity("1");
+		setAddItemUnitId("");
+	}
+
+	async function handleSubmitAddItem(e: FormEvent) {
+		e.preventDefault();
+		if (!addItemProductId || !addItemQuantity) return;
+		await createShoppingListItem.mutateAsync({
+			productId: addItemProductId,
+			quantity: addItemQuantity,
+			quantityUnitId: addItemUnitId || null,
+		});
+		resetAddItemForm();
+		setAddItemOpen(false);
+	}
 	function withKey(item: IngredientSummaryItem): IngredientItem {
 		return { ...item, key: `${item.productId}-${item.quantityUnitId}` };
 	}
@@ -162,8 +215,15 @@ function ShoppingListPage() {
 			key: `unlinked-${item.notes}-${item.quantity}-${item.unitId}`,
 		})) ?? [];
 
+	const { data: manualItems } = useShoppingListItems();
+	const manual = manualItems ?? [];
+
 	const totalRows =
-		deficit.length + unknownUnit.length + restock.length + unlinked.length;
+		deficit.length +
+		unknownUnit.length +
+		restock.length +
+		unlinked.length +
+		manual.length;
 	const checkedCount = checked.size;
 
 	const statusBadge: Record<string, string> = {
@@ -372,6 +432,55 @@ function ShoppingListPage() {
 							</div>
 						)}
 
+						<div>
+							<div className="mb-3 flex items-center justify-between">
+								<h2 className="text-sm font-semibold text-(--sea-ink)">
+									Added by you{manual.length > 0 ? ` (${manual.length})` : ""}
+								</h2>
+								<button
+									type="button"
+									onClick={() => setAddItemOpen(true)}
+									className="flex items-center gap-1 rounded-lg border border-(--line) px-2 py-1 text-xs font-semibold text-(--sea-ink-soft) transition hover:bg-(--surface)"
+								>
+									<Plus size={12} />
+									Add item
+								</button>
+							</div>
+							{manual.length > 0 && (
+								<div className="flex flex-col gap-1">
+									{manual.map((item) => {
+										const key = `manual-${item.id}`;
+										const product = productMap.get(item.productId);
+										const unit = item.quantityUnitId
+											? unitMap.get(item.quantityUnitId)
+											: product?.defaultQuantityUnitId
+												? unitMap.get(product.defaultQuantityUnitId)
+												: null;
+										const unitLabel = unit?.abbreviation ?? unit?.name ?? "";
+										return (
+											<ManualItemRow
+												key={key}
+												item={item}
+												productName={product?.name ?? "Unknown product"}
+												unitLabel={unitLabel}
+												checked={checked.has(key)}
+												onToggle={() => toggle(key)}
+												onStock={() =>
+													setStockingFor({
+														productId: item.productId,
+														productName: product?.name ?? "Unknown product",
+														quantity: item.quantity,
+														unitId: item.quantityUnitId ?? undefined,
+													})
+												}
+												onDelete={() => deleteShoppingListItem.mutate(item.id)}
+											/>
+										);
+									})}
+								</div>
+							)}
+						</div>
+
 						{unknownUnit.length > 0 && (
 							<div>
 								<h2 className="mb-3 text-sm font-semibold text-gray-500">
@@ -465,11 +574,148 @@ function ShoppingListPage() {
 							unitId: stockingFor.unitId,
 						}}
 						className="flex flex-col gap-3"
-						onSuccess={() => setStockingFor(null)}
+						onSuccess={({ quantity, unitAbbr }) => {
+							toast.success(
+								`${quantity}${unitAbbr ? ` ${unitAbbr}` : ""} ${stockingFor.productName} added to stock`,
+							);
+							setStockingFor(null);
+						}}
 					/>
 				)}
 			</Modal>
+
+			<Modal
+				open={addItemOpen}
+				onOpenChange={(o) => {
+					if (!o) {
+						setAddItemOpen(false);
+						resetAddItemForm();
+					}
+				}}
+				title="Add item to shopping list"
+			>
+				<form onSubmit={handleSubmitAddItem} className="flex flex-col gap-3">
+					<Combobox
+						value={addItemProductId}
+						onChange={(v) => {
+							setAddItemProductId(v);
+							const p = productMap.get(v);
+							if (p?.defaultQuantityUnitId) {
+								setAddItemUnitId(p.defaultQuantityUnitId);
+							}
+						}}
+						options={(products ?? []).map((p) => ({
+							value: p.id,
+							label: p.name,
+						}))}
+						placeholder="Product *"
+						required
+						className="flex-1"
+						onCreateNew={async (name) => {
+							const created = await createProduct.mutateAsync({ name });
+							setAddItemProductId(created.id);
+						}}
+					/>
+					<div className="flex items-center gap-2">
+						<NumberInput
+							placeholder="Qty *"
+							required
+							step="any"
+							min="0.01"
+							value={addItemQuantity}
+							onChange={(e) => setAddItemQuantity(e.target.value)}
+							className="w-24"
+						/>
+						<Combobox
+							value={addItemUnitId}
+							onChange={setAddItemUnitId}
+							options={(quantityUnits ?? []).map((u) => ({
+								value: u.id,
+								label: u.abbreviation ?? u.name,
+							}))}
+							placeholder="Unit"
+							className="flex-1"
+						/>
+					</div>
+					<Button
+						type="submit"
+						disabled={
+							createShoppingListItem.isPending ||
+							!addItemProductId ||
+							!addItemQuantity
+						}
+						className="flex items-center justify-center gap-1.5"
+					>
+						<Plus size={16} />
+						Add to list
+					</Button>
+				</form>
+			</Modal>
 		</Page>
+	);
+}
+
+function ManualItemRow({
+	item,
+	productName,
+	unitLabel,
+	checked,
+	onToggle,
+	onStock,
+	onDelete,
+}: {
+	item: ShoppingListItem;
+	productName: string;
+	unitLabel: string;
+	checked: boolean;
+	onToggle: () => void;
+	onStock: () => void;
+	onDelete: () => void;
+}) {
+	return (
+		<div
+			className={cn(
+				"flex w-full items-center gap-3 rounded-lg py-2 text-sm transition hover:bg-(--surface)",
+				checked && "opacity-60",
+			)}
+		>
+			<button
+				type="button"
+				onClick={onToggle}
+				className="flex min-w-0 flex-1 items-center gap-3 text-left"
+			>
+				<span
+					className={cn(
+						"flex-1 font-medium text-(--sea-ink)",
+						checked && "line-through",
+					)}
+				>
+					{productName}
+				</span>
+				<span
+					className={cn(
+						"text-xs sm:text-sm text-(--sea-ink-soft)",
+						checked && "line-through",
+					)}
+				>
+					{Number(item.quantity)
+						.toFixed(2)
+						.replace(/\.?0+$/, "")}
+					{unitLabel ? ` ${unitLabel}` : ""}
+				</span>
+			</button>
+			<StockButton onClick={onStock} />
+			<button
+				type="button"
+				onClick={onDelete}
+				title="Remove from list"
+				aria-label="Remove from list"
+				className="rounded-lg p-1 text-(--sea-ink-soft) transition hover:bg-(--surface) hover:text-red-600"
+			>
+				<X size={16} />
+			</button>
+			<RowCheckbox checked={checked} onChange={onToggle} />
+		</div>
 	);
 }
 

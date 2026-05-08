@@ -41,6 +41,7 @@ import { Route as ApiUnitConversionsIndexRouteImport } from './routes/api/unit-c
 import { Route as ApiStoresIndexRouteImport } from './routes/api/stores/index'
 import { Route as ApiStockLogsIndexRouteImport } from './routes/api/stock-logs/index'
 import { Route as ApiStockEntriesIndexRouteImport } from './routes/api/stock-entries/index'
+import { Route as ApiShoppingListItemsIndexRouteImport } from './routes/api/shopping-list-items/index'
 import { Route as ApiRecipesIndexRouteImport } from './routes/api/recipes/index'
 import { Route as ApiRecipeCategoriesIndexRouteImport } from './routes/api/recipe-categories/index'
 import { Route as ApiQuantityUnitsIndexRouteImport } from './routes/api/quantity-units/index'
@@ -61,6 +62,7 @@ import { Route as ApiStockLogsIdRouteImport } from './routes/api/stock-logs/$id'
 import { Route as ApiStockEntriesSpoilRouteImport } from './routes/api/stock-entries/spoil'
 import { Route as ApiStockEntriesConsumeRouteImport } from './routes/api/stock-entries/consume'
 import { Route as ApiStockEntriesIdRouteImport } from './routes/api/stock-entries/$id'
+import { Route as ApiShoppingListItemsIdRouteImport } from './routes/api/shopping-list-items/$id'
 import { Route as ApiRecipesCookRouteImport } from './routes/api/recipes/cook'
 import { Route as ApiRecipesAvailabilityRouteImport } from './routes/api/recipes/availability'
 import { Route as ApiRecipesIdRouteImport } from './routes/api/recipes/$id'
@@ -244,6 +246,12 @@ const ApiStockEntriesIndexRoute = ApiStockEntriesIndexRouteImport.update({
   path: '/api/stock-entries/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiShoppingListItemsIndexRoute =
+  ApiShoppingListItemsIndexRouteImport.update({
+    id: '/api/shopping-list-items/',
+    path: '/api/shopping-list-items/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiRecipesIndexRoute = ApiRecipesIndexRouteImport.update({
   id: '/api/recipes/',
   path: '/api/recipes/',
@@ -345,6 +353,11 @@ const ApiStockEntriesConsumeRoute = ApiStockEntriesConsumeRouteImport.update({
 const ApiStockEntriesIdRoute = ApiStockEntriesIdRouteImport.update({
   id: '/api/stock-entries/$id',
   path: '/api/stock-entries/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiShoppingListItemsIdRoute = ApiShoppingListItemsIdRouteImport.update({
+  id: '/api/shopping-list-items/$id',
+  path: '/api/shopping-list-items/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiRecipesCookRoute = ApiRecipesCookRouteImport.update({
@@ -508,6 +521,7 @@ export interface FileRoutesByFullPath {
   '/api/recipes/$id': typeof ApiRecipesIdRouteWithChildren
   '/api/recipes/availability': typeof ApiRecipesAvailabilityRoute
   '/api/recipes/cook': typeof ApiRecipesCookRoute
+  '/api/shopping-list-items/$id': typeof ApiShoppingListItemsIdRoute
   '/api/stock-entries/$id': typeof ApiStockEntriesIdRoute
   '/api/stock-entries/consume': typeof ApiStockEntriesConsumeRoute
   '/api/stock-entries/spoil': typeof ApiStockEntriesSpoilRoute
@@ -528,6 +542,7 @@ export interface FileRoutesByFullPath {
   '/api/quantity-units/': typeof ApiQuantityUnitsIndexRoute
   '/api/recipe-categories/': typeof ApiRecipeCategoriesIndexRoute
   '/api/recipes/': typeof ApiRecipesIndexRoute
+  '/api/shopping-list-items/': typeof ApiShoppingListItemsIndexRoute
   '/api/stock-entries/': typeof ApiStockEntriesIndexRoute
   '/api/stock-logs/': typeof ApiStockLogsIndexRoute
   '/api/stores/': typeof ApiStoresIndexRoute
@@ -584,6 +599,7 @@ export interface FileRoutesByTo {
   '/api/recipes/$id': typeof ApiRecipesIdRouteWithChildren
   '/api/recipes/availability': typeof ApiRecipesAvailabilityRoute
   '/api/recipes/cook': typeof ApiRecipesCookRoute
+  '/api/shopping-list-items/$id': typeof ApiShoppingListItemsIdRoute
   '/api/stock-entries/$id': typeof ApiStockEntriesIdRoute
   '/api/stock-entries/consume': typeof ApiStockEntriesConsumeRoute
   '/api/stock-entries/spoil': typeof ApiStockEntriesSpoilRoute
@@ -604,6 +620,7 @@ export interface FileRoutesByTo {
   '/api/quantity-units': typeof ApiQuantityUnitsIndexRoute
   '/api/recipe-categories': typeof ApiRecipeCategoriesIndexRoute
   '/api/recipes': typeof ApiRecipesIndexRoute
+  '/api/shopping-list-items': typeof ApiShoppingListItemsIndexRoute
   '/api/stock-entries': typeof ApiStockEntriesIndexRoute
   '/api/stock-logs': typeof ApiStockLogsIndexRoute
   '/api/stores': typeof ApiStoresIndexRoute
@@ -661,6 +678,7 @@ export interface FileRoutesById {
   '/api/recipes/$id': typeof ApiRecipesIdRouteWithChildren
   '/api/recipes/availability': typeof ApiRecipesAvailabilityRoute
   '/api/recipes/cook': typeof ApiRecipesCookRoute
+  '/api/shopping-list-items/$id': typeof ApiShoppingListItemsIdRoute
   '/api/stock-entries/$id': typeof ApiStockEntriesIdRoute
   '/api/stock-entries/consume': typeof ApiStockEntriesConsumeRoute
   '/api/stock-entries/spoil': typeof ApiStockEntriesSpoilRoute
@@ -681,6 +699,7 @@ export interface FileRoutesById {
   '/api/quantity-units/': typeof ApiQuantityUnitsIndexRoute
   '/api/recipe-categories/': typeof ApiRecipeCategoriesIndexRoute
   '/api/recipes/': typeof ApiRecipesIndexRoute
+  '/api/shopping-list-items/': typeof ApiShoppingListItemsIndexRoute
   '/api/stock-entries/': typeof ApiStockEntriesIndexRoute
   '/api/stock-logs/': typeof ApiStockLogsIndexRoute
   '/api/stores/': typeof ApiStoresIndexRoute
@@ -739,6 +758,7 @@ export interface FileRouteTypes {
     | '/api/recipes/$id'
     | '/api/recipes/availability'
     | '/api/recipes/cook'
+    | '/api/shopping-list-items/$id'
     | '/api/stock-entries/$id'
     | '/api/stock-entries/consume'
     | '/api/stock-entries/spoil'
@@ -759,6 +779,7 @@ export interface FileRouteTypes {
     | '/api/quantity-units/'
     | '/api/recipe-categories/'
     | '/api/recipes/'
+    | '/api/shopping-list-items/'
     | '/api/stock-entries/'
     | '/api/stock-logs/'
     | '/api/stores/'
@@ -815,6 +836,7 @@ export interface FileRouteTypes {
     | '/api/recipes/$id'
     | '/api/recipes/availability'
     | '/api/recipes/cook'
+    | '/api/shopping-list-items/$id'
     | '/api/stock-entries/$id'
     | '/api/stock-entries/consume'
     | '/api/stock-entries/spoil'
@@ -835,6 +857,7 @@ export interface FileRouteTypes {
     | '/api/quantity-units'
     | '/api/recipe-categories'
     | '/api/recipes'
+    | '/api/shopping-list-items'
     | '/api/stock-entries'
     | '/api/stock-logs'
     | '/api/stores'
@@ -891,6 +914,7 @@ export interface FileRouteTypes {
     | '/api/recipes/$id'
     | '/api/recipes/availability'
     | '/api/recipes/cook'
+    | '/api/shopping-list-items/$id'
     | '/api/stock-entries/$id'
     | '/api/stock-entries/consume'
     | '/api/stock-entries/spoil'
@@ -911,6 +935,7 @@ export interface FileRouteTypes {
     | '/api/quantity-units/'
     | '/api/recipe-categories/'
     | '/api/recipes/'
+    | '/api/shopping-list-items/'
     | '/api/stock-entries/'
     | '/api/stock-logs/'
     | '/api/stores/'
@@ -968,6 +993,7 @@ export interface RootRouteChildren {
   ApiRecipesIdRoute: typeof ApiRecipesIdRouteWithChildren
   ApiRecipesAvailabilityRoute: typeof ApiRecipesAvailabilityRoute
   ApiRecipesCookRoute: typeof ApiRecipesCookRoute
+  ApiShoppingListItemsIdRoute: typeof ApiShoppingListItemsIdRoute
   ApiStockEntriesIdRoute: typeof ApiStockEntriesIdRoute
   ApiStockEntriesConsumeRoute: typeof ApiStockEntriesConsumeRoute
   ApiStockEntriesSpoilRoute: typeof ApiStockEntriesSpoilRoute
@@ -988,6 +1014,7 @@ export interface RootRouteChildren {
   ApiQuantityUnitsIndexRoute: typeof ApiQuantityUnitsIndexRoute
   ApiRecipeCategoriesIndexRoute: typeof ApiRecipeCategoriesIndexRoute
   ApiRecipesIndexRoute: typeof ApiRecipesIndexRoute
+  ApiShoppingListItemsIndexRoute: typeof ApiShoppingListItemsIndexRoute
   ApiStockEntriesIndexRoute: typeof ApiStockEntriesIndexRoute
   ApiStockLogsIndexRoute: typeof ApiStockLogsIndexRoute
   ApiStoresIndexRoute: typeof ApiStoresIndexRoute
@@ -1223,6 +1250,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiStockEntriesIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/shopping-list-items/': {
+      id: '/api/shopping-list-items/'
+      path: '/api/shopping-list-items'
+      fullPath: '/api/shopping-list-items/'
+      preLoaderRoute: typeof ApiShoppingListItemsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/recipes/': {
       id: '/api/recipes/'
       path: '/api/recipes'
@@ -1361,6 +1395,13 @@ declare module '@tanstack/react-router' {
       path: '/api/stock-entries/$id'
       fullPath: '/api/stock-entries/$id'
       preLoaderRoute: typeof ApiStockEntriesIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/shopping-list-items/$id': {
+      id: '/api/shopping-list-items/$id'
+      path: '/api/shopping-list-items/$id'
+      fullPath: '/api/shopping-list-items/$id'
+      preLoaderRoute: typeof ApiShoppingListItemsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/recipes/cook': {
@@ -1599,6 +1640,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiRecipesIdRoute: ApiRecipesIdRouteWithChildren,
   ApiRecipesAvailabilityRoute: ApiRecipesAvailabilityRoute,
   ApiRecipesCookRoute: ApiRecipesCookRoute,
+  ApiShoppingListItemsIdRoute: ApiShoppingListItemsIdRoute,
   ApiStockEntriesIdRoute: ApiStockEntriesIdRoute,
   ApiStockEntriesConsumeRoute: ApiStockEntriesConsumeRoute,
   ApiStockEntriesSpoilRoute: ApiStockEntriesSpoilRoute,
@@ -1619,6 +1661,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiQuantityUnitsIndexRoute: ApiQuantityUnitsIndexRoute,
   ApiRecipeCategoriesIndexRoute: ApiRecipeCategoriesIndexRoute,
   ApiRecipesIndexRoute: ApiRecipesIndexRoute,
+  ApiShoppingListItemsIndexRoute: ApiShoppingListItemsIndexRoute,
   ApiStockEntriesIndexRoute: ApiStockEntriesIndexRoute,
   ApiStockLogsIndexRoute: ApiStockLogsIndexRoute,
   ApiStoresIndexRoute: ApiStoresIndexRoute,
