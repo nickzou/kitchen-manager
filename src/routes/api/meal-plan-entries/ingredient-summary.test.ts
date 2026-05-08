@@ -13,6 +13,7 @@ vi.mock("#src/lib/auth-session", () => ({
 vi.mock("#src/db/schema", () => ({
 	mealPlanEntry: {},
 	product: {},
+	productUnitConversion: {},
 	quantityUnit: {},
 	recipe: {},
 	recipeIngredient: {},
@@ -26,7 +27,8 @@ vi.mock("#src/db/schema", () => ({
 // 2. quantity units
 // 3. products by id (only if productIds non-empty)
 // 4. stock sums by product (only if productIds non-empty)
-// 5. unit conversions (only if productIds non-empty)
+// 5. global unit conversions (only if productIds non-empty)
+// 6. product unit conversions (only if productIds non-empty)
 let selectCall = 0;
 const mockResults: unknown[] = [];
 
@@ -365,6 +367,53 @@ describe("GET /api/meal-plan-entries/ingredient-summary restock", () => {
 		// 480ml → 480/240 = 2 cups
 		expect(data.ingredients[0].minStockBuffer).toBeCloseTo(2);
 		expect(data.ingredients[0].neededQuantity).toBe(1);
+	});
+
+	it("uses product-specific conversions when classifying ingredient status", async () => {
+		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
+		const grams = makeQuantityUnit({
+			id: "unit-g",
+			name: "Grams",
+			abbreviation: "g",
+		});
+		const tsp = makeQuantityUnit({
+			id: "unit-tsp",
+			name: "Teaspoon",
+			abbreviation: "tsp",
+		});
+		const cornstarch = makeProduct({
+			id: "p-cornstarch",
+			name: "Cornstarch",
+			defaultQuantityUnitId: "unit-g",
+		});
+		mockResults[0] = [
+			{
+				entryServings: null,
+				recipeServings: 4,
+				ingredientProductId: "p-cornstarch",
+				ingredientQuantity: "2",
+				ingredientUnitId: "unit-tsp",
+				ingredientNotes: null,
+			},
+		];
+		mockResults[1] = [];
+		mockResults[2] = [grams, tsp];
+		mockResults[3] = [cornstarch];
+		mockResults[4] = [{ productId: "p-cornstarch", totalQuantity: "100" }];
+		mockResults[5] = []; // no global conversions
+		mockResults[6] = [
+			{
+				productId: "p-cornstarch",
+				fromUnitId: "unit-tsp",
+				toUnitId: "unit-g",
+				factor: "3",
+			},
+		];
+
+		const response = await GET({ request: summaryRequest() } as never);
+
+		const data = await response.json();
+		expect(data.ingredients[0].status).toBe("sufficient");
 	});
 
 	it("populates unit labels for restock items from the product's default unit", async () => {
