@@ -4,6 +4,7 @@ import { db } from "#src/db";
 import {
 	mealPlanEntry,
 	product,
+	productUnitConversion,
 	quantityUnit,
 	recipe,
 	recipeIngredient,
@@ -167,17 +168,41 @@ export const Route = createFileRoute(
 					)
 					.groupBy(stockEntry.productId);
 
-				const conversions = await db
-					.select()
-					.from(unitConversion)
-					.where(eq(unitConversion.userId, session.user.id));
+				const [globalConversions, productConversions] = await Promise.all([
+					db
+						.select()
+						.from(unitConversion)
+						.where(eq(unitConversion.userId, session.user.id)),
+					db
+						.select()
+						.from(productUnitConversion)
+						.where(
+							and(
+								eq(productUnitConversion.userId, session.user.id),
+								inArray(productUnitConversion.productId, productIds),
+							),
+						),
+				]);
 
 				const productMap = new Map(products.map((p) => [p.id, p]));
 				const stockMap = new Map(
 					stock.map((s) => [s.productId, Number(s.totalQuantity)]),
 				);
 
-				const graph = buildConversionGraph(conversions);
+				const graphCache = new Map<
+					string,
+					ReturnType<typeof buildConversionGraph>
+				>();
+				function graphFor(productId: string) {
+					const cached = graphCache.get(productId);
+					if (cached) return cached;
+					const specific = productConversions.filter(
+						(c) => c.productId === productId,
+					);
+					const g = buildConversionGraph([...globalConversions, ...specific]);
+					graphCache.set(productId, g);
+					return g;
+				}
 
 				// Group fulfillment rule with stock simulation: walk meal plan
 				// entries chronologically, maintain a running stock map, and for
@@ -219,7 +244,7 @@ export const Route = createFileRoute(
 						(e.recipeServings ?? 1);
 					const needed = Number(e.ingredientQuantity) * scaleFactor;
 					const neededInStockUnit = tryConvert(
-						graph,
+						graphFor(p.id),
 						needed,
 						e.ingredientUnitId,
 						p.defaultQuantityUnitId,
@@ -363,7 +388,7 @@ export const Route = createFileRoute(
 
 					// Try to convert needed quantity to product's default unit for comparison
 					let neededInStockUnit = tryConvert(
-						graph,
+						graphFor(p.id),
 						agg.quantity,
 						agg.unitId,
 						p.defaultQuantityUnitId,
@@ -394,7 +419,7 @@ export const Route = createFileRoute(
 							} else {
 								minStockBuffer =
 									tryConvert(
-										graph,
+										graphFor(p.id),
 										minStock,
 										p.defaultQuantityUnitId,
 										agg.unitId,
