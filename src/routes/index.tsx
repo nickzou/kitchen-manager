@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { ExpiringStockList } from "#src/components/dashboard/ExpiringStockList";
 import { Island } from "#src/components/Island";
@@ -18,7 +18,6 @@ export const Route = createFileRoute("/")({ component: Dashboard });
 
 function Dashboard() {
 	const { data: session, isPending: sessionLoading } = authClient.useSession();
-	const navigate = useNavigate();
 
 	const { data: stockEntries } = useStockEntries();
 	const { data: products } = useProducts();
@@ -33,12 +32,7 @@ function Dashboard() {
 		{},
 	);
 
-	if (sessionLoading) return null;
-	if (!session) {
-		navigate({ to: "/sign-in" });
-		return null;
-	}
-
+	if (sessionLoading || !session) return null;
 	const firstName = session.user.name?.split(" ")[0] ?? "there";
 
 	const productMap = new Map((products ?? []).map((p) => [p.id, p]));

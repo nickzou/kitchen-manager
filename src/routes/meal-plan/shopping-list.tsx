@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Accordion } from "#src/components/Accordion";
@@ -7,7 +7,6 @@ import { Island } from "#src/components/Island";
 import { Modal } from "#src/components/Modal";
 import { Page } from "#src/components/Page";
 import { StockEntryForm } from "#src/components/stock/StockEntryForm";
-import { authClient } from "#src/lib/auth-client";
 import { useBrands } from "#src/lib/hooks/use-brands";
 import {
 	type IngredientRecipeRef,
@@ -97,9 +96,6 @@ type IngredientItem = IngredientSummaryItem & { key: string };
 type UnlinkedItem = UnlinkedIngredient & { key: string };
 
 function ShoppingListPage() {
-	const { data: session, isPending: sessionLoading } = authClient.useSession();
-	const navigate = useNavigate();
-
 	const [startDate, setStartDate] = useState(() =>
 		toDateString(getMonday(new Date())),
 	);
@@ -138,13 +134,6 @@ function ShoppingListPage() {
 		unitId?: string;
 		productName: string;
 	} | null>(null);
-
-	if (sessionLoading) return null;
-	if (!session) {
-		navigate({ to: "/sign-in" });
-		return null;
-	}
-
 	function withKey(item: IngredientSummaryItem): IngredientItem {
 		return { ...item, key: `${item.productId}-${item.quantityUnitId}` };
 	}

@@ -34,7 +34,6 @@ import { PrepStepRow } from "#src/components/recipes/PrepStepRow";
 import { SectionHeading } from "#src/components/SectionHeading";
 import { Textarea } from "#src/components/Textarea";
 import { useToast } from "#src/components/Toast";
-import { authClient } from "#src/lib/auth-client";
 import { useRecipeCategories } from "#src/lib/hooks/use-categories";
 import { useCookRecipe } from "#src/lib/hooks/use-cook-recipe";
 import {
@@ -86,7 +85,6 @@ export const Route = createFileRoute("/recipes/$id")({
 function RecipeDetail() {
 	const { id } = Route.useParams();
 	const navigate = useNavigate();
-	const { data: session, isPending: sessionLoading } = authClient.useSession();
 
 	const { data: recipe, isLoading, error } = useRecipe(id);
 	const { data: categories } = useRecipeCategories();
@@ -314,13 +312,6 @@ function RecipeDetail() {
 	}, [ingredients]);
 
 	const editConversionHint = getEditConversionHint();
-
-	if (sessionLoading) return null;
-	if (!session) {
-		navigate({ to: "/sign-in" });
-		return null;
-	}
-
 	if (isLoading) {
 		return (
 			<Page as="main" className="pb-8 pt-14">

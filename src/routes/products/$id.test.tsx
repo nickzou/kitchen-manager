@@ -188,16 +188,6 @@ function renderPage() {
 }
 
 describe("ProductDetail", () => {
-	describe("authentication", () => {
-		it("redirects to /sign-in when session is null", () => {
-			mockUseSession.mockReturnValue({ data: null, isPending: false });
-
-			renderPage();
-
-			expect(mockNavigate).toHaveBeenCalledWith({ to: "/sign-in" });
-		});
-	});
-
 	describe("error states", () => {
 		it("shows 'Product not found' on error", () => {
 			mockUseProduct.mockReturnValue({

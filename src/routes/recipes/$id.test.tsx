@@ -252,16 +252,6 @@ function renderPage() {
 }
 
 describe("RecipeDetail", () => {
-	describe("authentication", () => {
-		it("redirects to /sign-in when session is null", () => {
-			mockUseSession.mockReturnValue({ data: null, isPending: false });
-
-			renderPage();
-
-			expect(mockNavigate).toHaveBeenCalledWith({ to: "/sign-in" });
-		});
-	});
-
 	describe("error states", () => {
 		it("shows 'Recipe not found' on error", () => {
 			mockUseRecipe.mockReturnValue({

@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { CircleCheck, CircleX, Plus } from "lucide-react";
 import { type FormEvent, useMemo, useState } from "react";
 import { Button } from "#src/components/Button";
@@ -13,7 +13,6 @@ import { Page } from "#src/components/Page";
 import { SearchInput } from "#src/components/SearchInput";
 import { TableView } from "#src/components/TableView";
 import { type ViewMode, ViewSwitcher } from "#src/components/ViewSwitcher";
-import { authClient } from "#src/lib/auth-client";
 import { formatDate } from "#src/lib/format-date";
 import { useRecipeCategories } from "#src/lib/hooks/use-categories";
 import { useRecipeAvailability } from "#src/lib/hooks/use-recipe-availability";
@@ -30,9 +29,6 @@ function formatTime(minutes: number | null) {
 }
 
 function RecipesPage() {
-	const { data: session, isPending: sessionLoading } = authClient.useSession();
-	const navigate = useNavigate();
-
 	const { data: recipes, isLoading } = useRecipes();
 	const { data: categories } = useRecipeCategories();
 	const { data: availability } = useRecipeAvailability();
@@ -49,13 +45,6 @@ function RecipesPage() {
 		const term = search.toLowerCase();
 		return recipes.filter((r) => r.name.toLowerCase().includes(term));
 	}, [recipes, search]);
-
-	if (sessionLoading) return null;
-	if (!session) {
-		navigate({ to: "/sign-in" });
-		return null;
-	}
-
 	async function handleSubmit(e: FormEvent) {
 		e.preventDefault();
 		if (!name.trim()) return;

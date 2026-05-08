@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { UtensilsCrossed } from "lucide-react";
 import { type FormEvent, useState } from "react";
 import { Accordion } from "#src/components/Accordion";
@@ -16,7 +16,6 @@ import { StockActivityRow } from "#src/components/stock/StockActivityRow";
 import { StockProductContent } from "#src/components/stock/StockProductContent";
 import { StockProductTrigger } from "#src/components/stock/StockProductTrigger";
 import { useToast } from "#src/components/Toast";
-import { authClient } from "#src/lib/auth-client";
 import { useBrands, useCreateBrand } from "#src/lib/hooks/use-brands";
 import { useProductCategories } from "#src/lib/hooks/use-categories";
 import { useProductUnitConversions } from "#src/lib/hooks/use-product-unit-conversions";
@@ -47,9 +46,6 @@ import { cn } from "#src/lib/utils";
 export const Route = createFileRoute("/stock/")({ component: StockPage });
 
 function StockPage() {
-	const { data: session, isPending: sessionLoading } = authClient.useSession();
-	const navigate = useNavigate();
-
 	const { data: products } = useProducts();
 	const { data: categories } = useProductCategories();
 	const { data: brands } = useBrands();
@@ -77,13 +73,6 @@ function StockPage() {
 	);
 	const [editingEntry, setEditingEntry] = useState<StockEntry | null>(null);
 	const [activeTab, setActiveTab] = useState<"stock" | "activity">("stock");
-
-	if (sessionLoading) return null;
-	if (!session) {
-		navigate({ to: "/sign-in" });
-		return null;
-	}
-
 	async function handleConsume(stockEntryId: string) {
 		const amount = consumeAmounts[stockEntryId] ?? "1";
 		if (!amount) return;

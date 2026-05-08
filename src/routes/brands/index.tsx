@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
 import { type FormEvent, useMemo, useState } from "react";
 import { Button } from "#src/components/Button";
@@ -11,7 +11,6 @@ import { Page } from "#src/components/Page";
 import { SearchInput } from "#src/components/SearchInput";
 import { TableView } from "#src/components/TableView";
 import { type ViewMode, ViewSwitcher } from "#src/components/ViewSwitcher";
-import { authClient } from "#src/lib/auth-client";
 import { formatDate } from "#src/lib/format-date";
 import { useBrands, useCreateBrand } from "#src/lib/hooks/use-brands";
 
@@ -20,9 +19,6 @@ export const Route = createFileRoute("/brands/")({
 });
 
 function BrandsPage() {
-	const { data: session, isPending: sessionLoading } = authClient.useSession();
-	const navigate = useNavigate();
-
 	const { data: brands, isLoading } = useBrands();
 	const createBrand = useCreateBrand();
 
@@ -35,13 +31,6 @@ function BrandsPage() {
 		const term = search.toLowerCase();
 		return brands.filter((b) => b.name.toLowerCase().includes(term));
 	}, [brands, search]);
-
-	if (sessionLoading) return null;
-	if (!session) {
-		navigate({ to: "/sign-in" });
-		return null;
-	}
-
 	async function handleSubmit(e: FormEvent) {
 		e.preventDefault();
 		if (!name.trim()) return;
