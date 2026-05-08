@@ -59,6 +59,19 @@ interface RestockItem {
 	stockQuantity: number;
 }
 
+interface ProducibleIngredient {
+	productId: string;
+	productName: string;
+	quantityUnitId: string | null;
+	unitName: string | null;
+	unitAbbreviation: string | null;
+	neededQuantity: number;
+	stockQuantity: number;
+	sourceRecipeId: string;
+	sourceRecipeName: string;
+	recipes: IngredientRecipeRef[];
+}
+
 export const Route = createFileRoute(
 	"/api/meal-plan-entries/ingredient-summary",
 )({
@@ -168,21 +181,51 @@ export const Route = createFileRoute(
 					)
 					.groupBy(stockEntry.productId);
 
-				const [globalConversions, productConversions] = await Promise.all([
-					db
-						.select()
-						.from(unitConversion)
-						.where(eq(unitConversion.userId, session.user.id)),
-					db
-						.select()
-						.from(productUnitConversion)
-						.where(
-							and(
-								eq(productUnitConversion.userId, session.user.id),
-								inArray(productUnitConversion.productId, productIds),
+				const [globalConversions, productConversions, sourceRecipes] =
+					await Promise.all([
+						db
+							.select()
+							.from(unitConversion)
+							.where(eq(unitConversion.userId, session.user.id)),
+						db
+							.select()
+							.from(productUnitConversion)
+							.where(
+								and(
+									eq(productUnitConversion.userId, session.user.id),
+									inArray(productUnitConversion.productId, productIds),
+								),
 							),
-						),
-				]);
+						db
+							.select({
+								id: recipe.id,
+								name: recipe.name,
+								producedProductId: recipe.producedProductId,
+							})
+							.from(recipe)
+							.where(
+								and(
+									eq(recipe.userId, session.user.id),
+									inArray(recipe.producedProductId, productIds),
+								),
+							),
+					]);
+
+				// Map producible product → first source recipe (deterministic).
+				// A product produced by more than one recipe just picks the first
+				// row; user-pinned canonical-source is a follow-up.
+				const sourceRecipeByProduct = new Map<
+					string,
+					{ id: string; name: string }
+				>();
+				for (const r of sourceRecipes) {
+					if (!r.producedProductId) continue;
+					if (sourceRecipeByProduct.has(r.producedProductId)) continue;
+					sourceRecipeByProduct.set(r.producedProductId, {
+						id: r.id,
+						name: r.name,
+					});
+				}
 
 				const productMap = new Map(products.map((p) => [p.id, p]));
 				const stockMap = new Map(
@@ -378,6 +421,7 @@ export const Route = createFileRoute(
 				];
 
 				const ingredients: AggregatedIngredient[] = [];
+				const producible: ProducibleIngredient[] = [];
 
 				for (const agg of linked.values()) {
 					const p = productMap.get(agg.productId);
@@ -385,6 +429,23 @@ export const Route = createFileRoute(
 
 					const unit = agg.unitId ? unitMap.get(agg.unitId) : null;
 					const stockQty = stockMap.get(agg.productId) ?? 0;
+
+					const sourceRecipe = sourceRecipeByProduct.get(agg.productId);
+					if (sourceRecipe) {
+						producible.push({
+							productId: agg.productId,
+							productName: p.name,
+							quantityUnitId: agg.unitId,
+							unitName: unit?.name ?? null,
+							unitAbbreviation: unit?.abbreviation ?? null,
+							neededQuantity: agg.quantity,
+							stockQuantity: stockQty,
+							sourceRecipeId: sourceRecipe.id,
+							sourceRecipeName: sourceRecipe.name,
+							recipes: agg.recipes,
+						});
+						continue;
+					}
 
 					// Try to convert needed quantity to product's default unit for comparison
 					let neededInStockUnit = tryConvert(
@@ -442,11 +503,14 @@ export const Route = createFileRoute(
 					});
 				}
 
-				// Restock: products with a min threshold, below min, not already listed
+				// Restock: products with a min threshold, below min, not already
+				// listed and not producible (producible products are surfaced for
+				// cooking, not buying).
 				const linkedIdSet = new Set(linkedProductIds);
 				const restock: RestockItem[] = [];
 				for (const p of trackedProducts) {
 					if (linkedIdSet.has(p.id)) continue;
+					if (sourceRecipeByProduct.has(p.id)) continue;
 					const stockQty = stockMap.get(p.id) ?? 0;
 					const minStock = Number(p.minStockAmount);
 					if (stockQty >= minStock) continue;
@@ -468,6 +532,7 @@ export const Route = createFileRoute(
 					ingredients,
 					unlinkedIngredients: unlinked,
 					restock,
+					producible,
 				});
 			},
 		},

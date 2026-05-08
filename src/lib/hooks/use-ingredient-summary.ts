@@ -39,10 +39,24 @@ export interface RestockItem {
 	stockQuantity: number;
 }
 
+export interface ProducibleIngredient {
+	productId: string;
+	productName: string;
+	quantityUnitId: string | null;
+	unitName: string | null;
+	unitAbbreviation: string | null;
+	neededQuantity: number;
+	stockQuantity: number;
+	sourceRecipeId: string;
+	sourceRecipeName: string;
+	recipes: IngredientRecipeRef[];
+}
+
 export interface IngredientSummaryResponse {
 	ingredients: IngredientSummaryItem[];
 	unlinkedIngredients: UnlinkedIngredient[];
 	restock: RestockItem[];
+	producible: ProducibleIngredient[];
 }
 
 export function useIngredientSummary(startDate: string, endDate: string) {

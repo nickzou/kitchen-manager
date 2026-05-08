@@ -123,3 +123,31 @@ export function useDeleteProduct() {
 		},
 	});
 }
+
+export interface ProductSourceRecipe {
+	id: string;
+	name: string;
+	producedQuantity: string | null;
+	producedQuantityUnitId: string | null;
+	derivedNutrition: {
+		calories: number;
+		protein: number;
+		fat: number;
+		carbs: number;
+		baseAmount: number;
+		baseUnitId: string | null;
+		complete: boolean;
+	} | null;
+}
+
+export function useProductSourceRecipes(id: string | null | undefined) {
+	return useQuery<ProductSourceRecipe[]>({
+		queryKey: ["products", id, "source-recipes"],
+		queryFn: async () => {
+			const res = await fetch(`/api/products/${id}/source-recipes`);
+			if (!res.ok) throw new Error("Failed to fetch source recipes");
+			return res.json();
+		},
+		enabled: Boolean(id),
+	});
+}

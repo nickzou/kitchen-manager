@@ -79,6 +79,7 @@ import { Route as ApiMealPlanEntriesIdRouteImport } from './routes/api/meal-plan
 import { Route as ApiBrandsIdRouteImport } from './routes/api/brands/$id'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as ApiApiKeysIdRouteImport } from './routes/api/api-keys/$id'
+import { Route as ApiProductsIdSourceRecipesRouteImport } from './routes/api/products/$id/source-recipes'
 import { Route as ApiRecipesIdPrepStepsIndexRouteImport } from './routes/api/recipes/$id/prep-steps/index'
 import { Route as ApiRecipesIdIngredientsIndexRouteImport } from './routes/api/recipes/$id/ingredients/index'
 import { Route as ApiProductsIdUnitConversionsIndexRouteImport } from './routes/api/products/$id/unit-conversions/index'
@@ -442,6 +443,12 @@ const ApiApiKeysIdRoute = ApiApiKeysIdRouteImport.update({
   path: '/api/api-keys/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiProductsIdSourceRecipesRoute =
+  ApiProductsIdSourceRecipesRouteImport.update({
+    id: '/source-recipes',
+    path: '/source-recipes',
+    getParentRoute: () => ApiProductsIdRoute,
+  } as any)
 const ApiRecipesIdPrepStepsIndexRoute =
   ApiRecipesIdPrepStepsIndexRouteImport.update({
     id: '/prep-steps/',
@@ -550,6 +557,7 @@ export interface FileRoutesByFullPath {
   '/api/uploads/': typeof ApiUploadsIndexRoute
   '/api/user-settings/': typeof ApiUserSettingsIndexRoute
   '/api/webhooks/': typeof ApiWebhooksIndexRoute
+  '/api/products/$id/source-recipes': typeof ApiProductsIdSourceRecipesRoute
   '/api/products/$id/unit-conversions/$conversionId': typeof ApiProductsIdUnitConversionsConversionIdRoute
   '/api/recipes/$id/ingredients/$ingredientId': typeof ApiRecipesIdIngredientsIngredientIdRoute
   '/api/recipes/$id/prep-steps/$stepId': typeof ApiRecipesIdPrepStepsStepIdRoute
@@ -628,6 +636,7 @@ export interface FileRoutesByTo {
   '/api/uploads': typeof ApiUploadsIndexRoute
   '/api/user-settings': typeof ApiUserSettingsIndexRoute
   '/api/webhooks': typeof ApiWebhooksIndexRoute
+  '/api/products/$id/source-recipes': typeof ApiProductsIdSourceRecipesRoute
   '/api/products/$id/unit-conversions/$conversionId': typeof ApiProductsIdUnitConversionsConversionIdRoute
   '/api/recipes/$id/ingredients/$ingredientId': typeof ApiRecipesIdIngredientsIngredientIdRoute
   '/api/recipes/$id/prep-steps/$stepId': typeof ApiRecipesIdPrepStepsStepIdRoute
@@ -707,6 +716,7 @@ export interface FileRoutesById {
   '/api/uploads/': typeof ApiUploadsIndexRoute
   '/api/user-settings/': typeof ApiUserSettingsIndexRoute
   '/api/webhooks/': typeof ApiWebhooksIndexRoute
+  '/api/products/$id/source-recipes': typeof ApiProductsIdSourceRecipesRoute
   '/api/products/$id/unit-conversions/$conversionId': typeof ApiProductsIdUnitConversionsConversionIdRoute
   '/api/recipes/$id/ingredients/$ingredientId': typeof ApiRecipesIdIngredientsIngredientIdRoute
   '/api/recipes/$id/prep-steps/$stepId': typeof ApiRecipesIdPrepStepsStepIdRoute
@@ -787,6 +797,7 @@ export interface FileRouteTypes {
     | '/api/uploads/'
     | '/api/user-settings/'
     | '/api/webhooks/'
+    | '/api/products/$id/source-recipes'
     | '/api/products/$id/unit-conversions/$conversionId'
     | '/api/recipes/$id/ingredients/$ingredientId'
     | '/api/recipes/$id/prep-steps/$stepId'
@@ -865,6 +876,7 @@ export interface FileRouteTypes {
     | '/api/uploads'
     | '/api/user-settings'
     | '/api/webhooks'
+    | '/api/products/$id/source-recipes'
     | '/api/products/$id/unit-conversions/$conversionId'
     | '/api/recipes/$id/ingredients/$ingredientId'
     | '/api/recipes/$id/prep-steps/$stepId'
@@ -943,6 +955,7 @@ export interface FileRouteTypes {
     | '/api/uploads/'
     | '/api/user-settings/'
     | '/api/webhooks/'
+    | '/api/products/$id/source-recipes'
     | '/api/products/$id/unit-conversions/$conversionId'
     | '/api/recipes/$id/ingredients/$ingredientId'
     | '/api/recipes/$id/prep-steps/$stepId'
@@ -1516,6 +1529,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiApiKeysIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/products/$id/source-recipes': {
+      id: '/api/products/$id/source-recipes'
+      path: '/source-recipes'
+      fullPath: '/api/products/$id/source-recipes'
+      preLoaderRoute: typeof ApiProductsIdSourceRecipesRouteImport
+      parentRoute: typeof ApiProductsIdRoute
+    }
     '/api/recipes/$id/prep-steps/': {
       id: '/api/recipes/$id/prep-steps/'
       path: '/prep-steps'
@@ -1562,11 +1582,13 @@ declare module '@tanstack/react-router' {
 }
 
 interface ApiProductsIdRouteChildren {
+  ApiProductsIdSourceRecipesRoute: typeof ApiProductsIdSourceRecipesRoute
   ApiProductsIdUnitConversionsConversionIdRoute: typeof ApiProductsIdUnitConversionsConversionIdRoute
   ApiProductsIdUnitConversionsIndexRoute: typeof ApiProductsIdUnitConversionsIndexRoute
 }
 
 const ApiProductsIdRouteChildren: ApiProductsIdRouteChildren = {
+  ApiProductsIdSourceRecipesRoute: ApiProductsIdSourceRecipesRoute,
   ApiProductsIdUnitConversionsConversionIdRoute:
     ApiProductsIdUnitConversionsConversionIdRoute,
   ApiProductsIdUnitConversionsIndexRoute:

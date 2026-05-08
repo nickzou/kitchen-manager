@@ -84,6 +84,12 @@ Conversions defined here override the global ones for the given product.
 | `DELETE` | `/api/products/$id/unit-conversions/$conversionId` | Remove the override. |
 | `GET` | `/api/product-unit-conversions` | List all product-specific conversions across all products (read-only convenience). |
 
+### Source recipes
+
+| Method | Path | Description |
+| --- | --- | --- |
+| `GET` | `/api/products/$id/source-recipes` | Recipes that produce this product (their `producedProductId` matches `$id`). Returns `[{ id, name, producedQuantity, producedQuantityUnitId, derivedNutrition }]`, where `derivedNutrition` is `{ calories, protein, fat, carbs, baseAmount, baseUnitId, complete }` (per `producedQuantity` of `producedQuantityUnitId`) or `null` if the recipe has no produced quantity/unit. Used to surface "produced by" links, the derived nutrition display on the product detail page, and to mark producible products in the shopping-list summary. |
+
 ---
 
 ## Stock
@@ -121,8 +127,8 @@ Conversions defined here override the global ones for the given product.
 | `DELETE` | `/api/meal-plan-entries/$id` | Delete an entry. |
 | `POST` | `/api/meal-plan-entries/cook` | Mark an entry cooked. Body: `{ mealPlanEntryId, groupSelections? }`. Stamps `cookedAt`, deducts stock FIFO, writes consume logs, optionally produces stock. |
 | `DELETE` | `/api/meal-plan-entries/cook` | Uncook (reverse) an entry. Body: `{ mealPlanEntryId }`. Restores stock from the entry's consume logs. |
-| `GET` | `/api/meal-plan-entries/ingredient-summary` | Shopping-list summary for a date range. Query: `startDate`, `endDate`. Returns `{ ingredients, unlinkedIngredients, restock }`. Applies group rule with running-stock simulation across all entries in the range. Each row carries a `recipes[]` of contributing meal-plan entries. |
-| `GET` | `/api/meal-plan-entries/nutrition-summary` | Aggregate nutrition for the date range. Query: `startDate`, `endDate`. |
+| `GET` | `/api/meal-plan-entries/ingredient-summary` | Shopping-list summary for a date range. Query: `startDate`, `endDate`. Returns `{ ingredients, unlinkedIngredients, restock, producible }`. Applies group rule with running-stock simulation across all entries in the range. Each row carries a `recipes[]` of contributing meal-plan entries. Ingredients whose product is the output of a recipe (see `/api/products/$id/source-recipes`) are routed into `producible[]` (with `sourceRecipeId`/`sourceRecipeName`) instead of `ingredients[]` or `restock[]`, so they're surfaced for cooking rather than buying. |
+| `GET` | `/api/meal-plan-entries/nutrition-summary` | Aggregate nutrition for the date range. Query: `startDate`, `endDate`. When an ingredient's product has no own nutrition but is produced by a recipe, the macros are derived from that source recipe's ingredients (scaled by produced quantity). |
 
 ### Meal slots
 
@@ -276,6 +282,7 @@ products/                    GET, POST
 products/$id                 GET, PUT, DELETE
 products/$id/unit-conversions/                GET, POST
 products/$id/unit-conversions/$conversionId   GET, PUT, DELETE
+products/$id/source-recipes  GET             recipes producing this product
 quantity-units/              GET, POST
 quantity-units/$id           GET, PUT, DELETE
 recipe-categories/           GET, POST

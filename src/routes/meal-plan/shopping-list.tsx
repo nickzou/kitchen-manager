@@ -23,6 +23,7 @@ import { useBrands } from "#src/lib/hooks/use-brands";
 import {
 	type IngredientRecipeRef,
 	type IngredientSummaryItem,
+	type ProducibleIngredient,
 	type UnlinkedIngredient,
 	useIngredientSummary,
 } from "#src/lib/hooks/use-ingredient-summary";
@@ -209,6 +210,7 @@ function ShoppingListPage() {
 			.filter((i) => i.status === "unknown_unit")
 			.map(withKey) ?? [];
 	const restock = summary?.restock ?? [];
+	const producible = summary?.producible ?? [];
 	const unlinked: UnlinkedItem[] =
 		summary?.unlinkedIngredients.map((item) => ({
 			...item,
@@ -222,6 +224,7 @@ function ShoppingListPage() {
 		deficit.length +
 		unknownUnit.length +
 		restock.length +
+		producible.length +
 		unlinked.length +
 		manual.length;
 	const checkedCount = checked.size;
@@ -394,6 +397,27 @@ function ShoppingListPage() {
 									renderAction={ingredientAction}
 									renderContent={ingredientContent}
 								/>
+							</div>
+						)}
+
+						{producible.length > 0 && (
+							<div>
+								<h2 className="mb-3 text-sm font-semibold text-(--lagoon)">
+									To Prep ({producible.length})
+								</h2>
+								<div className="flex flex-col gap-1">
+									{producible.map((item) => {
+										const key = `producible-${item.productId}-${item.quantityUnitId}`;
+										return (
+											<ProducibleRow
+												key={key}
+												item={item}
+												checked={checked.has(key)}
+												onToggle={() => toggle(key)}
+											/>
+										);
+									})}
+								</div>
 							</div>
 						)}
 
@@ -810,6 +834,71 @@ function RestockRow({
 				</div>
 			</button>
 			<StockButton onClick={onStock} />
+			<RowCheckbox checked={checked} onChange={onToggle} />
+		</div>
+	);
+}
+
+function ProducibleRow({
+	item,
+	checked,
+	onToggle,
+}: {
+	item: ProducibleIngredient;
+	checked: boolean;
+	onToggle: () => void;
+}) {
+	const unitLabel = item.unitAbbreviation ?? item.unitName ?? "";
+
+	return (
+		<div
+			className={cn(
+				"flex w-full items-center gap-3 rounded-lg py-2 text-sm transition hover:bg-(--surface)",
+				checked && "opacity-60",
+			)}
+		>
+			<button
+				type="button"
+				onClick={onToggle}
+				className="flex min-w-0 flex-1 flex-col gap-0.5 text-left sm:flex-row sm:items-center sm:gap-3"
+			>
+				<span
+					className={cn(
+						"flex-1 font-medium text-(--sea-ink)",
+						checked && "line-through",
+					)}
+				>
+					{item.productName}
+				</span>
+				<div className="flex items-center gap-3">
+					<span
+						className={cn(
+							"text-xs sm:text-sm text-(--sea-ink-soft)",
+							checked && "line-through",
+						)}
+					>
+						Need: {item.neededQuantity.toFixed(1)}
+						{unitLabel ? ` ${unitLabel}` : ""}
+					</span>
+					<span
+						className={cn(
+							"text-xs sm:text-sm text-(--sea-ink-soft)",
+							checked && "line-through",
+						)}
+					>
+						Have: {item.stockQuantity.toFixed(1)}
+						{unitLabel ? ` ${unitLabel}` : ""}
+					</span>
+				</div>
+			</button>
+			<Link
+				to="/recipes/$id"
+				params={{ id: item.sourceRecipeId }}
+				className="rounded-lg border border-(--line) px-2 py-1 text-xs font-semibold text-(--sea-ink-soft) transition hover:bg-(--surface) hover:text-(--sea-ink)"
+				title={`Make from ${item.sourceRecipeName}`}
+			>
+				Make from {item.sourceRecipeName}
+			</Link>
 			<RowCheckbox checked={checked} onChange={onToggle} />
 		</div>
 	);

@@ -26,6 +26,7 @@ import {
 import {
 	useDeleteProduct,
 	useProduct,
+	useProductSourceRecipes,
 	useUpdateProduct,
 } from "#src/lib/hooks/use-products";
 import { useQuantityUnits } from "#src/lib/hooks/use-quantity-units";
@@ -55,6 +56,7 @@ function ProductDetail() {
 	const brandNames: Record<string, string> = {};
 	for (const b of brands ?? []) brandNames[b.id] = b.name;
 	const { data: productConversions } = useProductUnitConversion(id);
+	const { data: sourceRecipes } = useProductSourceRecipes(id);
 	const createConversion = useCreateProductUnitConversion(id);
 	const deleteConversion = useDeleteProductUnitConversion(id);
 	const [editingConversionId, setEditingConversionId] = useState<string | null>(
@@ -780,6 +782,111 @@ function ProductDetail() {
 										</dd>
 									</div>
 								</dl>
+
+								{sourceRecipes && sourceRecipes.length > 0 && (
+									<div className="mt-4">
+										<h3 className="mb-2 text-sm font-semibold text-(--sea-ink)">
+											Produced by
+										</h3>
+										<ul className="flex flex-col gap-1 text-sm">
+											{sourceRecipes.map((r) => (
+												<li key={r.id}>
+													<Link
+														to="/recipes/$id"
+														params={{ id: r.id }}
+														className="text-(--sea-ink) underline underline-offset-2 hover:text-(--accent)"
+													>
+														{r.name}
+													</Link>
+													{r.producedQuantity && (
+														<span className="text-(--sea-ink-soft)">
+															{" "}
+															— makes {Number.parseFloat(r.producedQuantity)}
+															{r.producedQuantityUnitId
+																? ` ${getUnitName(r.producedQuantityUnitId) ?? ""}`
+																: ""}
+														</span>
+													)}
+												</li>
+											))}
+										</ul>
+									</div>
+								)}
+
+								{product.isFood &&
+									settings?.nutritionEnabled &&
+									!product.calories &&
+									!product.protein &&
+									!product.fat &&
+									!product.carbs &&
+									sourceRecipes &&
+									sourceRecipes.length > 0 &&
+									sourceRecipes[0].derivedNutrition && (
+										<div className="mt-4">
+											<h3 className="mb-2 text-sm font-semibold text-(--sea-ink)">
+												Nutrition (per{" "}
+												{Number.parseFloat(
+													sourceRecipes[0].derivedNutrition.baseAmount.toString(),
+												)}{" "}
+												{getUnitName(
+													sourceRecipes[0].derivedNutrition.baseUnitId,
+												) ?? "unit"}
+												)
+											</h3>
+											<p className="mb-2 text-xs text-(--sea-ink-soft)">
+												Derived from{" "}
+												<Link
+													to="/recipes/$id"
+													params={{ id: sourceRecipes[0].id }}
+													className="underline underline-offset-2 hover:text-(--accent)"
+												>
+													{sourceRecipes[0].name}
+												</Link>
+												{!sourceRecipes[0].derivedNutrition.complete &&
+													" — incomplete (some ingredient nutrition is missing or not unit-convertible)"}
+											</p>
+											<dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm sm:grid-cols-4">
+												<div>
+													<dt className="font-medium text-(--sea-ink-soft)">
+														Calories
+													</dt>
+													<dd className="mt-0.5 text-(--sea-ink)">
+														{sourceRecipes[0].derivedNutrition.calories.toFixed(
+															1,
+														)}
+													</dd>
+												</div>
+												<div>
+													<dt className="font-medium text-(--sea-ink-soft)">
+														Protein
+													</dt>
+													<dd className="mt-0.5 text-(--sea-ink)">
+														{sourceRecipes[0].derivedNutrition.protein.toFixed(
+															1,
+														)}
+														g
+													</dd>
+												</div>
+												<div>
+													<dt className="font-medium text-(--sea-ink-soft)">
+														Fat
+													</dt>
+													<dd className="mt-0.5 text-(--sea-ink)">
+														{sourceRecipes[0].derivedNutrition.fat.toFixed(1)}g
+													</dd>
+												</div>
+												<div>
+													<dt className="font-medium text-(--sea-ink-soft)">
+														Carbs
+													</dt>
+													<dd className="mt-0.5 text-(--sea-ink)">
+														{sourceRecipes[0].derivedNutrition.carbs.toFixed(1)}
+														g
+													</dd>
+												</div>
+											</dl>
+										</div>
+									)}
 
 								{product.isFood &&
 									settings?.nutritionEnabled &&

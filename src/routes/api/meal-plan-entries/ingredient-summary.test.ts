@@ -29,6 +29,7 @@ vi.mock("#src/db/schema", () => ({
 // 4. stock sums by product (only if productIds non-empty)
 // 5. global unit conversions (only if productIds non-empty)
 // 6. product unit conversions (only if productIds non-empty)
+// 7. source recipes (recipes that produce one of the productIds)
 let selectCall = 0;
 const mockResults: unknown[] = [];
 
@@ -445,6 +446,83 @@ describe("GET /api/meal-plan-entries/ingredient-summary restock", () => {
 			unitName: "Grams",
 			unitAbbreviation: "g",
 		});
+	});
+
+	it("routes ingredients with a source recipe into the producible bucket", async () => {
+		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
+		const broth = makeProduct({
+			id: "p-broth",
+			name: "Chicken Broth",
+		});
+		mockResults[0] = [
+			{
+				mealPlanEntryId: "mpe-1",
+				mealPlanEntryDate: "2025-01-01",
+				entryServings: null,
+				recipeServings: 4,
+				ingredientId: "ing-1",
+				ingredientProductId: "p-broth",
+				ingredientQuantity: "200",
+				ingredientUnitId: null,
+				ingredientNotes: null,
+				ingredientGroupName: null,
+				ingredientSortOrder: 0,
+			},
+		];
+		mockResults[1] = []; // tracked
+		mockResults[2] = []; // units
+		mockResults[3] = [broth];
+		mockResults[4] = []; // stock
+		mockResults[5] = []; // global conversions
+		mockResults[6] = []; // product conversions
+		mockResults[7] = [
+			{
+				id: "recipe-stock",
+				name: "Chicken Stock",
+				producedProductId: "p-broth",
+			},
+		];
+
+		const response = await GET({ request: summaryRequest() } as never);
+
+		const data = await response.json();
+		expect(data.ingredients).toEqual([]);
+		expect(data.producible).toHaveLength(1);
+		expect(data.producible[0]).toMatchObject({
+			productId: "p-broth",
+			productName: "Chicken Broth",
+			neededQuantity: 200,
+			sourceRecipeId: "recipe-stock",
+			sourceRecipeName: "Chicken Stock",
+		});
+	});
+
+	it("excludes producible products from restock even when below min", async () => {
+		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
+		const broth = makeProduct({
+			id: "p-broth",
+			name: "Chicken Broth",
+			minStockAmount: "500",
+		});
+		mockResults[0] = [];
+		mockResults[1] = [broth];
+		mockResults[2] = [];
+		mockResults[3] = [broth];
+		mockResults[4] = [{ productId: "p-broth", totalQuantity: "100" }];
+		mockResults[5] = [];
+		mockResults[6] = [];
+		mockResults[7] = [
+			{
+				id: "recipe-stock",
+				name: "Chicken Stock",
+				producedProductId: "p-broth",
+			},
+		];
+
+		const response = await GET({ request: summaryRequest() } as never);
+
+		const data = await response.json();
+		expect(data.restock).toEqual([]);
 	});
 
 	function groupRow(opts: {

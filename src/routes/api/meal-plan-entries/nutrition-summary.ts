@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { and, eq, gte, lte } from "drizzle-orm";
+import { and, eq, gte, inArray, lte } from "drizzle-orm";
 import { db } from "#src/db";
 import {
 	mealPlanEntry,
 	product,
+	productUnitConversion,
 	recipe,
 	recipeIngredient,
 	unitConversion,
@@ -13,6 +14,11 @@ import {
 	buildConversionGraph,
 	tryConvert,
 } from "#src/lib/recipe-utils/conversion-graph";
+import {
+	type DerivedNutrition,
+	deriveProductNutrition,
+	type ProductForNutrition,
+} from "#src/lib/recipe-utils/derive-product-nutrition";
 
 function json(data: unknown, init?: { status?: number }) {
 	return new Response(JSON.stringify(data), {
@@ -78,6 +84,172 @@ export const Route = createFileRoute(
 					.from(unitConversion)
 					.where(eq(unitConversion.userId, session.user.id));
 
+				// For ingredients whose product has no own nutrition, derive it
+				// from the source recipe (the one that produces the product).
+				// Pull source recipes, their ingredients, and the nutrition data
+				// for those ingredients' products in batched queries.
+				const producibleProductIds = [
+					...new Set(
+						rows
+							.filter(
+								(r) =>
+									!r.productCalories &&
+									!r.productProtein &&
+									!r.productFat &&
+									!r.productCarbs &&
+									r.productId,
+							)
+							.map((r) => r.productId as string),
+					),
+				];
+
+				const derivedByProduct = new Map<string, DerivedNutrition>();
+
+				if (producibleProductIds.length > 0) {
+					const sourceRecipes = await db
+						.select({
+							id: recipe.id,
+							producedProductId: recipe.producedProductId,
+							producedQuantity: recipe.producedQuantity,
+							producedQuantityUnitId: recipe.producedQuantityUnitId,
+						})
+						.from(recipe)
+						.where(
+							and(
+								eq(recipe.userId, session.user.id),
+								inArray(recipe.producedProductId, producibleProductIds),
+							),
+						);
+
+					if (sourceRecipes.length > 0) {
+						const sourceRecipeIds = sourceRecipes.map((r) => r.id);
+						const sourceIngredients = await db
+							.select({
+								recipeId: recipeIngredient.recipeId,
+								productId: recipeIngredient.productId,
+								quantity: recipeIngredient.quantity,
+								quantityUnitId: recipeIngredient.quantityUnitId,
+							})
+							.from(recipeIngredient)
+							.where(inArray(recipeIngredient.recipeId, sourceRecipeIds));
+
+						const ingredientProductIds = [
+							...new Set(
+								sourceIngredients
+									.map((i) => i.productId)
+									.filter((id): id is string => Boolean(id)),
+							),
+						];
+
+						const ingredientProducts =
+							ingredientProductIds.length > 0
+								? await db
+										.select({
+											id: product.id,
+											defaultQuantityUnitId: product.defaultQuantityUnitId,
+											nutritionBaseAmount: product.nutritionBaseAmount,
+											nutritionBaseUnitId: product.nutritionBaseUnitId,
+											calories: product.calories,
+											protein: product.protein,
+											fat: product.fat,
+											carbs: product.carbs,
+										})
+										.from(product)
+										.where(
+											and(
+												eq(product.userId, session.user.id),
+												inArray(product.id, ingredientProductIds),
+											),
+										)
+								: [];
+
+						const ingredientProductConversions =
+							ingredientProductIds.length > 0
+								? await db
+										.select()
+										.from(productUnitConversion)
+										.where(
+											and(
+												eq(productUnitConversion.userId, session.user.id),
+												inArray(
+													productUnitConversion.productId,
+													ingredientProductIds,
+												),
+											),
+										)
+								: [];
+
+						const productMap = new Map<string, ProductForNutrition>();
+						for (const p of ingredientProducts) {
+							productMap.set(p.id, {
+								defaultQuantityUnitId: p.defaultQuantityUnitId,
+								nutritionBaseAmount: p.nutritionBaseAmount,
+								nutritionBaseUnitId: p.nutritionBaseUnitId,
+								calories: p.calories,
+								protein: p.protein,
+								fat: p.fat,
+								carbs: p.carbs,
+							});
+						}
+
+						const derivedGraphCache = new Map<
+							string,
+							ReturnType<typeof buildConversionGraph>
+						>();
+						function derivedGraphFor(productId: string) {
+							const cached = derivedGraphCache.get(productId);
+							if (cached) return cached;
+							const specific = ingredientProductConversions.filter(
+								(c) => c.productId === productId,
+							);
+							const g = buildConversionGraph([...conversions, ...specific]);
+							derivedGraphCache.set(productId, g);
+							return g;
+						}
+
+						const ingredientsByRecipe = new Map<
+							string,
+							typeof sourceIngredients
+						>();
+						for (const ing of sourceIngredients) {
+							const arr = ingredientsByRecipe.get(ing.recipeId) ?? [];
+							arr.push(ing);
+							ingredientsByRecipe.set(ing.recipeId, arr);
+						}
+
+						for (const r of sourceRecipes) {
+							if (!r.producedProductId) continue;
+							// First-wins: a product produced by multiple recipes uses
+							// the first one we get back. The user can later pin a
+							// canonical recipe per product if this becomes ambiguous.
+							if (derivedByProduct.has(r.producedProductId)) continue;
+							const ings = (ingredientsByRecipe.get(r.id) ?? [])
+								.filter(
+									(
+										i,
+									): i is (typeof sourceIngredients)[number] & {
+										productId: string;
+									} => Boolean(i.productId),
+								)
+								.map((i) => ({
+									productId: i.productId,
+									quantity: i.quantity,
+									quantityUnitId: i.quantityUnitId,
+								}));
+							const derived = deriveProductNutrition({
+								recipe: {
+									producedQuantity: r.producedQuantity,
+									producedQuantityUnitId: r.producedQuantityUnitId,
+								},
+								ingredients: ings,
+								products: productMap,
+								graphFor: derivedGraphFor,
+							});
+							if (derived) derivedByProduct.set(r.producedProductId, derived);
+						}
+					}
+				}
+
 				const graph = buildConversionGraph(conversions);
 
 				type Nutrition = {
@@ -94,33 +266,50 @@ export const Route = createFileRoute(
 				});
 
 				const summary: Record<string, Nutrition> = {};
-				// Group alternatives are bucketed per (date, entry, group) so each
-				// recipe occurrence's group is averaged independently. Sums of
-				// each bucket roll into the day's total after averaging.
 				const groupBuckets = new Map<
 					string,
 					{ date: string; contributions: Nutrition[] }
 				>();
 
 				for (const row of rows) {
-					if (
-						!row.productCalories &&
-						!row.productProtein &&
-						!row.productFat &&
-						!row.productCarbs
-					)
-						continue;
+					let cal: number;
+					let prot: number;
+					let fat: number;
+					let carb: number;
+					let baseAmount: number;
+					let baseUnitId: string | null;
+
+					const hasOwn =
+						row.productCalories ||
+						row.productProtein ||
+						row.productFat ||
+						row.productCarbs;
+
+					if (hasOwn) {
+						cal = row.productCalories ? Number(row.productCalories) : 0;
+						prot = row.productProtein ? Number(row.productProtein) : 0;
+						fat = row.productFat ? Number(row.productFat) : 0;
+						carb = row.productCarbs ? Number(row.productCarbs) : 0;
+						baseAmount = Number(row.productNutritionBaseAmount ?? "1") || 1;
+						baseUnitId =
+							row.productNutritionBaseUnitId ?? row.productDefaultUnitId;
+					} else {
+						const derived = row.productId
+							? derivedByProduct.get(row.productId)
+							: undefined;
+						if (!derived) continue;
+						cal = derived.calories;
+						prot = derived.protein;
+						fat = derived.fat;
+						carb = derived.carbs;
+						baseAmount = derived.baseAmount;
+						baseUnitId = derived.baseUnitId;
+					}
 
 					const scaleFactor =
 						(row.entryServings ?? row.recipeServings ?? 1) /
 						(row.recipeServings ?? 1);
 
-					// Honor the product's nutrition base (e.g. "350 cal per 100 g").
-					// Convert the ingredient qty into that base unit, then divide by
-					// the base amount to get the multiplier.
-					const baseUnitId =
-						row.productNutritionBaseUnitId ?? row.productDefaultUnitId;
-					const baseAmount = Number(row.productNutritionBaseAmount ?? "1") || 1;
 					const convertedQty = tryConvert(
 						graph,
 						Number(row.ingredientQuantity),
@@ -131,14 +320,10 @@ export const Route = createFileRoute(
 
 					const multiplier = (convertedQty * scaleFactor) / baseAmount;
 					const contribution: Nutrition = {
-						calories: row.productCalories
-							? Number(row.productCalories) * multiplier
-							: 0,
-						protein: row.productProtein
-							? Number(row.productProtein) * multiplier
-							: 0,
-						fat: row.productFat ? Number(row.productFat) * multiplier : 0,
-						carbs: row.productCarbs ? Number(row.productCarbs) * multiplier : 0,
+						calories: cal * multiplier,
+						protein: prot * multiplier,
+						fat: fat * multiplier,
+						carbs: carb * multiplier,
 					};
 
 					if (row.ingredientGroupName) {
