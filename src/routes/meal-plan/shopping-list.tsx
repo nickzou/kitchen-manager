@@ -574,8 +574,10 @@ function ShoppingListPage() {
 							unitId: stockingFor.unitId,
 						}}
 						className="flex flex-col gap-3"
-						onSuccess={() => {
-							toast.success(`${stockingFor.productName} added to stock`);
+						onSuccess={({ quantity, unitAbbr }) => {
+							toast.success(
+								`${quantity}${unitAbbr ? ` ${unitAbbr}` : ""} ${stockingFor.productName} added to stock`,
+							);
 							setStockingFor(null);
 						}}
 					/>

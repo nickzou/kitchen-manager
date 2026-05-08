@@ -36,7 +36,7 @@ export interface StockEntryFormProps {
 		quantity?: string;
 		unitId?: string;
 	};
-	onSuccess?: () => void;
+	onSuccess?: (info: { quantity: string; unitAbbr: string }) => void;
 	submitLabel?: string;
 	className?: string;
 }
@@ -152,6 +152,8 @@ export function StockEntryForm({
 			brandId: brandId || undefined,
 			tareWeight: useScaleWeight ? tareWeightOverride || undefined : undefined,
 		});
+		const submittedUnit = quantityUnits.find((u) => u.id === unitId);
+		const unitAbbr = submittedUnit?.abbreviation ?? submittedUnit?.name ?? "";
 		setProductId("");
 		setQuantity("");
 		setUnitId("");
@@ -162,7 +164,7 @@ export function StockEntryForm({
 		setUseScaleWeight(false);
 		setScaleWeight("");
 		setTareWeightOverride("");
-		onSuccess?.();
+		onSuccess?.({ quantity: rawQuantity, unitAbbr });
 	}
 
 	return (
