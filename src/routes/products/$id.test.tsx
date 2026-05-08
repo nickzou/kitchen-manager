@@ -37,6 +37,7 @@ vi.mock("#src/lib/hooks/use-products", () => ({
 	useProduct: (...args: unknown[]) => mockUseProduct(...args),
 	useUpdateProduct: (...args: unknown[]) => mockUseUpdateProduct(...args),
 	useDeleteProduct: (...args: unknown[]) => mockUseDeleteProduct(...args),
+	useProductSourceRecipes: () => ({ data: [] }),
 }));
 
 const mockUseProductCategories = vi.fn();

@@ -9,6 +9,7 @@ vi.mock("#src/lib/auth-session", () => ({
 vi.mock("#src/db/schema", () => ({
 	mealPlanEntry: {},
 	product: {},
+	productUnitConversion: {},
 	recipe: {},
 	recipeIngredient: {},
 	unitConversion: {},
@@ -17,6 +18,11 @@ vi.mock("#src/db/schema", () => ({
 // Handler runs these select() calls in order:
 // 0. joined rows (meal plan × recipe × ingredient × product)
 // 1. global unit conversions
+// (only when some row's product has no nutrition:)
+// 2. source recipes for producible products
+// 3. source recipe ingredients
+// 4. source recipe ingredient products (nutrition)
+// 5. product unit conversions for source recipe ingredient products
 let selectCall = 0;
 const mockResults: unknown[] = [];
 
@@ -224,6 +230,81 @@ describe("GET /api/meal-plan-entries/nutrition-summary", () => {
 		const data = await response.json();
 		expect(data["2025-01-01"].calories).toBeCloseTo(40);
 		expect(data["2025-01-02"].calories).toBeCloseTo(40);
+	});
+
+	it("derives nutrition from source recipe when ingredient product has none", async () => {
+		// Meal-plan ingredient is "p-broth" (a producible product) used at 200 ml
+		// in a recipe with servings 4, entry servings 4 → scaleFactor 1.
+		// Source recipe makes 1000 ml of broth from 1000 ml water (0 cal) and
+		// 200 g chicken (165 cal/100 g = 330 cal total).
+		// Derived: 330 cal per 1000 ml. Used 200 ml → 66 cal.
+		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
+		mockResults[0] = [
+			row({
+				date: "2025-01-01",
+				productId: "p-broth",
+				productCalories: null,
+				productProtein: null,
+				productFat: null,
+				productCarbs: null,
+				productDefaultUnitId: "unit-ml",
+				productNutritionBaseAmount: "1",
+				productNutritionBaseUnitId: "unit-ml",
+				ingredientUnitId: "unit-ml",
+				ingredientQuantity: "200",
+			}),
+		];
+		mockResults[1] = []; // no global conversions
+		mockResults[2] = [
+			{
+				id: "recipe-stock",
+				producedProductId: "p-broth",
+				producedQuantity: "1000",
+				producedQuantityUnitId: "unit-ml",
+			},
+		];
+		mockResults[3] = [
+			{
+				recipeId: "recipe-stock",
+				productId: "p-water",
+				quantity: "1000",
+				quantityUnitId: "unit-ml",
+			},
+			{
+				recipeId: "recipe-stock",
+				productId: "p-chicken",
+				quantity: "200",
+				quantityUnitId: "unit-g",
+			},
+		];
+		mockResults[4] = [
+			{
+				id: "p-water",
+				defaultQuantityUnitId: "unit-ml",
+				nutritionBaseAmount: "100",
+				nutritionBaseUnitId: "unit-ml",
+				calories: null,
+				protein: null,
+				fat: null,
+				carbs: null,
+			},
+			{
+				id: "p-chicken",
+				defaultQuantityUnitId: "unit-g",
+				nutritionBaseAmount: "100",
+				nutritionBaseUnitId: "unit-g",
+				calories: "165",
+				protein: "31",
+				fat: "3.6",
+				carbs: "0",
+			},
+		];
+		mockResults[5] = []; // no product-specific conversions
+
+		const response = await GET({ request: summaryRequest() } as never);
+
+		const data = await response.json();
+		expect(data["2025-01-01"].calories).toBeCloseTo(66);
 	});
 
 	it("scales by entry/recipe servings ratio", async () => {

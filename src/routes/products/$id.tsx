@@ -26,6 +26,7 @@ import {
 import {
 	useDeleteProduct,
 	useProduct,
+	useProductSourceRecipes,
 	useUpdateProduct,
 } from "#src/lib/hooks/use-products";
 import { useQuantityUnits } from "#src/lib/hooks/use-quantity-units";
@@ -55,6 +56,7 @@ function ProductDetail() {
 	const brandNames: Record<string, string> = {};
 	for (const b of brands ?? []) brandNames[b.id] = b.name;
 	const { data: productConversions } = useProductUnitConversion(id);
+	const { data: sourceRecipes } = useProductSourceRecipes(id);
 	const createConversion = useCreateProductUnitConversion(id);
 	const deleteConversion = useDeleteProductUnitConversion(id);
 	const [editingConversionId, setEditingConversionId] = useState<string | null>(
@@ -780,6 +782,63 @@ function ProductDetail() {
 										</dd>
 									</div>
 								</dl>
+
+								{sourceRecipes && sourceRecipes.length > 0 && (
+									<div className="mt-4">
+										<h3 className="mb-2 text-sm font-semibold text-(--sea-ink)">
+											Produced by
+										</h3>
+										<ul className="flex flex-col gap-1 text-sm">
+											{sourceRecipes.map((r) => (
+												<li key={r.id}>
+													<Link
+														to="/recipes/$id"
+														params={{ id: r.id }}
+														className="text-(--sea-ink) underline underline-offset-2 hover:text-(--accent)"
+													>
+														{r.name}
+													</Link>
+													{r.producedQuantity && (
+														<span className="text-(--sea-ink-soft)">
+															{" "}
+															— makes {Number.parseFloat(r.producedQuantity)}
+															{r.producedQuantityUnitId
+																? ` ${getUnitName(r.producedQuantityUnitId) ?? ""}`
+																: ""}
+														</span>
+													)}
+												</li>
+											))}
+										</ul>
+									</div>
+								)}
+
+								{product.isFood &&
+									settings?.nutritionEnabled &&
+									!product.calories &&
+									!product.protein &&
+									!product.fat &&
+									!product.carbs &&
+									sourceRecipes &&
+									sourceRecipes.length > 0 && (
+										<div className="mt-4">
+											<h3 className="mb-1 text-sm font-semibold text-(--sea-ink)">
+												Nutrition
+											</h3>
+											<p className="text-sm text-(--sea-ink-soft)">
+												Derived from{" "}
+												<Link
+													to="/recipes/$id"
+													params={{ id: sourceRecipes[0].id }}
+													className="underline underline-offset-2 hover:text-(--accent)"
+												>
+													{sourceRecipes[0].name}
+												</Link>{" "}
+												— meal plan totals use the recipe's ingredient nutrition
+												automatically.
+											</p>
+										</div>
+									)}
 
 								{product.isFood &&
 									settings?.nutritionEnabled &&
