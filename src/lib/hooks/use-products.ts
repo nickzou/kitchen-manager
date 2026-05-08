@@ -129,6 +129,15 @@ export interface ProductSourceRecipe {
 	name: string;
 	producedQuantity: string | null;
 	producedQuantityUnitId: string | null;
+	derivedNutrition: {
+		calories: number;
+		protein: number;
+		fat: number;
+		carbs: number;
+		baseAmount: number;
+		baseUnitId: string | null;
+		complete: boolean;
+	} | null;
 }
 
 export function useProductSourceRecipes(id: string | null | undefined) {

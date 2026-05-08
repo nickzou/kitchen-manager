@@ -88,7 +88,7 @@ Conversions defined here override the global ones for the given product.
 
 | Method | Path | Description |
 | --- | --- | --- |
-| `GET` | `/api/products/$id/source-recipes` | Recipes that produce this product (their `producedProductId` matches `$id`). Returns `[{ id, name, producedQuantity, producedQuantityUnitId }]`. Used to surface "produced by" links and to mark producible products in the shopping-list summary. |
+| `GET` | `/api/products/$id/source-recipes` | Recipes that produce this product (their `producedProductId` matches `$id`). Returns `[{ id, name, producedQuantity, producedQuantityUnitId, derivedNutrition }]`, where `derivedNutrition` is `{ calories, protein, fat, carbs, baseAmount, baseUnitId, complete }` (per `producedQuantity` of `producedQuantityUnitId`) or `null` if the recipe has no produced quantity/unit. Used to surface "produced by" links, the derived nutrition display on the product detail page, and to mark producible products in the shopping-list summary. |
 
 ---
 

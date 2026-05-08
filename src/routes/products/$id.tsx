@@ -820,12 +820,20 @@ function ProductDetail() {
 									!product.fat &&
 									!product.carbs &&
 									sourceRecipes &&
-									sourceRecipes.length > 0 && (
+									sourceRecipes.length > 0 &&
+									sourceRecipes[0].derivedNutrition && (
 										<div className="mt-4">
-											<h3 className="mb-1 text-sm font-semibold text-(--sea-ink)">
-												Nutrition
+											<h3 className="mb-2 text-sm font-semibold text-(--sea-ink)">
+												Nutrition (per{" "}
+												{Number.parseFloat(
+													sourceRecipes[0].derivedNutrition.baseAmount.toString(),
+												)}{" "}
+												{getUnitName(
+													sourceRecipes[0].derivedNutrition.baseUnitId,
+												) ?? "unit"}
+												)
 											</h3>
-											<p className="text-sm text-(--sea-ink-soft)">
+											<p className="mb-2 text-xs text-(--sea-ink-soft)">
 												Derived from{" "}
 												<Link
 													to="/recipes/$id"
@@ -833,10 +841,50 @@ function ProductDetail() {
 													className="underline underline-offset-2 hover:text-(--accent)"
 												>
 													{sourceRecipes[0].name}
-												</Link>{" "}
-												— meal plan totals use the recipe's ingredient nutrition
-												automatically.
+												</Link>
+												{!sourceRecipes[0].derivedNutrition.complete &&
+													" — incomplete (some ingredient nutrition is missing or not unit-convertible)"}
 											</p>
+											<dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm sm:grid-cols-4">
+												<div>
+													<dt className="font-medium text-(--sea-ink-soft)">
+														Calories
+													</dt>
+													<dd className="mt-0.5 text-(--sea-ink)">
+														{sourceRecipes[0].derivedNutrition.calories.toFixed(
+															1,
+														)}
+													</dd>
+												</div>
+												<div>
+													<dt className="font-medium text-(--sea-ink-soft)">
+														Protein
+													</dt>
+													<dd className="mt-0.5 text-(--sea-ink)">
+														{sourceRecipes[0].derivedNutrition.protein.toFixed(
+															1,
+														)}
+														g
+													</dd>
+												</div>
+												<div>
+													<dt className="font-medium text-(--sea-ink-soft)">
+														Fat
+													</dt>
+													<dd className="mt-0.5 text-(--sea-ink)">
+														{sourceRecipes[0].derivedNutrition.fat.toFixed(1)}g
+													</dd>
+												</div>
+												<div>
+													<dt className="font-medium text-(--sea-ink-soft)">
+														Carbs
+													</dt>
+													<dd className="mt-0.5 text-(--sea-ink)">
+														{sourceRecipes[0].derivedNutrition.carbs.toFixed(1)}
+														g
+													</dd>
+												</div>
+											</dl>
 										</div>
 									)}
 
