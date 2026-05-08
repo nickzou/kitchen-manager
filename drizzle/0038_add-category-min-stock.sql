@@ -1,0 +1,3 @@
+ALTER TABLE "product_category_type" ADD COLUMN "min_stock_amount" numeric DEFAULT '0' NOT NULL;--> statement-breakpoint
+ALTER TABLE "product_category_type" ADD COLUMN "min_stock_unit_id" text;--> statement-breakpoint
+ALTER TABLE "product_category_type" ADD CONSTRAINT "product_category_type_min_stock_unit_id_quantity_unit_id_fk" FOREIGN KEY ("min_stock_unit_id") REFERENCES "public"."quantity_unit"("id") ON DELETE set null ON UPDATE no action;

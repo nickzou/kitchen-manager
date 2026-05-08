@@ -152,9 +152,9 @@ Recipe and product categories share the same shape.
 | `GET` | `/api/recipe-categories` | List recipe categories. |
 | `POST` | `/api/recipe-categories` | Create. Body: `{ name, description? }`. |
 | `GET` / `PUT` / `DELETE` | `/api/recipe-categories/$id` | Standard CRUD. |
-| `GET` | `/api/product-categories` | List product categories. |
-| `POST` | `/api/product-categories` | Create. Body: `{ name, description? }`. |
-| `GET` / `PUT` / `DELETE` | `/api/product-categories/$id` | Standard CRUD. |
+| `GET` | `/api/product-categories` | List product categories with `{ id, name, description, minStockAmount, minStockUnitId }`. |
+| `POST` | `/api/product-categories` | Create. Body: `{ name, description?, minStockAmount?, minStockUnitId? }`. `minStockAmount` is a category-level minimum across all products in the category, expressed in `minStockUnitId`. |
+| `GET` / `PUT` / `DELETE` | `/api/product-categories/$id` | Standard CRUD. PUT accepts the same fields as POST (all optional). |
 
 ---
 

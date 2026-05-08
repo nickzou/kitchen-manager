@@ -48,6 +48,10 @@ export const Route = createFileRoute("/api/product-categories/$id")({
 				if (body.name !== undefined) updates.name = body.name;
 				if (body.description !== undefined)
 					updates.description = body.description;
+				if (body.minStockAmount !== undefined)
+					updates.minStockAmount = body.minStockAmount;
+				if (body.minStockUnitId !== undefined)
+					updates.minStockUnitId = body.minStockUnitId;
 
 				const [updated] = await db
 					.update(productCategoryType)

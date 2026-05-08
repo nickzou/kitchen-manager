@@ -7,7 +7,7 @@ import {
 } from "@testing-library/react";
 import type { ComponentType, ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { Category } from "#src/lib/hooks/use-categories";
+import type { ProductCategory } from "#src/lib/hooks/use-categories";
 import { createTestWrapper } from "#src/tests/helpers/test-wrapper";
 
 const mockNavigate = vi.fn();
@@ -41,6 +41,10 @@ vi.mock("#src/lib/hooks/use-categories", () => ({
 		mockUseDeleteProductCategory(...args),
 }));
 
+vi.mock("#src/lib/hooks/use-quantity-units", () => ({
+	useQuantityUnits: () => ({ data: [] }),
+}));
+
 vi.mock("#src/lib/utils", () => ({
 	cn: (...args: string[]) => args.filter(Boolean).join(" "),
 }));
@@ -51,10 +55,12 @@ vi.mock("#src/components/InventorySubNav", () => ({
 
 import { Route } from "./$id";
 
-const mockCategory: Category = {
+const mockCategory: ProductCategory = {
 	id: "1",
 	name: "Vegetables",
 	description: "Fresh vegetables",
+	minStockAmount: "0",
+	minStockUnitId: null,
 	userId: "u1",
 	createdAt: "2026-03-01T00:00:00Z",
 	updatedAt: "2026-03-02T00:00:00Z",
@@ -137,6 +143,8 @@ describe("ProductCategoryDetail", () => {
 				expect(mockUpdateMutateAsync).toHaveBeenCalledWith({
 					name: "Root Vegetables",
 					description: "Fresh vegetables",
+					minStockAmount: "0",
+					minStockUnitId: null,
 				});
 			});
 		});

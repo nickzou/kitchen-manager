@@ -52,11 +52,23 @@ export interface ProducibleIngredient {
 	recipes: IngredientRecipeRef[];
 }
 
+export interface CategoryRestockItem {
+	categoryId: string;
+	categoryName: string;
+	minStock: number;
+	stockQuantity: number;
+	quantityUnitId: string | null;
+	unitName: string | null;
+	unitAbbreviation: string | null;
+	productIds: string[];
+}
+
 export interface IngredientSummaryResponse {
 	ingredients: IngredientSummaryItem[];
 	unlinkedIngredients: UnlinkedIngredient[];
 	restock: RestockItem[];
 	producible: ProducibleIngredient[];
+	categoryRestock: CategoryRestockItem[];
 }
 
 export function useIngredientSummary(startDate: string, endDate: string) {

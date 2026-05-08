@@ -13,6 +13,8 @@ vi.mock("#src/lib/auth-session", () => ({
 vi.mock("#src/db/schema", () => ({
 	mealPlanEntry: {},
 	product: {},
+	productCategory: {},
+	productCategoryType: {},
 	productUnitConversion: {},
 	quantityUnit: {},
 	recipe: {},
@@ -30,6 +32,13 @@ vi.mock("#src/db/schema", () => ({
 // 5. global unit conversions (only if productIds non-empty)
 // 6. product unit conversions (only if productIds non-empty)
 // 7. source recipes (recipes that produce one of the productIds)
+// 8. min-stock categories (productCategoryType.minStockAmount > 0)
+// (only if min-stock categories exist:)
+// 9. category-product links (productCategory junction)
+// (only if there are member products; Promise.all:)
+// 10. member products (id, defaultQuantityUnitId)
+// 11. member product stock sums
+// 12. member product unit conversions
 let selectCall = 0;
 const mockResults: unknown[] = [];
 
@@ -712,5 +721,80 @@ describe("GET /api/meal-plan-entries/ingredient-summary restock", () => {
 		// Cilantro appears (used by night 1 + still in night 2's group),
 		// lime appears (kept on night 2 since cilantro depleted).
 		expect(ids).toEqual(["p-cilantro", "p-lime"]);
+	});
+
+	it("emits a categoryRestock entry when a min-stock category is below its minimum", async () => {
+		// No meal plan entries, no tracked products → we hit the early-return
+		// path and computeCategoryRestock runs starting at select() index 3:
+		//   3 minStockCategories, 4 categoryProductLinks,
+		//   Promise.all → 5 memberProducts, 6 memberStock,
+		//                 7 globalConversions, 8 memberConversions
+		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
+		mockResults[0] = []; // entries
+		mockResults[1] = []; // tracked products
+		mockResults[2] = [{ id: "unit-cans", name: "Cans", abbreviation: "cans" }]; // units
+		mockResults[3] = [
+			{
+				id: "cat-sodas",
+				name: "Sodas",
+				minStockAmount: "5",
+				minStockUnitId: "unit-cans",
+			},
+		];
+		mockResults[4] = [
+			{ categoryId: "cat-sodas", productId: "p-coke" },
+			{ categoryId: "cat-sodas", productId: "p-pepsi" },
+		];
+		mockResults[5] = [
+			{ id: "p-coke", defaultQuantityUnitId: "unit-cans" },
+			{ id: "p-pepsi", defaultQuantityUnitId: "unit-cans" },
+		];
+		mockResults[6] = [
+			{ productId: "p-coke", totalQuantity: "1" },
+			{ productId: "p-pepsi", totalQuantity: "1" },
+		];
+		mockResults[7] = []; // global conversions
+		mockResults[8] = []; // member product conversions
+
+		const response = await GET({ request: summaryRequest() } as never);
+
+		const data = await response.json();
+		expect(data.categoryRestock).toHaveLength(1);
+		expect(data.categoryRestock[0]).toMatchObject({
+			categoryId: "cat-sodas",
+			categoryName: "Sodas",
+			minStock: 5,
+			stockQuantity: 2,
+			quantityUnitId: "unit-cans",
+		});
+		expect(data.categoryRestock[0].productIds.sort()).toEqual([
+			"p-coke",
+			"p-pepsi",
+		]);
+	});
+
+	it("does not emit a categoryRestock entry when stock meets or exceeds the min", async () => {
+		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
+		mockResults[0] = [];
+		mockResults[1] = [];
+		mockResults[2] = [];
+		mockResults[3] = [
+			{
+				id: "cat-sodas",
+				name: "Sodas",
+				minStockAmount: "5",
+				minStockUnitId: "unit-cans",
+			},
+		];
+		mockResults[4] = [{ categoryId: "cat-sodas", productId: "p-coke" }];
+		mockResults[5] = [{ id: "p-coke", defaultQuantityUnitId: "unit-cans" }];
+		mockResults[6] = [{ productId: "p-coke", totalQuantity: "10" }];
+		mockResults[7] = [];
+		mockResults[8] = [];
+
+		const response = await GET({ request: summaryRequest() } as never);
+
+		const data = await response.json();
+		expect(data.categoryRestock).toEqual([]);
 	});
 });

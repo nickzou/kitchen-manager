@@ -18,6 +18,7 @@ const mockUseCreateProduct = vi.fn();
 vi.mock("@tanstack/react-router", () => ({
 	createFileRoute: () => (opts: { component: ComponentType }) => ({
 		component: opts.component,
+		useSearch: () => ({}),
 	}),
 	useNavigate: () => mockNavigate,
 	Link: ({ children, to, ...props }: Record<string, unknown>) => (

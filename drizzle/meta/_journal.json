@@ -267,6 +267,13 @@
       "when": 1778269996351,
       "tag": "0037_add-product-default-skip-stock-deduction",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1778272767570,
+      "tag": "0038_add-category-min-stock",
+      "breakpoints": true
     }
   ]
 }

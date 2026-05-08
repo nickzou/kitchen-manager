@@ -4,6 +4,8 @@ import { db } from "#src/db";
 import {
 	mealPlanEntry,
 	product,
+	productCategory,
+	productCategoryType,
 	productUnitConversion,
 	quantityUnit,
 	recipe,
@@ -70,6 +72,19 @@ interface ProducibleIngredient {
 	sourceRecipeId: string;
 	sourceRecipeName: string;
 	recipes: IngredientRecipeRef[];
+}
+
+interface CategoryRestockItem {
+	categoryId: string;
+	categoryName: string;
+	minStock: number;
+	stockQuantity: number;
+	quantityUnitId: string | null;
+	unitName: string | null;
+	unitAbbreviation: string | null;
+	// Products that contribute to the rollup (those whose stock was
+	// successfully converted into the category's unit).
+	productIds: string[];
 }
 
 export const Route = createFileRoute(
@@ -150,10 +165,19 @@ export const Route = createFileRoute(
 				const unitMap = new Map(units.map((u) => [u.id, u]));
 
 				if (productIds.length === 0) {
+					// Category restock runs independently of meal-plan ingredients —
+					// even with no planned meals or tracked products, a category min
+					// can still be unmet.
+					const categoryRestock = await computeCategoryRestock(
+						session.user.id,
+						unitMap,
+					);
 					return json({
 						ingredients: [],
 						unlinkedIngredients: [],
 						restock: [],
+						producible: [],
+						categoryRestock,
 					});
 				}
 
@@ -528,13 +552,153 @@ export const Route = createFileRoute(
 					});
 				}
 
+				const categoryRestock = await computeCategoryRestock(
+					session.user.id,
+					unitMap,
+				);
+
 				return json({
 					ingredients,
 					unlinkedIngredients: unlinked,
 					restock,
 					producible,
+					categoryRestock,
 				});
 			},
 		},
 	},
 });
+
+async function computeCategoryRestock(
+	userId: string,
+	unitMap: Map<string, { name: string; abbreviation: string | null }>,
+): Promise<CategoryRestockItem[]> {
+	const minStockCategories = await db
+		.select()
+		.from(productCategoryType)
+		.where(
+			and(
+				eq(productCategoryType.userId, userId),
+				gt(productCategoryType.minStockAmount, "0"),
+			),
+		);
+	if (minStockCategories.length === 0) return [];
+
+	const categoryIds = minStockCategories.map((c) => c.id);
+	const links = await db
+		.select({
+			categoryId: productCategory.categoryId,
+			productId: productCategory.productId,
+		})
+		.from(productCategory)
+		.where(inArray(productCategory.categoryId, categoryIds));
+
+	const memberIds = [...new Set(links.map((l) => l.productId))];
+	const productsByCategory = new Map<string, string[]>();
+	for (const link of links) {
+		const list = productsByCategory.get(link.categoryId) ?? [];
+		list.push(link.productId);
+		productsByCategory.set(link.categoryId, list);
+	}
+
+	const [memberProducts, memberStock, globalConversions, memberConversions] =
+		memberIds.length > 0
+			? await Promise.all([
+					db
+						.select({
+							id: product.id,
+							defaultQuantityUnitId: product.defaultQuantityUnitId,
+						})
+						.from(product)
+						.where(
+							and(eq(product.userId, userId), inArray(product.id, memberIds)),
+						),
+					db
+						.select({
+							productId: stockEntry.productId,
+							totalQuantity: sql<string>`SUM(CAST(${stockEntry.quantity} AS numeric))`,
+						})
+						.from(stockEntry)
+						.where(
+							and(
+								eq(stockEntry.userId, userId),
+								inArray(stockEntry.productId, memberIds),
+							),
+						)
+						.groupBy(stockEntry.productId),
+					db
+						.select()
+						.from(unitConversion)
+						.where(eq(unitConversion.userId, userId)),
+					db
+						.select()
+						.from(productUnitConversion)
+						.where(
+							and(
+								eq(productUnitConversion.userId, userId),
+								inArray(productUnitConversion.productId, memberIds),
+							),
+						),
+				])
+			: [[], [], [], []];
+
+	const memberProductMap = new Map(memberProducts.map((p) => [p.id, p]));
+	const memberStockMap = new Map(
+		memberStock.map((s) => [s.productId, Number(s.totalQuantity)]),
+	);
+
+	const graphCache = new Map<string, ReturnType<typeof buildConversionGraph>>();
+	function graphFor(productId: string) {
+		const cached = graphCache.get(productId);
+		if (cached) return cached;
+		const specific = memberConversions.filter((c) => c.productId === productId);
+		const g = buildConversionGraph([...globalConversions, ...specific]);
+		graphCache.set(productId, g);
+		return g;
+	}
+
+	const result: CategoryRestockItem[] = [];
+	for (const cat of minStockCategories) {
+		const memberPids = productsByCategory.get(cat.id) ?? [];
+		if (memberPids.length === 0) continue;
+		let total = 0;
+		const contributingIds: string[] = [];
+		for (const pid of memberPids) {
+			const memberProduct = memberProductMap.get(pid);
+			if (!memberProduct) continue;
+			const memberStockQty = memberStockMap.get(pid) ?? 0;
+			if (memberStockQty === 0) continue;
+			if (
+				!cat.minStockUnitId ||
+				memberProduct.defaultQuantityUnitId === cat.minStockUnitId
+			) {
+				total += memberStockQty;
+				contributingIds.push(pid);
+				continue;
+			}
+			const converted = tryConvert(
+				graphFor(pid),
+				memberStockQty,
+				memberProduct.defaultQuantityUnitId,
+				cat.minStockUnitId,
+			);
+			if (converted === null) continue;
+			total += converted;
+			contributingIds.push(pid);
+		}
+		const minStock = Number(cat.minStockAmount);
+		if (total >= minStock) continue;
+		const unit = cat.minStockUnitId ? unitMap.get(cat.minStockUnitId) : null;
+		result.push({
+			categoryId: cat.id,
+			categoryName: cat.name,
+			minStock,
+			stockQuantity: total,
+			quantityUnitId: cat.minStockUnitId,
+			unitName: unit?.name ?? null,
+			unitAbbreviation: unit?.abbreviation ?? null,
+			productIds: contributingIds,
+		});
+	}
+	return result;
+}
