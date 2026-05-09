@@ -60,6 +60,9 @@ export function useCreateMealPlanEntry() {
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["meal-plan-entries"] });
+			queryClient.invalidateQueries({ queryKey: ["nutrition-summary"] });
+			queryClient.invalidateQueries({ queryKey: ["cost-summary"] });
+			queryClient.invalidateQueries({ queryKey: ["ingredient-summary"] });
 		},
 	});
 }
@@ -79,6 +82,9 @@ export function useUpdateMealPlanEntry() {
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["meal-plan-entries"] });
+			queryClient.invalidateQueries({ queryKey: ["nutrition-summary"] });
+			queryClient.invalidateQueries({ queryKey: ["cost-summary"] });
+			queryClient.invalidateQueries({ queryKey: ["ingredient-summary"] });
 		},
 	});
 }
@@ -95,6 +101,9 @@ export function useDeleteMealPlanEntry() {
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["meal-plan-entries"] });
+			queryClient.invalidateQueries({ queryKey: ["nutrition-summary"] });
+			queryClient.invalidateQueries({ queryKey: ["cost-summary"] });
+			queryClient.invalidateQueries({ queryKey: ["ingredient-summary"] });
 		},
 	});
 }
@@ -115,6 +124,8 @@ export function useCookMealPlanEntry() {
 			queryClient.invalidateQueries({ queryKey: ["meal-plan-entries"] });
 			queryClient.invalidateQueries({ queryKey: ["stock-entries"] });
 			queryClient.invalidateQueries({ queryKey: ["stock-logs"] });
+			queryClient.invalidateQueries({ queryKey: ["cost-summary"] });
+			queryClient.invalidateQueries({ queryKey: ["ingredient-summary"] });
 		},
 	});
 }
@@ -135,6 +146,8 @@ export function useUncookMealPlanEntry() {
 			queryClient.invalidateQueries({ queryKey: ["meal-plan-entries"] });
 			queryClient.invalidateQueries({ queryKey: ["stock-entries"] });
 			queryClient.invalidateQueries({ queryKey: ["stock-logs"] });
+			queryClient.invalidateQueries({ queryKey: ["cost-summary"] });
+			queryClient.invalidateQueries({ queryKey: ["ingredient-summary"] });
 		},
 	});
 }

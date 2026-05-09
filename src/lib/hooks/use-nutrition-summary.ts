@@ -7,7 +7,7 @@ export type NutritionSummary = Record<
 
 export function useNutritionSummary(startDate: string, endDate: string) {
 	return useQuery<NutritionSummary>({
-		queryKey: ["nutritionSummary", startDate, endDate],
+		queryKey: ["nutrition-summary", startDate, endDate],
 		queryFn: async () => {
 			const res = await fetch(
 				`/api/meal-plan-entries/nutrition-summary?startDate=${startDate}&endDate=${endDate}`,

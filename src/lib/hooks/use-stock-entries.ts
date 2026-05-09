@@ -79,6 +79,7 @@ export function useCreateStockEntry() {
 			queryClient.invalidateQueries({ queryKey: ["stock-logs"] });
 			queryClient.invalidateQueries({ queryKey: ["ingredient-summary"] });
 			queryClient.invalidateQueries({ queryKey: ["recipe-availability"] });
+			queryClient.invalidateQueries({ queryKey: ["cost-summary"] });
 		},
 	});
 }
@@ -99,6 +100,7 @@ export function useUpdateStockEntry(id: string) {
 			queryClient.invalidateQueries({ queryKey: ["stock-entries"] });
 			queryClient.invalidateQueries({ queryKey: ["ingredient-summary"] });
 			queryClient.invalidateQueries({ queryKey: ["recipe-availability"] });
+			queryClient.invalidateQueries({ queryKey: ["cost-summary"] });
 		},
 	});
 }
@@ -118,6 +120,7 @@ export function useDeleteStockEntry() {
 			queryClient.invalidateQueries({ queryKey: ["stock-logs"] });
 			queryClient.invalidateQueries({ queryKey: ["ingredient-summary"] });
 			queryClient.invalidateQueries({ queryKey: ["recipe-availability"] });
+			queryClient.invalidateQueries({ queryKey: ["cost-summary"] });
 		},
 	});
 }

@@ -90,6 +90,9 @@ export function useUpdateRecipe(id: string) {
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["recipes"] });
+			queryClient.invalidateQueries({ queryKey: ["nutrition-summary"] });
+			queryClient.invalidateQueries({ queryKey: ["cost-summary"] });
+			queryClient.invalidateQueries({ queryKey: ["ingredient-summary"] });
 		},
 	});
 }
@@ -104,6 +107,10 @@ export function useDeleteRecipe() {
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["recipes"] });
+			queryClient.invalidateQueries({ queryKey: ["meal-plan-entries"] });
+			queryClient.invalidateQueries({ queryKey: ["nutrition-summary"] });
+			queryClient.invalidateQueries({ queryKey: ["cost-summary"] });
+			queryClient.invalidateQueries({ queryKey: ["ingredient-summary"] });
 		},
 	});
 }
