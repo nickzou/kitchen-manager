@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { Badge } from "#src/components/Badge";
+import { ExpiryDateEditor } from "#src/components/stock/ExpiryDateEditor";
 import { StockActions } from "#src/components/stock/StockActions";
 import type { Product } from "#src/lib/hooks/use-products";
 import type { QuantityUnit } from "#src/lib/hooks/use-quantity-units";
@@ -39,15 +40,6 @@ function getBucket(expirationDate: string): UrgencyBucket | null {
 	if (diffDays <= 3) return "3days";
 	if (diffDays <= 7) return "7days";
 	return null;
-}
-
-function formatDate(dateStr: string) {
-	const d = new Date(dateStr);
-	return d.toLocaleDateString(undefined, {
-		month: "short",
-		day: "numeric",
-		year: "numeric",
-	});
 }
 
 export function ExpiringStockList({
@@ -132,9 +124,12 @@ export function ExpiringStockList({
 									{entry.quantity}
 									{unitAbbr ? ` ${unitAbbr}` : ""}
 								</span>
-								<span className="shrink-0 text-xs text-(--sea-ink-soft)">
-									{formatDate(entry.expirationDate!)}
-								</span>
+								<ExpiryDateEditor
+									stockEntryId={entry.id}
+									expirationDate={entry.expirationDate}
+									productName={product?.name}
+									className="shrink-0"
+								/>
 							</div>
 							<div className="mt-1.5 flex items-center justify-end gap-1.5">
 								<StockActions

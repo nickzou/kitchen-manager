@@ -47,6 +47,7 @@ vi.mock("#src/lib/hooks/use-stock-entries", () => ({
 	useStockEntries: (...args: unknown[]) => mockUseStockEntries(...args),
 	useConsumeStock: (...args: unknown[]) => mockUseConsumeStock(...args),
 	useSpoilStock: (...args: unknown[]) => mockUseSpoilStock(...args),
+	useUpdateStockEntry: () => ({ mutateAsync: vi.fn() }),
 }));
 
 vi.mock("#src/lib/hooks/use-stock-logs", () => ({
