@@ -1,4 +1,5 @@
 import { Pencil, Trash2 } from "lucide-react";
+import { ExpiryDateEditor } from "#src/components/stock/ExpiryDateEditor";
 import { StockActions } from "#src/components/stock/StockActions";
 import type { StockEntry } from "#src/lib/hooks/use-stock-entries";
 
@@ -42,11 +43,11 @@ export function StockEntryRow({
 					{entry.quantity}
 					{unitAbbr ? ` ${unitAbbr}` : ""}
 				</span>
-				{entry.expirationDate && (
-					<span>
-						Exp: {new Date(entry.expirationDate).toLocaleDateString()}
-					</span>
-				)}
+				<ExpiryDateEditor
+					stockEntryId={entry.id}
+					expirationDate={entry.expirationDate}
+					prefix="Exp:"
+				/>
 				{entry.purchaseDate && (
 					<span>
 						Purchased: {new Date(entry.purchaseDate).toLocaleDateString()}
