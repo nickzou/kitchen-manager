@@ -34,7 +34,7 @@ All resources are scoped to the authenticated user — the API never crosses ten
 | Method | Path | Description |
 | --- | --- | --- |
 | `GET` | `/api/recipes` | List the user's recipes. |
-| `POST` | `/api/recipes` | Create a recipe. Body: `{ name, description?, image?, servings?, prepTime?, cookTime?, instructions?, categoryIds?, producesProductId? }`. |
+| `POST` | `/api/recipes` | Create a recipe. Body: `{ name, description?, image?, servings?, prepTime?, cookTime?, instructions?, categoryIds?, producedProductId?, producedQuantity?, producedQuantityUnitId?, isMealPrep? }`. `isMealPrep: true` flags a recipe whose calories/cost are excluded from the meal-plan day totals on the day it's planned (you cooked it, you didn't eat it). |
 | `GET` | `/api/recipes/$id` | Fetch one recipe (with category ids). |
 | `PUT` | `/api/recipes/$id` | Update any subset of recipe fields. |
 | `DELETE` | `/api/recipes/$id` | Delete a recipe. |

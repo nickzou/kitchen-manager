@@ -67,6 +67,7 @@ type Row = {
 	mealPlanEntryId: string;
 	entryServings: number | null;
 	recipeServings: number | null;
+	recipeIsMealPrep: boolean;
 	ingredientQuantity: string;
 	ingredientUnitId: string | null;
 	ingredientGroupName: string | null;
@@ -80,6 +81,7 @@ function row(overrides: Partial<Row> & { productId: string }): Row {
 		mealPlanEntryId: "mpe-1",
 		entryServings: null,
 		recipeServings: 4,
+		recipeIsMealPrep: false,
 		ingredientQuantity: "1",
 		ingredientUnitId: null,
 		ingredientGroupName: null,
@@ -197,6 +199,39 @@ describe("GET /api/meal-plan-entries/cost-summary", () => {
 
 		const data = await response.json();
 		expect(data["2025-01-01"].total).toBeCloseTo(0.65);
+	});
+
+	it("excludes meal-prep recipes from the day total", async () => {
+		// Two rows: one meal-prep, one regular. Only the regular one should
+		// contribute to the day total.
+		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
+		mockResults[0] = [
+			row({
+				productId: "p-rice",
+				productDefaultUnitId: null,
+				ingredientUnitId: null,
+				ingredientQuantity: "1",
+			}),
+			row({
+				mealPlanEntryId: "mpe-prep",
+				productId: "p-chicken",
+				productDefaultUnitId: null,
+				ingredientUnitId: null,
+				ingredientQuantity: "5",
+				recipeIsMealPrep: true,
+			}),
+		];
+		mockResults[1] = [
+			{ productId: "p-rice", avgCost: "2" },
+			{ productId: "p-chicken", avgCost: "10" },
+		];
+		mockResults[2] = [];
+		mockResults[3] = [];
+
+		const response = await GET({ request: summaryRequest() } as never);
+
+		const data = await response.json();
+		expect(data["2025-01-01"].total).toBeCloseTo(2);
 	});
 
 	it("flags the day incomplete when an ingredient lacks a priced stock entry", async () => {

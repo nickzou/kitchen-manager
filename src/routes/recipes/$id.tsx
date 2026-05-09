@@ -139,6 +139,7 @@ function RecipeDetail() {
 		producedProductId: "" as string,
 		producedQuantity: "" as string,
 		producedQuantityUnitId: "" as string,
+		isMealPrep: false,
 	});
 
 	const [newIngredient, setNewIngredient] = useState<IngredientFormState>({
@@ -369,6 +370,7 @@ function RecipeDetail() {
 			producedProductId: recipe.producedProductId || "",
 			producedQuantity: recipe.producedQuantity || "",
 			producedQuantityUnitId: recipe.producedQuantityUnitId || "",
+			isMealPrep: recipe.isMealPrep,
 		});
 		setEditing(true);
 	}
@@ -387,6 +389,7 @@ function RecipeDetail() {
 			producedProductId: form.producedProductId || null,
 			producedQuantity: form.producedQuantity || null,
 			producedQuantityUnitId: form.producedQuantityUnitId || null,
+			isMealPrep: form.isMealPrep,
 		});
 		setEditing(false);
 	}
@@ -1106,6 +1109,36 @@ function RecipeDetail() {
 										</div>
 									</fieldset>
 
+									<label className="flex items-center justify-between gap-3">
+										<div>
+											<p className="text-sm font-medium text-(--sea-ink)">
+												Meal prep
+											</p>
+											<p className="text-xs text-(--sea-ink-soft)">
+												Exclude this recipe's calories and cost from the
+												meal-plan day totals on the day it's planned (you cooked
+												it but didn't eat it)
+											</p>
+										</div>
+										<button
+											type="button"
+											role="switch"
+											aria-checked={form.isMealPrep}
+											onClick={() =>
+												setForm({ ...form, isMealPrep: !form.isMealPrep })
+											}
+											className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-(--lagoon) focus-visible:ring-offset-2 ${
+												form.isMealPrep ? "bg-(--lagoon)" : "bg-(--line)"
+											}`}
+										>
+											<span
+												className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+													form.isMealPrep ? "translate-x-5" : "translate-x-0"
+												}`}
+											/>
+										</button>
+									</label>
+
 									<Button
 										type="submit"
 										disabled={updateRecipe.isPending}
@@ -1135,8 +1168,13 @@ function RecipeDetail() {
 													/>
 												)}
 											</div>
-											{categoryNames.length > 0 && (
+											{(categoryNames.length > 0 || recipe.isMealPrep) && (
 												<div className="mt-2 flex flex-wrap gap-1">
+													{recipe.isMealPrep && (
+														<span className="inline-block rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
+															Meal prep
+														</span>
+													)}
 													{categoryNames.map((name) => (
 														<span
 															key={name}

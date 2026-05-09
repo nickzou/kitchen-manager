@@ -58,6 +58,7 @@ export const Route = createFileRoute("/api/meal-plan-entries/cost-summary")({
 						mealPlanEntryId: mealPlanEntry.id,
 						entryServings: mealPlanEntry.servings,
 						recipeServings: recipe.servings,
+						recipeIsMealPrep: recipe.isMealPrep,
 						ingredientQuantity: recipeIngredient.quantity,
 						ingredientUnitId: recipeIngredient.quantityUnitId,
 						ingredientGroupName: recipeIngredient.groupName,
@@ -147,6 +148,9 @@ export const Route = createFileRoute("/api/meal-plan-entries/cost-summary")({
 				const incompleteByDate = new Set<string>();
 
 				for (const row of rows) {
+					// Meal-prep recipes are cooked-but-not-eaten on the planned day,
+					// so their cost shouldn't roll into that day's totals.
+					if (row.recipeIsMealPrep) continue;
 					if (!row.productId) continue;
 					const avgCost = avgCostMap.get(row.productId);
 					if (avgCost === undefined) {
