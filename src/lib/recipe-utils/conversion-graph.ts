@@ -34,9 +34,28 @@ export function tryConvert(
 ): number | null {
 	if (fromUnitId === toUnitId) return qty;
 	if (!fromUnitId || !toUnitId) return null;
-	const fromEdges = graph.get(fromUnitId);
-	if (!fromEdges) return null;
-	const factor = fromEdges.get(toUnitId);
-	if (factor !== undefined) return qty * factor;
+	if (!graph.has(fromUnitId)) return null;
+
+	// BFS so the first path found is the shortest in hops, which keeps
+	// floating-point drift to a minimum and lets us reach indirectly-
+	// connected units (e.g. tsp → g → jar when only tsp↔g and jar↔g
+	// are defined).
+	const factors = new Map<string, number>([[fromUnitId, 1]]);
+	const queue: string[] = [fromUnitId];
+	let head = 0;
+
+	while (head < queue.length) {
+		const current = queue[head++];
+		const currentFactor = factors.get(current) ?? 1;
+		const edges = graph.get(current);
+		if (!edges) continue;
+		for (const [neighbor, factor] of edges) {
+			if (factors.has(neighbor)) continue;
+			const composed = currentFactor * factor;
+			if (neighbor === toUnitId) return qty * composed;
+			factors.set(neighbor, composed);
+			queue.push(neighbor);
+		}
+	}
 	return null;
 }
