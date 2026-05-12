@@ -57,6 +57,7 @@ type Ing = {
 	quantityUnitId: string | null;
 	groupName: string | null;
 	optional: boolean;
+	skipStockDeduction: boolean;
 };
 
 function ing(overrides: Partial<Ing> & { recipeId: string }): Ing {
@@ -66,6 +67,7 @@ function ing(overrides: Partial<Ing> & { recipeId: string }): Ing {
 		quantityUnitId: null,
 		groupName: null,
 		optional: false,
+		skipStockDeduction: false,
 		...overrides,
 	};
 }
@@ -112,6 +114,31 @@ describe("GET /api/recipes/availability optional handling", () => {
 		const response = await GET({ request: makeGetRequest() } as never);
 
 		expect(await response.json()).toEqual({ "r-pancakes": "sufficient" });
+	});
+
+	it("treats skipStockDeduction ingredients as always-sufficient", async () => {
+		// Recipe needs flour + water; flour is stocked but water has 0 stock.
+		// Water is flagged skipStockDeduction so it shouldn't fail the recipe.
+		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
+		seed({
+			ingredients: [
+				ing({ recipeId: "r-dough", productId: "p-flour" }),
+				ing({
+					recipeId: "r-dough",
+					productId: "p-water",
+					skipStockDeduction: true,
+				}),
+			],
+			products: [
+				{ id: "p-flour", defaultQuantityUnitId: null },
+				{ id: "p-water", defaultQuantityUnitId: null },
+			],
+			stock: [{ productId: "p-flour", totalQuantity: "5" }],
+		});
+
+		const response = await GET({ request: makeGetRequest() } as never);
+
+		expect(await response.json()).toEqual({ "r-dough": "sufficient" });
 	});
 
 	it("marks a recipe deficit when a required ingredient is missing", async () => {

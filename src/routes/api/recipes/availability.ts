@@ -46,6 +46,7 @@ export const Route = createFileRoute("/api/recipes/availability")({
 						quantityUnitId: recipeIngredient.quantityUnitId,
 						groupName: recipeIngredient.groupName,
 						optional: recipeIngredient.optional,
+						skipStockDeduction: recipeIngredient.skipStockDeduction,
 					})
 					.from(recipeIngredient)
 					.where(eq(recipeIngredient.userId, userId));
@@ -138,6 +139,12 @@ export const Route = createFileRoute("/api/recipes/availability")({
 					trackable: boolean;
 				} {
 					if (!ing.productId) return { sufficient: true, trackable: false };
+
+					// skipStockDeduction means the ingredient is outside stock
+					// accounting (e.g. water). Treat as always-sufficient and
+					// non-trackable so it can't fail recipe availability.
+					if (ing.skipStockDeduction)
+						return { sufficient: true, trackable: false };
 
 					const p = productMap.get(ing.productId);
 					if (!p) return { sufficient: true, trackable: false };

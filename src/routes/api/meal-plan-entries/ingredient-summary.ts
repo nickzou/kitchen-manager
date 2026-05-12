@@ -125,6 +125,7 @@ export const Route = createFileRoute(
 						ingredientNotes: recipeIngredient.notes,
 						ingredientGroupName: recipeIngredient.groupName,
 						ingredientSortOrder: recipeIngredient.sortOrder,
+						ingredientSkipStockDeduction: recipeIngredient.skipStockDeduction,
 					})
 					.from(mealPlanEntry)
 					.innerJoin(recipe, eq(mealPlanEntry.recipeId, recipe.id))
@@ -369,6 +370,7 @@ export const Route = createFileRoute(
 					for (const e of mpeEntries) {
 						if (e.ingredientGroupName) continue;
 						if (!e.ingredientProductId) continue;
+						if (e.ingredientSkipStockDeduction) continue;
 						const need = effectiveNeed(e);
 						if (need === null) continue;
 						runningStock.set(
@@ -401,6 +403,13 @@ export const Route = createFileRoute(
 					if (skipKeys.has(`${entry.mealPlanEntryId}::${entry.ingredientId}`)) {
 						continue;
 					}
+					// Ingredients flagged skipStockDeduction are outside stock
+					// accounting entirely — they don't get cooked-down from
+					// inventory (cook flow already skips them), and they shouldn't
+					// surface as deficit/restock on the shopping list either. Used
+					// for things like water, salt/pepper to taste, etc.
+					if (entry.ingredientSkipStockDeduction) continue;
+
 					const scaleFactor =
 						(entry.entryServings ?? entry.recipeServings ?? 1) /
 						(entry.recipeServings ?? 1);
