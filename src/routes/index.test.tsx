@@ -167,7 +167,10 @@ describe("Dashboard", () => {
 		it("shows expiring stock entry", () => {
 			renderPage();
 			expect(screen.getByText("Milk")).toBeDefined();
-			expect(screen.getByText(/4/)).toBeDefined();
+			// The mock product has defaultQuantityUnitId "qu1" → unit abbr "L".
+			// Match the quantity span's full text to avoid colliding with "4"s
+			// in the formatted expiry date (e.g. "May 14, 2026").
+			expect(screen.getByText("4 L")).toBeDefined();
 		});
 
 		it("shows empty message when no expiring entries", () => {
