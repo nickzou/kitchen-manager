@@ -270,6 +270,41 @@ describe("GET /api/meal-plan-entries/ingredient-summary restock", () => {
 		});
 	});
 
+	it("excludes ingredients flagged skipStockDeduction from the shopping list", async () => {
+		// A meal plan ingredient with skipStockDeduction=true should never
+		// surface as deficit/sufficient/restock — it's outside stock accounting
+		// (e.g. water, salt to taste).
+		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
+		const water = makeProduct({ id: "p-water", name: "Water" });
+		mockResults[0] = [
+			{
+				mealPlanEntryId: "mpe-1",
+				mealPlanEntryDate: "2025-01-01",
+				entryServings: null,
+				recipeServings: 4,
+				ingredientId: "ing-water",
+				ingredientProductId: "p-water",
+				ingredientQuantity: "240",
+				ingredientUnitId: null,
+				ingredientNotes: null,
+				ingredientGroupName: null,
+				ingredientSortOrder: 0,
+				ingredientSkipStockDeduction: true,
+			},
+		];
+		mockResults[1] = [];
+		mockResults[2] = [];
+		mockResults[3] = [water];
+		mockResults[4] = []; // zero stock
+		mockResults[5] = [];
+
+		const response = await GET({ request: summaryRequest() } as never);
+
+		const data = await response.json();
+		expect(data.ingredients).toEqual([]);
+		expect(data.restock).toEqual([]);
+	});
+
 	it("marks a planned ingredient sufficient when stock covers need plus min", async () => {
 		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
 		const flour = makeProduct({
