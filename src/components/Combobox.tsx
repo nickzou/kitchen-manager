@@ -107,7 +107,15 @@ export function Combobox({
 		setOpen(false);
 	}
 
-	const showCreateRow = !!onCreateNew && query.trim().length > 0;
+	// Hide the "Create new" row when the typed query is an exact
+	// case-insensitive match for an existing option — creating a duplicate
+	// is blocked anyway, and offering it as an option is confusing UX.
+	const trimmedQuery = query.trim();
+	const exactMatchExists = options.some(
+		(o) => o.label.trim().toLowerCase() === trimmedQuery.toLowerCase(),
+	);
+	const showCreateRow =
+		!!onCreateNew && trimmedQuery.length > 0 && !exactMatchExists;
 	const totalItems = filtered.length + (showCreateRow ? 1 : 0);
 	const createRowIndex = filtered.length;
 
