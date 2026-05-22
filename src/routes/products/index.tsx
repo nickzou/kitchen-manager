@@ -15,6 +15,7 @@ import { SearchInput } from "#src/components/SearchInput";
 import { TableView } from "#src/components/TableView";
 import { useToast } from "#src/components/Toast";
 import { type ViewMode, ViewSwitcher } from "#src/components/ViewSwitcher";
+import { findDuplicateName } from "#src/lib/duplicate-name";
 import { formatDate } from "#src/lib/format-date";
 import { useBrands } from "#src/lib/hooks/use-brands";
 import { useProductCategories } from "#src/lib/hooks/use-categories";
@@ -50,6 +51,10 @@ function ProductsPage() {
 	const [filterCategoryIds, setFilterCategoryIds] = useState<string[]>(() =>
 		search.category ? [search.category] : [],
 	);
+
+	const duplicate = findDuplicateName(name, products);
+	const submitDisabled =
+		createProduct.isPending || !name.trim() || Boolean(duplicate);
 
 	const brandsByProduct = useMemo(() => {
 		const map = new Map<string, string[]>();
@@ -88,7 +93,7 @@ function ProductsPage() {
 	}, [products, searchTerm, categories, brandsByProduct, filterCategoryIds]);
 	async function handleSubmit(e: FormEvent) {
 		e.preventDefault();
-		if (!name.trim()) return;
+		if (!name.trim() || duplicate) return;
 		try {
 			await createProduct.mutateAsync({
 				name: name.trim(),
@@ -97,8 +102,8 @@ function ProductsPage() {
 			toast.success(`${name.trim()} added`);
 			setName("");
 			setCategoryIds([]);
-		} catch {
-			toast.error(`Failed to add ${name.trim()}`);
+		} catch (err) {
+			toast.error(err instanceof Error ? err.message : "Failed to add product");
 		}
 	}
 
@@ -130,14 +135,20 @@ function ProductsPage() {
 					onSubmit={handleSubmit}
 					className="mb-6 flex flex-wrap gap-3 border-b border-(--line) pb-6"
 				>
-					<Input
-						type="text"
-						placeholder="Product name *"
-						required
-						value={name}
-						onChange={(e) => setName(e.target.value)}
-						className="flex-1 min-w-40"
-					/>
+					<div className="flex flex-1 min-w-40 flex-col gap-1">
+						<Input
+							type="text"
+							placeholder="Product name *"
+							required
+							value={name}
+							onChange={(e) => setName(e.target.value)}
+						/>
+						{duplicate && (
+							<p className="text-xs text-amber-600 dark:text-amber-400">
+								"{duplicate.name}" already exists
+							</p>
+						)}
+					</div>
 					<MultiCombobox
 						value={categoryIds}
 						onChange={setCategoryIds}
@@ -150,7 +161,7 @@ function ProductsPage() {
 					/>
 					<Button
 						type="submit"
-						disabled={createProduct.isPending}
+						disabled={submitDisabled}
 						className="flex items-center gap-1.5"
 					>
 						<Plus size={16} />

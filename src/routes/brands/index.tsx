@@ -10,7 +10,9 @@ import { Island } from "#src/components/Island";
 import { Page } from "#src/components/Page";
 import { SearchInput } from "#src/components/SearchInput";
 import { TableView } from "#src/components/TableView";
+import { useToast } from "#src/components/Toast";
 import { type ViewMode, ViewSwitcher } from "#src/components/ViewSwitcher";
+import { findDuplicateName } from "#src/lib/duplicate-name";
 import { formatDate } from "#src/lib/format-date";
 import { useBrands, useCreateBrand } from "#src/lib/hooks/use-brands";
 
@@ -21,10 +23,15 @@ export const Route = createFileRoute("/brands/")({
 function BrandsPage() {
 	const { data: brands, isLoading } = useBrands();
 	const createBrand = useCreateBrand();
+	const toast = useToast();
 
 	const [view, setView] = useState<ViewMode>("grid");
 	const [name, setName] = useState("");
 	const [search, setSearch] = useState("");
+
+	const duplicate = findDuplicateName(name, brands);
+	const submitDisabled =
+		createBrand.isPending || !name.trim() || Boolean(duplicate);
 
 	const filteredBrands = useMemo(() => {
 		if (!brands || !search.trim()) return brands;
@@ -33,11 +40,13 @@ function BrandsPage() {
 	}, [brands, search]);
 	async function handleSubmit(e: FormEvent) {
 		e.preventDefault();
-		if (!name.trim()) return;
-		await createBrand.mutateAsync({
-			name: name.trim(),
-		});
-		setName("");
+		if (!name.trim() || duplicate) return;
+		try {
+			await createBrand.mutateAsync({ name: name.trim() });
+			setName("");
+		} catch (err) {
+			toast.error(err instanceof Error ? err.message : "Failed to add brand");
+		}
 	}
 
 	return (
@@ -56,17 +65,23 @@ function BrandsPage() {
 					onSubmit={handleSubmit}
 					className="mb-6 flex flex-wrap gap-3 border-b border-(--line) pb-6"
 				>
-					<Input
-						type="text"
-						placeholder="Brand name *"
-						required
-						value={name}
-						onChange={(e) => setName(e.target.value)}
-						className="flex-1 min-w-[160px]"
-					/>
+					<div className="flex flex-1 min-w-[160px] flex-col gap-1">
+						<Input
+							type="text"
+							placeholder="Brand name *"
+							required
+							value={name}
+							onChange={(e) => setName(e.target.value)}
+						/>
+						{duplicate && (
+							<p className="text-xs text-amber-600 dark:text-amber-400">
+								"{duplicate.name}" already exists
+							</p>
+						)}
+					</div>
 					<Button
 						type="submit"
-						disabled={createBrand.isPending}
+						disabled={submitDisabled}
 						className="flex items-center gap-1.5"
 					>
 						<Plus size={16} />
