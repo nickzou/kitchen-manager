@@ -26,6 +26,7 @@ All resources are scoped to the authenticated user — the API never crosses ten
 - Numeric quantities are sent as strings to preserve precision (Postgres `numeric` columns).
 - Errors return `{ "error": "..." }` with an appropriate 4xx / 5xx status.
 - Response shapes mirror the Drizzle row schema; consult `src/db/schema.ts` for the full field list.
+- Names on user-scoped lookup tables (brands, stores, quantity units, product categories, recipe categories, recipes, products) are unique per user, **case-insensitive**. Creating or renaming to a duplicate name returns `409 { "error": "A <thing> with this name already exists" }`.
 
 ---
 

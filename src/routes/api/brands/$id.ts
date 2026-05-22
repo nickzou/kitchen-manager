@@ -3,6 +3,7 @@ import { and, eq } from "drizzle-orm";
 import { db } from "#src/db";
 import { brand } from "#src/db/schema";
 import { getAuthSession } from "#src/lib/auth-session";
+import { isUniqueViolation } from "#src/lib/unique-violation";
 
 function json(data: unknown, init?: { status?: number }) {
 	return new Response(JSON.stringify(data), {
@@ -44,13 +45,24 @@ export const Route = createFileRoute("/api/brands/$id")({
 
 				if (body.name !== undefined) updates.name = body.name;
 
-				const [updated] = await db
-					.update(brand)
-					.set(updates)
-					.where(
-						and(eq(brand.id, params.id), eq(brand.userId, session.user.id)),
-					)
-					.returning();
+				let updated: typeof brand.$inferSelect | undefined;
+				try {
+					[updated] = await db
+						.update(brand)
+						.set(updates)
+						.where(
+							and(eq(brand.id, params.id), eq(brand.userId, session.user.id)),
+						)
+						.returning();
+				} catch (err) {
+					if (isUniqueViolation(err)) {
+						return json(
+							{ error: "A brand with this name already exists" },
+							{ status: 409 },
+						);
+					}
+					throw err;
+				}
 
 				if (!updated) {
 					return json({ error: "Not found" }, { status: 404 });
