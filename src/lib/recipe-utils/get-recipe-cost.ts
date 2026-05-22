@@ -29,9 +29,15 @@ export function getRecipeCost(opts: {
 		entriesByProduct.set(entry.productId, list);
 	}
 
-	let total = 0;
 	let ingredientsPriced = 0;
 	const ingredientsTotal = ingredients.length;
+
+	// Ingredient groups represent "OR" alternatives — the cook will use one.
+	// Average across the contributors so the recipe cost reflects the
+	// typical case rather than summing every alternative as if all were
+	// used (mirrors the nutrition rollup).
+	const ungrouped: number[] = [];
+	const grouped = new Map<string, number[]>();
 
 	for (const ing of ingredients) {
 		if (!ing.productId) continue;
@@ -51,11 +57,26 @@ export function getRecipeCost(opts: {
 		);
 		if (convertedQty === null) continue;
 
-		total += convertedQty * scaleFactor * avgCost;
+		const contribution = convertedQty * scaleFactor * avgCost;
+
+		if (ing.groupName) {
+			const bucket = grouped.get(ing.groupName) ?? [];
+			bucket.push(contribution);
+			grouped.set(ing.groupName, bucket);
+		} else {
+			ungrouped.push(contribution);
+		}
 		ingredientsPriced++;
 	}
 
 	if (ingredientsPriced === 0) return null;
+
+	let total = 0;
+	for (const c of ungrouped) total += c;
+	for (const bucket of grouped.values()) {
+		if (bucket.length === 0) continue;
+		total += bucket.reduce((s, c) => s + c, 0) / bucket.length;
+	}
 
 	return { total, ingredientsPriced, ingredientsTotal };
 }
