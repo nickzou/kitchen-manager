@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Spec: Prevent duplicate brands (and similar)</title>
+<style>
+  :root {
+    --ink: #1a2e30;
+    --soft: #5a6c70;
+    --line: #d8dfe0;
+    --accent: #2b7a78;
+    --bg: #faf8f5;
+    --code-bg: #f0ece6;
+    --warn: #b85c1f;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    max-width: 760px;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.55;
+  }
+  h1, h2, h3 { color: var(--ink); margin-top: 2em; }
+  h1 { border-bottom: 2px solid var(--accent); padding-bottom: 0.3em; }
+  h2 { border-bottom: 1px solid var(--line); padding-bottom: 0.2em; }
+  code {
+    background: var(--code-bg);
+    padding: 0.1em 0.35em;
+    border-radius: 3px;
+    font-size: 0.92em;
+  }
+  pre {
+    background: var(--code-bg);
+    padding: 0.8em 1em;
+    border-radius: 6px;
+    overflow-x: auto;
+    font-size: 0.9em;
+    line-height: 1.45;
+  }
+  table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+  th, td { text-align: left; padding: 0.45em 0.7em; border-bottom: 1px solid var(--line); font-size: 0.95em; }
+  th { background: var(--code-bg); }
+  .meta { color: var(--soft); font-size: 0.9em; margin-top: -0.5em; }
+  .callout {
+    border-left: 3px solid var(--accent);
+    background: rgba(43, 122, 120, 0.06);
+    padding: 0.6em 1em;
+    margin: 1em 0;
+    border-radius: 0 4px 4px 0;
+  }
+  .warn {
+    border-left-color: var(--warn);
+    background: rgba(184, 92, 31, 0.07);
+  }
+  ul, ol { padding-left: 1.4em; }
+  li { margin: 0.25em 0; }
+  hr { border: none; border-top: 1px solid var(--line); margin: 2em 0; }
+</style>
+</head>
+<body>
+
+<h1>Spec: Prevent duplicate brands (and similar)</h1>
+<p class="meta">Kitchen Manager · Draft</p>
+<table style="margin-top: 0.5em; width: auto;">
+  <tr><th>Detected</th><td>2026-05-22</td></tr>
+  <tr><th>Resolved</th><td>—</td></tr>
+</table>
+
+<h2>Problem</h2>
+<p>
+  The brand "Lactantia" exists twice in production, created 7 seconds apart
+  — most likely from a double-click on the create form. One copy has stock
+  entries attached; the other is orphaned. There is no DB-level or API-level
+  guard against this. The same issue can recur for any user-named lookup
+  table (brands, stores, quantity units, categories).
+</p>
+
+<h2>Goal</h2>
+<p>Make it impossible for a user to end up with two brands of the same name in their account. Same fix should apply to other user-named lookup tables that share this shape.</p>
+
+<h2>Approach</h2>
+<p>Two-layer defence, ship in that order:</p>
+<ol>
+  <li>
+    <strong>DB-level unique constraint on <code>(user_id, lower(name))</code></strong>.
+    Authoritative, race-proof, language-agnostic. POST returns 409 with a clear error message.
+  </li>
+  <li>
+    <strong>Client-side guard</strong>: disable the create button while the request
+    is in flight, and surface a soft "already exists" hint inline as the user
+    types (using the brands list the page already has cached). UX polish on top
+    of the DB layer.
+  </li>
+</ol>
+<div class="callout">
+  <strong>Case sensitivity</strong>: <code>product</code> already has a
+  unique constraint on <code>(user_id, name)</code> but it's <em>case-sensitive</em>,
+  so "Salt" and "salt" can both exist. Proposal: switch to case-insensitive for
+  this new work (unique index on <code>lower(name)</code>). Decide whether to
+  apply the same change to the existing product constraint.
+</div>
+
+<h2>Affected tables</h2>
+<table>
+  <tr><th>Table</th><th>Current constraint</th><th>Proposal</th></tr>
+  <tr><td><code>brand</code></td><td>none</td><td>unique <code>(user_id, lower(name))</code></td></tr>
+  <tr><td><code>store</code></td><td>none</td><td>same</td></tr>
+  <tr><td><code>quantity_unit</code></td><td>none</td><td>same</td></tr>
+  <tr><td><code>product_category_type</code></td><td>none</td><td>same</td></tr>
+  <tr><td><code>recipe_category_type</code></td><td>none</td><td>same</td></tr>
+  <tr><td><code>product</code></td><td>case-sensitive on <code>(user_id, name)</code></td><td><em>decision: leave alone, or migrate to case-insensitive too?</em></td></tr>
+  <tr><td><code>recipe</code></td><td>none currently</td><td>case-insensitive on <code>(user_id, name)</code></td></tr>
+</table>
+
+<h2>Migration strategy</h2>
+<p>Two concerns: (a) creating the new unique indexes, (b) cleaning up existing duplicates so the index can be created.</p>
+
+<h3>1. Audit existing data first</h3>
+<p>Before generating the migration, run a SQL query (or one-off script) to find any duplicates that would block the new index:</p>
+<pre>SELECT user_id, lower(name), count(*)
+FROM brand
+GROUP BY user_id, lower(name)
+HAVING count(*) > 1;</pre>
+<p>Repeat for each affected table. If anything is found, surface it to the user for manual merge before running the migration.</p>
+
+<h3>2. Migration shape</h3>
+<p>One Drizzle migration per table (or combined), using a functional unique index:</p>
+<pre>CREATE UNIQUE INDEX brand_userId_name_unique
+  ON brand (user_id, lower(name));</pre>
+<p>Generated via <code>drizzle-kit generate --name=add-unique-brand-name</code>.</p>
+
+<h2>API behavior</h2>
+<p>
+  POST and PUT handlers on each affected resource catch Postgres error code
+  <code>23505</code> (unique violation) and return a 409 with a clear
+  <code>error</code> message. The product handler already does this — pattern
+  to copy:
+</p>
+<pre>try {
+  [created] = await db.insert(brand).values({...}).returning();
+} catch (err) {
+  if (err.code === "23505") {
+    return json(
+      { error: "A brand with this name already exists" },
+      { status: 409 }
+    );
+  }
+  throw err;
+}</pre>
+
+<h2>Client UX</h2>
+<ul>
+  <li><strong>Disable submit while pending</strong> — already partly done elsewhere; ensure consistent.</li>
+  <li><strong>Inline duplicate hint</strong>: as the user types in the create field, check the cached brand list (already in React Query). If a case-insensitive match exists, render a small "Brand already exists" message next to the input and gray out the submit. Cheap to wire because the list is already loaded.</li>
+  <li><strong>409 toast on submit</strong>: if the inline check missed (race, list cache stale), surface the server's 409 message via the existing toast system.</li>
+</ul>
+
+<h2>Tests</h2>
+<ul>
+  <li>Endpoint test: POST a duplicate (same name, different case) returns 409 with the expected error body.</li>
+  <li>Endpoint test: PUT renaming brand B to match brand A's name returns 409.</li>
+  <li>Endpoint test: POST a non-duplicate succeeds.</li>
+  <li>Schema test or repeat the above for each affected resource that gets the constraint.</li>
+</ul>
+
+<h2>Decisions you need to make</h2>
+<ol>
+  <li>
+    <strong>Case sensitivity</strong>: case-insensitive uniqueness for the new constraints? (Recommended.)
+  </li>
+  <li>
+    <strong>Existing <code>product</code> constraint</strong>: leave as case-sensitive,
+    or migrate it to case-insensitive too (drops the old constraint, adds the new
+    functional one)?
+  </li>
+  <li>
+    <strong>Scope</strong>: ship for brands only first (small, focused PR), or
+    cover brands + stores + units + categories + recipes in one PR? Same shape
+    of change applied uniformly.
+  </li>
+  <li>
+    <strong>Pre-migration duplicates</strong>: if the audit query finds existing
+    duplicates beyond Lactantia, do we want a one-off cleanup script or surface
+    them in-app for manual merge?
+  </li>
+</ol>
+
+<h2>Out of scope</h2>
+<ul>
+  <li>"Merge brand" UI flow for resolving duplicates that already exist — useful future feature, not needed for this fix.</li>
+  <li>Fuzzy-match duplicate detection ("Lactantia" vs "Lactancia") — case-insensitive only.</li>
+  <li>Trimming whitespace before comparison — could add, but a separate concern.</li>
+</ul>
+
+<hr />
+<p class="meta">Last updated 2026-05-22</p>
+
+</body>
+</html>
