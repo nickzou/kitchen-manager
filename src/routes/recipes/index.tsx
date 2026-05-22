@@ -12,7 +12,9 @@ import { MultiCombobox } from "#src/components/MultiCombobox";
 import { Page } from "#src/components/Page";
 import { SearchInput } from "#src/components/SearchInput";
 import { TableView } from "#src/components/TableView";
+import { useToast } from "#src/components/Toast";
 import { type ViewMode, ViewSwitcher } from "#src/components/ViewSwitcher";
+import { findDuplicateName } from "#src/lib/duplicate-name";
 import { formatDate } from "#src/lib/format-date";
 import { useRecipeCategories } from "#src/lib/hooks/use-categories";
 import { useRecipeAvailability } from "#src/lib/hooks/use-recipe-availability";
@@ -33,12 +35,17 @@ function RecipesPage() {
 	const { data: categories } = useRecipeCategories();
 	const { data: availability } = useRecipeAvailability();
 	const createRecipe = useCreateRecipe();
+	const toast = useToast();
 
 	const [view, setView] = useState<ViewMode>("grid");
 	const [name, setName] = useState("");
 	const [categoryIds, setCategoryIds] = useState<string[]>([]);
 	const [search, setSearch] = useState("");
 	const [showImages, setShowImages] = useState(true);
+
+	const duplicate = findDuplicateName(name, recipes);
+	const submitDisabled =
+		createRecipe.isPending || !name.trim() || Boolean(duplicate);
 
 	const filteredRecipes = useMemo(() => {
 		if (!recipes || !search.trim()) return recipes;
@@ -47,13 +54,17 @@ function RecipesPage() {
 	}, [recipes, search]);
 	async function handleSubmit(e: FormEvent) {
 		e.preventDefault();
-		if (!name.trim()) return;
-		await createRecipe.mutateAsync({
-			name: name.trim(),
-			categoryIds: categoryIds.length > 0 ? categoryIds : undefined,
-		});
-		setName("");
-		setCategoryIds([]);
+		if (!name.trim() || duplicate) return;
+		try {
+			await createRecipe.mutateAsync({
+				name: name.trim(),
+				categoryIds: categoryIds.length > 0 ? categoryIds : undefined,
+			});
+			setName("");
+			setCategoryIds([]);
+		} catch (err) {
+			toast.error(err instanceof Error ? err.message : "Failed to add recipe");
+		}
 	}
 
 	function getCategoryNames(catIds: string[]) {
@@ -78,14 +89,20 @@ function RecipesPage() {
 					onSubmit={handleSubmit}
 					className="mb-6 flex flex-wrap gap-3 border-b border-(--line) pb-6"
 				>
-					<Input
-						type="text"
-						placeholder="Recipe name *"
-						required
-						value={name}
-						onChange={(e) => setName(e.target.value)}
-						className="flex-1 min-w-[160px]"
-					/>
+					<div className="flex flex-1 min-w-[160px] flex-col gap-1">
+						<Input
+							type="text"
+							placeholder="Recipe name *"
+							required
+							value={name}
+							onChange={(e) => setName(e.target.value)}
+						/>
+						{duplicate && (
+							<p className="text-xs text-amber-600 dark:text-amber-400">
+								"{duplicate.name}" already exists
+							</p>
+						)}
+					</div>
 					<MultiCombobox
 						value={categoryIds}
 						onChange={setCategoryIds}
@@ -98,7 +115,7 @@ function RecipesPage() {
 					/>
 					<Button
 						type="submit"
-						disabled={createRecipe.isPending}
+						disabled={submitDisabled}
 						className="flex items-center gap-1.5"
 					>
 						<Plus size={16} />

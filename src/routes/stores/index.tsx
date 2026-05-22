@@ -10,7 +10,9 @@ import { Island } from "#src/components/Island";
 import { Page } from "#src/components/Page";
 import { SearchInput } from "#src/components/SearchInput";
 import { TableView } from "#src/components/TableView";
+import { useToast } from "#src/components/Toast";
 import { type ViewMode, ViewSwitcher } from "#src/components/ViewSwitcher";
+import { findDuplicateName } from "#src/lib/duplicate-name";
 import { formatDate } from "#src/lib/format-date";
 import { useCreateStore, useStores } from "#src/lib/hooks/use-stores";
 
@@ -21,10 +23,15 @@ export const Route = createFileRoute("/stores/")({
 function StoresPage() {
 	const { data: stores, isLoading } = useStores();
 	const createStore = useCreateStore();
+	const toast = useToast();
 
 	const [view, setView] = useState<ViewMode>("grid");
 	const [name, setName] = useState("");
 	const [search, setSearch] = useState("");
+
+	const duplicate = findDuplicateName(name, stores);
+	const submitDisabled =
+		createStore.isPending || !name.trim() || Boolean(duplicate);
 
 	const filteredStores = useMemo(() => {
 		if (!stores || !search.trim()) return stores;
@@ -33,11 +40,13 @@ function StoresPage() {
 	}, [stores, search]);
 	async function handleSubmit(e: FormEvent) {
 		e.preventDefault();
-		if (!name.trim()) return;
-		await createStore.mutateAsync({
-			name: name.trim(),
-		});
-		setName("");
+		if (!name.trim() || duplicate) return;
+		try {
+			await createStore.mutateAsync({ name: name.trim() });
+			setName("");
+		} catch (err) {
+			toast.error(err instanceof Error ? err.message : "Failed to add store");
+		}
 	}
 
 	return (
@@ -56,17 +65,23 @@ function StoresPage() {
 					onSubmit={handleSubmit}
 					className="mb-6 flex flex-wrap gap-3 border-b border-(--line) pb-6"
 				>
-					<Input
-						type="text"
-						placeholder="Store name *"
-						required
-						value={name}
-						onChange={(e) => setName(e.target.value)}
-						className="flex-1 min-w-[160px]"
-					/>
+					<div className="flex flex-1 min-w-[160px] flex-col gap-1">
+						<Input
+							type="text"
+							placeholder="Store name *"
+							required
+							value={name}
+							onChange={(e) => setName(e.target.value)}
+						/>
+						{duplicate && (
+							<p className="text-xs text-amber-600 dark:text-amber-400">
+								"{duplicate.name}" already exists
+							</p>
+						)}
+					</div>
 					<Button
 						type="submit"
-						disabled={createStore.isPending}
+						disabled={submitDisabled}
 						className="flex items-center gap-1.5"
 					>
 						<Plus size={16} />

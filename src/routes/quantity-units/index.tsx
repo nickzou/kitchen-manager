@@ -9,7 +9,9 @@ import InventorySubNav from "#src/components/InventorySubNav";
 import { Island } from "#src/components/Island";
 import { Page } from "#src/components/Page";
 import { SearchInput } from "#src/components/SearchInput";
+import { useToast } from "#src/components/Toast";
 import { type ViewMode, ViewSwitcher } from "#src/components/ViewSwitcher";
+import { findDuplicateName } from "#src/lib/duplicate-name";
 import { formatDate } from "#src/lib/format-date";
 import {
 	type QuantityUnit,
@@ -42,11 +44,16 @@ function QuantityUnitsPage() {
 	const { data: quantityUnits, isLoading } = useQuantityUnits();
 	const { data: conversions } = useUnitConversions();
 	const createQuantityUnit = useCreateQuantityUnit();
+	const toast = useToast();
 
 	const [view, setView] = useState<ViewMode>("grid");
 	const [name, setName] = useState("");
 	const [abbreviation, setAbbreviation] = useState("");
 	const [search, setSearch] = useState("");
+
+	const duplicate = findDuplicateName(name, quantityUnits);
+	const submitDisabled =
+		createQuantityUnit.isPending || !name.trim() || Boolean(duplicate);
 
 	const filteredQuantityUnits = useMemo(() => {
 		if (!quantityUnits || !search.trim()) return quantityUnits;
@@ -72,13 +79,19 @@ function QuantityUnitsPage() {
 
 	async function handleSubmit(e: FormEvent) {
 		e.preventDefault();
-		if (!name.trim()) return;
-		await createQuantityUnit.mutateAsync({
-			name: name.trim(),
-			abbreviation: abbreviation.trim() || undefined,
-		});
-		setName("");
-		setAbbreviation("");
+		if (!name.trim() || duplicate) return;
+		try {
+			await createQuantityUnit.mutateAsync({
+				name: name.trim(),
+				abbreviation: abbreviation.trim() || undefined,
+			});
+			setName("");
+			setAbbreviation("");
+		} catch (err) {
+			toast.error(
+				err instanceof Error ? err.message : "Failed to add quantity unit",
+			);
+		}
 	}
 
 	return (
@@ -97,14 +110,20 @@ function QuantityUnitsPage() {
 					onSubmit={handleSubmit}
 					className="mb-6 flex flex-wrap gap-3 border-b border-(--line) pb-6"
 				>
-					<Input
-						type="text"
-						placeholder="Unit name *"
-						required
-						value={name}
-						onChange={(e) => setName(e.target.value)}
-						className="flex-1 min-w-[160px]"
-					/>
+					<div className="flex flex-1 min-w-[160px] flex-col gap-1">
+						<Input
+							type="text"
+							placeholder="Unit name *"
+							required
+							value={name}
+							onChange={(e) => setName(e.target.value)}
+						/>
+						{duplicate && (
+							<p className="text-xs text-amber-600 dark:text-amber-400">
+								"{duplicate.name}" already exists
+							</p>
+						)}
+					</div>
 					<Input
 						type="text"
 						placeholder="Abbreviation"
@@ -114,7 +133,7 @@ function QuantityUnitsPage() {
 					/>
 					<Button
 						type="submit"
-						disabled={createQuantityUnit.isPending}
+						disabled={submitDisabled}
 						className="flex items-center gap-1.5"
 					>
 						<Plus size={16} />

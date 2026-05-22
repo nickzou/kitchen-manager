@@ -61,7 +61,12 @@ export function useCreateProductCategory() {
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify(input),
 			});
-			if (!res.ok) throw new Error("Failed to create product category");
+			if (!res.ok) {
+				const body = (await res.json().catch(() => null)) as {
+					error?: string;
+				} | null;
+				throw new Error(body?.error ?? "Failed to create product category");
+			}
 			return res.json();
 		},
 		onSuccess: () => {
@@ -137,7 +142,12 @@ export function useCreateRecipeCategory() {
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify(input),
 			});
-			if (!res.ok) throw new Error("Failed to create recipe category");
+			if (!res.ok) {
+				const body = (await res.json().catch(() => null)) as {
+					error?: string;
+				} | null;
+				throw new Error(body?.error ?? "Failed to create recipe category");
+			}
 			return res.json();
 		},
 		onSuccess: () => {

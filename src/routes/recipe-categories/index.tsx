@@ -10,7 +10,9 @@ import { Island } from "#src/components/Island";
 import { Page } from "#src/components/Page";
 import { SearchInput } from "#src/components/SearchInput";
 import { TableView } from "#src/components/TableView";
+import { useToast } from "#src/components/Toast";
 import { type ViewMode, ViewSwitcher } from "#src/components/ViewSwitcher";
+import { findDuplicateName } from "#src/lib/duplicate-name";
 import { formatDate } from "#src/lib/format-date";
 import {
 	useCreateRecipeCategory,
@@ -24,11 +26,16 @@ export const Route = createFileRoute("/recipe-categories/")({
 function RecipeCategoriesPage() {
 	const { data: categories, isLoading } = useRecipeCategories();
 	const createCategory = useCreateRecipeCategory();
+	const toast = useToast();
 
 	const [view, setView] = useState<ViewMode>("grid");
 	const [name, setName] = useState("");
 	const [description, setDescription] = useState("");
 	const [search, setSearch] = useState("");
+
+	const duplicate = findDuplicateName(name, categories);
+	const submitDisabled =
+		createCategory.isPending || !name.trim() || Boolean(duplicate);
 
 	const filteredCategories = useMemo(() => {
 		if (!categories || !search.trim()) return categories;
@@ -41,13 +48,19 @@ function RecipeCategoriesPage() {
 	}, [categories, search]);
 	async function handleSubmit(e: FormEvent) {
 		e.preventDefault();
-		if (!name.trim()) return;
-		await createCategory.mutateAsync({
-			name: name.trim(),
-			description: description.trim() || undefined,
-		});
-		setName("");
-		setDescription("");
+		if (!name.trim() || duplicate) return;
+		try {
+			await createCategory.mutateAsync({
+				name: name.trim(),
+				description: description.trim() || undefined,
+			});
+			setName("");
+			setDescription("");
+		} catch (err) {
+			toast.error(
+				err instanceof Error ? err.message : "Failed to add category",
+			);
+		}
 	}
 
 	return (
@@ -66,14 +79,20 @@ function RecipeCategoriesPage() {
 					onSubmit={handleSubmit}
 					className="mb-6 flex flex-wrap gap-3 border-b border-(--line) pb-6"
 				>
-					<Input
-						type="text"
-						placeholder="Category name *"
-						required
-						value={name}
-						onChange={(e) => setName(e.target.value)}
-						className="flex-1 min-w-[160px]"
-					/>
+					<div className="flex flex-1 min-w-[160px] flex-col gap-1">
+						<Input
+							type="text"
+							placeholder="Category name *"
+							required
+							value={name}
+							onChange={(e) => setName(e.target.value)}
+						/>
+						{duplicate && (
+							<p className="text-xs text-amber-600 dark:text-amber-400">
+								"{duplicate.name}" already exists
+							</p>
+						)}
+					</div>
 					<Input
 						type="text"
 						placeholder="Description"
@@ -83,7 +102,7 @@ function RecipeCategoriesPage() {
 					/>
 					<Button
 						type="submit"
-						disabled={createCategory.isPending}
+						disabled={submitDisabled}
 						className="flex items-center gap-1.5"
 					>
 						<Plus size={16} />

@@ -45,7 +45,12 @@ export function useCreateBrand() {
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify(input),
 			});
-			if (!res.ok) throw new Error("Failed to create brand");
+			if (!res.ok) {
+				const body = (await res.json().catch(() => null)) as {
+					error?: string;
+				} | null;
+				throw new Error(body?.error ?? "Failed to create brand");
+			}
 			return res.json();
 		},
 		onSuccess: () => {

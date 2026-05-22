@@ -67,7 +67,12 @@ export function useCreateRecipe() {
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify(input),
 			});
-			if (!res.ok) throw new Error("Failed to create recipe");
+			if (!res.ok) {
+				const body = (await res.json().catch(() => null)) as {
+					error?: string;
+				} | null;
+				throw new Error(body?.error ?? "Failed to create recipe");
+			}
 			return res.json();
 		},
 		onSuccess: () => {

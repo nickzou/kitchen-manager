@@ -45,7 +45,12 @@ export function useCreateStore() {
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify(input),
 			});
-			if (!res.ok) throw new Error("Failed to create store");
+			if (!res.ok) {
+				const body = (await res.json().catch(() => null)) as {
+					error?: string;
+				} | null;
+				throw new Error(body?.error ?? "Failed to create store");
+			}
 			return res.json();
 		},
 		onSuccess: () => {
