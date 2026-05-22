@@ -274,4 +274,188 @@ describe("getRecipeCost", () => {
 		});
 		expect(result!.total).toBeCloseTo(2.5);
 	});
+
+	it("averages cost across alternatives within an ingredient group", () => {
+		// Toppings group: cilantro 500g @ $0.005/g = $2.50, lime 500g @
+		// $0.011/g = $5.50. The cook picks one — recipe cost should reflect
+		// the average ($4.00), not the sum ($8.00).
+		const result = getRecipeCost({
+			ingredients: [
+				makeIngredient({
+					id: "ing-cilantro",
+					productId: "p-cilantro",
+					quantity: "500",
+					quantityUnitId: "g",
+					groupName: "Toppings",
+				}),
+				makeIngredient({
+					id: "ing-lime",
+					productId: "p-lime",
+					quantity: "500",
+					quantityUnitId: "g",
+					groupName: "Toppings",
+				}),
+			],
+			products: [
+				makeProduct({ id: "p-cilantro", defaultQuantityUnitId: "g" }),
+				makeProduct({ id: "p-lime", defaultQuantityUnitId: "g" }),
+			],
+			stockEntries: [
+				makeEntry({
+					id: "e1",
+					productId: "p-cilantro",
+					quantity: "1000",
+					price: "5.00",
+					unitCost: "0.005",
+				}),
+				makeEntry({
+					id: "e2",
+					productId: "p-lime",
+					quantity: "1000",
+					price: "11.00",
+					unitCost: "0.011",
+				}),
+			],
+			...defaults,
+		});
+		expect(result).not.toBeNull();
+		expect(result!.total).toBeCloseTo(4.0);
+		expect(result!.ingredientsPriced).toBe(2);
+	});
+
+	it("sums ungrouped + averages grouped on the same recipe", () => {
+		// 500g flour @ $0.005/g = $2.50 (ungrouped)
+		// + Toppings group: cilantro $2.50, lime $5.50 → avg $4.00
+		// = $6.50
+		const result = getRecipeCost({
+			ingredients: [
+				makeIngredient({
+					id: "ing-flour",
+					productId: "p-flour",
+					quantity: "500",
+					quantityUnitId: "g",
+				}),
+				makeIngredient({
+					id: "ing-cilantro",
+					productId: "p-cilantro",
+					quantity: "500",
+					quantityUnitId: "g",
+					groupName: "Toppings",
+				}),
+				makeIngredient({
+					id: "ing-lime",
+					productId: "p-lime",
+					quantity: "500",
+					quantityUnitId: "g",
+					groupName: "Toppings",
+				}),
+			],
+			products: [
+				makeProduct({ id: "p-flour", defaultQuantityUnitId: "g" }),
+				makeProduct({ id: "p-cilantro", defaultQuantityUnitId: "g" }),
+				makeProduct({ id: "p-lime", defaultQuantityUnitId: "g" }),
+			],
+			stockEntries: [
+				makeEntry({
+					id: "ef",
+					productId: "p-flour",
+					quantity: "1000",
+					price: "5.00",
+					unitCost: "0.005",
+				}),
+				makeEntry({
+					id: "ec",
+					productId: "p-cilantro",
+					quantity: "1000",
+					price: "5.00",
+					unitCost: "0.005",
+				}),
+				makeEntry({
+					id: "el",
+					productId: "p-lime",
+					quantity: "1000",
+					price: "11.00",
+					unitCost: "0.011",
+				}),
+			],
+			...defaults,
+		});
+		expect(result!.total).toBeCloseTo(6.5);
+	});
+
+	it("treats independent groups as separate averages", () => {
+		// Group A: $2 + $4 → avg $3
+		// Group B: $10 + $20 → avg $15
+		// Total: $3 + $15 = $18
+		const result = getRecipeCost({
+			ingredients: [
+				makeIngredient({
+					id: "a1",
+					productId: "p-a1",
+					quantity: "100",
+					quantityUnitId: "g",
+					groupName: "A",
+				}),
+				makeIngredient({
+					id: "a2",
+					productId: "p-a2",
+					quantity: "100",
+					quantityUnitId: "g",
+					groupName: "A",
+				}),
+				makeIngredient({
+					id: "b1",
+					productId: "p-b1",
+					quantity: "100",
+					quantityUnitId: "g",
+					groupName: "B",
+				}),
+				makeIngredient({
+					id: "b2",
+					productId: "p-b2",
+					quantity: "100",
+					quantityUnitId: "g",
+					groupName: "B",
+				}),
+			],
+			products: [
+				makeProduct({ id: "p-a1", defaultQuantityUnitId: "g" }),
+				makeProduct({ id: "p-a2", defaultQuantityUnitId: "g" }),
+				makeProduct({ id: "p-b1", defaultQuantityUnitId: "g" }),
+				makeProduct({ id: "p-b2", defaultQuantityUnitId: "g" }),
+			],
+			stockEntries: [
+				makeEntry({
+					id: "ea1",
+					productId: "p-a1",
+					quantity: "100",
+					price: "2.00",
+					unitCost: "0.02",
+				}),
+				makeEntry({
+					id: "ea2",
+					productId: "p-a2",
+					quantity: "100",
+					price: "4.00",
+					unitCost: "0.04",
+				}),
+				makeEntry({
+					id: "eb1",
+					productId: "p-b1",
+					quantity: "100",
+					price: "10.00",
+					unitCost: "0.10",
+				}),
+				makeEntry({
+					id: "eb2",
+					productId: "p-b2",
+					quantity: "100",
+					price: "20.00",
+					unitCost: "0.20",
+				}),
+			],
+			...defaults,
+		});
+		expect(result!.total).toBeCloseTo(18.0);
+	});
 });
