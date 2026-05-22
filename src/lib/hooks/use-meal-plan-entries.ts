@@ -111,11 +111,14 @@ export function useDeleteMealPlanEntry() {
 export function useCookMealPlanEntry() {
 	const queryClient = useQueryClient();
 	return useMutation({
-		mutationFn: async (mealPlanEntryId: string) => {
+		mutationFn: async (input: {
+			mealPlanEntryId: string;
+			groupSelections?: Record<string, string>;
+		}) => {
 			const res = await fetch("/api/meal-plan-entries/cook", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ mealPlanEntryId }),
+				body: JSON.stringify(input),
 			});
 			if (!res.ok) throw new Error("Failed to cook meal plan entry");
 			return res.json();

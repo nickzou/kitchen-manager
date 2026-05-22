@@ -3,6 +3,7 @@ import { Settings } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { Island } from "#src/components/Island";
 import { MealPlanCalendar } from "#src/components/meal-plan/MealPlanCalendar";
+import { MealPlanCookDialog } from "#src/components/meal-plan/MealPlanCookDialog";
 import { MealSlotManager } from "#src/components/meal-plan/MealSlotManager";
 import { WeekNavigation } from "#src/components/meal-plan/WeekNavigation";
 import { Page } from "#src/components/Page";
@@ -114,12 +115,17 @@ function MealPlanPage() {
 	}
 
 	function handleCookEntry(entryId: string) {
-		cookEntry.mutate(entryId);
+		setPendingCook(entryId);
 	}
 
 	function handleUncookEntry(entryId: string) {
 		uncookEntry.mutate(entryId);
 	}
+
+	const [pendingCook, setPendingCook] = useState<string | null>(null);
+	const pendingEntry = pendingCook
+		? entries?.find((e) => e.id === pendingCook)
+		: null;
 
 	function handleCreateSlot(name: string, sortOrder: number) {
 		createSlot.mutate({ name, sortOrder });
@@ -206,6 +212,24 @@ function MealPlanPage() {
 					/>
 				)}
 			</Island>
+			{pendingEntry && (
+				<MealPlanCookDialog
+					entry={pendingEntry}
+					isCooking={cookEntry.isPending}
+					onCook={async (groupSelections) => {
+						const id = pendingEntry.id;
+						try {
+							await cookEntry.mutateAsync({
+								mealPlanEntryId: id,
+								groupSelections,
+							});
+						} finally {
+							setPendingCook(null);
+						}
+					}}
+					onCancel={() => setPendingCook(null)}
+				/>
+			)}
 		</Page>
 	);
 }
