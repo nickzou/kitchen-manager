@@ -3,6 +3,7 @@ import { and, eq } from "drizzle-orm";
 import { db } from "#src/db";
 import { recipe, recipeCategory } from "#src/db/schema";
 import { getAuthSession } from "#src/lib/auth-session";
+import { isUniqueViolation } from "#src/lib/unique-violation";
 
 function json(data: unknown, init?: { status?: number }) {
 	return new Response(JSON.stringify(data), {
@@ -67,13 +68,24 @@ export const Route = createFileRoute("/api/recipes/$id")({
 					updates.producedQuantityUnitId = body.producedQuantityUnitId;
 				if (body.isMealPrep !== undefined) updates.isMealPrep = body.isMealPrep;
 
-				const [updated] = await db
-					.update(recipe)
-					.set(updates)
-					.where(
-						and(eq(recipe.id, params.id), eq(recipe.userId, session.user.id)),
-					)
-					.returning();
+				let updated: typeof recipe.$inferSelect | undefined;
+				try {
+					[updated] = await db
+						.update(recipe)
+						.set(updates)
+						.where(
+							and(eq(recipe.id, params.id), eq(recipe.userId, session.user.id)),
+						)
+						.returning();
+				} catch (err) {
+					if (isUniqueViolation(err)) {
+						return json(
+							{ error: "A recipe with this name already exists" },
+							{ status: 409 },
+						);
+					}
+					throw err;
+				}
 
 				if (!updated) {
 					return json({ error: "Not found" }, { status: 404 });

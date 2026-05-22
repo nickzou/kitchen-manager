@@ -281,6 +281,13 @@
       "when": 1778280941235,
       "tag": "0039_add-recipe-meal-prep",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1779477823950,
+      "tag": "0040_add-unique-name-constraints",
+      "breakpoints": true
     }
   ]
 }

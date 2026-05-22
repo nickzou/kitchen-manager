@@ -1,4 +1,4 @@
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
 	boolean,
 	date,
@@ -9,7 +9,7 @@ import {
 	pgTable,
 	text,
 	timestamp,
-	unique,
+	uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { user } from "./auth-schema";
 
@@ -55,7 +55,13 @@ export const productCategoryType = pgTable(
 			.$onUpdate(() => new Date())
 			.notNull(),
 	},
-	(table) => [index("productCategoryType_userId_idx").on(table.userId)],
+	(table) => [
+		index("productCategoryType_userId_idx").on(table.userId),
+		uniqueIndex("productCategoryType_userId_name_unique").on(
+			table.userId,
+			sql`lower(${table.name})`,
+		),
+	],
 );
 
 export const productCategoryTypeRelations = relations(
@@ -86,7 +92,13 @@ export const recipeCategoryType = pgTable(
 			.$onUpdate(() => new Date())
 			.notNull(),
 	},
-	(table) => [index("recipeCategoryType_userId_idx").on(table.userId)],
+	(table) => [
+		index("recipeCategoryType_userId_idx").on(table.userId),
+		uniqueIndex("recipeCategoryType_userId_name_unique").on(
+			table.userId,
+			sql`lower(${table.name})`,
+		),
+	],
 );
 
 export const recipeCategoryTypeRelations = relations(
@@ -117,7 +129,13 @@ export const quantityUnit = pgTable(
 			.$onUpdate(() => new Date())
 			.notNull(),
 	},
-	(table) => [index("quantityUnit_userId_idx").on(table.userId)],
+	(table) => [
+		index("quantityUnit_userId_idx").on(table.userId),
+		uniqueIndex("quantityUnit_userId_name_unique").on(
+			table.userId,
+			sql`lower(${table.name})`,
+		),
+	],
 );
 
 export const quantityUnitRelations = relations(
@@ -288,7 +306,10 @@ export const product = pgTable(
 	},
 	(table) => [
 		index("product_userId_idx").on(table.userId),
-		unique("product_userId_name_unique").on(table.userId, table.name),
+		uniqueIndex("product_userId_name_unique").on(
+			table.userId,
+			sql`lower(${table.name})`,
+		),
 	],
 );
 
@@ -382,7 +403,13 @@ export const brand = pgTable(
 			.$onUpdate(() => new Date())
 			.notNull(),
 	},
-	(table) => [index("brand_userId_idx").on(table.userId)],
+	(table) => [
+		index("brand_userId_idx").on(table.userId),
+		uniqueIndex("brand_userId_name_unique").on(
+			table.userId,
+			sql`lower(${table.name})`,
+		),
+	],
 );
 
 export const brandRelations = relations(brand, ({ one }) => ({
@@ -408,7 +435,13 @@ export const store = pgTable(
 			.$onUpdate(() => new Date())
 			.notNull(),
 	},
-	(table) => [index("store_userId_idx").on(table.userId)],
+	(table) => [
+		index("store_userId_idx").on(table.userId),
+		uniqueIndex("store_userId_name_unique").on(
+			table.userId,
+			sql`lower(${table.name})`,
+		),
+	],
 );
 
 export const storeRelations = relations(store, ({ one }) => ({
@@ -552,7 +585,13 @@ export const recipe = pgTable(
 			.$onUpdate(() => new Date())
 			.notNull(),
 	},
-	(table) => [index("recipe_userId_idx").on(table.userId)],
+	(table) => [
+		index("recipe_userId_idx").on(table.userId),
+		uniqueIndex("recipe_userId_name_unique").on(
+			table.userId,
+			sql`lower(${table.name})`,
+		),
+	],
 );
 
 export const recipeRelations = relations(recipe, ({ one, many }) => ({

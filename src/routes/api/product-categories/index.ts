@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { db } from "#src/db";
 import { productCategoryType } from "#src/db/schema";
 import { getAuthSession } from "#src/lib/auth-session";
+import { isUniqueViolation } from "#src/lib/unique-violation";
 
 function json(data: unknown, init?: { status?: number }) {
 	return new Response(JSON.stringify(data), {
@@ -39,16 +40,27 @@ export const Route = createFileRoute("/api/product-categories/")({
 					return json({ error: "Name is required" }, { status: 400 });
 				}
 
-				const [created] = await db
-					.insert(productCategoryType)
-					.values({
-						name: body.name,
-						description: body.description,
-						minStockAmount: body.minStockAmount ?? "0",
-						minStockUnitId: body.minStockUnitId ?? null,
-						userId: session.user.id,
-					})
-					.returning();
+				let created: typeof productCategoryType.$inferSelect;
+				try {
+					[created] = await db
+						.insert(productCategoryType)
+						.values({
+							name: body.name,
+							description: body.description,
+							minStockAmount: body.minStockAmount ?? "0",
+							minStockUnitId: body.minStockUnitId ?? null,
+							userId: session.user.id,
+						})
+						.returning();
+				} catch (err) {
+					if (isUniqueViolation(err)) {
+						return json(
+							{ error: "A product category with this name already exists" },
+							{ status: 409 },
+						);
+					}
+					throw err;
+				}
 
 				return json(created, { status: 201 });
 			},
