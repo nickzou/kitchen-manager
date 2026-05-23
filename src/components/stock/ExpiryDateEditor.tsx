@@ -180,7 +180,7 @@ export function ExpiryDateEditor({
 	}
 
 	return (
-		<span className="inline-flex items-center gap-0 mr-2 rounded-md border border-(--line) sm:mr-3">
+		<span className="inline-flex items-center gap-0.5 mr-2 rounded-md border border-(--line) px-1 py-0.5 sm:mr-3">
 			<button
 				type="button"
 				onClick={() => setEditing(true)}
