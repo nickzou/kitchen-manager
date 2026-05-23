@@ -6,17 +6,11 @@ import type { NutritionSummary } from "#src/lib/hooks/use-nutrition-summary";
 import { cn } from "#src/lib/utils";
 import { MealPlanCell } from "./MealPlanCell";
 
-interface RecipeOption {
-	value: string;
-	label: string;
-}
-
 interface MealPlanCalendarProps {
 	weekStart: Date;
 	weekStartDay: number;
 	mealSlots: MealSlot[];
 	entries: MealPlanEntry[];
-	recipeOptions: RecipeOption[];
 	onAddRecipe: (date: string, mealSlotId: string, recipeId: string) => void;
 	onUpdateServings: (entryId: string, servings: number | null) => void;
 	onDeleteEntry: (entryId: string) => void;
@@ -60,7 +54,6 @@ export function MealPlanCalendar({
 	weekStartDay,
 	mealSlots,
 	entries,
-	recipeOptions,
 	onAddRecipe,
 	onUpdateServings,
 	onDeleteEntry,
@@ -145,7 +138,6 @@ export function MealPlanCalendar({
 								>
 									<MealPlanCell
 										entries={cellEntries}
-										recipeOptions={recipeOptions}
 										onAddRecipe={(recipeId) =>
 											onAddRecipe(dateStr, slot.id, recipeId)
 										}
@@ -298,7 +290,6 @@ export function MealPlanCalendar({
 							</p>
 							<MealPlanCell
 								entries={cellEntries}
-								recipeOptions={recipeOptions}
 								onAddRecipe={(recipeId) =>
 									onAddRecipe(mobileDateStr, slot.id, recipeId)
 								}
