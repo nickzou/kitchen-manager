@@ -420,17 +420,29 @@ function RecipeDetail() {
 
 	async function handleCook(selections?: Record<string, string>) {
 		if (!recipe) return;
-		const result = await cookRecipe.mutateAsync({
-			recipeId: recipe.id,
-			servings: currentServings ?? undefined,
-			groupSelections: selections,
-		});
-		setCookResult(result);
-		setShowCookPicker(false);
-		setTimeout(
-			() => cookResultRef.current?.scrollIntoView({ behavior: "smooth" }),
-			100,
-		);
+		try {
+			const result = await cookRecipe.mutateAsync({
+				recipeId: recipe.id,
+				servings: currentServings ?? undefined,
+				groupSelections: selections,
+			});
+			setCookResult(result);
+			setShowCookPicker(false);
+			setTimeout(
+				() => cookResultRef.current?.scrollIntoView({ behavior: "smooth" }),
+				100,
+			);
+			const warningCount = result.warnings.length;
+			toast.success(
+				warningCount > 0
+					? `Cooked "${recipe.name}" with ${warningCount} warning${warningCount === 1 ? "" : "s"}`
+					: `Cooked "${recipe.name}"`,
+			);
+		} catch (err) {
+			toast.error(
+				err instanceof Error ? err.message : `Failed to cook ${recipe.name}`,
+			);
+		}
 	}
 
 	async function handleDelete() {
