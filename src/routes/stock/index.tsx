@@ -377,8 +377,8 @@ function StockPage() {
 									return (
 										<>
 											<span className="hidden text-xs text-(--sea-ink-soft) sm:inline">
-												{amount}
-												{consumeUnit ? ` ${consumeUnit}` : ""}
+												({amount}
+												{consumeUnit ? ` ${consumeUnit}` : ""})
 											</span>
 											<AmberButton
 												type="button"
