@@ -26,7 +26,6 @@ import {
 	useUpdateMealSlot,
 } from "#src/lib/hooks/use-meal-slots";
 import { useNutritionSummary } from "#src/lib/hooks/use-nutrition-summary";
-import { useRecipes } from "#src/lib/hooks/use-recipes";
 import { useUserSettings } from "#src/lib/hooks/use-user-settings";
 
 export const Route = createFileRoute("/meal-plan/")({
@@ -64,7 +63,6 @@ function MealPlanPage() {
 
 	const { data: mealSlots } = useMealSlots();
 	const { data: entries } = useMealPlanEntries(startStr, endStr);
-	const { data: recipes } = useRecipes();
 	const { data: nutritionSummary } = useNutritionSummary(startStr, endStr);
 	const { data: costSummary } = useCostSummary(startStr, endStr);
 
@@ -77,11 +75,6 @@ function MealPlanPage() {
 	const updateSlot = useUpdateMealSlot();
 	const reorderSlots = useReorderMealSlots();
 	const deleteSlot = useDeleteMealSlot();
-
-	const recipeOptions = (recipes ?? []).map((r) => ({
-		value: r.id,
-		label: r.name,
-	}));
 
 	const handlePrevWeek = useCallback(() => {
 		setWeekStart((prev) => {
@@ -198,7 +191,6 @@ function MealPlanPage() {
 						weekStartDay={weekStartDay}
 						mealSlots={mealSlots}
 						entries={entries ?? []}
-						recipeOptions={recipeOptions}
 						onAddRecipe={handleAddRecipe}
 						onUpdateServings={handleUpdateServings}
 						onDeleteEntry={handleDeleteEntry}
