@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Spec: Meal Plan recipe modal &amp; entry detail</title>
+<style>
+  :root {
+    --ink: #1a2e30;
+    --soft: #5a6c70;
+    --line: #d8dfe0;
+    --accent: #2b7a78;
+    --bg: #faf8f5;
+    --code-bg: #f0ece6;
+    --warn: #b85c1f;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    max-width: 760px;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.55;
+  }
+  h1, h2, h3 { color: var(--ink); margin-top: 2em; }
+  h1 { border-bottom: 2px solid var(--accent); padding-bottom: 0.3em; }
+  h2 { border-bottom: 1px solid var(--line); padding-bottom: 0.2em; }
+  code {
+    background: var(--code-bg);
+    padding: 0.1em 0.35em;
+    border-radius: 3px;
+    font-size: 0.92em;
+  }
+  pre {
+    background: var(--code-bg);
+    padding: 0.8em 1em;
+    border-radius: 6px;
+    overflow-x: auto;
+    font-size: 0.9em;
+    line-height: 1.45;
+  }
+  table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+  th, td { text-align: left; padding: 0.45em 0.7em; border-bottom: 1px solid var(--line); font-size: 0.95em; }
+  th { background: var(--code-bg); }
+  .meta { color: var(--soft); font-size: 0.9em; margin-top: -0.5em; }
+  .callout {
+    border-left: 3px solid var(--accent);
+    background: rgba(43, 122, 120, 0.06);
+    padding: 0.6em 1em;
+    margin: 1em 0;
+    border-radius: 0 4px 4px 0;
+  }
+  .warn {
+    border-left-color: var(--warn);
+    background: rgba(184, 92, 31, 0.07);
+  }
+  ul, ol { padding-left: 1.4em; }
+  li { margin: 0.25em 0; }
+  hr { border: none; border-top: 1px solid var(--line); margin: 2em 0; }
+</style>
+</head>
+<body>
+
+<h1>Spec: Meal Plan recipe modal &amp; entry detail</h1>
+<p class="meta">Kitchen Manager · Draft</p>
+<table style="margin-top: 0.5em; width: auto;">
+  <tr><th>Drafted</th><td>2026-05-22</td></tr>
+  <tr><th>Shipped</th><td>—</td></tr>
+</table>
+
+<h2>Problem</h2>
+<p>
+  Two related rough edges on the Meal Plan page:
+</p>
+<ol>
+  <li>
+    The recipe picker is an inline <code>Combobox</code> jammed inside each grid cell.
+    On desktop the cell is ~120px wide; on mobile it's bigger but still cramped.
+    You only see a name &mdash; no image, no categories, no signal of whether you
+    have the stock to actually cook it.
+  </li>
+  <li>
+    Once a recipe is planned, the entry popover only exposes servings &plusmn;,
+    Cook, and Delete. The recipe name is plain text &mdash; no way to jump to the
+    recipe page from the plan. And the popover hides the two things you'd most
+    want to see when scheduling: <em>what will this cost</em> and
+    <em>how many calories / macros</em>.
+  </li>
+</ol>
+
+<h2>Goal</h2>
+<ul>
+  <li>Picking a recipe to plan should feel like browsing a small catalogue, not typing into a 120px input.</li>
+  <li>Looking at a planned entry should answer "what is this, how much does it cost, what are the macros, and can I cook it now?" without leaving the page &mdash; with a clear way to jump to the full recipe.</li>
+</ul>
+
+<h2>Approach</h2>
+<p>Two new pieces, both reusing existing data hooks:</p>
+
+<h3>1. Add-recipe modal (<code>MealPlanRecipePickerModal</code>)</h3>
+<p>
+  Replace the inline <code>Combobox</code> in <code>MealPlanCell</code> with a
+  <code>+</code> button. Clicking it opens a <code>Modal</code> scoped to the cell's
+  (date, mealSlotId) showing:
+</p>
+<ul>
+  <li>Search field that filters the recipe list as you type.</li>
+  <li>Scrollable list of recipe rows. Each row shows:
+    <ul>
+      <li>Thumbnail (<code>recipe.image</code>) or placeholder square.</li>
+      <li>Recipe name + category tags.</li>
+      <li>Servings / prep time / cook time inline.</li>
+      <li>Stock availability badge from <code>useRecipeAvailability</code> &mdash; <code>CircleCheck</code> if sufficient, <code>CircleX</code> if deficit, nothing if no ingredients.</li>
+    </ul>
+  </li>
+  <li>One click on a row commits the add and closes the modal.</li>
+</ul>
+
+<h3>2. Recipe entry detail (replace <code>MealPlanEntryPopover</code>)</h3>
+<p>
+  The current floating popover is too small for what we want to show. Replace it
+  with a <code>Modal</code> that renders the same info plus:
+</p>
+<ul>
+  <li>Recipe thumbnail + name (the name is a <code>Link</code> to <code>/recipes/$id</code>).</li>
+  <li>Quick facts block:
+    <ul>
+      <li>Calories + P/F/C macros from <code>getRecipeNutrition</code>, scaled to the entry's <code>servings</code>.</li>
+      <li>Estimated cost from <code>getRecipeCost</code>, scaled the same way. Show a <code>*</code> if the cost is partial.</li>
+    </ul>
+  </li>
+  <li>Existing controls: servings &plusmn;, Cook / Undo Cook, Delete.</li>
+  <li>"View recipe &rarr;" footer link as a second affordance in case the user misses that the title is also a link.</li>
+</ul>
+
+<div class="callout">
+  <strong>Why a Modal, not an inline expander or a bigger popover?</strong>
+  The popover's positioning logic already has to flip above/below depending on
+  available space. Adding nutrition + cost + a thumbnail makes it tall enough
+  that it'll regularly clip on mobile. A modal centers content, scrolls cleanly,
+  and lets us reuse the existing <code>Modal</code> primitive.
+</div>
+
+<h2>Affected files</h2>
+<table>
+  <tr><th>File</th><th>Change</th></tr>
+  <tr><td><code>src/components/meal-plan/MealPlanRecipePickerModal.tsx</code></td><td><em>new</em> &mdash; modal for picking a recipe to add</td></tr>
+  <tr><td><code>src/components/meal-plan/MealPlanCell.tsx</code></td><td>swap inline Combobox for the new modal trigger; swap popover for entry-detail modal</td></tr>
+  <tr><td><code>src/components/meal-plan/MealPlanEntryDetailModal.tsx</code></td><td><em>new</em> &mdash; replaces <code>MealPlanEntryPopover</code></td></tr>
+  <tr><td><code>src/components/meal-plan/MealPlanEntryPopover.tsx</code></td><td>delete (and its references)</td></tr>
+  <tr><td><code>src/components/meal-plan/MealPlanCalendar.tsx</code></td><td>plumbing: no behavioural change &mdash; cells still call <code>onAddRecipe</code>, etc.</td></tr>
+</table>
+
+<h2>Data sources (no new hooks needed)</h2>
+<ul>
+  <li><code>useRecipes()</code>, <code>useRecipeCategories()</code> &mdash; list + tags for the picker.</li>
+  <li><code>useRecipeAvailability()</code> &mdash; per-recipe stock signal.</li>
+  <li><code>useRecipeIngredients(recipeId)</code>, <code>useProducts()</code>, <code>useStockEntries()</code>, <code>useUnitConversions()</code>, <code>useAllProductConversions()</code> &mdash; inputs to <code>getRecipeNutrition</code> and <code>getRecipeCost</code> for the entry detail modal.</li>
+</ul>
+<p>
+  Fetching these only when the detail modal is open keeps the meal-plan landing
+  query graph the same as today.
+</p>
+
+<h2>Tests</h2>
+<ul>
+  <li><code>MealPlanRecipePickerModal</code>: renders when triggered, filters by search, picks a recipe and fires <code>onPick(recipeId)</code>, closes on backdrop click.</li>
+  <li><code>MealPlanEntryDetailModal</code>: renders nutrition + cost rows, the title links to the recipe page, Cook / Undo Cook / Delete fire the correct callbacks, servings &plusmn; updates locally and calls <code>onUpdateServings</code>.</li>
+  <li>Light integration check on the meal-plan page: clicking <code>+</code> opens the picker, clicking a recipe closes it and the entry appears in the cell.</li>
+</ul>
+
+<h2>Decisions you need to make</h2>
+<ol>
+  <li>
+    <strong>Mobile presentation</strong>: same Modal on mobile (full-bleed sheet feel),
+    or a bottom-sheet variant for the picker? Default is "use the existing Modal,
+    revisit if it feels off."
+  </li>
+  <li>
+    <strong>Empty state in the picker</strong>: if the user has no recipes yet, show
+    a "No recipes &mdash; create one" link to <code>/recipes</code> inside the modal?
+  </li>
+  <li>
+    <strong>Cost rounding in the detail modal</strong>: same 2-decimal currency
+    formatting the calendar already uses? (Assumed yes.)
+  </li>
+</ol>
+
+<h2>Out of scope</h2>
+<ul>
+  <li>Adding a recipe to multiple slots/days in one open. One modal open = one entry.</li>
+  <li>Creating a recipe from inside the picker modal. The "No recipes" link to <code>/recipes</code> is the escape hatch.</li>
+  <li>Showing per-ingredient detail in the entry modal &mdash; that's what the recipe page itself is for.</li>
+  <li>Reorder / drag-and-drop between slots.</li>
+</ul>
+
+<hr />
+<p class="meta">Last updated 2026-05-22</p>
+
+</body>
+</html>
