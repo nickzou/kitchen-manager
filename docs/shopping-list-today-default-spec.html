@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Spec: Shopping list defaults to today &rarr; end of week</title>
+<style>
+  :root {
+    --ink: #1a2e30;
+    --soft: #5a6c70;
+    --line: #d8dfe0;
+    --accent: #2b7a78;
+    --bg: #faf8f5;
+    --code-bg: #f0ece6;
+    --warn: #b85c1f;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    max-width: 760px;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.55;
+  }
+  h1, h2, h3 { color: var(--ink); margin-top: 2em; }
+  h1 { border-bottom: 2px solid var(--accent); padding-bottom: 0.3em; }
+  h2 { border-bottom: 1px solid var(--line); padding-bottom: 0.2em; }
+  code {
+    background: var(--code-bg);
+    padding: 0.1em 0.35em;
+    border-radius: 3px;
+    font-size: 0.92em;
+  }
+  pre {
+    background: var(--code-bg);
+    padding: 0.8em 1em;
+    border-radius: 6px;
+    overflow-x: auto;
+    font-size: 0.9em;
+    line-height: 1.45;
+  }
+  table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+  th, td { text-align: left; padding: 0.45em 0.7em; border-bottom: 1px solid var(--line); font-size: 0.95em; }
+  th { background: var(--code-bg); }
+  .meta { color: var(--soft); font-size: 0.9em; margin-top: -0.5em; }
+  .callout {
+    border-left: 3px solid var(--accent);
+    background: rgba(43, 122, 120, 0.06);
+    padding: 0.6em 1em;
+    margin: 1em 0;
+    border-radius: 0 4px 4px 0;
+  }
+  .warn {
+    border-left-color: var(--warn);
+    background: rgba(184, 92, 31, 0.07);
+  }
+  ul, ol { padding-left: 1.4em; }
+  li { margin: 0.25em 0; }
+  hr { border: none; border-top: 1px solid var(--line); margin: 2em 0; }
+</style>
+</head>
+<body>
+
+<h1>Spec: Shopping list defaults to today &rarr; end of week</h1>
+<p class="meta">Kitchen Manager · Draft</p>
+<table style="margin-top: 0.5em; width: auto;">
+  <tr><th>Drafted</th><td>2026-05-22</td></tr>
+  <tr><th>Shipped</th><td>—</td></tr>
+</table>
+
+<h2>Problem</h2>
+<p>
+  Opening the Shopping List always defaults the range to <em>start-of-week &rarr; end-of-week</em>,
+  honoring the user's <code>weekStartDay</code> setting. If today is Wednesday and the week
+  starts Monday, the picker fills Mon&ndash;Sun, including two days that have already passed.
+  Those past days drag in meals you've already cooked or skipped, padding the list with stuff
+  you don't actually need to buy.
+</p>
+<p>
+  The picker also resets to the default on every navigation back to the page &mdash; even a
+  trip to a recipe page and back wipes the manually chosen range.
+</p>
+
+<h2>Goal</h2>
+<ul>
+  <li>First visit in a session: range is <strong>today &rarr; end of the current week</strong>, where "end of week" honors <code>weekStartDay</code> (i.e. <code>getWeekStart(today, weekStartDay) + 6&nbsp;days</code>).</li>
+  <li>Subsequent visits in the same session: keep whatever range the user picked.</li>
+  <li>Behaviour is preserved across SPA navigations <em>and</em> page reloads within the same browser session.</li>
+</ul>
+
+<h2>Approach</h2>
+
+<h3>1. Compute defaults from today, not from week start</h3>
+<p>
+  Replace the current init block in <code>shopping-list.tsx</code>:
+</p>
+<pre>// before
+const [startDate, setStartDate] = useState(() =&gt;
+  toDateString(getWeekStart(new Date(), 1)),
+);
+const [endDate, setEndDate] = useState(() =&gt; {
+  const end = getWeekStart(new Date(), 1);
+  end.setDate(end.getDate() + 6);
+  return toDateString(end);
+});</pre>
+<p>with a helper that computes the new default:</p>
+<pre>function todayToWeekEnd(weekStartDay: number) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const end = getWeekStart(today, weekStartDay);
+  end.setDate(end.getDate() + 6);
+  return {
+    start: toDateString(today),
+    end: toDateString(end),
+  };
+}</pre>
+<p>
+  Edge case: if today <em>is</em> the last day of the week, start &equiv; end &mdash; that's
+  correct, just one day's worth of plan.
+</p>
+
+<h3>2. Persist the user's chosen range for the session</h3>
+<p>
+  Use <code>sessionStorage</code> (not <code>localStorage</code>) so the range is sticky
+  across reloads and route changes within the session, but resets cleanly to the
+  today-based default next session. Key: <code>shopping-list-range</code>, value:
+  <code>{"start": "YYYY-MM-DD", "end": "YYYY-MM-DD"}</code>.
+</p>
+<p>Initial state resolution order:</p>
+<ol>
+  <li>If <code>sessionStorage[shopping-list-range]</code> exists and parses, use it.</li>
+  <li>Otherwise compute <code>todayToWeekEnd(weekStartDay)</code>.</li>
+</ol>
+<p>
+  When the user changes either date via <code>DateRangePicker</code>, write the new
+  pair back to <code>sessionStorage</code>.
+</p>
+
+<h3>3. Reconcile with the existing settings-load effect</h3>
+<p>
+  Today there's a <code>useEffect</code> guarded by a <code>settingsAppliedRef</code>
+  that re-applies the week-start default once user settings finish loading. That effect
+  becomes a no-op the moment we move to today-based defaults &mdash; the initial state
+  doesn't depend on <code>weekStartDay</code> being known. Remove the ref and effect.
+</p>
+<p>
+  We do still need to wait for the first render before reading from sessionStorage if
+  we want to stay SSR-safe; do the read inside a <code>useEffect</code> (same shape the
+  existing <code>useCheckedItems</code> hook uses).
+</p>
+
+<h2>Affected files</h2>
+<table>
+  <tr><th>File</th><th>Change</th></tr>
+  <tr><td><code>src/routes/meal-plan/shopping-list.tsx</code></td><td>swap the start/end init + the settings-load effect for a sessionStorage-backed hook; centralise the default in <code>todayToWeekEnd</code></td></tr>
+</table>
+<p>
+  No API changes. No new hooks. The persistence pattern mirrors the existing
+  <code>useCheckedItems</code> hook in the same file, so it should feel familiar.
+</p>
+
+<h2>Tests</h2>
+<ul>
+  <li>Unit test for <code>todayToWeekEnd</code>: given a known today + weekStartDay, returns the expected start/end pair (covering "today is week start", "today is mid-week", "today is week end").</li>
+  <li>Integration check: render the page with an empty sessionStorage and assert the picker fills with today &rarr; week end.</li>
+  <li>Integration check: pre-seed sessionStorage with a stored range, render, assert the picker fills with the stored values.</li>
+  <li>Integration check: changing the range writes back to sessionStorage.</li>
+</ul>
+
+<h2>Decisions</h2>
+<ol>
+  <li>
+    <strong>Persistence scope</strong>: <code>sessionStorage</code>. Resets on browser close;
+    we don't carry a stored range into a fresh session.
+  </li>
+  <li>
+    <strong>Day flip in the same session</strong>: reset to today &rarr; end of week when the
+    calendar moves past the day the range was saved. To detect this we also store a
+    <code>savedAt</code> date alongside the range; if <code>savedAt</code> &ne; today on
+    mount, we ignore the stored range and recompute defaults.
+  </li>
+  <li>
+    <strong>Reset affordance</strong>: include a small "Reset" button next to the date
+    picker that snaps the range back to today &rarr; end of week and updates
+    <code>sessionStorage</code> with today's <code>savedAt</code>.
+  </li>
+</ol>
+
+<h2>Out of scope</h2>
+<ul>
+  <li>Changing the Meal Plan page's week-start behaviour &mdash; that one still anchors on <code>weekStartDay</code>.</li>
+  <li>Server-side persistence of the range &mdash; if we ever want it to sync across devices, that's a separate change.</li>
+  <li>Touching the existing <code>useCheckedItems</code> persistence (which is keyed by range and writes to <code>localStorage</code>) &mdash; left as-is.</li>
+</ul>
+
+<hr />
+<p class="meta">Last updated 2026-05-22</p>
+
+</body>
+</html>

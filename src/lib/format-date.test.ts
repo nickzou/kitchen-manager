@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getWeekStart } from "./format-date";
+import { getWeekStart, todayToWeekEnd } from "./format-date";
 
 function ymd(d: Date) {
 	return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -55,5 +55,43 @@ describe("getWeekStart", () => {
 			expect(r.getDay()).toBe(s);
 			expect(r.getTime()).toBeLessThanOrEqual(wed.getTime());
 		}
+	});
+});
+
+describe("todayToWeekEnd", () => {
+	it("returns today and the following Sunday when today is mid-week (Monday start)", () => {
+		// 2026-05-06 is Wednesday → week ends 2026-05-10 (Sunday)
+		const wed = new Date("2026-05-06T09:00:00");
+		expect(todayToWeekEnd(1, wed)).toEqual({
+			start: "2026-05-06",
+			end: "2026-05-10",
+		});
+	});
+
+	it("returns the same date for start and end when today is the last day of the week", () => {
+		// 2026-05-10 is Sunday → with Monday start, end of week is also 2026-05-10
+		const sun = new Date("2026-05-10T09:00:00");
+		expect(todayToWeekEnd(1, sun)).toEqual({
+			start: "2026-05-10",
+			end: "2026-05-10",
+		});
+	});
+
+	it("honors weekStartDay=0 (Sunday-start weeks)", () => {
+		// 2026-05-06 is Wednesday → Sunday-start week ends 2026-05-09 (Saturday)
+		const wed = new Date("2026-05-06T09:00:00");
+		expect(todayToWeekEnd(0, wed)).toEqual({
+			start: "2026-05-06",
+			end: "2026-05-09",
+		});
+	});
+
+	it("returns a 7-day span when today is the first day of the week", () => {
+		// 2026-05-04 is Monday → week ends 2026-05-10 (Sunday)
+		const mon = new Date("2026-05-04T09:00:00");
+		expect(todayToWeekEnd(1, mon)).toEqual({
+			start: "2026-05-04",
+			end: "2026-05-10",
+		});
 	});
 });
