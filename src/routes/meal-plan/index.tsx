@@ -7,6 +7,7 @@ import { MealPlanCookDialog } from "#src/components/meal-plan/MealPlanCookDialog
 import { MealSlotManager } from "#src/components/meal-plan/MealSlotManager";
 import { WeekNavigation } from "#src/components/meal-plan/WeekNavigation";
 import { Page } from "#src/components/Page";
+import { useToast } from "#src/components/Toast";
 import { getWeekStart } from "#src/lib/format-date";
 import { useCostSummary } from "#src/lib/hooks/use-cost-summary";
 import {
@@ -39,6 +40,7 @@ function toDateString(d: Date): string {
 function MealPlanPage() {
 	const { data: settings } = useUserSettings();
 	const weekStartDay = settings?.weekStartDay ?? 1;
+	const toast = useToast();
 
 	const [weekStart, setWeekStart] = useState(() =>
 		getWeekStart(new Date(), weekStartDay),
@@ -218,11 +220,22 @@ function MealPlanPage() {
 					isCooking={cookEntry.isPending}
 					onCook={async (groupSelections) => {
 						const id = pendingEntry.id;
+						const name = pendingEntry.recipeName ?? "recipe";
 						try {
-							await cookEntry.mutateAsync({
+							const result = (await cookEntry.mutateAsync({
 								mealPlanEntryId: id,
 								groupSelections,
-							});
+							})) as { warnings?: string[] };
+							const warningCount = result.warnings?.length ?? 0;
+							toast.success(
+								warningCount > 0
+									? `Cooked "${name}" with ${warningCount} warning${warningCount === 1 ? "" : "s"}`
+									: `Cooked "${name}"`,
+							);
+						} catch (err) {
+							toast.error(
+								err instanceof Error ? err.message : `Failed to cook ${name}`,
+							);
 						} finally {
 							setPendingCook(null);
 						}
