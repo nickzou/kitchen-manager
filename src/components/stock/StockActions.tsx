@@ -32,7 +32,7 @@ export function StockActions({
 				max={quantity}
 				value={consumeAmount}
 				onChange={(e) => onConsumeAmountChange(e.target.value)}
-				className="h-7 flex-1 rounded border bg-white px-2 text-xs sm:w-20 sm:flex-none dark:bg-(--surface)"
+				className="h-7 flex-1 rounded border bg-white px-2 text-xs lg:w-20 lg:flex-none dark:bg-(--surface)"
 			/>
 			<button
 				type="button"
