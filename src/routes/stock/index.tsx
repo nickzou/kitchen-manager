@@ -370,17 +370,29 @@ function StockPage() {
 									const amount = item.product.defaultConsumeAmount
 										? Number.parseFloat(item.product.defaultConsumeAmount)
 										: 1;
+									const consumeUnit = getUnitAbbr(
+										item.product.defaultConsumeUnitId ??
+											item.product.defaultQuantityUnitId,
+									);
 									return (
-										<AmberButton
-											type="button"
-											onClick={() => handleQuickConsume(item.entries, amount)}
-											disabled={consumeStock.isPending || item.totalStock <= 0}
-											title={`Consume ${amount}`}
-											className="flex shrink-0 items-center gap-1"
-										>
-											<UtensilsCrossed size={12} className="sm:hidden" />
-											<span className="hidden sm:inline">Consume</span>
-										</AmberButton>
+										<>
+											<span className="hidden text-xs text-(--sea-ink-soft) sm:mr-2 sm:inline">
+												({amount}
+												{consumeUnit ? ` ${consumeUnit}` : ""})
+											</span>
+											<AmberButton
+												type="button"
+												onClick={() => handleQuickConsume(item.entries, amount)}
+												disabled={
+													consumeStock.isPending || item.totalStock <= 0
+												}
+												title={`Consume ${amount}${consumeUnit ? ` ${consumeUnit}` : ""}`}
+												className="flex shrink-0 items-center gap-1"
+											>
+												<UtensilsCrossed size={12} className="sm:hidden" />
+												<span className="hidden sm:inline">Consume</span>
+											</AmberButton>
+										</>
 									);
 								}}
 								renderContent={(item) => (
