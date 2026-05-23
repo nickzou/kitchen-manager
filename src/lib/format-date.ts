@@ -16,3 +16,23 @@ export function getWeekStart(d: Date, startDay: number): Date {
 	date.setHours(0, 0, 0, 0);
 	return date;
 }
+
+function ymd(d: Date) {
+	return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+/**
+ * Return YYYY-MM-DD strings for today and the end of the current week,
+ * where "end of week" is `getWeekStart(today, weekStartDay) + 6 days`.
+ * `today` defaults to `new Date()` but is parameterised so tests can pin it.
+ */
+export function todayToWeekEnd(
+	weekStartDay: number,
+	today: Date = new Date(),
+): { start: string; end: string } {
+	const t = new Date(today);
+	t.setHours(0, 0, 0, 0);
+	const end = getWeekStart(t, weekStartDay);
+	end.setDate(end.getDate() + 6);
+	return { start: ymd(t), end: ymd(end) };
+}

@@ -18,7 +18,7 @@ import { NumberInput } from "#src/components/NumberInput";
 import { Page } from "#src/components/Page";
 import { StockEntryForm } from "#src/components/stock/StockEntryForm";
 import { useToast } from "#src/components/Toast";
-import { getWeekStart } from "#src/lib/format-date";
+import { todayToWeekEnd } from "#src/lib/format-date";
 import { useBrands } from "#src/lib/hooks/use-brands";
 import {
 	type CategoryRestockItem,
@@ -49,6 +49,8 @@ export const Route = createFileRoute("/meal-plan/shopping-list")({
 function toDateString(d: Date): string {
 	return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
+
+const RANGE_STORAGE_KEY = "shopping-list-range";
 
 function checkedStorageKey(startDate: string, endDate: string) {
 	return `shopping-list-checked:${startDate}:${endDate}`;
@@ -111,28 +113,61 @@ function ShoppingListPage() {
 	const { data: settings } = useUserSettings();
 	const weekStartDay = settings?.weekStartDay ?? 1;
 
-	const [startDate, setStartDate] = useState(() =>
-		toDateString(getWeekStart(new Date(), 1)),
-	);
-	const [endDate, setEndDate] = useState(() => {
-		const end = getWeekStart(new Date(), 1);
-		end.setDate(end.getDate() + 6);
-		return toDateString(end);
-	});
+	const initial = todayToWeekEnd(1);
+	const [startDate, setStartDate] = useState(initial.start);
+	const [endDate, setEndDate] = useState(initial.end);
 
-	// When user settings load, reset the default range to honor weekStartDay.
-	// Stops re-applying once the user has changed the range manually so we
-	// don't clobber their selection.
-	const settingsAppliedRef = useRef(false);
+	// Hydrate once after settings load: prefer a sessionStorage range saved
+	// today; otherwise recompute today → end of week using the real
+	// weekStartDay. A day flip (savedAt !== today) discards the stored value.
+	const rangeHydratedRef = useRef(false);
 	useEffect(() => {
-		if (!settings || settingsAppliedRef.current) return;
-		settingsAppliedRef.current = true;
-		const start = getWeekStart(new Date(), weekStartDay);
-		const end = getWeekStart(new Date(), weekStartDay);
-		end.setDate(end.getDate() + 6);
-		setStartDate(toDateString(start));
-		setEndDate(toDateString(end));
+		if (!settings || rangeHydratedRef.current) return;
+		rangeHydratedRef.current = true;
+		const today = toDateString(new Date());
+		try {
+			const raw = window.sessionStorage.getItem(RANGE_STORAGE_KEY);
+			if (raw) {
+				const parsed = JSON.parse(raw) as {
+					start?: unknown;
+					end?: unknown;
+					savedAt?: unknown;
+				};
+				if (
+					parsed.savedAt === today &&
+					typeof parsed.start === "string" &&
+					typeof parsed.end === "string"
+				) {
+					setStartDate(parsed.start);
+					setEndDate(parsed.end);
+					return;
+				}
+			}
+		} catch {
+			/* ignore malformed storage */
+		}
+		const def = todayToWeekEnd(weekStartDay);
+		setStartDate(def.start);
+		setEndDate(def.end);
 	}, [settings, weekStartDay]);
+
+	const updateRange = useCallback((start: string, end: string) => {
+		setStartDate(start);
+		setEndDate(end);
+		try {
+			window.sessionStorage.setItem(
+				RANGE_STORAGE_KEY,
+				JSON.stringify({ start, end, savedAt: toDateString(new Date()) }),
+			);
+		} catch {
+			/* sessionStorage unavailable */
+		}
+	}, []);
+
+	const resetRange = useCallback(() => {
+		const def = todayToWeekEnd(weekStartDay);
+		updateRange(def.start, def.end);
+	}, [weekStartDay, updateRange]);
 
 	const { data: summary, isLoading } = useIngredientSummary(startDate, endDate);
 	const { checked, toggle, reset } = useCheckedItems(startDate, endDate);
@@ -351,15 +386,19 @@ function ShoppingListPage() {
 					</Link>
 				</div>
 
-				<div className="mb-6 border-b border-(--line) pb-6">
+				<div className="mb-6 flex flex-wrap items-center gap-3 border-b border-(--line) pb-6">
 					<DateRangePicker
 						startDate={startDate}
 						endDate={endDate}
-						onChange={(start, end) => {
-							setStartDate(start);
-							setEndDate(end);
-						}}
+						onChange={updateRange}
 					/>
+					<button
+						type="button"
+						onClick={resetRange}
+						className="rounded-lg border border-(--line) px-2.5 py-1.5 text-xs font-semibold text-(--sea-ink-soft) transition hover:bg-(--surface)"
+					>
+						Reset
+					</button>
 				</div>
 
 				{isLoading ? (
