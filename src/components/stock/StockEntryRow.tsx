@@ -57,7 +57,7 @@ export function StockEntryRow({
 				{brandName && <span>{brandName}</span>}
 				{storeName && <span>{storeName}</span>}
 			</div>
-			<div className="flex items-center gap-1.5 md:ml-auto">
+			<div className="flex w-full items-center gap-1.5 md:w-auto md:ml-auto">
 				<StockActions
 					quantity={entry.quantity}
 					consumeAmount={consumeAmount}
