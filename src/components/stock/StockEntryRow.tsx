@@ -37,8 +37,8 @@ export function StockEntryRow({
 	brandName: string | null;
 }) {
 	return (
-		<div className="flex flex-col gap-2 rounded-lg bg-(--surface) pl-3 py-2 text-xs text-(--sea-ink-soft) md:flex-row md:flex-wrap md:items-center md:gap-3 md:pl-3 md:pr-0">
-			<div className="flex flex-wrap items-center gap-2 md:contents">
+		<div className="flex flex-col gap-2 rounded-lg bg-(--surface) pl-3 py-2 text-xs text-(--sea-ink-soft) lg:flex-row lg:flex-wrap lg:items-center lg:gap-3 lg:pl-3 lg:pr-0">
+			<div className="flex flex-wrap items-center gap-2 lg:contents">
 				<span className="font-medium text-(--sea-ink)">
 					{entry.quantity}
 					{unitAbbr ? ` ${unitAbbr}` : ""}
@@ -57,7 +57,7 @@ export function StockEntryRow({
 				{brandName && <span>{brandName}</span>}
 				{storeName && <span>{storeName}</span>}
 			</div>
-			<div className="flex w-full items-center gap-1.5 md:w-auto md:ml-auto">
+			<div className="flex w-full items-center gap-1.5 lg:w-auto lg:ml-auto">
 				<StockActions
 					quantity={entry.quantity}
 					consumeAmount={consumeAmount}
