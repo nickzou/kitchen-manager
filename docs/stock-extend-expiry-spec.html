@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Spec: Quick-extend stock expiry date</title>
+<style>
+  :root {
+    --ink: #1a2e30;
+    --soft: #5a6c70;
+    --line: #d8dfe0;
+    --accent: #2b7a78;
+    --bg: #faf8f5;
+    --code-bg: #f0ece6;
+    --warn: #b85c1f;
+    --surface: #f3eee6;
+    --lagoon: #4fb8b2;
+    --lagoon-deep: #2b7a78;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    max-width: 760px;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.55;
+  }
+  h1, h2, h3 { color: var(--ink); margin-top: 2em; }
+  h1 { border-bottom: 2px solid var(--accent); padding-bottom: 0.3em; }
+  h2 { border-bottom: 1px solid var(--line); padding-bottom: 0.2em; }
+  code {
+    background: var(--code-bg);
+    padding: 0.1em 0.35em;
+    border-radius: 3px;
+    font-size: 0.92em;
+  }
+  pre {
+    background: var(--code-bg);
+    padding: 0.8em 1em;
+    border-radius: 6px;
+    overflow-x: auto;
+    font-size: 0.9em;
+    line-height: 1.45;
+  }
+  table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+  th, td { text-align: left; padding: 0.45em 0.7em; border-bottom: 1px solid var(--line); font-size: 0.95em; }
+  th { background: var(--code-bg); }
+  .meta { color: var(--soft); font-size: 0.9em; margin-top: -0.5em; }
+  .callout {
+    border-left: 3px solid var(--accent);
+    background: rgba(43, 122, 120, 0.06);
+    padding: 0.6em 1em;
+    margin: 1em 0;
+    border-radius: 0 4px 4px 0;
+  }
+  .recommended {
+    border-left-color: var(--lagoon-deep);
+    background: rgba(79, 184, 178, 0.08);
+  }
+  ul, ol { padding-left: 1.4em; }
+  li { margin: 0.25em 0; }
+  hr { border: none; border-top: 1px solid var(--line); margin: 2em 0; }
+
+  /* Mockup styles */
+  .mockup {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 0.9em 1em;
+    margin: 0.8em 0 0.5em;
+    font-size: 0.85em;
+  }
+  .mockup-label {
+    font-size: 0.7rem;
+    color: var(--soft);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.5em;
+  }
+  .row {
+    display: flex;
+    align-items: center;
+    gap: 0.6em;
+    flex-wrap: wrap;
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3em;
+    padding: 0.2em 0.55em;
+    border-radius: 6px;
+    color: var(--soft);
+    background: transparent;
+    border: none;
+    cursor: default;
+  }
+  .pill .ico {
+    display: inline-block;
+    width: 11px;
+    height: 11px;
+    opacity: 0.6;
+  }
+  .icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    border: 1px solid var(--line);
+    color: var(--soft);
+    background: #fff;
+    font-size: 0.7em;
+  }
+  .icon-btn.lagoon {
+    color: var(--lagoon-deep);
+    border-color: rgba(79, 184, 178, 0.4);
+    background: rgba(79, 184, 178, 0.08);
+  }
+  .chip {
+    display: inline-block;
+    padding: 0.3em 0.6em;
+    border-radius: 999px;
+    background: rgba(79, 184, 178, 0.14);
+    color: var(--lagoon-deep);
+    font-size: 0.78em;
+    font-weight: 600;
+    border: 1px solid rgba(79, 184, 178, 0.3);
+    margin: 0.15em;
+  }
+  .popover {
+    margin-top: 0.6em;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 0.7em 0.9em;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+    max-width: 320px;
+    position: relative;
+  }
+  .popover::before {
+    content: "";
+    position: absolute;
+    top: -7px;
+    left: 18px;
+    width: 12px;
+    height: 12px;
+    background: #fff;
+    border-left: 1px solid var(--line);
+    border-top: 1px solid var(--line);
+    transform: rotate(45deg);
+  }
+  .calendar-stub {
+    margin-top: 0.5em;
+    padding: 0.6em;
+    border-top: 1px dashed var(--line);
+    color: var(--soft);
+    font-size: 0.75em;
+    text-align: center;
+  }
+  .stepper-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    border: 1px solid var(--line);
+    color: var(--soft);
+    background: #fff;
+    font-size: 0.8em;
+    line-height: 1;
+  }
+  .stock-name {
+    color: var(--ink);
+    font-weight: 600;
+  }
+</style>
+</head>
+<body>
+
+<h1>Spec: Quick-extend stock expiry date</h1>
+<p class="meta">Kitchen Manager · Draft</p>
+<table style="margin-top: 0.5em; width: auto;">
+  <tr><th>Drafted</th><td>2026-05-22</td></tr>
+  <tr><th>Shipped</th><td>—</td></tr>
+</table>
+
+<h2>Problem</h2>
+<p>
+  Expiry dates on stock entries are often estimates. You set "good for 5 days"
+  when you bought the leftovers, then on day 5 the dish is clearly still fine.
+  Today the only way to push the date is to click the date, type an absolute
+  new date into an OS date picker, and dismiss. That's three interactions for
+  a 1-day nudge.
+</p>
+
+<h2>Goal</h2>
+<p>
+  Make extending an expiry date a single click for the common deltas
+  (<code>+1d</code>, <code>+3d</code>, <code>+1w</code>, <code>+2w</code>,
+  <code>+1mo</code>), without removing the ability to pick a specific date.
+</p>
+
+<h2>UX options</h2>
+
+<h3>Option 1: Dedicated "extend" button + chip popover &nbsp;<span style="color: var(--lagoon-deep); font-size: 0.7em; vertical-align: middle;">(recommended)</span></h3>
+<p>
+  Add a second small affordance next to the existing pencil edit. A <code>⏱+</code>
+  icon opens a popover containing chip presets. Clicking a chip applies the
+  delta and closes the popover. Pencil-edit is unchanged.
+</p>
+
+<div class="mockup">
+  <div class="mockup-label">Stock row, default state</div>
+  <div class="row">
+    <span class="stock-name">Leftover lasagna</span>
+    <span class="pill">Exp: May 27, 2026</span>
+    <button class="icon-btn" title="Edit expiry"><span>✎</span></button>
+    <button class="icon-btn lagoon" title="Extend expiry"><span>⏱+</span></button>
+  </div>
+  <div class="mockup-label" style="margin-top: 1.1em;">Click the ⏱+ button</div>
+  <div class="popover">
+    <div style="font-size: 0.75rem; color: var(--soft); margin-bottom: 0.4em;">Extend expiry by…</div>
+    <div>
+      <span class="chip">+1 day</span>
+      <span class="chip">+3 days</span>
+      <span class="chip">+1 week</span>
+      <span class="chip">+2 weeks</span>
+      <span class="chip">+1 month</span>
+    </div>
+  </div>
+</div>
+
+<p style="font-size: 0.9em;">
+  <strong>Pros:</strong> Discoverable; the verb "extend" matches the user's
+  mental model; doesn't disturb the existing edit flow; chip layout reads as a
+  menu of common nudges.<br>
+  <strong>Cons:</strong> Two affordances per row instead of one.
+</p>
+
+<h3>Option 2: One popover via the pencil — chips + calendar</h3>
+<p>
+  Collapse both flows into one. The existing pencil/date click opens a popover
+  with chip presets on top and the date input below. Saves one icon per row but
+  costs one extra click for absolute edits (popover &rarr; calendar &rarr; pick).
+</p>
+
+<div class="mockup">
+  <div class="mockup-label">Stock row, default state</div>
+  <div class="row">
+    <span class="stock-name">Leftover lasagna</span>
+    <span class="pill">Exp: May 27, 2026</span>
+    <button class="icon-btn" title="Edit expiry"><span>✎</span></button>
+  </div>
+  <div class="mockup-label" style="margin-top: 1.1em;">Click the date</div>
+  <div class="popover">
+    <div style="font-size: 0.75rem; color: var(--soft); margin-bottom: 0.4em;">Extend expiry by…</div>
+    <div>
+      <span class="chip">+1 day</span>
+      <span class="chip">+3 days</span>
+      <span class="chip">+1 week</span>
+      <span class="chip">+2 weeks</span>
+      <span class="chip">+1 month</span>
+    </div>
+    <div class="calendar-stub">— or pick a date —<br><span style="font-size: 1.5em; opacity: 0.5;">📅</span></div>
+  </div>
+</div>
+
+<p style="font-size: 0.9em;">
+  <strong>Pros:</strong> One affordance, less visual clutter; both flows live
+  in one place.<br>
+  <strong>Cons:</strong> Slower for the user who actually wants to pick a date;
+  changes existing behaviour (click date no longer focuses input directly).
+</p>
+
+<h3>Option 3: Inline +/− day stepper</h3>
+<p>
+  Two tiny buttons flanking the date that step by one day. Cheapest for ±1 day
+  but tedious for "+1 week" and noisy with two extra controls per row.
+</p>
+
+<div class="mockup">
+  <div class="mockup-label">Stock row, default state</div>
+  <div class="row">
+    <span class="stock-name">Leftover lasagna</span>
+    <button class="stepper-btn" title="Bump expiry back 1 day">−</button>
+    <span class="pill">Exp: May 27, 2026</span>
+    <button class="stepper-btn" title="Bump expiry forward 1 day">+</button>
+    <button class="icon-btn" title="Edit expiry"><span>✎</span></button>
+  </div>
+</div>
+
+<p style="font-size: 0.9em;">
+  <strong>Pros:</strong> Zero-popover; immediate feedback.<br>
+  <strong>Cons:</strong> Bad fit for week+ extensions; doubles the controls per
+  row; risk of accidental clicks on dense rows.
+</p>
+
+<div class="callout recommended">
+  <strong>Recommendation:</strong> Ship Option 1. It matches the user's
+  language ("extend"), preserves the existing edit-absolute flow, and the chip
+  popover scales cleanly if we want to add new presets later. Anchor the delta
+  from <code>max(currentExpiry, today)</code> so already-expired entries push
+  to a useful future date rather than further into the past.
+</div>
+
+<h2>Affected files</h2>
+<table>
+  <tr><th>File</th><th>Change</th></tr>
+  <tr><td><code>src/components/stock/ExpiryDateEditor.tsx</code></td><td>add the extend-icon button and the chip popover; reuse the existing <code>useUpdateStockEntry</code> mutation</td></tr>
+  <tr><td><em>(no new component file needed)</em></td><td>popover and chips are simple enough to inline; if it grows, extract <code>ExtendExpiryPopover</code></td></tr>
+</table>
+
+<h2>Behaviour details</h2>
+<ul>
+  <li><strong>Anchor date</strong>: deltas are applied to <code>max(currentExpiry, today)</code>. So extending a January-expired entry on May 22 with <code>+1 week</code> produces May 29, not Jan-something.</li>
+  <li><strong>No current expiry</strong>: presets still work; anchor is today.</li>
+  <li><strong>Toast</strong>: reuse the existing <code>toast.success</code> shape from the editor: <code>Expiry set to May 28, 2026</code>.</li>
+  <li><strong>Close behaviour</strong>: popover dismisses on outside click, Escape, or after a chip click.</li>
+  <li><strong>Keyboard</strong>: Tab into the popover should iterate chips; Enter triggers the focused chip.</li>
+</ul>
+
+<h2>Decisions you need to make</h2>
+<ol>
+  <li>
+    <strong>Preset set</strong>: do <code>+1d / +3d / +1w / +2w / +1mo</code> cover
+    your real-world cases, or do you want different defaults (e.g. <code>+2d</code>
+    instead of <code>+3d</code>, or add <code>+3mo</code>)?
+  </li>
+  <li>
+    <strong>Anchor rule</strong>: <code>max(currentExpiry, today)</code> as above,
+    or always anchor from current expiry (which can keep an expired item in the
+    past after a "+1 day" tap)?
+  </li>
+  <li>
+    <strong>Shorten too?</strong> Mirror chips for <code>−1d / −3d / −1w</code>
+    in case you over-estimated? Or keep this strictly an "extend" feature?
+  </li>
+  <li>
+    <strong>Reach</strong>: apply to every place <code>ExpiryDateEditor</code>
+    is used (stock list, stock detail, dashboard expiring panel), or only the
+    stock entry row? Default: all, since it's the same component.
+  </li>
+</ol>
+
+<h2>Tests</h2>
+<ul>
+  <li>Unit: a helper <code>addDelta(expiry, today, deltaDays)</code> that returns the new date string, with cases for "no expiry", "expiry in the future", "expiry in the past".</li>
+  <li>Component: clicking <code>+1 week</code> calls <code>updateStockEntry.mutateAsync</code> with the expected ISO date.</li>
+  <li>Component: popover closes after a chip click and on Escape.</li>
+</ul>
+
+<h2>Out of scope</h2>
+<ul>
+  <li>"Smart" extend suggestions based on product type or past behaviour. Static presets only.</li>
+  <li>Bulk-extend across multiple stock entries at once.</li>
+  <li>Editing a stock entry's <em>purchase</em> date — separate field, same pattern could apply later.</li>
+</ul>
+
+<hr />
+<p class="meta">Last updated 2026-05-22</p>
+
+</body>
+</html>
