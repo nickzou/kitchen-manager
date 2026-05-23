@@ -13,6 +13,7 @@ export interface Recipe {
 	producedQuantity: string | null;
 	producedQuantityUnitId: string | null;
 	isMealPrep: boolean;
+	source: string | null;
 	categoryIds: string[];
 	userId: string;
 	createdAt: string;
@@ -31,6 +32,7 @@ export type CreateRecipeInput = {
 	producedQuantity?: string | null;
 	producedQuantityUnitId?: string | null;
 	isMealPrep?: boolean;
+	source?: string | null;
 	categoryIds?: string[];
 };
 

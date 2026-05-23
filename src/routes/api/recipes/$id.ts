@@ -67,6 +67,7 @@ export const Route = createFileRoute("/api/recipes/$id")({
 				if (body.producedQuantityUnitId !== undefined)
 					updates.producedQuantityUnitId = body.producedQuantityUnitId;
 				if (body.isMealPrep !== undefined) updates.isMealPrep = body.isMealPrep;
+				if (body.source !== undefined) updates.source = body.source;
 
 				let updated: typeof recipe.$inferSelect | undefined;
 				try {

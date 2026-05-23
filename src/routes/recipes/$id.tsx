@@ -5,6 +5,7 @@ import {
 	CircleCheck,
 	CircleX,
 	CookingPot,
+	ExternalLink,
 	Minus,
 	Pencil,
 	Plus,
@@ -140,6 +141,7 @@ function RecipeDetail() {
 		producedQuantity: "" as string,
 		producedQuantityUnitId: "" as string,
 		isMealPrep: false,
+		source: "",
 	});
 
 	const [newIngredient, setNewIngredient] = useState<IngredientFormState>({
@@ -371,6 +373,7 @@ function RecipeDetail() {
 			producedQuantity: recipe.producedQuantity || "",
 			producedQuantityUnitId: recipe.producedQuantityUnitId || "",
 			isMealPrep: recipe.isMealPrep,
+			source: recipe.source ?? "",
 		});
 		setEditing(true);
 	}
@@ -390,6 +393,7 @@ function RecipeDetail() {
 			producedQuantity: form.producedQuantity || null,
 			producedQuantityUnitId: form.producedQuantityUnitId || null,
 			isMealPrep: form.isMealPrep,
+			source: form.source.trim() || null,
 		});
 		setEditing(false);
 	}
@@ -923,6 +927,19 @@ function RecipeDetail() {
 										/>
 									</label>
 
+									<label className="flex flex-col gap-1.5 text-sm font-medium text-(--sea-ink)">
+										Source
+										<Input
+											type="url"
+											inputMode="url"
+											placeholder="https://example.com/recipe"
+											value={form.source}
+											onChange={(e) =>
+												setForm({ ...form, source: e.target.value })
+											}
+										/>
+									</label>
+
 									<ImageInput
 										value={form.image}
 										onChange={(url) => setForm({ ...form, image: url })}
@@ -1232,6 +1249,20 @@ function RecipeDetail() {
 									{recipe.description && (
 										<p className="mb-4 text-sm text-(--sea-ink-soft)">
 											{recipe.description}
+										</p>
+									)}
+
+									{recipe.source && (
+										<p className="mb-4 text-sm">
+											<a
+												href={recipe.source}
+												target="_blank"
+												rel="noopener noreferrer"
+												className="inline-flex items-center gap-1.5 font-medium text-(--lagoon-deep) hover:underline"
+											>
+												<ExternalLink size={14} />
+												Source
+											</a>
 										</p>
 									)}
 
