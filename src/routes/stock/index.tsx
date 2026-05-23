@@ -376,7 +376,7 @@ function StockPage() {
 									);
 									return (
 										<>
-											<span className="hidden text-xs text-(--sea-ink-soft) sm:inline">
+											<span className="hidden text-xs text-(--sea-ink-soft) sm:mr-2 sm:inline">
 												({amount}
 												{consumeUnit ? ` ${consumeUnit}` : ""})
 											</span>
