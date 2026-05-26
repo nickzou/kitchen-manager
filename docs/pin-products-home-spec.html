@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Spec: Pin products to the home page</title>
+<style>
+  :root {
+    --ink: #1a2e30;
+    --soft: #5a6c70;
+    --line: #d8dfe0;
+    --accent: #2b7a78;
+    --bg: #faf8f5;
+    --code-bg: #f0ece6;
+    --warn: #b85c1f;
+    --surface: #f3eee6;
+    --lagoon: #4fb8b2;
+    --lagoon-deep: #2b7a78;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    max-width: 760px;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.55;
+  }
+  h1, h2, h3 { color: var(--ink); margin-top: 2em; }
+  h1 { border-bottom: 2px solid var(--accent); padding-bottom: 0.3em; }
+  h2 { border-bottom: 1px solid var(--line); padding-bottom: 0.2em; }
+  code {
+    background: var(--code-bg);
+    padding: 0.1em 0.35em;
+    border-radius: 3px;
+    font-size: 0.92em;
+  }
+  pre {
+    background: var(--code-bg);
+    padding: 0.8em 1em;
+    border-radius: 6px;
+    overflow-x: auto;
+    font-size: 0.9em;
+    line-height: 1.45;
+  }
+  table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+  th, td { text-align: left; padding: 0.45em 0.7em; border-bottom: 1px solid var(--line); font-size: 0.95em; }
+  th { background: var(--code-bg); }
+  .meta { color: var(--soft); font-size: 0.9em; margin-top: -0.5em; }
+  .callout {
+    border-left: 3px solid var(--accent);
+    background: rgba(43, 122, 120, 0.06);
+    padding: 0.6em 1em;
+    margin: 1em 0;
+    border-radius: 0 4px 4px 0;
+  }
+  ul, ol { padding-left: 1.4em; }
+  li { margin: 0.25em 0; }
+  hr { border: none; border-top: 1px solid var(--line); margin: 2em 0; }
+
+  /* Mockup styles */
+  .mockup {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 0.9em 1em;
+    margin: 0.8em 0 0.5em;
+    font-size: 0.85em;
+  }
+  .mockup-label {
+    font-size: 0.7rem;
+    color: var(--soft);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.5em;
+  }
+  .pin-row {
+    display: flex;
+    align-items: center;
+    gap: 0.7em;
+    padding: 0.5em 0.6em;
+    border-radius: 8px;
+  }
+  .pin-row + .pin-row { border-top: 1px solid var(--line); }
+  .name { flex: 1; color: var(--ink); font-weight: 600; }
+  .tag {
+    display: inline-block;
+    padding: 0.1em 0.5em;
+    border-radius: 999px;
+    background: rgba(79,184,178,0.14);
+    color: var(--lagoon-deep);
+    font-size: 0.7em;
+    font-weight: 600;
+  }
+  .total { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .small-muted { color: var(--soft); font-size: 0.78em; }
+  .btn {
+    background: #d97706;
+    color: #fff;
+    border: none;
+    border-radius: 999px;
+    padding: 0.25em 0.8em;
+    font-size: 0.78em;
+    font-weight: 700;
+  }
+  .star {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    border: 1px solid var(--line);
+    background: #fff;
+    color: var(--soft);
+  }
+  .star.on {
+    background: rgba(245, 158, 11, 0.12);
+    border-color: rgba(245, 158, 11, 0.4);
+    color: #d97706;
+  }
+</style>
+</head>
+<body>
+
+<h1>Spec: Pin products to the home page</h1>
+<p class="meta">Kitchen Manager · Draft</p>
+<table style="margin-top: 0.5em; width: auto;">
+  <tr><th>Drafted</th><td>2026-05-25</td></tr>
+  <tr><th>Shipped</th><td>—</td></tr>
+</table>
+
+<h2>Problem</h2>
+<p>
+  Day-to-day, the same handful of products get consumed over and over &mdash; coffee, soy
+  sauce, soda. Every consume currently requires going to the Stock page, scrolling or
+  searching to find the product, opening the accordion, and clicking the quick-consume
+  button. For frequently used staples that's a lot of friction.
+</p>
+
+<h2>Goal</h2>
+<p>
+  Let the user pin individual products so they show up as a quick-access list on the
+  home page, with a one-click consume that mirrors the Stock view's quick-consume
+  behaviour (deduct the product's default consume amount from the best FIFO entry).
+</p>
+
+<h2>Approach</h2>
+
+<h3>1. Data</h3>
+<p>
+  Add two columns to the existing <code>product</code> table:
+</p>
+<pre>pinned: boolean default false not null
+pinnedSortOrder: integer (nullable — manual order)</pre>
+<p>
+  Per-user is implicit because <code>product</code> is already scoped to <code>userId</code>.
+  A separate join table is overkill for a single-user flag; the column-on-row approach keeps
+  reads cheap and avoids a second query for the dashboard.
+</p>
+<p>
+  Migration via <code>drizzle-kit generate --name=add-product-pinned</code>. New rows default
+  to <code>pinned=false</code>; nothing to backfill.
+</p>
+
+<h3>2. API</h3>
+<p>
+  Extend <code>PUT /api/products/$id</code> to accept <code>pinned</code> and
+  <code>pinnedSortOrder</code> (both optional). No new endpoint needed; the existing pattern
+  of "PATCH-style PUT" already handles partial updates field-by-field.
+</p>
+<p>
+  <code>GET /api/products</code> continues to return everything, so the dashboard can filter
+  <code>pinned === true</code> client-side without a new request shape.
+</p>
+
+<h3>3. Pin / unpin affordance</h3>
+<p>
+  A star icon button on each product&apos;s detail page (top right of the header) and a
+  smaller version on each Stock accordion trigger row. Filled gold star = pinned;
+  outline grey star = not pinned. Click toggles via the existing update mutation; toast
+  confirms.
+</p>
+
+<div class="mockup">
+  <div class="mockup-label">Stock view, accordion trigger row</div>
+  <div class="pin-row">
+    <span style="opacity: 0.6;">▾</span>
+    <span class="name">Coffee</span>
+    <span class="tag">Pantry</span>
+    <span class="total">701 g</span>
+    <span class="small-muted">(1 g)</span>
+    <button class="star on" title="Unpin from home">★</button>
+    <button class="btn">Consume</button>
+  </div>
+  <div class="pin-row">
+    <span style="opacity: 0.6;">▸</span>
+    <span class="name">Pasta</span>
+    <span class="tag">Pantry</span>
+    <span class="total">494 g</span>
+    <span class="small-muted">(1 g)</span>
+    <button class="star" title="Pin to home">☆</button>
+    <button class="btn">Consume</button>
+  </div>
+</div>
+
+<h3>4. Home page: Pinned section</h3>
+<p>
+  New section <code>&lt;Pinned&gt;</code> rendered above <code>Expiring Soon</code> on the
+  dashboard. Each row mirrors the Stock view's trigger + action layout:
+  product name, total stock, default-consume label (in parens), Consume button.
+  Out-of-stock pinned products still appear, with the Consume button disabled and stock
+  shown as <code>0</code>.
+</p>
+
+<div class="mockup">
+  <div class="mockup-label">Home page, Pinned section</div>
+  <div class="pin-row">
+    <span class="name">Coffee</span>
+    <span class="total">701 g</span>
+    <span class="small-muted">(1 g)</span>
+    <button class="btn">Consume</button>
+  </div>
+  <div class="pin-row">
+    <span class="name">Soda</span>
+    <span class="total">408 mL</span>
+    <span class="small-muted">(1 mL)</span>
+    <button class="btn">Consume</button>
+  </div>
+  <div class="pin-row">
+    <span class="name">Soy Sauce</span>
+    <span class="total" style="color: var(--warn);">⚠ 0 mL</span>
+    <span class="small-muted">(1 mL)</span>
+    <button class="btn" style="opacity: 0.4;">Consume</button>
+  </div>
+</div>
+
+<p>
+  Consume action: same flow as <code>handleQuickConsume</code> in the Stock view &mdash;
+  pick best FIFO entry, apply default-consume amount, do unit conversion if needed,
+  toast with Undo. The function can be extracted to a shared hook
+  (<code>useQuickConsume</code>) so dashboard and stock view stay in sync.
+</p>
+
+<h3>5. Ordering</h3>
+<p>
+  Display order: <code>pinnedSortOrder ASC NULLS LAST, name ASC</code>. Until we build
+  drag-to-reorder, new pins land at the end and alphabetical kicks in for unordered
+  ties. Drag-to-reorder is a separate, larger feature; not in this PR.
+</p>
+
+<h2>Affected files</h2>
+<table>
+  <tr><th>File</th><th>Change</th></tr>
+  <tr><td><code>src/db/schema.ts</code></td><td>add <code>pinned</code> and <code>pinnedSortOrder</code> columns to <code>product</code></td></tr>
+  <tr><td><code>drizzle/00NN_add-product-pinned.sql</code></td><td><em>new</em> — generated migration</td></tr>
+  <tr><td><code>src/lib/hooks/use-products.ts</code></td><td>add fields to <code>Product</code> + create/update input types</td></tr>
+  <tr><td><code>src/routes/api/products/$id.ts</code></td><td>accept <code>pinned</code>, <code>pinnedSortOrder</code> in PUT</td></tr>
+  <tr><td><code>src/routes/api/products/index.ts</code></td><td>no behavioural change; GET already returns all columns</td></tr>
+  <tr><td><code>src/components/PinToggle.tsx</code></td><td><em>new</em> — shared star button (used in product detail + stock trigger)</td></tr>
+  <tr><td><code>src/components/dashboard/PinnedProducts.tsx</code></td><td><em>new</em> — home page section</td></tr>
+  <tr><td><code>src/lib/hooks/use-quick-consume.ts</code></td><td><em>new</em> — extracted from stock view's <code>handleQuickConsume</code> so dashboard reuses the same flow</td></tr>
+  <tr><td><code>src/routes/index.tsx</code></td><td>render <code>&lt;PinnedProducts /&gt;</code> above expiring</td></tr>
+  <tr><td><code>src/routes/stock/index.tsx</code></td><td>add pin toggle to <code>StockProductTrigger</code>; switch quick-consume to the shared hook</td></tr>
+  <tr><td><code>src/routes/products/$id.tsx</code></td><td>add pin toggle to header</td></tr>
+  <tr><td><code>API.md</code></td><td>document the new fields on <code>PUT /api/products/$id</code></td></tr>
+</table>
+
+<h2>Tests</h2>
+<ul>
+  <li>API: PUT <code>/api/products/$id</code> with <code>{ pinned: true }</code> sets the column; toggling back to <code>false</code> works.</li>
+  <li>Component: <code>PinnedProducts</code> renders only pinned products; sorts by <code>pinnedSortOrder</code> then name.</li>
+  <li>Component: clicking Consume on a pinned product calls the same mutation path the stock view uses.</li>
+  <li>Component: out-of-stock pinned products still render but Consume is disabled.</li>
+</ul>
+
+<h2>Decisions you need to make</h2>
+<ol>
+  <li>
+    <strong>Pin affordance location</strong>: product detail page only, or also on each Stock
+    accordion trigger? Trigger-row pinning is fastest to discover, but adds one more icon to
+    a busy row. Default: both.
+  </li>
+  <li>
+    <strong>Hide out-of-stock pinned products?</strong> Show them disabled (default), hide
+    them, or move them to a collapsed "Out of stock" subsection?
+  </li>
+  <li>
+    <strong>Empty state on home</strong>: when no products are pinned, hide the section
+    entirely or show a "Pin frequent items from the Stock page" hint? Default: hide.
+  </li>
+  <li>
+    <strong>Star vs pin icon</strong>: <code>Star</code> (yellow) or <code>Pin</code>
+    (more literal)? Default: star — fits the "favourite" mental model better.
+  </li>
+</ol>
+
+<h2>Out of scope</h2>
+<ul>
+  <li>Drag-to-reorder pinned products — keep alphabetical order for now.</li>
+  <li>Pinning recipes or meal plans — same pattern could apply later, but not here.</li>
+  <li>Per-device pins — pins are tied to the user account, not the device/browser.</li>
+  <li>Search/filter on the pinned section — assumed small enough to fit on one screen.</li>
+</ul>
+
+<hr />
+<p class="meta">Last updated 2026-05-25</p>
+
+</body>
+</html>
