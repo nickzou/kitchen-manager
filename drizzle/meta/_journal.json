@@ -295,6 +295,13 @@
       "when": 1779503007493,
       "tag": "0041_add-recipe-source",
       "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1779763906653,
+      "tag": "0042_add-product-pinned",
+      "breakpoints": true
     }
   ]
 }
