@@ -147,10 +147,10 @@ function Dashboard() {
 
 	return (
 		<Page as="main" className="sm:pb-8 sm:pt-14">
-			<div className="grid items-start gap-4 sm:gap-6 lg:grid-cols-2">
+			<div className="grid items-start gap-4 sm:gap-6 lg:grid-cols-3">
 				<Island
 					as="section"
-					className="animate-rise-in sm:rounded-2xl p-6 sm:p-8"
+					className="animate-rise-in sm:rounded-2xl p-6 sm:p-8 lg:col-span-2"
 				>
 					<p className="mb-2 text-[0.69rem] font-bold uppercase tracking-[0.16em] text-(--kicker)">
 						Dashboard
