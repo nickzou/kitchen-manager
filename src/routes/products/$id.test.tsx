@@ -126,6 +126,8 @@ const mockProduct: Product = {
 	nutritionBaseUnitId: null,
 	defaultTareWeight: null,
 	defaultSkipStockDeduction: false,
+	pinned: false,
+	pinnedSortOrder: null,
 	userId: "u1",
 	createdAt: "2026-03-01T00:00:00Z",
 	updatedAt: "2026-03-02T00:00:00Z",

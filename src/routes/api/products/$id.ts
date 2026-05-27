@@ -77,6 +77,9 @@ export const Route = createFileRoute("/api/products/$id")({
 					updates.defaultTareWeight = body.defaultTareWeight;
 				if (body.defaultSkipStockDeduction !== undefined)
 					updates.defaultSkipStockDeduction = body.defaultSkipStockDeduction;
+				if (body.pinned !== undefined) updates.pinned = body.pinned;
+				if (body.pinnedSortOrder !== undefined)
+					updates.pinnedSortOrder = body.pinnedSortOrder;
 
 				let updated: typeof product.$inferSelect | undefined;
 				try {

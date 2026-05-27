@@ -9,6 +9,7 @@ import { Island } from "#src/components/Island";
 import { Modal } from "#src/components/Modal";
 import { NumberInput } from "#src/components/NumberInput";
 import { Page } from "#src/components/Page";
+import { PinToggle } from "#src/components/PinToggle";
 import { SearchInput } from "#src/components/SearchInput";
 import { AmberButton } from "#src/components/stock/AmberButton";
 import { QuickAddStock } from "#src/components/stock/QuickAddStock";
@@ -21,6 +22,7 @@ import { useProductCategories } from "#src/lib/hooks/use-categories";
 import { useProductUnitConversions } from "#src/lib/hooks/use-product-unit-conversions";
 import { useProducts } from "#src/lib/hooks/use-products";
 import { useQuantityUnits } from "#src/lib/hooks/use-quantity-units";
+import { useQuickConsume } from "#src/lib/hooks/use-quick-consume";
 import {
 	type StockEntry,
 	useConsumeStock,
@@ -40,7 +42,6 @@ import {
 	tryConvert,
 } from "#src/lib/recipe-utils/conversion-graph";
 import { roundQty } from "#src/lib/round-qty";
-import { pickBestEntry } from "#src/lib/stock-utils";
 import { cn } from "#src/lib/utils";
 
 export const Route = createFileRoute("/stock/")({ component: StockPage });
@@ -65,6 +66,7 @@ function StockPage() {
 	const consumeStock = useConsumeStock();
 	const spoilStock = useSpoilStock();
 	const reverseStockLog = useReverseStockLog();
+	const { quickConsume } = useQuickConsume({ products, quantityUnits });
 
 	const toast = useToast();
 	const [search, setSearch] = useState("");
@@ -173,60 +175,6 @@ function StockPage() {
 			});
 		} catch {
 			toast.error(`Failed to mark ${name} as spoiled`);
-		}
-	}
-
-	async function handleQuickConsume(entries: StockEntry[], amount: number) {
-		const best = pickBestEntry(entries);
-		if (!best) return;
-		const product = products?.find((p) => p.id === best.productId);
-		const name = product?.name ?? "Unknown";
-
-		let finalAmount = amount;
-		if (
-			product?.defaultConsumeUnitId &&
-			product.defaultQuantityUnitId &&
-			product.defaultConsumeUnitId !== product.defaultQuantityUnitId
-		) {
-			const allConversions = [
-				...(productConversions ?? []).filter((c) => c.productId === product.id),
-				...(globalConversions ?? []),
-			];
-			const graph = buildConversionGraph(allConversions);
-			const converted = tryConvert(
-				graph,
-				amount,
-				product.defaultConsumeUnitId,
-				product.defaultQuantityUnitId,
-			);
-			if (converted === null) {
-				toast.error(`Cannot convert consume unit to stock unit for ${name}`);
-				return;
-			}
-			finalAmount = roundQty(converted);
-		}
-
-		try {
-			const result = await consumeStock.mutateAsync({
-				stockEntryId: best.id,
-				quantity: finalAmount.toString(),
-			});
-			const consumeUnit = product?.defaultConsumeUnitId
-				? getUnitAbbr(product.defaultConsumeUnitId)
-				: getUnitAbbr(product?.defaultQuantityUnitId ?? null);
-			toast.success(
-				`${amount}${consumeUnit ? ` ${consumeUnit}` : ""} ${name} consumed`,
-				{
-					label: "Undo",
-					onClick: () =>
-						reverseStockLog.mutate({
-							stockLogId: result.stockLogId,
-							stockEntryId: best.id,
-						}),
-				},
-			);
-		} catch {
-			toast.error(`Failed to consume ${name}`);
 		}
 	}
 
@@ -380,9 +328,15 @@ function StockPage() {
 												({amount}
 												{consumeUnit ? ` ${consumeUnit}` : ""})
 											</span>
+											<PinToggle
+												productId={item.product.id}
+												productName={item.product.name}
+												pinned={item.product.pinned}
+												className="mr-1"
+											/>
 											<AmberButton
 												type="button"
-												onClick={() => handleQuickConsume(item.entries, amount)}
+												onClick={() => quickConsume(item.entries, amount)}
 												disabled={
 													consumeStock.isPending || item.totalStock <= 0
 												}

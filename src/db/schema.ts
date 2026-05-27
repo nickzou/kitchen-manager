@@ -295,6 +295,8 @@ export const product = pgTable(
 		defaultSkipStockDeduction: boolean("default_skip_stock_deduction")
 			.default(false)
 			.notNull(),
+		pinned: boolean("pinned").default(false).notNull(),
+		pinnedSortOrder: integer("pinned_sort_order"),
 		userId: text("user_id")
 			.notNull()
 			.references(() => user.id, { onDelete: "cascade" }),

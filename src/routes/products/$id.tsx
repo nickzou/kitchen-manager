@@ -13,6 +13,7 @@ import { DetailColumns } from "#src/components/layouts/DetailColumns";
 import { MultiCombobox } from "#src/components/MultiCombobox";
 import { NumberInput } from "#src/components/NumberInput";
 import { Page } from "#src/components/Page";
+import { PinToggle } from "#src/components/PinToggle";
 import { PricingHistoryChart } from "#src/components/stock/PricingHistoryChart";
 import { Textarea } from "#src/components/Textarea";
 import { useBrands } from "#src/lib/hooks/use-brands";
@@ -703,6 +704,12 @@ function ProductDetail() {
 											<h1 className="font-display text-2xl font-bold text-(--sea-ink)">
 												{product.name}
 											</h1>
+											<PinToggle
+												productId={product.id}
+												productName={product.name}
+												pinned={product.pinned}
+												size={18}
+											/>
 											{!product.isFood && (
 												<span className="inline-block rounded-full bg-(--surface) px-2.5 py-0.5 text-xs font-medium text-(--sea-ink-soft)">
 													Non-food
