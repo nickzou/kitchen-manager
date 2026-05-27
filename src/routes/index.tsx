@@ -147,47 +147,49 @@ function Dashboard() {
 
 	return (
 		<Page as="main" className="sm:pb-8 sm:pt-14">
-			<Island
-				as="section"
-				className="animate-rise-in sm:rounded-2xl p-6 sm:p-8"
-			>
-				<p className="mb-2 text-[0.69rem] font-bold uppercase tracking-[0.16em] text-(--kicker)">
-					Dashboard
-				</p>
-				<h1 className="font-display text-3xl font-bold text-(--sea-ink)">
-					Hey, {firstName}!
-				</h1>
+			<div className="grid items-start gap-4 sm:gap-6 lg:grid-cols-12">
+				<Island
+					as="section"
+					className="animate-rise-in sm:rounded-2xl p-6 sm:p-8 lg:col-span-7"
+				>
+					<p className="mb-2 text-[0.69rem] font-bold uppercase tracking-[0.16em] text-(--kicker)">
+						Dashboard
+					</p>
+					<h1 className="font-display text-3xl font-bold text-(--sea-ink)">
+						Hey, {firstName}!
+					</h1>
 
-				<div>
-					<h2 className="mb-3 mt-6 text-base font-semibold text-(--sea-ink)">
-						Expiring Soon
-					</h2>
-					<ExpiringStockList
-						entries={stockEntries ?? []}
-						products={products ?? []}
-						quantityUnits={quantityUnits ?? []}
-						consumeAmounts={consumeAmounts}
-						onConsumeAmountChange={(entryId, value) =>
-							setConsumeAmounts((prev) => ({
-								...prev,
-								[entryId]: value,
-							}))
-						}
-						onConsume={handleConsume}
-						onConsumeAll={handleConsumeAll}
-						onSpoil={handleSpoil}
-						onSpoilAll={handleSpoilAll}
-						consumePending={consumeStock.isPending}
-						spoilPending={spoilStock.isPending}
-					/>
-				</div>
-			</Island>
+					<div>
+						<h2 className="mb-3 mt-6 text-base font-semibold text-(--sea-ink)">
+							Expiring Soon
+						</h2>
+						<ExpiringStockList
+							entries={stockEntries ?? []}
+							products={products ?? []}
+							quantityUnits={quantityUnits ?? []}
+							consumeAmounts={consumeAmounts}
+							onConsumeAmountChange={(entryId, value) =>
+								setConsumeAmounts((prev) => ({
+									...prev,
+									[entryId]: value,
+								}))
+							}
+							onConsume={handleConsume}
+							onConsumeAll={handleConsumeAll}
+							onSpoil={handleSpoil}
+							onSpoilAll={handleSpoilAll}
+							consumePending={consumeStock.isPending}
+							spoilPending={spoilStock.isPending}
+						/>
+					</div>
+				</Island>
 
-			<PinnedProducts
-				products={products ?? []}
-				stockEntries={stockEntries ?? []}
-				quantityUnits={quantityUnits ?? []}
-			/>
+				<PinnedProducts
+					products={products ?? []}
+					stockEntries={stockEntries ?? []}
+					quantityUnits={quantityUnits ?? []}
+				/>
+			</div>
 		</Page>
 	);
 }

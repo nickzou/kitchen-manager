@@ -52,9 +52,11 @@ export function PinnedProducts({
 	return (
 		<Island
 			as="section"
-			className="animate-rise-in mt-4 sm:mt-6 sm:rounded-2xl p-6 sm:p-8"
+			className="animate-rise-in sm:rounded-2xl p-6 sm:p-8 lg:col-span-5"
 		>
-			<h2 className="mb-3 text-base font-semibold text-(--sea-ink)">Pinned</h2>
+			<h2 className="mb-3 text-base font-semibold text-(--sea-ink)">
+				Pinned Products
+			</h2>
 			<ul className="flex flex-col divide-y divide-(--line) rounded-xl border border-(--line) bg-(--surface)">
 				{pinned.map((p) => {
 					const entries = stockEntries.filter((e) => e.productId === p.id);
