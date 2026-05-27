@@ -50,7 +50,10 @@ export function PinnedProducts({
 	if (pinned.length === 0) return null;
 
 	return (
-		<Island as="section" className="animate-rise-in sm:rounded-2xl p-6 sm:p-8">
+		<Island
+			as="section"
+			className="animate-rise-in sm:rounded-2xl p-6 sm:p-8 lg:col-span-5"
+		>
 			<h2 className="mb-3 text-base font-semibold text-(--sea-ink)">
 				Pinned Products
 			</h2>
