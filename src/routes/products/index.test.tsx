@@ -35,6 +35,7 @@ vi.mock("#src/lib/auth-client", () => ({
 vi.mock("#src/lib/hooks/use-products", () => ({
 	useProducts: (...args: unknown[]) => mockUseProducts(...args),
 	useCreateProduct: (...args: unknown[]) => mockUseCreateProduct(...args),
+	useUpdateProduct: () => ({ mutateAsync: vi.fn(), isPending: false }),
 }));
 
 const mockUseProductCategories = vi.fn();

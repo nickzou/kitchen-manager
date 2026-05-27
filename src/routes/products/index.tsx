@@ -11,6 +11,7 @@ import InventorySubNav from "#src/components/InventorySubNav";
 import { Island } from "#src/components/Island";
 import { MultiCombobox } from "#src/components/MultiCombobox";
 import { Page } from "#src/components/Page";
+import { PinToggle } from "#src/components/PinToggle";
 import { SearchInput } from "#src/components/SearchInput";
 import { TableView } from "#src/components/TableView";
 import { useToast } from "#src/components/Toast";
@@ -221,9 +222,17 @@ function ProductsPage() {
 							const catNames = getCategoryNames(p.categoryIds);
 							return (
 								<>
-									<h3 className="mb-1 text-sm font-semibold text-(--sea-ink)">
-										{p.name}
-									</h3>
+									<div className="mb-1 flex items-start justify-between gap-2">
+										<h3 className="text-sm font-semibold text-(--sea-ink)">
+											{p.name}
+										</h3>
+										<PinToggle
+											productId={p.id}
+											productName={p.name}
+											pinned={p.pinned}
+											size={16}
+										/>
+									</div>
 									{catNames.length > 0 && (
 										<div className="mb-2 flex flex-wrap gap-1">
 											{catNames.map((name) => (
@@ -251,6 +260,7 @@ function ProductsPage() {
 				) : view === "table" ? (
 					<TableView
 						columns={[
+							{ label: "" },
 							{ label: "Name" },
 							{ label: "Category" },
 							{ label: "Min Stock" },
@@ -260,6 +270,13 @@ function ProductsPage() {
 						getKey={(p) => p.id}
 						renderRow={(p) => (
 							<>
+								<td className="py-2.5 pr-2 w-6">
+									<PinToggle
+										productId={p.id}
+										productName={p.name}
+										pinned={p.pinned}
+									/>
+								</td>
 								<td className="py-2.5 pr-4">
 									<Link
 										to="/products/$id"
@@ -292,6 +309,13 @@ function ProductsPage() {
 						getSecondary={(p) =>
 							getCategoryNames(p.categoryIds).join(", ") || "—"
 						}
+						renderExtra={(p) => (
+							<PinToggle
+								productId={p.id}
+								productName={p.name}
+								pinned={p.pinned}
+							/>
+						)}
 					/>
 				)}
 			</Island>
