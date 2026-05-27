@@ -25,14 +25,20 @@ export function PinnedProducts({
 
 	const pinned = useMemo(() => {
 		return products
-			.filter((p) => p.pinned)
+			.filter((p) => {
+				if (!p.pinned) return false;
+				const total = stockEntries
+					.filter((e) => e.productId === p.id)
+					.reduce((s, e) => s + Number.parseFloat(e.quantity), 0);
+				return total > 0;
+			})
 			.sort((a, b) => {
 				const ao = a.pinnedSortOrder ?? Number.POSITIVE_INFINITY;
 				const bo = b.pinnedSortOrder ?? Number.POSITIVE_INFINITY;
 				if (ao !== bo) return ao - bo;
 				return a.name.localeCompare(b.name);
 			});
-	}, [products]);
+	}, [products, stockEntries]);
 
 	function getUnitAbbr(unitId: string | null) {
 		if (!unitId) return "";
@@ -59,7 +65,6 @@ export function PinnedProducts({
 					const consumeUnit = getUnitAbbr(
 						p.defaultConsumeUnitId ?? p.defaultQuantityUnitId,
 					);
-					const empty = totalStock <= 0;
 					return (
 						<li
 							key={p.id}
@@ -68,13 +73,7 @@ export function PinnedProducts({
 							<span className="min-w-0 flex-1 truncate font-medium text-(--sea-ink)">
 								{p.name}
 							</span>
-							<span
-								className={
-									empty
-										? "shrink-0 text-(--sea-ink-soft)"
-										: "shrink-0 font-semibold text-(--sea-ink)"
-								}
-							>
+							<span className="shrink-0 font-semibold text-(--sea-ink)">
 								{totalStock}
 								{stockUnit ? ` ${stockUnit}` : ""}
 							</span>
@@ -90,7 +89,7 @@ export function PinnedProducts({
 							<AmberButton
 								type="button"
 								onClick={() => quickConsume(entries, consumeAmount)}
-								disabled={isPending || empty}
+								disabled={isPending}
 								title={`Consume ${consumeAmount}${consumeUnit ? ` ${consumeUnit}` : ""}`}
 								className="flex shrink-0 items-center gap-1"
 							>
