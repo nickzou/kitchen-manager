@@ -1,5 +1,6 @@
 import { UtensilsCrossed } from "lucide-react";
 import { useMemo } from "react";
+import { Island } from "#src/components/Island";
 import { AmberButton } from "#src/components/stock/AmberButton";
 import type { Product } from "#src/lib/hooks/use-products";
 import type { QuantityUnit } from "#src/lib/hooks/use-quantity-units";
@@ -49,7 +50,10 @@ export function PinnedProducts({
 	if (pinned.length === 0) return null;
 
 	return (
-		<div className="mb-8">
+		<Island
+			as="section"
+			className="animate-rise-in mt-4 sm:mt-6 sm:rounded-2xl p-6 sm:p-8"
+		>
 			<h2 className="mb-3 text-base font-semibold text-(--sea-ink)">Pinned</h2>
 			<ul className="flex flex-col divide-y divide-(--line) rounded-xl border border-(--line) bg-(--surface)">
 				{pinned.map((p) => {
@@ -100,6 +104,6 @@ export function PinnedProducts({
 					);
 				})}
 			</ul>
-		</div>
+		</Island>
 	);
 }

@@ -154,18 +154,12 @@ function Dashboard() {
 				<p className="mb-2 text-[0.69rem] font-bold uppercase tracking-[0.16em] text-(--kicker)">
 					Dashboard
 				</p>
-				<h1 className="font-display mb-6 text-3xl font-bold text-(--sea-ink)">
+				<h1 className="font-display text-3xl font-bold text-(--sea-ink)">
 					Hey, {firstName}!
 				</h1>
 
-				<PinnedProducts
-					products={products ?? []}
-					stockEntries={stockEntries ?? []}
-					quantityUnits={quantityUnits ?? []}
-				/>
-
 				<div>
-					<h2 className="mb-3 text-base font-semibold text-(--sea-ink)">
+					<h2 className="mb-3 mt-6 text-base font-semibold text-(--sea-ink)">
 						Expiring Soon
 					</h2>
 					<ExpiringStockList
@@ -188,6 +182,12 @@ function Dashboard() {
 					/>
 				</div>
 			</Island>
+
+			<PinnedProducts
+				products={products ?? []}
+				stockEntries={stockEntries ?? []}
+				quantityUnits={quantityUnits ?? []}
+			/>
 		</Page>
 	);
 }
