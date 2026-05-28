@@ -90,6 +90,8 @@ Conversions defined here override the global ones for the given product.
 | Method | Path | Description |
 | --- | --- | --- |
 | `GET` | `/api/products/$id/source-recipes` | Recipes that produce this product (their `producedProductId` matches `$id`). Returns `[{ id, name, producedQuantity, producedQuantityUnitId, derivedNutrition }]`, where `derivedNutrition` is `{ calories, protein, fat, carbs, baseAmount, baseUnitId, complete }` (per `producedQuantity` of `producedQuantityUnitId`) or `null` if the recipe has no produced quantity/unit. Used to surface "produced by" links, the derived nutrition display on the product detail page, and to mark producible products in the shopping-list summary. |
+| `GET` | `/api/products/derived-nutrition` | Per-product derived nutrition for every producible product owned by the user. Returns `{ [productId]: { calories, protein, fat, carbs, baseAmount, baseUnitId, complete } }`. Used by the client-side recipe/meal-plan nutrition rollups so produced ingredients (e.g. a meal-prepped sauce) contribute their source recipe's macros. First-wins if multiple recipes produce the same product. |
+| `GET` | `/api/products/derived-cost` | Per-product derived cost. Returns `{ [productId]: { total, baseAmount, baseUnitId, complete } }`, where `total` is the cost of producing one batch (`baseAmount` of `baseUnitId`) computed from the source recipe's priced ingredients. Same first-wins semantics as derived-nutrition. |
 
 ---
 

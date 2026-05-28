@@ -4,6 +4,7 @@ import type { StockEntry } from "#src/lib/hooks/use-stock-entries";
 import type { UnitConversion } from "#src/lib/hooks/use-unit-conversions";
 import { getAvgUnitCost } from "#src/lib/stock-utils";
 import { buildConversionGraph, tryConvert } from "./conversion-graph";
+import type { DerivedCost } from "./derive-product-cost";
 
 export function getRecipeCost(opts: {
 	ingredients: RecipeIngredient[];
@@ -11,13 +12,24 @@ export function getRecipeCost(opts: {
 	stockEntries: StockEntry[];
 	unitConversions: UnitConversion[];
 	scaleFactor: number;
+	// Optional per-product derived cost map for producible products (cost
+	// derived from the source recipe's ingredients). Falls back to derived
+	// when the product has no priced stock.
+	derivedByProduct?: Map<string, DerivedCost>;
 }): {
 	total: number;
 	ingredientsPriced: number;
 	ingredientsTotal: number;
+	complete: boolean;
 } | null {
-	const { ingredients, products, stockEntries, unitConversions, scaleFactor } =
-		opts;
+	const {
+		ingredients,
+		products,
+		stockEntries,
+		unitConversions,
+		scaleFactor,
+		derivedByProduct,
+	} = opts;
 
 	const graph = buildConversionGraph(unitConversions);
 
@@ -31,6 +43,7 @@ export function getRecipeCost(opts: {
 
 	let ingredientsPriced = 0;
 	const ingredientsTotal = ingredients.length;
+	let complete = true;
 
 	// Ingredient groups represent "OR" alternatives — the cook will use one.
 	// Average across the contributors so the recipe cost reflects the
@@ -42,22 +55,50 @@ export function getRecipeCost(opts: {
 	for (const ing of ingredients) {
 		if (!ing.productId) continue;
 		const product = products.find((p) => p.id === ing.productId);
-		if (!product) continue;
+		if (!product) {
+			complete = false;
+			continue;
+		}
 
 		const entries = entriesByProduct.get(ing.productId) ?? [];
 		const avgCost = getAvgUnitCost(entries);
-		if (avgCost === null) continue;
+		const derived = derivedByProduct?.get(ing.productId);
 
-		// avgCost is per product's default unit; convert ingredient qty to that unit
-		const convertedQty = tryConvert(
-			graph,
-			Number(ing.quantity),
-			ing.quantityUnitId,
-			product.defaultQuantityUnitId,
-		);
-		if (convertedQty === null) continue;
+		let contribution: number | null = null;
 
-		const contribution = convertedQty * scaleFactor * avgCost;
+		if (avgCost !== null) {
+			// avgCost is per product's default unit; convert ingredient qty to that unit
+			const convertedQty = tryConvert(
+				graph,
+				Number(ing.quantity),
+				ing.quantityUnitId,
+				product.defaultQuantityUnitId,
+			);
+			if (convertedQty === null) {
+				complete = false;
+			} else {
+				contribution = convertedQty * scaleFactor * avgCost;
+			}
+		} else if (derived && derived.baseAmount > 0) {
+			// No own stock to price from — use the source-recipe's per-batch cost.
+			const convertedQty = tryConvert(
+				graph,
+				Number(ing.quantity),
+				ing.quantityUnitId,
+				derived.baseUnitId,
+			);
+			if (convertedQty === null) {
+				complete = false;
+			} else {
+				contribution =
+					(convertedQty * scaleFactor * derived.total) / derived.baseAmount;
+				if (!derived.complete) complete = false;
+			}
+		} else {
+			complete = false;
+		}
+
+		if (contribution === null) continue;
 
 		if (ing.groupName) {
 			const bucket = grouped.get(ing.groupName) ?? [];
@@ -78,5 +119,5 @@ export function getRecipeCost(opts: {
 		total += bucket.reduce((s, c) => s + c, 0) / bucket.length;
 	}
 
-	return { total, ingredientsPriced, ingredientsTotal };
+	return { total, ingredientsPriced, ingredientsTotal, complete };
 }

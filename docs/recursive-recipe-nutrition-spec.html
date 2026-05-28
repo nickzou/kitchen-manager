@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Spec: Recursive recipe nutrition, cost, and shopping list</title>
+<style>
+  :root {
+    --ink: #1a2e30;
+    --soft: #5a6c70;
+    --line: #d8dfe0;
+    --accent: #2b7a78;
+    --bg: #faf8f5;
+    --code-bg: #f0ece6;
+    --warn: #b85c1f;
+    --surface: #f3eee6;
+    --lagoon-deep: #2b7a78;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    max-width: 760px;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.55;
+  }
+  h1, h2, h3 { color: var(--ink); margin-top: 2em; }
+  h1 { border-bottom: 2px solid var(--accent); padding-bottom: 0.3em; }
+  h2 { border-bottom: 1px solid var(--line); padding-bottom: 0.2em; }
+  code {
+    background: var(--code-bg);
+    padding: 0.1em 0.35em;
+    border-radius: 3px;
+    font-size: 0.92em;
+  }
+  pre {
+    background: var(--code-bg);
+    padding: 0.8em 1em;
+    border-radius: 6px;
+    overflow-x: auto;
+    font-size: 0.9em;
+    line-height: 1.45;
+  }
+  table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+  th, td { text-align: left; padding: 0.45em 0.7em; border-bottom: 1px solid var(--line); font-size: 0.95em; }
+  th { background: var(--code-bg); }
+  .meta { color: var(--soft); font-size: 0.9em; margin-top: -0.5em; }
+  .callout {
+    border-left: 3px solid var(--accent);
+    background: rgba(43, 122, 120, 0.06);
+    padding: 0.6em 1em;
+    margin: 1em 0;
+    border-radius: 0 4px 4px 0;
+  }
+  .warn {
+    border-left-color: var(--warn);
+    background: rgba(184, 92, 31, 0.07);
+  }
+  ul, ol { padding-left: 1.4em; }
+  li { margin: 0.25em 0; }
+  hr { border: none; border-top: 1px solid var(--line); margin: 2em 0; }
+</style>
+</head>
+<body>
+
+<h1>Spec: Recursive recipe nutrition, cost, and shopping list</h1>
+<p class="meta">Kitchen Manager · Draft</p>
+<table style="margin-top: 0.5em; width: auto;">
+  <tr><th>Drafted</th><td>2026-05-28</td></tr>
+  <tr><th>Shipped</th><td>—</td></tr>
+</table>
+
+<h2>Problem</h2>
+<p>
+  When a recipe's ingredient is a <em>producible product</em> (a product with no
+  nutrition of its own, where the calories live on the <em>source recipe</em>
+  that produces it), the client-side nutrition rollup misses those ingredients.
+</p>
+<p>
+  Concrete example from production, meal plan 2026-05-26:
+</p>
+<table>
+  <tr><th>Item</th><th>Client-side cal</th></tr>
+  <tr><td>Buttered Bagel and Coffee</td><td>~292</td></tr>
+  <tr><td>Pad Kra Pao (Meal-Prepped)</td><td>~462</td></tr>
+  <tr><td>Protein Shake</td><td>~376</td></tr>
+  <tr><td>Spaghetti con broccoli aglio e olio</td><td>~1066</td></tr>
+  <tr><td><strong>Sum (client)</strong></td><td><strong>2,196</strong></td></tr>
+  <tr><td><strong>Day total (server)</strong></td><td><strong>2,981</strong></td></tr>
+</table>
+<p>
+  The 785-calorie gap shows up because the meal-prepped dish references a
+  prepped product whose nutrition is derived from a source recipe — the server's
+  <code>nutrition-summary</code> route follows that link, but
+  <code>getRecipeNutrition</code> in <code>src/lib/recipe-utils</code> does not.
+</p>
+<p>
+  The cost rollup has the same shape of bug (<code>getRecipeCost</code> uses
+  <code>getAvgUnitCost</code> on stock; producible products with no stock get
+  skipped). Same fix, same place.
+</p>
+<p>
+  The shopping list has a related-but-different gap: when a planned recipe
+  needs a producible product (e.g. "Pad Kra Pao mix") and there's no stock,
+  the current ingredient-summary surfaces it under a "producible" bucket with
+  a "Make from recipe" hint &mdash; but it does <em>not</em> auto-expand into
+  the source recipe's ingredients (the things you actually have to buy). The
+  user has to remember to open the source recipe and add its ingredients
+  manually.
+</p>
+
+<h2>Goal</h2>
+<ul>
+  <li>Per-recipe and per-meal-plan-entry nutrition shown in the UI matches the server's day total to within rounding.</li>
+  <li>The fix is in shared utilities so it benefits the recipe detail page, the meal-plan entry modal, and the per-day rollup component the same way.</li>
+  <li>Cost gets the same treatment in the same PR — same data plumbing, no point doing it twice.</li>
+  <li>Shopping list: when a planned producible product has no stock, auto-expand the shortfall into the source recipe's ingredients. Nets out against existing stock of those ingredients the same way regular ingredients do.</li>
+</ul>
+
+<h2>Approach</h2>
+
+<h3>1. Shape: one helper, one extra input</h3>
+<p>
+  Extend <code>getRecipeNutrition</code> and <code>getRecipeCost</code> to
+  accept an optional <code>derivedByProduct</code> map keyed by product id.
+  When an ingredient's product has no own nutrition/cost, fall back to the
+  derived value for that product before giving up.
+</p>
+<pre>type Derived = { calories, protein, fat, carbs, baseAmount, baseUnitId };
+const derived = derivedByProduct.get(ing.productId);
+if (!product.calories &amp;&amp; !product.protein &amp;&amp; ... &amp;&amp; derived) {
+  // treat `derived` as if it lived on the product, normalised the same way
+}</pre>
+<p>
+  This mirrors the existing <code>deriveProductNutrition</code> helper the
+  server already uses; we'd extract it into <code>src/lib/recipe-utils/</code>
+  and use it on both sides so the math is identical.
+</p>
+
+<h3>2. New hook: <code>useDerivedNutritionByProduct</code></h3>
+<p>
+  A React Query hook that returns the same per-product derived nutrition map
+  the server builds. Backed by a new <code>GET /api/products/derived-nutrition</code>
+  endpoint that runs the recursion once and returns:
+</p>
+<pre>{
+  [productId]: {
+    calories: number, protein: number, fat: number, carbs: number,
+    baseAmount: number, baseUnitId: string | null,
+    complete: boolean
+  }
+}</pre>
+<p>
+  The server already computes this per request inside
+  <code>nutrition-summary</code>; extracting it lets the dashboard, recipe
+  detail page, meal-plan entry modal, and shopping list all share one cached
+  source.
+</p>
+
+<div class="callout">
+  <strong>Why a new endpoint instead of expanding the existing nutrition-summary?</strong>
+  <code>nutrition-summary</code> is keyed by date range and returns per-day
+  rollups. We want per-product derived values that we can reuse for the recipe
+  detail page (no date) and the per-entry modal. Keeping them separate also
+  means the day-rollup endpoint can stay narrow and fast.
+</div>
+
+<h3>3. Recursion depth</h3>
+<p>
+  The server today does <strong>one level</strong> of derivation — if a source
+  recipe itself contains another producible product, that secondary product is
+  not expanded. We keep that limit for now (rare in practice; an unbounded
+  recursion would also need a cycle guard).
+</p>
+<p>
+  If the user does build a chain (recipe A produces P1, recipe B uses P1 and
+  produces P2, recipe C uses P2), we will under-count C, the same way we under-count
+  today. Out of scope for this PR; would be a follow-up if/when this surfaces.
+</p>
+
+<h3>4. Cost parallel</h3>
+<p>
+  Mirror the same pattern: <code>useDerivedCostByProduct</code> hook + a
+  <code>derivedByProduct</code> input to <code>getRecipeCost</code>. The
+  derived cost of a produced product comes from averaging the cost of the
+  source recipe's ingredients per unit produced.
+</p>
+<p>
+  Same one-level limit, same first-wins rule (if multiple recipes produce a
+  product, pick the first — matches the server's existing behaviour).
+</p>
+
+<h3>5. Shopping-list expansion</h3>
+<p>
+  Refactor <code>ingredient-summary</code> so that when a planned producible
+  product is short on stock, the shortfall is expanded into the source
+  recipe's ingredient list rather than leaving the user to follow a "Make
+  from recipe" hint by hand.
+</p>
+<ul>
+  <li>For each producible product whose <code>need &gt; stock</code>, compute the deficit (the amount you'd have to "make"), then divide by the source recipe's <code>producedQuantity</code> to get the number of source-recipe servings needed.</li>
+  <li>Multiply each source-recipe ingredient by that factor and roll it into the same <code>ingredients</code> aggregation the rest of the summary already builds (so it nets against any in-stock ingredients automatically).</li>
+  <li>If the source recipe itself uses another producible product without stock, stop there — same one-level limit as nutrition/cost. The "Make from recipe" affordance still appears for any unresolved producible chains so the user has visibility.</li>
+  <li>The "producible" bucket in the response stays as-is for products the user genuinely wants to make themselves (i.e., still has source-recipe stock). The expansion is opt-in based on whether source-recipe ingredients are buyable.</li>
+</ul>
+
+<div class="callout">
+  <strong>Side effect:</strong> this closes ClickUp <code>86e19mwm6</code>
+  ("Auto-expand source-recipe ingredients into shopping list when producible
+  stock is short") and partially addresses <code>86e19mw30</code> ("Recursive
+  producible products in shopping list / nutrition"). The latter stays open
+  for the unbounded recursion case if we ever pursue it.
+</div>
+
+<h2>Affected files</h2>
+<table>
+  <tr><th>File</th><th>Change</th></tr>
+  <tr><td><code>src/lib/recipe-utils/derive-product-nutrition.ts</code></td><td>already exists server-side; ensure it's framework-free so the client can import it (it likely is)</td></tr>
+  <tr><td><code>src/lib/recipe-utils/derive-product-cost.ts</code></td><td><em>new</em> — mirror of derive-nutrition but for $/unit</td></tr>
+  <tr><td><code>src/lib/recipe-utils/get-recipe-nutrition.ts</code></td><td>accept optional <code>derivedByProduct</code> input; fall back when product has no own nutrition</td></tr>
+  <tr><td><code>src/lib/recipe-utils/get-recipe-cost.ts</code></td><td>same shape: accept <code>derivedByProduct</code></td></tr>
+  <tr><td><code>src/routes/api/products/derived-nutrition.ts</code></td><td><em>new</em> — GET endpoint; runs the same derivation the day-rollup does, but per-product</td></tr>
+  <tr><td><code>src/routes/api/products/derived-cost.ts</code></td><td><em>new</em></td></tr>
+  <tr><td><code>src/lib/hooks/use-derived-nutrition.ts</code></td><td><em>new</em></td></tr>
+  <tr><td><code>src/lib/hooks/use-derived-cost.ts</code></td><td><em>new</em></td></tr>
+  <tr><td><code>src/components/meal-plan/MealPlanEntryDetailModal.tsx</code></td><td>pass derived maps into the rollup calls; nutrition and cost now match the day total</td></tr>
+  <tr><td><code>src/routes/recipes/$id.tsx</code></td><td>same wiring; recipe detail page nutrition matches what the meal plan and dashboard show</td></tr>
+  <tr><td><code>src/routes/api/meal-plan-entries/nutrition-summary.ts</code></td><td>optionally refactor to call the new shared derivation so server &amp; client stay in lockstep</td></tr>
+  <tr><td><code>src/routes/api/meal-plan-entries/ingredient-summary.ts</code></td><td>expand producible shortfalls into their source-recipe ingredients in the <code>ingredients</code> aggregation</td></tr>
+  <tr><td><code>API.md</code></td><td>document the two new endpoints and the ingredient-summary behaviour change</td></tr>
+</table>
+
+<h2>Tests</h2>
+<ul>
+  <li>Unit: <code>getRecipeNutrition</code> with a producible product and a derived map returns the expected calories (uses the derived value).</li>
+  <li>Unit: same recipe with derived map omitted falls back to today's behaviour (undercounts) — to prove the new path is the only one that changes behaviour.</li>
+  <li>Unit: <code>deriveProductNutrition</code> handles the "no ingredients" and "source recipe with no produced quantity" cases gracefully.</li>
+  <li>API: <code>GET /api/products/derived-nutrition</code> returns the expected derived value for a known fixture (recipe → product → ingredients with nutrition).</li>
+  <li>Integration: per-entry modal calorie display matches the dashboard's day total for a day with at least one meal-prepped entry.</li>
+  <li>API: <code>GET /api/meal-plan-entries/ingredient-summary</code> with a planned producible product and zero stock returns the source recipe's ingredients in the <code>ingredients</code> array, scaled by the deficit.</li>
+  <li>API: same call with enough source-recipe stock that the deficit can be made still surfaces a "producible" entry (no double-counting).</li>
+</ul>
+
+<h2>Decisions</h2>
+<ol>
+  <li><strong>Endpoint shape</strong>: two separate endpoints — one for derived nutrition, one for derived cost.</li>
+  <li><strong>Server refactor</strong>: yes — <code>nutrition-summary</code> moves to the new shared helper in this PR.</li>
+  <li><strong>Multi-source-recipe products</strong>: keep first-wins, matching today's server behaviour.</li>
+  <li><strong>"Complete" flag</strong>: surface in the UI with a "*" partial marker so users know when a number is partial.</li>
+</ol>
+
+<h2>Out of scope</h2>
+<ul>
+  <li>Unbounded recursion / cycle detection. One level only.</li>
+  <li>Recomputing historical day totals — this is a display fix, not a data fix.</li>
+  <li>Letting the user pick a canonical source recipe per product (e.g., "use <em>this</em> recipe to compute Pad Kra Pao mix's calories"). The first-wins behaviour stays; a chooser is a future feature.</li>
+  <li>Cost: per-stock-entry pricing precision (averaging across entries already handled).</li>
+</ul>
+
+<hr />
+<p class="meta">Last updated 2026-05-28</p>
+
+</body>
+</html>
