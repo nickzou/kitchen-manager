@@ -68,6 +68,8 @@ import { Route as ApiRecipesAvailabilityRouteImport } from './routes/api/recipes
 import { Route as ApiRecipesIdRouteImport } from './routes/api/recipes/$id'
 import { Route as ApiRecipeCategoriesIdRouteImport } from './routes/api/recipe-categories/$id'
 import { Route as ApiQuantityUnitsIdRouteImport } from './routes/api/quantity-units/$id'
+import { Route as ApiProductsDerivedNutritionRouteImport } from './routes/api/products/derived-nutrition'
+import { Route as ApiProductsDerivedCostRouteImport } from './routes/api/products/derived-cost'
 import { Route as ApiProductsIdRouteImport } from './routes/api/products/$id'
 import { Route as ApiProductCategoriesIdRouteImport } from './routes/api/product-categories/$id'
 import { Route as ApiMealSlotsReorderRouteImport } from './routes/api/meal-slots/reorder'
@@ -387,6 +389,17 @@ const ApiQuantityUnitsIdRoute = ApiQuantityUnitsIdRouteImport.update({
   path: '/api/quantity-units/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiProductsDerivedNutritionRoute =
+  ApiProductsDerivedNutritionRouteImport.update({
+    id: '/api/products/derived-nutrition',
+    path: '/api/products/derived-nutrition',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiProductsDerivedCostRoute = ApiProductsDerivedCostRouteImport.update({
+  id: '/api/products/derived-cost',
+  path: '/api/products/derived-cost',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiProductsIdRoute = ApiProductsIdRouteImport.update({
   id: '/api/products/$id',
   path: '/api/products/$id',
@@ -531,6 +544,8 @@ export interface FileRoutesByFullPath {
   '/api/meal-slots/reorder': typeof ApiMealSlotsReorderRoute
   '/api/product-categories/$id': typeof ApiProductCategoriesIdRoute
   '/api/products/$id': typeof ApiProductsIdRouteWithChildren
+  '/api/products/derived-cost': typeof ApiProductsDerivedCostRoute
+  '/api/products/derived-nutrition': typeof ApiProductsDerivedNutritionRoute
   '/api/quantity-units/$id': typeof ApiQuantityUnitsIdRoute
   '/api/recipe-categories/$id': typeof ApiRecipeCategoriesIdRoute
   '/api/recipes/$id': typeof ApiRecipesIdRouteWithChildren
@@ -611,6 +626,8 @@ export interface FileRoutesByTo {
   '/api/meal-slots/reorder': typeof ApiMealSlotsReorderRoute
   '/api/product-categories/$id': typeof ApiProductCategoriesIdRoute
   '/api/products/$id': typeof ApiProductsIdRouteWithChildren
+  '/api/products/derived-cost': typeof ApiProductsDerivedCostRoute
+  '/api/products/derived-nutrition': typeof ApiProductsDerivedNutritionRoute
   '/api/quantity-units/$id': typeof ApiQuantityUnitsIdRoute
   '/api/recipe-categories/$id': typeof ApiRecipeCategoriesIdRoute
   '/api/recipes/$id': typeof ApiRecipesIdRouteWithChildren
@@ -692,6 +709,8 @@ export interface FileRoutesById {
   '/api/meal-slots/reorder': typeof ApiMealSlotsReorderRoute
   '/api/product-categories/$id': typeof ApiProductCategoriesIdRoute
   '/api/products/$id': typeof ApiProductsIdRouteWithChildren
+  '/api/products/derived-cost': typeof ApiProductsDerivedCostRoute
+  '/api/products/derived-nutrition': typeof ApiProductsDerivedNutritionRoute
   '/api/quantity-units/$id': typeof ApiQuantityUnitsIdRoute
   '/api/recipe-categories/$id': typeof ApiRecipeCategoriesIdRoute
   '/api/recipes/$id': typeof ApiRecipesIdRouteWithChildren
@@ -774,6 +793,8 @@ export interface FileRouteTypes {
     | '/api/meal-slots/reorder'
     | '/api/product-categories/$id'
     | '/api/products/$id'
+    | '/api/products/derived-cost'
+    | '/api/products/derived-nutrition'
     | '/api/quantity-units/$id'
     | '/api/recipe-categories/$id'
     | '/api/recipes/$id'
@@ -854,6 +875,8 @@ export interface FileRouteTypes {
     | '/api/meal-slots/reorder'
     | '/api/product-categories/$id'
     | '/api/products/$id'
+    | '/api/products/derived-cost'
+    | '/api/products/derived-nutrition'
     | '/api/quantity-units/$id'
     | '/api/recipe-categories/$id'
     | '/api/recipes/$id'
@@ -934,6 +957,8 @@ export interface FileRouteTypes {
     | '/api/meal-slots/reorder'
     | '/api/product-categories/$id'
     | '/api/products/$id'
+    | '/api/products/derived-cost'
+    | '/api/products/derived-nutrition'
     | '/api/quantity-units/$id'
     | '/api/recipe-categories/$id'
     | '/api/recipes/$id'
@@ -1015,6 +1040,8 @@ export interface RootRouteChildren {
   ApiMealSlotsReorderRoute: typeof ApiMealSlotsReorderRoute
   ApiProductCategoriesIdRoute: typeof ApiProductCategoriesIdRoute
   ApiProductsIdRoute: typeof ApiProductsIdRouteWithChildren
+  ApiProductsDerivedCostRoute: typeof ApiProductsDerivedCostRoute
+  ApiProductsDerivedNutritionRoute: typeof ApiProductsDerivedNutritionRoute
   ApiQuantityUnitsIdRoute: typeof ApiQuantityUnitsIdRoute
   ApiRecipeCategoriesIdRoute: typeof ApiRecipeCategoriesIdRoute
   ApiRecipesIdRoute: typeof ApiRecipesIdRouteWithChildren
@@ -1466,6 +1493,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiQuantityUnitsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/products/derived-nutrition': {
+      id: '/api/products/derived-nutrition'
+      path: '/api/products/derived-nutrition'
+      fullPath: '/api/products/derived-nutrition'
+      preLoaderRoute: typeof ApiProductsDerivedNutritionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/products/derived-cost': {
+      id: '/api/products/derived-cost'
+      path: '/api/products/derived-cost'
+      fullPath: '/api/products/derived-cost'
+      preLoaderRoute: typeof ApiProductsDerivedCostRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/products/$id': {
       id: '/api/products/$id'
       path: '/api/products/$id'
@@ -1679,6 +1720,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiMealSlotsReorderRoute: ApiMealSlotsReorderRoute,
   ApiProductCategoriesIdRoute: ApiProductCategoriesIdRoute,
   ApiProductsIdRoute: ApiProductsIdRouteWithChildren,
+  ApiProductsDerivedCostRoute: ApiProductsDerivedCostRoute,
+  ApiProductsDerivedNutritionRoute: ApiProductsDerivedNutritionRoute,
   ApiQuantityUnitsIdRoute: ApiQuantityUnitsIdRoute,
   ApiRecipeCategoriesIdRoute: ApiRecipeCategoriesIdRoute,
   ApiRecipesIdRoute: ApiRecipesIdRouteWithChildren,

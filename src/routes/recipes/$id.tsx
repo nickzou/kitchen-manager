@@ -37,6 +37,8 @@ import { Textarea } from "#src/components/Textarea";
 import { useToast } from "#src/components/Toast";
 import { useRecipeCategories } from "#src/lib/hooks/use-categories";
 import { useCookRecipe } from "#src/lib/hooks/use-cook-recipe";
+import { useDerivedCostMap } from "#src/lib/hooks/use-derived-cost";
+import { useDerivedNutritionMap } from "#src/lib/hooks/use-derived-nutrition";
 import {
 	useProductUnitConversion,
 	useProductUnitConversions,
@@ -248,6 +250,9 @@ function RecipeDetail() {
 		],
 	);
 
+	const derivedNutrition = useDerivedNutritionMap();
+	const derivedCost = useDerivedCostMap();
+
 	const recipeCost = useMemo(() => {
 		if (!ingredients || !products || !stockEntries || !unitConversions)
 			return null;
@@ -257,8 +262,16 @@ function RecipeDetail() {
 			stockEntries,
 			unitConversions,
 			scaleFactor,
+			derivedByProduct: derivedCost,
 		});
-	}, [ingredients, products, stockEntries, unitConversions, scaleFactor]);
+	}, [
+		ingredients,
+		products,
+		stockEntries,
+		unitConversions,
+		scaleFactor,
+		derivedCost,
+	]);
 
 	const recipeNutrition = useMemo(() => {
 		if (!ingredients || !products || !unitConversions) return null;
@@ -267,8 +280,9 @@ function RecipeDetail() {
 			products,
 			unitConversions,
 			scaleFactor,
+			derivedByProduct: derivedNutrition,
 		});
-	}, [ingredients, products, unitConversions, scaleFactor]);
+	}, [ingredients, products, unitConversions, scaleFactor, derivedNutrition]);
 
 	const sortedPrepSteps = useMemo(
 		() =>

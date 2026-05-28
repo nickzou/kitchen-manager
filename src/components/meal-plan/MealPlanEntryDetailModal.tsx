@@ -2,6 +2,8 @@ import { Link } from "@tanstack/react-router";
 import { CookingPot, Minus, Plus, Trash2, Undo2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Modal } from "#src/components/Modal";
+import { useDerivedCostMap } from "#src/lib/hooks/use-derived-cost";
+import { useDerivedNutritionMap } from "#src/lib/hooks/use-derived-nutrition";
 import type { MealPlanEntry } from "#src/lib/hooks/use-meal-plan-entries";
 import { useProductUnitConversions } from "#src/lib/hooks/use-product-unit-conversions";
 import { useProducts } from "#src/lib/hooks/use-products";
@@ -59,6 +61,8 @@ export function MealPlanEntryDetailModal({
 	);
 	const { data: allProductConversions } =
 		useProductUnitConversions(ingredientProductIds);
+	const derivedNutrition = useDerivedNutritionMap();
+	const derivedCost = useDerivedCostMap();
 
 	const scaleFactor =
 		entry.recipeServings && entry.recipeServings > 0
@@ -75,6 +79,7 @@ export function MealPlanEntryDetailModal({
 				...(unitConversions ?? []),
 			],
 			scaleFactor,
+			derivedByProduct: derivedNutrition,
 		});
 	}, [
 		ingredients,
@@ -82,6 +87,7 @@ export function MealPlanEntryDetailModal({
 		unitConversions,
 		allProductConversions,
 		scaleFactor,
+		derivedNutrition,
 	]);
 
 	const cost = useMemo(() => {
@@ -95,6 +101,7 @@ export function MealPlanEntryDetailModal({
 				...(unitConversions ?? []),
 			],
 			scaleFactor,
+			derivedByProduct: derivedCost,
 		});
 	}, [
 		ingredients,
@@ -103,6 +110,7 @@ export function MealPlanEntryDetailModal({
 		unitConversions,
 		allProductConversions,
 		scaleFactor,
+		derivedCost,
 	]);
 
 	function handleServingsChange(delta: number) {
@@ -113,8 +121,10 @@ export function MealPlanEntryDetailModal({
 
 	const costPartial =
 		cost &&
-		cost.ingredientsTotal > 0 &&
-		cost.ingredientsPriced < cost.ingredientsTotal;
+		(!cost.complete ||
+			(cost.ingredientsTotal > 0 &&
+				cost.ingredientsPriced < cost.ingredientsTotal));
+	const nutritionPartial = nutrition && !nutrition.complete;
 
 	return (
 		<Modal
@@ -175,7 +185,9 @@ export function MealPlanEntryDetailModal({
 				<div>
 					<dt className="text-xs text-(--sea-ink-soft)">Calories</dt>
 					<dd className="font-semibold text-(--sea-ink)">
-						{nutrition ? `${Math.round(nutrition.calories)} cal` : "—"}
+						{nutrition
+							? `${Math.round(nutrition.calories)} cal${nutritionPartial ? "*" : ""}`
+							: "—"}
 					</dd>
 				</div>
 				<div>
@@ -195,10 +207,10 @@ export function MealPlanEntryDetailModal({
 					</dd>
 				</div>
 			</dl>
-			{costPartial && (
+			{(costPartial || nutritionPartial) && (
 				<p className="mb-4 text-xs text-amber-600 dark:text-amber-400">
-					* Some ingredients have no priced stock or unit-conversion gap — total
-					is partial.
+					* Some ingredients are missing data or have a unit-conversion gap —
+					total is partial.
 				</p>
 			)}
 

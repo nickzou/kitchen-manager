@@ -103,6 +103,7 @@ describe("getRecipeNutrition", () => {
 			carbs: 40,
 			ingredientsWithNutrition: 1,
 			ingredientsTotal: 1,
+			complete: true,
 		});
 	});
 
@@ -128,6 +129,7 @@ describe("getRecipeNutrition", () => {
 			carbs: 60,
 			ingredientsWithNutrition: 1,
 			ingredientsTotal: 1,
+			complete: true,
 		});
 	});
 
@@ -156,6 +158,7 @@ describe("getRecipeNutrition", () => {
 			carbs: 10000,
 			ingredientsWithNutrition: 1,
 			ingredientsTotal: 1,
+			complete: true,
 		});
 	});
 
@@ -220,6 +223,7 @@ describe("getRecipeNutrition", () => {
 			carbs: 0,
 			ingredientsWithNutrition: 1,
 			ingredientsTotal: 1,
+			complete: true,
 		});
 	});
 
@@ -458,5 +462,59 @@ describe("getRecipeNutrition", () => {
 		});
 
 		expect(result?.calories).toBeCloseTo(60);
+	});
+
+	it("falls back to derivedByProduct when the product has no own nutrition", () => {
+		// Producible product p-prep with no own nutrition. Source recipe says
+		// 100 g of p-prep is 500 cal / 30 g protein. Recipe uses 50 g.
+		const result = getRecipeNutrition({
+			ingredients: [makeIngredient({ productId: "p-prep", quantity: "50" })],
+			products: [makeProduct({ id: "p-prep" })],
+			unitConversions: [],
+			scaleFactor: 1,
+			derivedByProduct: new Map([
+				[
+					"p-prep",
+					{
+						calories: 500,
+						protein: 30,
+						fat: 10,
+						carbs: 40,
+						baseAmount: 100,
+						baseUnitId: "unit-1",
+						complete: true,
+					},
+				],
+			]),
+		});
+
+		expect(result?.calories).toBeCloseTo(250);
+		expect(result?.protein).toBeCloseTo(15);
+		expect(result?.complete).toBe(true);
+	});
+
+	it("marks complete=false when a derived entry is itself partial", () => {
+		const result = getRecipeNutrition({
+			ingredients: [makeIngredient({ productId: "p-prep", quantity: "50" })],
+			products: [makeProduct({ id: "p-prep" })],
+			unitConversions: [],
+			scaleFactor: 1,
+			derivedByProduct: new Map([
+				[
+					"p-prep",
+					{
+						calories: 500,
+						protein: 30,
+						fat: 10,
+						carbs: 40,
+						baseAmount: 100,
+						baseUnitId: "unit-1",
+						complete: false,
+					},
+				],
+			]),
+		});
+
+		expect(result?.complete).toBe(false);
 	});
 });
