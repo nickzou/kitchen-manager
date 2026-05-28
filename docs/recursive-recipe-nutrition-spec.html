@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<title>Spec: Recursive recipe nutrition (and cost)</title>
+<title>Spec: Recursive recipe nutrition, cost, and shopping list</title>
 <style>
   :root {
     --ink: #1a2e30;
@@ -63,7 +63,7 @@
 </head>
 <body>
 
-<h1>Spec: Recursive recipe nutrition (and cost)</h1>
+<h1>Spec: Recursive recipe nutrition, cost, and shopping list</h1>
 <p class="meta">Kitchen Manager · Draft</p>
 <table style="margin-top: 0.5em; width: auto;">
   <tr><th>Drafted</th><td>2026-05-28</td></tr>
@@ -99,12 +99,22 @@
   <code>getAvgUnitCost</code> on stock; producible products with no stock get
   skipped). Same fix, same place.
 </p>
+<p>
+  The shopping list has a related-but-different gap: when a planned recipe
+  needs a producible product (e.g. "Pad Kra Pao mix") and there's no stock,
+  the current ingredient-summary surfaces it under a "producible" bucket with
+  a "Make from recipe" hint &mdash; but it does <em>not</em> auto-expand into
+  the source recipe's ingredients (the things you actually have to buy). The
+  user has to remember to open the source recipe and add its ingredients
+  manually.
+</p>
 
 <h2>Goal</h2>
 <ul>
   <li>Per-recipe and per-meal-plan-entry nutrition shown in the UI matches the server's day total to within rounding.</li>
   <li>The fix is in shared utilities so it benefits the recipe detail page, the meal-plan entry modal, and the per-day rollup component the same way.</li>
   <li>Cost gets the same treatment in the same PR — same data plumbing, no point doing it twice.</li>
+  <li>Shopping list: when a planned producible product has no stock, auto-expand the shortfall into the source recipe's ingredients. Nets out against existing stock of those ingredients the same way regular ingredients do.</li>
 </ul>
 
 <h2>Approach</h2>
@@ -180,6 +190,28 @@ if (!product.calories &amp;&amp; !product.protein &amp;&amp; ... &amp;&amp; deri
   product, pick the first — matches the server's existing behaviour).
 </p>
 
+<h3>5. Shopping-list expansion</h3>
+<p>
+  Refactor <code>ingredient-summary</code> so that when a planned producible
+  product is short on stock, the shortfall is expanded into the source
+  recipe's ingredient list rather than leaving the user to follow a "Make
+  from recipe" hint by hand.
+</p>
+<ul>
+  <li>For each producible product whose <code>need &gt; stock</code>, compute the deficit (the amount you'd have to "make"), then divide by the source recipe's <code>producedQuantity</code> to get the number of source-recipe servings needed.</li>
+  <li>Multiply each source-recipe ingredient by that factor and roll it into the same <code>ingredients</code> aggregation the rest of the summary already builds (so it nets against any in-stock ingredients automatically).</li>
+  <li>If the source recipe itself uses another producible product without stock, stop there — same one-level limit as nutrition/cost. The "Make from recipe" affordance still appears for any unresolved producible chains so the user has visibility.</li>
+  <li>The "producible" bucket in the response stays as-is for products the user genuinely wants to make themselves (i.e., still has source-recipe stock). The expansion is opt-in based on whether source-recipe ingredients are buyable.</li>
+</ul>
+
+<div class="callout">
+  <strong>Side effect:</strong> this closes ClickUp <code>86e19mwm6</code>
+  ("Auto-expand source-recipe ingredients into shopping list when producible
+  stock is short") and partially addresses <code>86e19mw30</code> ("Recursive
+  producible products in shopping list / nutrition"). The latter stays open
+  for the unbounded recursion case if we ever pursue it.
+</div>
+
 <h2>Affected files</h2>
 <table>
   <tr><th>File</th><th>Change</th></tr>
@@ -194,7 +226,8 @@ if (!product.calories &amp;&amp; !product.protein &amp;&amp; ... &amp;&amp; deri
   <tr><td><code>src/components/meal-plan/MealPlanEntryDetailModal.tsx</code></td><td>pass derived maps into the rollup calls; nutrition and cost now match the day total</td></tr>
   <tr><td><code>src/routes/recipes/$id.tsx</code></td><td>same wiring; recipe detail page nutrition matches what the meal plan and dashboard show</td></tr>
   <tr><td><code>src/routes/api/meal-plan-entries/nutrition-summary.ts</code></td><td>optionally refactor to call the new shared derivation so server &amp; client stay in lockstep</td></tr>
-  <tr><td><code>API.md</code></td><td>document the two new endpoints</td></tr>
+  <tr><td><code>src/routes/api/meal-plan-entries/ingredient-summary.ts</code></td><td>expand producible shortfalls into their source-recipe ingredients in the <code>ingredients</code> aggregation</td></tr>
+  <tr><td><code>API.md</code></td><td>document the two new endpoints and the ingredient-summary behaviour change</td></tr>
 </table>
 
 <h2>Tests</h2>
@@ -204,31 +237,16 @@ if (!product.calories &amp;&amp; !product.protein &amp;&amp; ... &amp;&amp; deri
   <li>Unit: <code>deriveProductNutrition</code> handles the "no ingredients" and "source recipe with no produced quantity" cases gracefully.</li>
   <li>API: <code>GET /api/products/derived-nutrition</code> returns the expected derived value for a known fixture (recipe → product → ingredients with nutrition).</li>
   <li>Integration: per-entry modal calorie display matches the dashboard's day total for a day with at least one meal-prepped entry.</li>
+  <li>API: <code>GET /api/meal-plan-entries/ingredient-summary</code> with a planned producible product and zero stock returns the source recipe's ingredients in the <code>ingredients</code> array, scaled by the deficit.</li>
+  <li>API: same call with enough source-recipe stock that the deficit can be made still surfaces a "producible" entry (no double-counting).</li>
 </ul>
 
-<h2>Decisions you need to make</h2>
+<h2>Decisions</h2>
 <ol>
-  <li>
-    <strong>Endpoint shape</strong>: one endpoint returning <code>{ nutrition, cost }</code>
-    per product, or two separate endpoints? Default: two — cleaner caching keys,
-    cost may be skipped on screens that don't need it.
-  </li>
-  <li>
-    <strong>Server refactor</strong>: do we touch <code>nutrition-summary</code> to use
-    the new shared helper? Reduces drift but expands the blast radius of this PR.
-    Default: yes, in the same PR.
-  </li>
-  <li>
-    <strong>Multi-source-recipe products</strong>: if two recipes both produce the same
-    product, the existing server logic is "first wins". Keep that, or sort by
-    something more meaningful (most recent, alphabetical)? Default: keep first-wins.
-  </li>
-  <li>
-    <strong>"Complete" flag</strong>: today the server returns <code>complete: boolean</code>
-    on derived nutrition (true if every ingredient had data). Surface that in the UI as a
-    "*" partial marker like we do for cost, or hide it? Default: surface it; users
-    benefit from knowing the number is partial.
-  </li>
+  <li><strong>Endpoint shape</strong>: two separate endpoints — one for derived nutrition, one for derived cost.</li>
+  <li><strong>Server refactor</strong>: yes — <code>nutrition-summary</code> moves to the new shared helper in this PR.</li>
+  <li><strong>Multi-source-recipe products</strong>: keep first-wins, matching today's server behaviour.</li>
+  <li><strong>"Complete" flag</strong>: surface in the UI with a "*" partial marker so users know when a number is partial.</li>
 </ol>
 
 <h2>Out of scope</h2>
