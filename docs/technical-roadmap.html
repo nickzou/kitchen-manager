@@ -92,7 +92,22 @@
   <tr><th>Drafted</th><td>2026-05-30</td></tr>
   <tr><th>Owner</th><td>Nick</td></tr>
   <tr><th>Time budget assumption</th><td>~10&ndash;15 hrs/week (full-time job in parallel)</td></tr>
+  <tr><th>Operating ethos</th><td>Sustainability over speed · leverage > capital · small-team thesis · self-hosted by default</td></tr>
+  <tr><th>Marketing site</th><td>Unauthenticated routes of the PWA (not separate WordPress / static site)</td></tr>
 </table>
+
+<h2>Operating principles</h2>
+<p>
+  These constrain every technical choice below. When in doubt, fall back to
+  these rather than industry defaults.
+</p>
+<ul>
+  <li><strong>Sustainability over speed.</strong> No shipping-pressure rhythm. Slower, more deliberate beats fast and brittle.</li>
+  <li><strong>Leverage > capital.</strong> Trade technical effort and stubbornness for money. AI fills knowledge gaps that would otherwise require hiring.</li>
+  <li><strong>Small-team thesis.</strong> SaaS suffers from organizational cruft because people resort to technical processes to solve organizational problems. Keeping the team small + AI-augmented sidesteps that. Don't choose tooling that only makes sense once the team is 20+.</li>
+  <li><strong>Self-hosted by default.</strong> "I don't like Vercel selling me AWS compute back to me." OSS on owned infra unless there's no realistic equivalent (Stripe is the canonical exception). Justify managed-service picks explicitly.</li>
+  <li><strong>No physical office</strong> until a partnership specifically demands it.</li>
+</ul>
 
 <h2>Where we are today</h2>
 <p>
@@ -151,7 +166,7 @@
   <p>The goal of this phase is to put it in front of real users (not friends &mdash; see GTM doc) and find the bugs and onboarding gaps that you can't see because you built it.</p>
   <ul class="checklist">
     <li><strong>Branded name + domain</strong>. "Kitchen Manager" is a description, not a brand. Without a name you can't make a logo, can't buy a domain, can't write copy. Pick something and move on. (Naming is a Phase-1 task, not a "later" task &mdash; it blocks the marketing site.)</li>
-    <li><strong>Public marketing site</strong> at the apex of the new domain. App moves to <code>app.&lt;domain&gt;</code>. Already on the board (<code>86e0vjvgv</code>).</li>
+    <li><strong>Marketing site = unauthenticated routes of the PWA</strong>. Decided: don't run a separate WordPress / static site. The marketing surface is built inside the app as unauthed routes (a <code>(marketing)</code> group alongside <code>(app)</code>). Reasons: a single codebase to maintain, SSR via TanStack Start handles SEO, and most importantly <strong>interactive product previews</strong> are possible inline &mdash; the demo problem most B2B SaaS hits (where the WordPress site can't show the real product) goes away. Domain shape: apex resolves to the marketing routes, <code>app.&lt;domain&gt;</code> redirects to the authenticated experience.</li>
     <li><strong>Sign-up + onboarding flow</strong>: account creation, optional first-run wizard (give me 1 stock entry + 1 recipe so the dashboard isn't empty), tooltips or empty-state explanations.</li>
     <li><strong>Seed data option</strong>: "Add starter pantry" button that populates Salt / Pepper / Flour / etc. so new users don't face a blank product list.</li>
     <li><strong>Loading states</strong> across the app (on your board as <code>86e0zjy0r</code>).</li>
@@ -230,17 +245,38 @@
 </ul>
 
 <h3>Tech choices to lock in early</h3>
+<p>
+  Defaults below follow the self-hosted-by-default principle. Each row notes
+  what you'd trade if you took the managed alternative — sometimes that trade
+  is worth it (Stripe), sometimes it isn't.
+</p>
 <table>
-  <tr><th>Concern</th><th>Pick</th><th>Why</th></tr>
-  <tr><td>Payments</td><td>Stripe Checkout</td><td>Lowest friction, no PCI scope, supports CAD natively, Stripe Tax handles GST/HST.</td></tr>
-  <tr><td>Transactional email</td><td>Resend</td><td>React Email templates, cheap, indie-friendly.</td></tr>
-  <tr><td>Error tracking</td><td>Sentry</td><td>Free tier is enough until you have real volume; battle-tested.</td></tr>
-  <tr><td>Analytics</td><td>Plausible or Fathom</td><td>Privacy-friendly, no cookie banner needed, matches your "no data farming" stance.</td></tr>
-  <tr><td>Uptime monitoring</td><td>Better Stack or UptimeRobot</td><td>Free tier covers a single check.</td></tr>
-  <tr><td>Status page</td><td>Defer to Phase 4</td><td>Don't need it until you have outages users care about.</td></tr>
+  <tr><th>Concern</th><th>Pick</th><th>Notes</th></tr>
+  <tr><td>Payments</td><td>Stripe Checkout</td><td>No realistic self-hosted equivalent for global card-present payments. Stripe Tax handles GST/HST collection. <em>Managed exception, justified.</em></td></tr>
+  <tr><td>Transactional email</td><td>Postal (or Postfix + DKIM)</td><td>Self-hosted SMTP/API on your VPS. Trade: dealing with deliverability reputation, IP warming. If that becomes too painful, Resend is the fallback &mdash; but try Postal first.</td></tr>
+  <tr><td>Newsletter / mailing list</td><td>Listmonk</td><td>Single-binary, Postgres-backed, OSS. Trade: no fancy email-builder; you write HTML/MJML. Probably a plus.</td></tr>
+  <tr><td>Error tracking</td><td>GlitchTip</td><td>Sentry-SDK compatible, Django + Postgres, much lighter than Sentry self-hosted. Trade: smaller community, fewer integrations. Trivial Docker deploy.</td></tr>
+  <tr><td>Logs</td><td>Grafana Loki</td><td>Pipe structured JSON logs from the Node process. Cheap to run, queryable. Pairs with Grafana for viewing.</td></tr>
+  <tr><td>Metrics</td><td>Prometheus + Grafana</td><td>Standard OSS. Add <code>prom-client</code> to the Node process for application metrics. Server-level via node-exporter.</td></tr>
+  <tr><td>Traces (later)</td><td>Grafana Tempo or Jaeger</td><td>Defer until you have a tracing question you can't answer with logs. Then OpenTelemetry SDK + one of these.</td></tr>
+  <tr><td>All-in-one alt</td><td>SigNoz</td><td>If running Loki + Prometheus + Tempo + GlitchTip feels like too many moving pieces, SigNoz bundles logs / metrics / traces into a single OSS deploy (ClickHouse-backed). Worth evaluating before committing to the stack above.</td></tr>
+  <tr><td>Uptime monitoring</td><td>Uptime Kuma</td><td>OSS, single Docker container, Slack/email/webhook alerts. Put it on a different VPS than the app so a host failure still sends the alert.</td></tr>
+  <tr><td>Analytics</td><td>Plausible self-hosted (or Umami)</td><td>Privacy-friendly, no cookie banner needed. Plausible's self-hosted edition is GPL'd; Umami is a lighter MIT-licensed alternative if you want simpler.</td></tr>
+  <tr><td>Status page</td><td>Cachet (defer to Phase 4)</td><td>Don't need it until outages affect customers.</td></tr>
+  <tr><td>Feature flags</td><td>Unleash, or hand-rolled</td><td>For a single-app codebase you can probably get away with a boolean column on <code>user</code> until you actually need cohorts.</td></tr>
+  <tr><td>CRM (when needed)</td><td>Twenty, or Postgres tables + admin view</td><td>You don't need a CRM until you have B2B-shaped support conversations to track. For B2C support, just route to an inbox with a label system.</td></tr>
   <tr><td>Search infra</td><td>Postgres full-text + trigrams</td><td>You already use Postgres. Don't add Algolia / Meilisearch until you have a complaint.</td></tr>
-  <tr><td>Background jobs</td><td>Defer</td><td>You don't need a queue yet. When you do (webhook retries, scheduled emails), a Postgres-backed queue (river / pg-boss) is enough.</td></tr>
+  <tr><td>Background jobs</td><td>Defer</td><td>When you do (webhook retries, scheduled emails), use a Postgres-backed queue (river / pg-boss) instead of standing up Redis.</td></tr>
+  <tr><td>Hosting</td><td>AWS direct (EC2 / Lightsail) or a single beefy VPS</td><td>Skip the Vercel / Netlify / Render / Railway abstraction layers. They sell you AWS-or-similar back at a markup. The trade is taking on systems work yourself &mdash; aligned with the leverage-over-capital principle.</td></tr>
 </table>
+
+<div class="callout">
+  <strong>Realistic observability bundle for Kitchen Manager scale:</strong>
+  GlitchTip + Loki + Prometheus + Grafana + Uptime Kuma on a single
+  observability VPS, ~$10&ndash;20 CAD / month. One weekend to set up cleanly.
+  Optional consolidation: replace the middle three with SigNoz if running
+  fewer moving pieces matters more than swappability.
+</div>
 
 <h2>Blindspots &amp; risks</h2>
 <div class="callout warn">
@@ -265,7 +301,9 @@
   </li>
   <li><strong>Mobile</strong>: the meal-prepper / shopping audience uses this in the kitchen and the grocery store. PWA is good enough for v1 but the rough edges of "save to home screen" on iOS will bite. Budget a week per phase for mobile polish.</li>
   <li><strong>Data import</strong>: people who already track stuff in spreadsheets or Notion will ask "how do I get my data in?" You don't need a fancy importer; a CSV upload to a few tables would carry you far. Phase 2 nice-to-have.</li>
-  <li><strong>Receipt scanning</strong> (on your board as <code>86e0vp8jy</code> / <code>86e0vp8j5</code>) is the single feature that turns this from "nerd tool" to "anyone can use it." It's also the hardest thing on your roadmap. Don't try to build it pre-launch; instead, validate that users actually want it before committing engineering time. Or, make it an "import receipt via photo" beta feature that fails gracefully.</li>
+  <li><strong>Receipt scanning</strong> (on your board as <code>86e0vp8jy</code> / <code>86e0vp8j5</code>) is the single feature that turns this from "nerd tool" to "anyone can use it." With the GTM doc's lead-ICP set to the value-conscious cook, this moves <em>closer</em> to the critical path: a value-conscious user who has to type in 30 grocery items by hand will bounce. Cost-effective approach: hosted OCR (Google Vision / AWS Textract) behind a feature flag &mdash; one of the few places where managed-service makes sense because the alternative (self-host a Tesseract pipeline) is genuinely worse output for more work. Aim to ship a v1 by end of Phase 2.</li>
+  <li><strong>Onboarding overhead</strong> changes radically when the lead ICP changes. The current empty-state experience assumes someone willing to configure quantity units and add their first product. The value-conscious ICP will bounce in 90 seconds if step one isn't either "scan a receipt" or "pick a starter pantry." Phase 1 onboarding work should be sized accordingly &mdash; budget more than feels obvious.</li>
+  <li><strong>The product you've built is partly over-engineered for the new lead ICP.</strong> Per-product unit conversions, the public API, recursive producible-product nutrition &mdash; these are hypernerd-shaped features. They're sunk cost and they don't hurt; but they're also not what wins value-conscious users. Be conscious of not over-investing in that direction at the expense of receipt scanning, expiry tracking polish, and waste-reduction surfacing.</li>
 </ul>
 
 <h2>What's not on this roadmap (and why)</h2>
