@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Go-to-market strategy</title>
+<style>
+  :root {
+    --ink: #1a2e30;
+    --soft: #5a6c70;
+    --line: #d8dfe0;
+    --accent: #2b7a78;
+    --bg: #faf8f5;
+    --code-bg: #f0ece6;
+    --warn: #b85c1f;
+    --surface: #f3eee6;
+    --lagoon-deep: #2b7a78;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    max-width: 760px;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.55;
+  }
+  h1, h2, h3 { color: var(--ink); margin-top: 2em; }
+  h1 { border-bottom: 2px solid var(--accent); padding-bottom: 0.3em; }
+  h2 { border-bottom: 1px solid var(--line); padding-bottom: 0.2em; }
+  h3 { margin-top: 1.4em; }
+  code {
+    background: var(--code-bg);
+    padding: 0.1em 0.35em;
+    border-radius: 3px;
+    font-size: 0.92em;
+  }
+  pre {
+    background: var(--code-bg);
+    padding: 0.8em 1em;
+    border-radius: 6px;
+    overflow-x: auto;
+    font-size: 0.9em;
+    line-height: 1.45;
+  }
+  table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+  th, td { text-align: left; padding: 0.45em 0.7em; border-bottom: 1px solid var(--line); font-size: 0.95em; vertical-align: top; }
+  th { background: var(--code-bg); }
+  .meta { color: var(--soft); font-size: 0.9em; margin-top: -0.5em; }
+  .callout {
+    border-left: 3px solid var(--accent);
+    background: rgba(43, 122, 120, 0.06);
+    padding: 0.7em 1em;
+    margin: 1em 0;
+    border-radius: 0 4px 4px 0;
+  }
+  .warn {
+    border-left-color: var(--warn);
+    background: rgba(184, 92, 31, 0.07);
+  }
+  .icp-card {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 0.6em 1em 1em;
+    margin: 1em 0;
+    background: #fff;
+  }
+  .icp-card h3 { margin-top: 0.5em; }
+  .icp-meta {
+    font-size: 0.78em;
+    color: var(--soft);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 0.4em;
+  }
+  ul, ol { padding-left: 1.4em; }
+  li { margin: 0.3em 0; }
+  hr { border: none; border-top: 1px solid var(--line); margin: 2em 0; }
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.8em;
+    margin: 1em 0;
+  }
+  .pricing-grid > div {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 0.9em 1em;
+    background: #fff;
+  }
+  @media (max-width: 600px) { .pricing-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<h1>Go-to-market strategy</h1>
+<p class="meta">Kitchen Manager · Draft</p>
+<table style="margin-top: 0.5em; width: auto;">
+  <tr><th>Drafted</th><td>2026-05-30</td></tr>
+  <tr><th>Owner</th><td>Nick</td></tr>
+  <tr><th>Constraints</th><td>Solo, no VC, ~10&ndash;15 hrs/week, modest ad budget, Toronto-based</td></tr>
+</table>
+
+<h2>Positioning</h2>
+<p>
+  Before anything else, lock the one-liner. Drafts to react to:
+</p>
+<ul>
+  <li><strong>"Your kitchen, modelled."</strong> A complete inventory, recipe, and meal-planning tool for people who treat the kitchen like a system.</li>
+  <li><strong>"Cook from what you have."</strong> Track every ingredient, build every recipe, never waste a meal-prep batch again.</li>
+  <li><strong>"The kitchen tool for people who use spreadsheets for everything else."</strong> Self-explanatory.</li>
+</ul>
+<p>
+  The first speaks to the hypernerd, the second to the value-conscious cook,
+  the third is wink-and-nod hypernerd messaging. The right answer probably
+  isn't any of these &mdash; it's whatever 3 beta users say back when you
+  ask "what would you call this?"
+</p>
+
+<div class="callout">
+  <strong>Action:</strong> in the next ~2 weeks, run 5 short calls (20 min)
+  with people who'd plausibly use this, ask them to describe it back to you
+  in their own words. The cleanest phrasing wins.
+</div>
+
+<h2>Two ICPs &mdash; pick one to lead</h2>
+<p>
+  You named two: hypernerds, and the financially struggling. Those are
+  emotionally adjacent (both care about waste and control) but functionally
+  very different on price sensitivity, channel reachability, and feature
+  priority. You can't market to both at launch with one budget. Lead with one.
+</p>
+
+<div class="icp-card">
+  <p class="icp-meta">ICP A &middot; recommended for launch</p>
+  <h3>The Hypernerd Home Cook</h3>
+  <p>30&ndash;45, technical day-job, runs Home Assistant, has opinions about
+  Notion vs Obsidian, meal-preps on Sundays, tracks macros for fitness or
+  curiosity, knows the unit conversion rate from grams to cups of flour off
+  the top of their head. They've tried Paprika, Mealime, Notion templates,
+  and either bounced or live with a homemade spreadsheet.</p>
+  <ul>
+    <li><strong>What hurts them:</strong> existing apps are either too consumer-y (Paprika, Whisk) or too generic (Notion). Nothing lets them model recipes as data the way they want to.</li>
+    <li><strong>Why you win:</strong> per-product unit conversions. Producible products. Macros that recurse through recipes. The public API. Self-hostable. Indie-built, no VC, no nickel-and-diming.</li>
+    <li><strong>Reachable via:</strong> Hacker News, Lobsters, BlueSky, indie hackers, r/SideProject, r/selfhosted, r/MealPrepSunday (tangential).</li>
+    <li><strong>Willing to pay:</strong> CAD $40&ndash;120 one-time, or $4&ndash;9/mo for hosted.</li>
+    <li><strong>Risk:</strong> small TAM. You'll cap out at low thousands of users in this segment alone.</li>
+  </ul>
+</div>
+
+<div class="icp-card">
+  <p class="icp-meta">ICP B &middot; the larger market, but harder to reach</p>
+  <h3>The Value-Conscious Cook</h3>
+  <p>Mid-20s to 50s, household income strained by groceries, wants to waste
+  less food and stretch the budget further. May or may not be tech-savvy. Has
+  probably tried meal planning apps before and given up because they were too
+  much work to set up.</p>
+  <ul>
+    <li><strong>What hurts them:</strong> food waste, grocery bills, decision fatigue at the store.</li>
+    <li><strong>Why you'd win:</strong> shopping list expansion, expiry tracking, "make from what you have" (the producible-products feature). Once that exists, the value prop is concrete.</li>
+    <li><strong>Reachable via:</strong> TikTok, Instagram, frugal-living blogs, r/Frugal, r/EatCheapAndHealthy. Long-form content, not search ads.</li>
+    <li><strong>Willing to pay:</strong> lower &mdash; CAD $20&ndash;40 one-time, or maybe nothing for software. Hard segment to monetize directly.</li>
+    <li><strong>Risk:</strong> by definition this audience is price-sensitive. You'd need a free tier or genuine donation-ware model. That conflicts with "charge upfront."</li>
+  </ul>
+</div>
+
+<p><strong>Recommendation:</strong> lead with the Hypernerd at launch, set up
+  ICP B as a Phase-4+ expansion once you have product-market fit signal and
+  the receipt-scanning / shopping-list-expansion features that the value
+  segment needs. Don't try to be both apps at once.</p>
+
+<h2>Pricing</h2>
+<p>You said: charge upfront, no nickel-and-diming, no data farming. That maps
+to a few clean models.</p>
+
+<div class="pricing-grid">
+  <div>
+    <strong>Option 1: One-time lifetime</strong>
+    <p style="font-size: 0.9em; color: var(--soft); margin: 0.3em 0;">$80&ndash;$120 CAD. Pay once, hosted-or-self-hosted, all future updates included.</p>
+    <p style="font-size: 0.85em; margin: 0.3em 0 0;"><em>Pro:</em> aligned with your "make a product, someone pays for it" stance. <em>Con:</em> no recurring revenue, hosting costs eat margin over time on heavy users.</p>
+  </div>
+  <div>
+    <strong>Option 2: Annual subscription</strong>
+    <p style="font-size: 0.9em; color: var(--soft); margin: 0.3em 0;">$36&ndash;$60/yr CAD. Hosted only. Lifetime sale price for self-host (~$120).</p>
+    <p style="font-size: 0.85em; margin: 0.3em 0 0;"><em>Pro:</em> predictable revenue, easier financial planning. <em>Con:</em> feels closer to the SaaS nickel-and-diming you said you don't want.</p>
+  </div>
+  <div>
+    <strong>Option 3: Dual SKU (recommended)</strong>
+    <p style="font-size: 0.9em; color: var(--soft); margin: 0.3em 0;">$100 CAD lifetime self-host license. $5/mo or $48/yr hosted. Free for evaluation up to N stock entries.</p>
+    <p style="font-size: 0.85em; margin: 0.3em 0 0;"><em>Pro:</em> serves both halves of the Hypernerd ICP. Hosted users pay for the service, not the IP. <em>Con:</em> two products to support, two billing surfaces.</p>
+  </div>
+  <div>
+    <strong>Option 4: Pay-what-you-want with floor</strong>
+    <p style="font-size: 0.9em; color: var(--soft); margin: 0.3em 0;">Suggested $80, minimum $30. Single SKU, hosted-or-self-host.</p>
+    <p style="font-size: 0.85em; margin: 0.3em 0 0;"><em>Pro:</em> generates goodwill, reaches both ICPs. <em>Con:</em> revenue is hard to forecast; average price will be at or near the floor.</p>
+  </div>
+</div>
+
+<p>
+  My pick for you: <strong>Option 3</strong>. It matches your no-VC, "the
+  software is the product" stance, lets the hypernerd self-host while
+  monetising the convenience-loving subset of the same audience, and lets
+  you defer the "free tier for low-income users" question until you can
+  afford to subsidize it.
+</p>
+
+<div class="callout warn">
+  <strong>What to avoid:</strong> a feature-gated freemium that makes the
+  free version deliberately worse. It conflicts with everything you said
+  about how you want this to feel.
+</div>
+
+<h2>Channel strategy</h2>
+<p>You have a modest ad budget. Paid acquisition will not be the dominant
+channel for an indie tool at this price point in this niche. Lead with
+content + community + audience-building, paid as a force multiplier later.</p>
+
+<table>
+  <tr><th>Channel</th><th>Effort</th><th>Fit</th><th>Notes</th></tr>
+  <tr><td>Hacker News launch (Show HN)</td><td>Low</td><td>High</td><td>One-shot. Time it after Phase 3. Have a writeup ready that's <em>not</em> just a feature list &mdash; tell the story of why you built it.</td></tr>
+  <tr><td>Lobsters</td><td>Low</td><td>High</td><td>Same audience as HN, smaller but engaged.</td></tr>
+  <tr><td>BlueSky build-in-public</td><td>Medium / ongoing</td><td>High</td><td>Toronto + Canadian indie scene is very active here. Better signal than X right now.</td></tr>
+  <tr><td>Indie Hackers</td><td>Low</td><td>High</td><td>Post your launch and your revenue milestones. The audience is your audience.</td></tr>
+  <tr><td>r/selfhosted</td><td>Low</td><td>High (option 3)</td><td>Drop the self-host option there. They'll dissect it but they'll also share it.</td></tr>
+  <tr><td>r/MealPrepSunday</td><td>Medium</td><td>Medium</td><td>Be careful &mdash; promo posts get banned. Lead with value (a recipe? a meal-plan post?) and mention the tool secondarily.</td></tr>
+  <tr><td>SEO</td><td>High / slow</td><td>Medium</td><td>Long-tail queries like "track pantry inventory app," "meal prep nutrition calculator," etc. Worth a content investment but won't pay off until month 6+.</td></tr>
+  <tr><td>Cooking YouTube creators</td><td>High</td><td>High</td><td>Reach out to mid-tier (10&ndash;100k subs) creators who already talk about meal prep or budget cooking. Offer free lifetime + a custom feature tour for an honest review.</td></tr>
+  <tr><td>TikTok / Instagram Reels</td><td>High</td><td>Medium-Low (for ICP A)</td><td>Wrong audience for the hypernerd launch. Save for ICP B expansion.</td></tr>
+  <tr><td>Paid: Reddit promoted posts</td><td>Low</td><td>Medium</td><td>Cheap and reasonably targeted. Test small ($100&ndash;$300) on r/MealPrepSunday or r/selfhosted.</td></tr>
+  <tr><td>Paid: Google Search</td><td>Medium</td><td>Medium</td><td>Bid on long-tail buyer-intent queries, not generic terms. Probably $5&ndash;$15 CPC.</td></tr>
+  <tr><td>Paid: Facebook/Instagram</td><td>Medium</td><td>Low (for ICP A)</td><td>Bad fit for the launch audience. Skip.</td></tr>
+  <tr><td>Toronto / local press</td><td>Low</td><td>Low-Medium</td><td>Long shot but a Toronto Star or Globe and Mail piece on a "Toronto-built tool to reduce food waste" angle could land &mdash; that's an ICP B angle though.</td></tr>
+</table>
+
+<h2>Pre-launch playbook (the next 90 days)</h2>
+<p>Independent of when each phase technically completes, this is what to do <em>around</em> the build:</p>
+<ol>
+  <li><strong>Pick a name and a domain.</strong> This is the blocker. Without it you can't do half of the other steps. Spend a weekend, pick something, move on. (My suggestion: <em>don't</em> overthink this. "Larder" / "Mise" / "Pantry" / a made-up word are all fine.)</li>
+  <li><strong>Build a teaser landing page.</strong> Single page, email capture, 3 paragraphs about the problem and the approach. Ship before the product is ready. Goal: 100 emails by the time Phase 2 opens.</li>
+  <li><strong>Start posting build-in-public on BlueSky.</strong> 2&ndash;3x a week. Mix product progress with cooking content. You'll feel weird about it. Do it anyway.</li>
+  <li><strong>Talk to 10 potential users by phone or DM.</strong> Not friends &mdash; people you don't already know. Reddit DMs from r/MealPrepSunday, Twitter/BlueSky replies, anywhere. Ask: what do they use today? What's broken about it? What would they pay to fix it? Take notes. The pricing instinct you have now is half-formed; these calls will calibrate it.</li>
+  <li><strong>Draft a "story behind the product" essay</strong> for HN launch day. ~1000 words. The angle: "I built this for myself because everything else was either too consumer-y or too generic, and I'm releasing it because friends kept asking for access." That's a true story and a sympathetic one.</li>
+  <li><strong>Decide on the self-host stance</strong> (covered in the technical roadmap). This affects how you write the marketing site.</li>
+  <li><strong>Set up an email list.</strong> Beehiiv or Buttondown. Send a monthly progress update to the waitlist starting in month 1, even if there are 5 people on it.</li>
+</ol>
+
+<h2>Launch playbook (the day-of)</h2>
+<ol>
+  <li>Soft-launch to the waitlist 72 hours before public, with a discount code that thanks them. Lifetime access for the first 50? Solid evangelism unlock.</li>
+  <li>HN <em>Show HN</em> at ~9am ET on a Tuesday or Wednesday (best traffic, worst for your sleep).</li>
+  <li>Cross-post to Lobsters, Indie Hackers, BlueSky, r/SideProject, r/selfhosted (within their rules).</li>
+  <li>Reply to every comment in the first 12 hours. This matters more than people think.</li>
+  <li>Have the support inbox open. Bugs will surface.</li>
+  <li>Don't launch the day before a long weekend, the week of a major US holiday, or during a Canadian federal election. Sounds dumb but each of these will tank discoverability.</li>
+</ol>
+
+<h2>Metrics that matter (and ones that don't)</h2>
+<table>
+  <tr><th>Matters</th><th>Doesn't matter (yet)</th></tr>
+  <tr>
+    <td>
+      <ul>
+        <li>Signups &rarr; first stock entry conversion</li>
+        <li>Week-2 retention (did they come back?)</li>
+        <li>Stock entries / week per active user</li>
+        <li>Recipes cooked / week per active user</li>
+        <li>Paid conversion rate at end of free / trial</li>
+        <li>Support tickets per active user (proxy for friction)</li>
+        <li>NPS or "would you tell a friend" pulse</li>
+      </ul>
+    </td>
+    <td>
+      <ul>
+        <li>Total signups</li>
+        <li>Pageviews</li>
+        <li>Time-on-site</li>
+        <li>Twitter/BlueSky follower count</li>
+        <li>HN points</li>
+      </ul>
+    </td>
+  </tr>
+</table>
+
+<h2>Blindspots (the part you asked me to be honest about)</h2>
+<ul>
+  <li><strong>"Marketing ≠ sales."</strong> You said you have brand strategy and demand-gen experience. That's true, and it'll help you with the top of the funnel. The bottom &mdash; convincing someone to actually pay &mdash; is a different muscle. Plan on: writing better landing copy than you think you need to, A/B-testing pricing, doing reply-DM "soft sells" with engaged users, and writing case studies (yes, even for B2C). If sales feels slimy, reframe it as "helping the right people find the thing they were already looking for."</li>
+  <li><strong>"Interest from friends" is a trap.</strong> Friends say nice things. The conversion from "this is cool" to "here's my credit card" is &lt;5%. Calibrate by talking to strangers. The first time someone you don't know pays for it is the moment the product is real.</li>
+  <li><strong>Underestimating the marketing-site build.</strong> Indie founders consistently spend 2x what they planned on the marketing site. Copy is slow, images are slow, design takes longer than building features. Start it now, in parallel with Phase 0.</li>
+  <li><strong>Pricing too low.</strong> The instinct, especially for indie devs without sales experience, is to price low to be friendly. Don't. Higher prices filter to better customers, signal seriousness, and give you margin to support them well. If your gut says $50, charge $80. If it says $80, charge $100.</li>
+  <li><strong>Support time</strong>: with ~50 active users at $80 lifetime you have $4k revenue and probably 30&ndash;60 minutes a week of support. With 500 active users, you have $40k revenue and... still 30&ndash;60 minutes a week, <em>only if</em> you spent the first phase making things self-explanatory. Compounding interest works for support too. Invest in docs early.</li>
+  <li><strong>Indie != alone.</strong> Join one indie/maker community in the first month. Indie Hackers, MicroConf, anywhere with people doing the same thing. Solo doesn't have to mean isolated, and the difference in trajectory between people who plug in and people who don't is enormous.</li>
+  <li><strong>You're a Canadian solo dev launching to a global market.</strong> The "Toronto / Canadian" angle is a story. Use it. Buyers like supporting indie builders, and many like the "not from SF, not VC-backed" framing.</li>
+  <li><strong>The day job is leverage, until it isn't.</strong> Full-time pay funds the runway and reduces panic-driven decisions. But after a certain point (~$3k/mo in MRR or ~$30k in lifetime sales) the day job becomes the constraint on growth. Have a written-down threshold for when you'd reduce or quit the day job. Otherwise you'll either jump too early (financial stress) or stay too long (resentment).</li>
+  <li><strong>You will get one shot at "first impression" with each launch venue.</strong> HN remembers a bad submission for a few months. Make sure Phase 3 is genuinely solid before the Show HN. Cancelling and re-launching is fine; submitting a half-built thing and getting roasted is worse.</li>
+</ul>
+
+<h2>Toronto / Canada specifics</h2>
+<ul>
+  <li><strong>Currency:</strong> price in CAD. Don't try to dual-currency at launch &mdash; Stripe Checkout auto-converts for international buyers and the experience is good enough.</li>
+  <li><strong>Sales tax:</strong> Stripe Tax handles the mechanics, but you have to register with the CRA once you cross the $30k small-supplier threshold over 4 consecutive quarters. Set the calendar reminder now.</li>
+  <li><strong>Toronto tech scene:</strong> there's a meaningful indie / bootstrap community here. Drink-and-Draws, ShipIt nights, etc. Worth being visible at one or two of those.</li>
+  <li><strong>French considerations:</strong> if you sell into Quebec, Law 25 gets stricter every year. Phase 4 work, not pre-launch, but worth knowing.</li>
+</ul>
+
+<h2>Budget allocation (rough)</h2>
+<p>For "modest ad budget" assume ~$2,000 CAD over the first 6 months. Distribute roughly:</p>
+<table>
+  <tr><th>Channel</th><th>Spend</th><th>What you expect back</th></tr>
+  <tr><td>Domain + branding + landing page (one-time)</td><td>$300</td><td>A name and a site you don't hate.</td></tr>
+  <tr><td>Email tools (Beehiiv / Buttondown free tiers OK initially)</td><td>$0&ndash;$120</td><td>Owned channel that compounds.</td></tr>
+  <tr><td>Reddit promoted posts</td><td>$400</td><td>2&ndash;3 test posts, gauge signup CPA.</td></tr>
+  <tr><td>Google search ads (long-tail)</td><td>$400</td><td>Buyer-intent traffic at month 3+.</td></tr>
+  <tr><td>YouTube creator collabs (lifetime licence in lieu of cash)</td><td>$0 ($100 buffer)</td><td>1&ndash;2 honest reviews from the right creators.</td></tr>
+  <tr><td>Press kit / 1 paid copywriter pass</td><td>$300</td><td>Marketing-site copy that doesn't sound like a feature list.</td></tr>
+  <tr><td>Reserve</td><td>$500</td><td>Things you didn't plan for. There will be things.</td></tr>
+</table>
+
+<h2>The 30-day next steps</h2>
+<ol>
+  <li>Name + domain + skeleton landing page with email capture.</li>
+  <li>5 stranger interviews (one weekend block of outreach + scheduling).</li>
+  <li>BlueSky build-in-public cadence started.</li>
+  <li>First newsletter sent (even to 5 people).</li>
+  <li>Self-host stance decided.</li>
+  <li>Technical Phase 0 work (account deletion, transactional email, observability) in parallel.</li>
+</ol>
+
+<hr />
+<p class="meta">Last updated 2026-05-30</p>
+
+</body>
+</html>
