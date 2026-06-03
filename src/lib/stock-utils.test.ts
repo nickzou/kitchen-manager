@@ -4,6 +4,7 @@ import {
 	getAvgUnitCost,
 	getLatestUnitCost,
 	pickBestEntry,
+	planConsumption,
 } from "#src/lib/stock-utils";
 
 function makeEntry(overrides: Partial<StockEntry> = {}): StockEntry {
@@ -223,5 +224,85 @@ describe("getLatestUnitCost", () => {
 		];
 		// e1 has a real date which is newer than epoch (null → 0)
 		expect(getLatestUnitCost(entries)).toBe(5);
+	});
+});
+
+describe("planConsumption", () => {
+	it("returns an empty plan when no entries are available", () => {
+		const plan = planConsumption([], 80);
+		expect(plan).toEqual({ steps: [], totalPlanned: 0, complete: false });
+	});
+
+	it("drains the first entry then takes the remainder from the next (Nick's 80g case)", () => {
+		const entries = [
+			makeEntry({
+				id: "small",
+				quantity: "20",
+				expirationDate: "2026-06-10",
+			}),
+			makeEntry({
+				id: "large",
+				quantity: "500",
+				expirationDate: "2026-07-01",
+			}),
+		];
+		const plan = planConsumption(entries, 80);
+		expect(plan.steps).toEqual([
+			{ entryId: "small", amount: 20 },
+			{ entryId: "large", amount: 60 },
+		]);
+		expect(plan.totalPlanned).toBe(80);
+		expect(plan.complete).toBe(true);
+	});
+
+	it("respects expiration order regardless of insertion order", () => {
+		const entries = [
+			makeEntry({
+				id: "later",
+				quantity: "100",
+				expirationDate: "2026-12-01",
+			}),
+			makeEntry({
+				id: "sooner",
+				quantity: "100",
+				expirationDate: "2026-06-10",
+			}),
+		];
+		const plan = planConsumption(entries, 50);
+		expect(plan.steps).toEqual([{ entryId: "sooner", amount: 50 }]);
+		expect(plan.complete).toBe(true);
+	});
+
+	it("flags complete=false and returns a partial plan when stock is short", () => {
+		const entries = [
+			makeEntry({ id: "small", quantity: "20", expirationDate: "2026-06-10" }),
+		];
+		const plan = planConsumption(entries, 80);
+		expect(plan.steps).toEqual([{ entryId: "small", amount: 20 }]);
+		expect(plan.totalPlanned).toBe(20);
+		expect(plan.complete).toBe(false);
+	});
+
+	it("skips zero-quantity entries", () => {
+		const entries = [
+			makeEntry({ id: "empty", quantity: "0", expirationDate: "2026-06-01" }),
+			makeEntry({
+				id: "stocked",
+				quantity: "100",
+				expirationDate: "2026-07-01",
+			}),
+		];
+		const plan = planConsumption(entries, 30);
+		expect(plan.steps).toEqual([{ entryId: "stocked", amount: 30 }]);
+	});
+
+	it("takes exactly enough when the requested amount matches the first entry", () => {
+		const entries = [
+			makeEntry({ id: "a", quantity: "80", expirationDate: "2026-06-10" }),
+			makeEntry({ id: "b", quantity: "500", expirationDate: "2026-07-01" }),
+		];
+		const plan = planConsumption(entries, 80);
+		expect(plan.steps).toEqual([{ entryId: "a", amount: 80 }]);
+		expect(plan.complete).toBe(true);
 	});
 });
