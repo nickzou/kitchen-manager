@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Technical roadmap: personal tool → launchable product</title>
+<style>
+  :root {
+    --ink: #1a2e30;
+    --soft: #5a6c70;
+    --line: #d8dfe0;
+    --accent: #2b7a78;
+    --bg: #faf8f5;
+    --code-bg: #f0ece6;
+    --warn: #b85c1f;
+    --surface: #f3eee6;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    max-width: 760px;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.55;
+  }
+  h1, h2, h3 { color: var(--ink); margin-top: 2em; }
+  h1 { border-bottom: 2px solid var(--accent); padding-bottom: 0.3em; }
+  h2 { border-bottom: 1px solid var(--line); padding-bottom: 0.2em; }
+  h3 { margin-top: 1.4em; }
+  code {
+    background: var(--code-bg);
+    padding: 0.1em 0.35em;
+    border-radius: 3px;
+    font-size: 0.92em;
+  }
+  pre {
+    background: var(--code-bg);
+    padding: 0.8em 1em;
+    border-radius: 6px;
+    overflow-x: auto;
+    font-size: 0.9em;
+    line-height: 1.45;
+  }
+  table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+  th, td { text-align: left; padding: 0.45em 0.7em; border-bottom: 1px solid var(--line); font-size: 0.95em; vertical-align: top; }
+  th { background: var(--code-bg); }
+  .meta { color: var(--soft); font-size: 0.9em; margin-top: -0.5em; }
+  .callout {
+    border-left: 3px solid var(--accent);
+    background: rgba(43, 122, 120, 0.06);
+    padding: 0.7em 1em;
+    margin: 1em 0;
+    border-radius: 0 4px 4px 0;
+  }
+  .warn {
+    border-left-color: var(--warn);
+    background: rgba(184, 92, 31, 0.07);
+  }
+  .phase {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 0.6em 1em 1em;
+    margin: 1em 0;
+    background: #fff;
+  }
+  .phase h3 { margin-top: 0.5em; }
+  .phase-meta {
+    font-size: 0.78em;
+    color: var(--soft);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 0.4em;
+  }
+  ul, ol { padding-left: 1.4em; }
+  li { margin: 0.3em 0; }
+  hr { border: none; border-top: 1px solid var(--line); margin: 2em 0; }
+  .checklist li { list-style: none; position: relative; padding-left: 1.4em; }
+  .checklist li::before {
+    content: "☐";
+    position: absolute;
+    left: 0;
+    top: 0;
+    color: var(--soft);
+  }
+</style>
+</head>
+<body>
+
+<h1>Technical roadmap: personal tool → launchable product</h1>
+<p class="meta">Kitchen Manager · Draft</p>
+<table style="margin-top: 0.5em; width: auto;">
+  <tr><th>Drafted</th><td>2026-05-30</td></tr>
+  <tr><th>Owner</th><td>Nick</td></tr>
+  <tr><th>Time budget assumption</th><td>~10&ndash;15 hrs/week (full-time job in parallel)</td></tr>
+  <tr><th>Operating ethos</th><td>Sustainability over speed · leverage > capital · small-team thesis · self-hosted by default</td></tr>
+  <tr><th>Marketing site</th><td>Unauthenticated routes of the PWA (not separate WordPress / static site)</td></tr>
+</table>
+
+<h2>Operating principles</h2>
+<p>
+  These constrain every technical choice below. When in doubt, fall back to
+  these rather than industry defaults.
+</p>
+<ul>
+  <li><strong>Sustainability over speed.</strong> No shipping-pressure rhythm. Slower, more deliberate beats fast and brittle.</li>
+  <li><strong>Leverage > capital.</strong> Trade technical effort and stubbornness for money. AI fills knowledge gaps that would otherwise require hiring.</li>
+  <li><strong>Small-team thesis.</strong> SaaS suffers from organizational cruft because people resort to technical processes to solve organizational problems. Keeping the team small + AI-augmented sidesteps that. Don't choose tooling that only makes sense once the team is 20+.</li>
+  <li><strong>Self-hosted by default.</strong> "I don't like Vercel selling me AWS compute back to me." OSS on owned infra unless there's no realistic equivalent (Stripe is the canonical exception). Justify managed-service picks explicitly.</li>
+  <li><strong>No physical office</strong> until a partnership specifically demands it.</li>
+</ul>
+
+<h2>Where we are today</h2>
+<p>
+  Kitchen Manager is a single-user, production-deployed personal app at
+  <code>kitchen-manager.waffleruntime.com</code>. The architecture is already
+  multi-tenant (every table scopes by <code>userId</code>, Better Auth issues
+  sessions), so the path to "other people can sign up and use this" is mostly
+  about removing single-user assumptions, hardening the public-facing surface,
+  and adding the commercial plumbing (payments, comms, legal).
+</p>
+<p>What works in our favour:</p>
+<ul>
+  <li>Multi-tenant data model from day one &mdash; no schema rewrite.</li>
+  <li>Better Auth + email/password already in place.</li>
+  <li>Full public API mirrors the GUI, with bearer-token API keys per user. That's a meaningful differentiator most kitchen apps don't have.</li>
+  <li>Real-world usage data from your own account &mdash; ~30 Baby Spinach purchases, recurring meal plans, real recipes &mdash; means edge cases have been exercised.</li>
+</ul>
+<p>What doesn't work yet:</p>
+<ul>
+  <li>Zero onboarding. A brand-new user lands on an empty stock view with no context.</li>
+  <li>No payment, no plan, no entitlement system.</li>
+  <li>No account deletion (this is on your ClickUp board as <code>86e0vjvmw</code> &mdash; it's also a legal requirement in Canada under PIPEDA).</li>
+  <li>No transactional email beyond Better Auth's defaults. No support email routing.</li>
+  <li>No marketing site &mdash; just the app behind a login.</li>
+  <li>Some performance assumptions break at scale (most list pages fetch everything).</li>
+  <li>The domain name (<code>kitchen-manager.waffleruntime.com</code>) and the product name need work before public launch.</li>
+</ul>
+
+<h2>Phases</h2>
+<p>
+  Each phase has an exit gate. Don't move to the next until the current is
+  done, even if you have time. The instinct will be to build new features
+  &mdash; resist it.
+</p>
+
+<div class="phase">
+  <p class="phase-meta">Phase 0 · Personal-tool harden · ~2&ndash;4 weeks</p>
+  <h3>0. Stop the single-user assumptions from leaking out</h3>
+  <p>Before any other human sees a signup form, fix anything that assumes "the user" means "me."</p>
+  <ul class="checklist">
+    <li><strong>Account deletion flow</strong> &mdash; user-initiated, cascades through every <code>userId</code>-scoped table. Already on the board (<code>86e0vjvmw</code>); ship it first.</li>
+    <li><strong>Email change + verification</strong>.</li>
+    <li><strong>Password reset email</strong> through a real provider (Postmark, Resend, AWS SES &mdash; Resend is simplest).</li>
+    <li><strong>Tenant-isolation audit</strong> &mdash; grep every <code>db.select</code>, <code>db.update</code>, <code>db.delete</code> for "is this filtered by <code>userId</code>?" Anything that isn't is a leak.</li>
+    <li><strong>Tenant-isolation tests</strong> &mdash; one user can't read/write another user's data on every API endpoint. Add a "cross-user" test helper and gate CI on it.</li>
+    <li><strong>Rate limiting</strong> on auth and key endpoints. Better Auth has primitives; otherwise upstash/redis is the cheap path.</li>
+    <li><strong>API key scoping</strong> &mdash; currently a key is full account access. Decide whether you ship that as-is for v1 or add read-only / per-resource scopes.</li>
+    <li><strong>Observability baseline</strong>: Sentry (or Highlight) on the front end, structured logs server-side, a single uptime check. You will not catch regressions without these.</li>
+    <li><strong>Backups</strong>: confirm what your Postgres host does, when, where backups go, and try a restore once.</li>
+  </ul>
+</div>
+
+<div class="phase">
+  <p class="phase-meta">Phase 1 · Closed beta · ~4&ndash;6 weeks</p>
+  <h3>1. Make it survivable for 10&ndash;25 friendly strangers</h3>
+  <p>The goal of this phase is to put it in front of real users (not friends &mdash; see GTM doc) and find the bugs and onboarding gaps that you can't see because you built it.</p>
+  <ul class="checklist">
+    <li><strong>Branded name + domain</strong>. "Kitchen Manager" is a description, not a brand. Without a name you can't make a logo, can't buy a domain, can't write copy. Pick something and move on. (Naming is a Phase-1 task, not a "later" task &mdash; it blocks the marketing site.)</li>
+    <li><strong>Marketing site = unauthenticated routes of the PWA</strong>. Decided: don't run a separate WordPress / static site. The marketing surface is built inside the app as unauthed routes (a <code>(marketing)</code> group alongside <code>(app)</code>). Reasons: a single codebase to maintain, SSR via TanStack Start handles SEO, and most importantly <strong>interactive product previews</strong> are possible inline &mdash; the demo problem most B2B SaaS hits (where the WordPress site can't show the real product) goes away. Domain shape: apex resolves to the marketing routes, <code>app.&lt;domain&gt;</code> redirects to the authenticated experience.</li>
+    <li><strong>Sign-up + onboarding flow</strong>: account creation, optional first-run wizard (give me 1 stock entry + 1 recipe so the dashboard isn't empty), tooltips or empty-state explanations.</li>
+    <li><strong>Seed data option</strong>: "Add starter pantry" button that populates Salt / Pepper / Flour / etc. so new users don't face a blank product list.</li>
+    <li><strong>Loading states</strong> across the app (on your board as <code>86e0zjy0r</code>).</li>
+    <li><strong>Help / docs</strong>: short user-facing docs (not the API.md) covering core concepts &mdash; stock, products, recipes, meal plans. A single page is enough. Static, in the marketing site or under <code>/help</code>.</li>
+    <li><strong>Support email</strong> routed to your inbox. <code>support@&lt;domain&gt;</code>. Reply within 24 hrs in beta.</li>
+    <li><strong>In-app bug report</strong> &mdash; a "report an issue" link that grabs the current URL + screenshot. Sentry can do this; otherwise a simple form.</li>
+    <li><strong>Legal pages</strong>: Terms, Privacy, Cookie. Lawyer-reviewed eventually; for beta a Termly / iubenda template plus disclosure that the service is in beta and may break is fine.</li>
+    <li><strong>Feature flagging</strong> for risky changes. Even a hand-rolled boolean column on <code>user</code> is enough &mdash; you don't need LaunchDarkly.</li>
+  </ul>
+  <div class="callout warn">
+    <strong>Hard truth:</strong> the first 5 beta users will surface more
+    blockers than the next 50. Don't open the gates too wide.
+  </div>
+</div>
+
+<div class="phase">
+  <p class="phase-meta">Phase 2 · Open beta (free) · ~3&ndash;6 weeks</p>
+  <h3>2. Public signup, still free, no payments yet</h3>
+  <p>Open the doors. Goal is to validate the value proposition with people who don't know you. <em>Not</em> to monetize yet.</p>
+  <ul class="checklist">
+    <li><strong>OAuth sign-in</strong> at minimum with Google. Drops signup friction by 50%+ for the cooking/meal-prep audience.</li>
+    <li><strong>Pagination + lazy loading</strong> for product / recipe / stock-log lists. Some users will have 500+ products. Add a server-side limit before they hit it.</li>
+    <li><strong>Cost monitoring</strong> on your hosting bill. Pin the threshold where you'd need to pump the brakes.</li>
+    <li><strong>Newsletter signup</strong> on the marketing site so visitors who aren't ready to sign up still convert into an owned channel.</li>
+    <li><strong>Analytics</strong>: privacy-friendly (Plausible, Fathom, or self-hosted Umami). You'll want to see signup → first-stock-entry → cook-a-recipe → return-7-days funnels.</li>
+    <li><strong>Mobile pass</strong>: ensure every flow works on a phone. You already pay attention to breakpoints; this is a focused pass for parity.</li>
+    <li><strong>PWA install prompt</strong>: cheap, lets users add to home screen and feel like a native app. Don't build a native app yet.</li>
+  </ul>
+</div>
+
+<div class="phase">
+  <p class="phase-meta">Phase 3 · Paid launch · ~4&ndash;8 weeks</p>
+  <h3>3. Pricing, payments, and the moment of truth</h3>
+  <ul class="checklist">
+    <li><strong>Stripe</strong> integration. Use Checkout sessions, not Elements &mdash; faster to build, no PCI surface, gives Apple/Google Pay for free.</li>
+    <li><strong>Entitlement model</strong>: a single <code>plan</code> column on <code>user</code> ("free", "pro", optionally "lifetime"). Don't overengineer this.</li>
+    <li><strong>Grandfathered beta users</strong>: decide. Lifetime free is the easy and friendly call. It also gives you a tier of evangelists.</li>
+    <li><strong>HST/GST handling</strong>: as a Canadian sole prop, once you hit ~CAD $30k/yr in revenue you have to register and collect. Stripe Tax handles the mechanics; you handle the registration. Set a calendar reminder at projected $25k.</li>
+    <li><strong>Refund policy</strong>. Even a 14-day refund window without questions is huge for trust on first-time buyers.</li>
+    <li><strong>Invoice generation</strong> for users who'll expense it. Stripe sends these.</li>
+    <li><strong>Webhook backbone</strong> for Stripe events &rarr; entitlement table. Make this idempotent.</li>
+    <li><strong>Pricing page</strong> on the marketing site.</li>
+  </ul>
+</div>
+
+<div class="phase">
+  <p class="phase-meta">Phase 4 · Steady state · ongoing</p>
+  <h3>4. Run a small business</h3>
+  <ul class="checklist">
+    <li>Weekly time block for support email triage. Hard cap so it doesn't eat the build week.</li>
+    <li>Public changelog / "what's new" page. Drives both retention and "the maker is real and active" signal.</li>
+    <li>Feature flag system that lets paying users opt into experiments (creates a feedback loop without forcing rollouts).</li>
+    <li>Annual security review checklist (run yourself or once you can afford it pay a consultant for a few hours).</li>
+    <li>Quarterly review: are the metrics that matter (see GTM) trending where you want?</li>
+  </ul>
+</div>
+
+<h2>Cross-cutting concerns</h2>
+
+<h3>Legal &amp; compliance (Canada specific)</h3>
+<ul>
+  <li><strong>PIPEDA</strong>: Canadian federal privacy law. Disclose what data you collect, why, and let users delete it. You're already mostly compliant; the missing piece is documented (Terms + Privacy) and operationalised (account deletion).</li>
+  <li><strong>Quebec Law 25</strong> kicked in 2023. If you have Quebec users you need stricter consent / breach notification language. Worth knowing.</li>
+  <li><strong>HST/GST</strong>: the $30k threshold above.</li>
+  <li><strong>EU users</strong>: if any sign up, you're in GDPR land. The same Terms/Privacy template covers most of it; the data-subject-access-request workflow is the operational lift.</li>
+  <li><strong>Stripe + Canadian bank</strong>: straightforward, but takes a week of paperwork. Start the application early.</li>
+</ul>
+
+<h3>Security baseline</h3>
+<ul>
+  <li>Argon2 (Better Auth default) for passwords. No legacy to worry about.</li>
+  <li>HTTPS-only, HSTS, CSP headers. You probably have most of these via your host; verify.</li>
+  <li>Don't log secrets. Add a redaction check to your structured logger.</li>
+  <li>Rotation policy for the production API key in CLAUDE.md (rotate it now; it's been in the file for weeks). For new tokens, treat them as secrets in 1Password or similar &mdash; not in CLAUDE.md.</li>
+  <li>Dependabot or Renovate for dependency updates. You won't have time to chase these manually.</li>
+</ul>
+
+<h3>Tech choices to lock in early</h3>
+<p>
+  Defaults below follow the self-hosted-by-default principle. Each row notes
+  what you'd trade if you took the managed alternative — sometimes that trade
+  is worth it (Stripe), sometimes it isn't.
+</p>
+<table>
+  <tr><th>Concern</th><th>Pick</th><th>Notes</th></tr>
+  <tr><td>Payments</td><td>Stripe Checkout</td><td>No realistic self-hosted equivalent for global card-present payments. Stripe Tax handles GST/HST collection. <em>Managed exception, justified.</em></td></tr>
+  <tr><td>Transactional email</td><td>Postal (or Postfix + DKIM)</td><td>Self-hosted SMTP/API on your VPS. Trade: dealing with deliverability reputation, IP warming. If that becomes too painful, Resend is the fallback &mdash; but try Postal first.</td></tr>
+  <tr><td>Newsletter / mailing list</td><td>Listmonk</td><td>Single-binary, Postgres-backed, OSS. Trade: no fancy email-builder; you write HTML/MJML. Probably a plus.</td></tr>
+  <tr><td>Error tracking</td><td>GlitchTip</td><td>Sentry-SDK compatible, Django + Postgres, much lighter than Sentry self-hosted. Trade: smaller community, fewer integrations. Trivial Docker deploy.</td></tr>
+  <tr><td>Logs</td><td>Grafana Loki</td><td>Pipe structured JSON logs from the Node process. Cheap to run, queryable. Pairs with Grafana for viewing.</td></tr>
+  <tr><td>Metrics</td><td>Prometheus + Grafana</td><td>Standard OSS. Add <code>prom-client</code> to the Node process for application metrics. Server-level via node-exporter.</td></tr>
+  <tr><td>Traces (later)</td><td>Grafana Tempo or Jaeger</td><td>Defer until you have a tracing question you can't answer with logs. Then OpenTelemetry SDK + one of these.</td></tr>
+  <tr><td>All-in-one alt</td><td>SigNoz</td><td>If running Loki + Prometheus + Tempo + GlitchTip feels like too many moving pieces, SigNoz bundles logs / metrics / traces into a single OSS deploy (ClickHouse-backed). Worth evaluating before committing to the stack above.</td></tr>
+  <tr><td>Uptime monitoring</td><td>Uptime Kuma</td><td>OSS, single Docker container, Slack/email/webhook alerts. Put it on a different VPS than the app so a host failure still sends the alert.</td></tr>
+  <tr><td>Analytics</td><td>Plausible self-hosted (or Umami)</td><td>Privacy-friendly, no cookie banner needed. Plausible's self-hosted edition is GPL'd; Umami is a lighter MIT-licensed alternative if you want simpler.</td></tr>
+  <tr><td>Status page</td><td>Cachet (defer to Phase 4)</td><td>Don't need it until outages affect customers.</td></tr>
+  <tr><td>Feature flags</td><td>Unleash, or hand-rolled</td><td>For a single-app codebase you can probably get away with a boolean column on <code>user</code> until you actually need cohorts.</td></tr>
+  <tr><td>CRM (when needed)</td><td>Twenty, or Postgres tables + admin view</td><td>You don't need a CRM until you have B2B-shaped support conversations to track. For B2C support, just route to an inbox with a label system.</td></tr>
+  <tr><td>Search infra</td><td>Postgres full-text + trigrams</td><td>You already use Postgres. Don't add Algolia / Meilisearch until you have a complaint.</td></tr>
+  <tr><td>Background jobs</td><td>Defer</td><td>When you do (webhook retries, scheduled emails), use a Postgres-backed queue (river / pg-boss) instead of standing up Redis.</td></tr>
+  <tr><td>Hosting</td><td>AWS direct (EC2 / Lightsail) or a single beefy VPS</td><td>Skip the Vercel / Netlify / Render / Railway abstraction layers. They sell you AWS-or-similar back at a markup. The trade is taking on systems work yourself &mdash; aligned with the leverage-over-capital principle.</td></tr>
+</table>
+
+<div class="callout">
+  <strong>Realistic observability bundle for Kitchen Manager scale:</strong>
+  GlitchTip + Loki + Prometheus + Grafana + Uptime Kuma on a single
+  observability VPS, ~$10&ndash;20 CAD / month. One weekend to set up cleanly.
+  Optional consolidation: replace the middle three with SigNoz if running
+  fewer moving pieces matters more than swappability.
+</div>
+
+<h2>Blindspots &amp; risks</h2>
+<div class="callout warn">
+  <strong>The scope creep instinct</strong> is the #1 thing that kills indie
+  launches. You've shown an excellent track record of shipping small,
+  reviewable PRs. Carry that discipline into product strategy: every "wouldn't
+  it be cool if&hellip;" idea between now and Phase 3 launch goes into a
+  backlog, not into the codebase. Default answer for non-essential features:
+  <em>"after launch."</em>
+</div>
+<ul>
+  <li><strong>Backend gap risk</strong>: you flagged this. The biggest server-side cost is going to be tenant isolation bugs &mdash; the kind that don't show up in tests because the test data is all one user. The audit + cross-user test pattern in Phase 0 is the cheapest insurance.</li>
+  <li><strong>Single point of failure: you</strong>. If you're hit by a bus, the lights go out for users. By Phase 3 you need (a) someone in your life who can pause the Stripe subscriptions and email users in an emergency, (b) written-down runbooks for the 5 things that can break (auth down, payments down, DB down, host down, you're sick), (c) ideally a dead-man-switch arrangement with another solo dev. Don't put this off.</li>
+  <li><strong>Cost of running the database</strong> for free-tier users at scale. Set a cap. Have a plan for what happens if 5,000 people sign up in a week (Hacker News effect).</li>
+  <li><strong>Self-hosting interest</strong>: the "hypernerd" segment of your ICP will ask "can I run this myself?" Decide now. Options:
+    <ol>
+      <li>No &mdash; hosted only. Simplest commercially, alienates the segment that's most likely to evangelise.</li>
+      <li>Source-available with a license that allows personal use, not commercial resale. Good middle ground for indie products (PostHog, Plausible, Cal.com pattern).</li>
+      <li>Fully OSS with a paid hosted version (Standard Notes, Tailscale-ish). Most aligned with your "valuable to users" stance, hardest to monetize.</li>
+    </ol>
+    My pick for you given the no-VC, simple-pricing stance: <strong>option 2</strong>. You keep the IP, indies get to self-host, you get free word-of-mouth from the segment that talks the most.
+  </li>
+  <li><strong>Mobile</strong>: the meal-prepper / shopping audience uses this in the kitchen and the grocery store. PWA is good enough for v1 but the rough edges of "save to home screen" on iOS will bite. Budget a week per phase for mobile polish.</li>
+  <li><strong>Data import</strong>: people who already track stuff in spreadsheets or Notion will ask "how do I get my data in?" You don't need a fancy importer; a CSV upload to a few tables would carry you far. Phase 2 nice-to-have.</li>
+  <li><strong>Receipt scanning</strong> (on your board as <code>86e0vp8jy</code> / <code>86e0vp8j5</code>) is the single feature that turns this from "nerd tool" to "anyone can use it." With the GTM doc's lead-ICP set to the value-conscious cook, this moves <em>closer</em> to the critical path: a value-conscious user who has to type in 30 grocery items by hand will bounce. Cost-effective approach: hosted OCR (Google Vision / AWS Textract) behind a feature flag &mdash; one of the few places where managed-service makes sense because the alternative (self-host a Tesseract pipeline) is genuinely worse output for more work. Aim to ship a v1 by end of Phase 2.</li>
+  <li><strong>Onboarding overhead</strong> changes radically when the lead ICP changes. The current empty-state experience assumes someone willing to configure quantity units and add their first product. The value-conscious ICP will bounce in 90 seconds if step one isn't either "scan a receipt" or "pick a starter pantry." Phase 1 onboarding work should be sized accordingly &mdash; budget more than feels obvious.</li>
+  <li><strong>The product you've built is partly over-engineered for the new lead ICP.</strong> Per-product unit conversions, the public API, recursive producible-product nutrition &mdash; these are hypernerd-shaped features. They're sunk cost and they don't hurt; but they're also not what wins value-conscious users. Be conscious of not over-investing in that direction at the expense of receipt scanning, expiry tracking polish, and waste-reduction surfacing.</li>
+</ul>
+
+<h2>What's not on this roadmap (and why)</h2>
+<ul>
+  <li><strong>Native mobile app</strong>: PWA first. Native after you have 100+ paying users and a clear ask.</li>
+  <li><strong>Real-time collaboration</strong> (multi-user household accounts): big feature, niche-within-the-niche. Phase 5+, only if there's pull.</li>
+  <li><strong>Recipe AI / suggestions / "what can I make with what I have"</strong>: tempting; cost-and-novelty risk. Defer until you have signal.</li>
+  <li><strong>Integration with grocery delivery (Instacart etc.)</strong>: huge unlock for the value-conscious segment, but partnership-gated and slow. Park it.</li>
+  <li><strong>Public API marketplace</strong>: cool but speculative. Your API is already a differentiator; just publicise it. No need for a marketplace until there's demand.</li>
+</ul>
+
+<hr />
+<p class="meta">Last updated 2026-05-30</p>
+
+</body>
+</html>

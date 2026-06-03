@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Launch task list — centralized chronological view</title>
+<style>
+  :root {
+    --ink: #1a2e30;
+    --soft: #5a6c70;
+    --line: #d8dfe0;
+    --accent: #2b7a78;
+    --bg: #faf8f5;
+    --code-bg: #f0ece6;
+    --warn: #b85c1f;
+    --surface: #f3eee6;
+    --lagoon-deep: #2b7a78;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    max-width: 760px;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.55;
+  }
+  h1, h2, h3 { color: var(--ink); margin-top: 2em; }
+  h1 { border-bottom: 2px solid var(--accent); padding-bottom: 0.3em; }
+  h2 { border-bottom: 1px solid var(--line); padding-bottom: 0.2em; }
+  h3 { margin-top: 1.4em; color: var(--soft); font-size: 0.95em; text-transform: uppercase; letter-spacing: 0.06em; }
+  code {
+    background: var(--code-bg);
+    padding: 0.1em 0.35em;
+    border-radius: 3px;
+    font-size: 0.92em;
+  }
+  table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+  th, td { text-align: left; padding: 0.45em 0.7em; border-bottom: 1px solid var(--line); font-size: 0.95em; vertical-align: top; }
+  th { background: var(--code-bg); }
+  .meta { color: var(--soft); font-size: 0.9em; margin-top: -0.5em; }
+  .callout {
+    border-left: 3px solid var(--accent);
+    background: rgba(43, 122, 120, 0.06);
+    padding: 0.7em 1em;
+    margin: 1em 0;
+    border-radius: 0 4px 4px 0;
+  }
+  .phase {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 0.6em 1.1em 1em;
+    margin: 1em 0;
+    background: #fff;
+  }
+  .phase h2 { border: none; margin-top: 0.6em; padding: 0; font-size: 1.15em; }
+  .phase-meta {
+    font-size: 0.72rem;
+    color: var(--soft);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    margin-bottom: 0.2em;
+  }
+  ul, ol { padding-left: 1.3em; }
+  li { margin: 0.2em 0; }
+  hr { border: none; border-top: 1px solid var(--line); margin: 2em 0; }
+  .checklist { list-style: none; padding-left: 0.2em; }
+  .checklist li { padding-left: 1.4em; position: relative; margin: 0.3em 0; }
+  .checklist li::before {
+    content: "☐";
+    position: absolute;
+    left: 0;
+    top: 0;
+    color: var(--soft);
+    font-size: 0.95em;
+  }
+  .group {
+    margin-top: 0.8em;
+  }
+  .group-label {
+    font-size: 0.72rem;
+    color: var(--lagoon-deep);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    font-weight: 700;
+    margin-bottom: 0.2em;
+  }
+</style>
+</head>
+<body>
+
+<h1>Launch task list &mdash; centralized chronological view</h1>
+<p class="meta">Kitchen Manager · Working list</p>
+<table style="margin-top: 0.5em; width: auto;">
+  <tr><th>Drafted</th><td>2026-05-31</td></tr>
+  <tr><th>Source</th><td>technical-roadmap.html · go-to-market.html · founder-readiness-checklist.html</td></tr>
+  <tr><th>Intended next</th><td>Mirror into ClickUp once the list feels stable.</td></tr>
+</table>
+
+<div class="callout">
+  <strong>How to read this:</strong> tasks are grouped by phase, then by
+  rough sub-category within the phase. Not every task is sized the same &mdash;
+  some are an hour, some are a week. When this moves into ClickUp,
+  individual cards may need to be broken down further. Treat this as a
+  working list, not a contract.
+</div>
+
+<div class="phase">
+  <p class="phase-meta">Parallel · pre-flight · run alongside Phase 0</p>
+  <h2>Pre-flight (these aren't phase-blocked)</h2>
+
+  <div class="group">
+    <p class="group-label">Brand &amp; entity</p>
+    <ul class="checklist">
+      <li>Pick a product name (short, spellable, not enterprise-sounding).</li>
+      <li>Buy the domain.</li>
+      <li>Register the business name with ServiceOntario (~$60).</li>
+      <li>Open a separate business bank account.</li>
+      <li>Set up Wave Accounting (free) and route all project expenses through it.</li>
+      <li>Book a one-hour consultation with a small-business CPA who works with indie devs (~$300).</li>
+      <li>Re-read your day-job employment contract for IP / moonlighting clauses.</li>
+    </ul>
+  </div>
+
+  <div class="group">
+    <p class="group-label">Design system foundation</p>
+    <ul class="checklist">
+      <li>Pick wordmark + 1&ndash;2 typeface candidates.</li>
+      <li>Refine the brand palette (sea / lagoon / cream base already exists).</li>
+      <li>Write a 2-page brand voice guide (how we talk vs. how we don't).</li>
+    </ul>
+  </div>
+
+  <div class="group">
+    <p class="group-label">Personal foundation</p>
+    <ul class="checklist">
+      <li>Write personal financial runway plan (savings, burn, day-job coverage, scenarios).</li>
+      <li>Write quit-day-job criteria one-pager (numerically defined MRR thresholds).</li>
+      <li>Write time-budget plan (which evenings, which weekend hours, which are off-limits).</li>
+    </ul>
+  </div>
+
+  <div class="group">
+    <p class="group-label">Customer learning</p>
+    <ul class="checklist">
+      <li>Write customer interview guide (who to ask, what to ask, how to record).</li>
+      <li>Conduct 5 stranger customer interviews (Reddit DMs, BlueSky replies &mdash; not friends).</li>
+      <li>Lurk + contribute (no promo) in r/Frugal, r/EatCheapAndHealthy, r/MealPrepSunday.</li>
+      <li>Identify 10 mid-tier (5k&ndash;50k subs) food/budget content creators &mdash; list only, no outreach.</li>
+      <li>Start BlueSky build-in-public posts (2&ndash;3 per week).</li>
+    </ul>
+  </div>
+
+  <div class="group">
+    <p class="group-label">Architectural decisions</p>
+    <ul class="checklist">
+      <li>Decide self-host SKU stance (defer if needed &mdash; can be Phase 4 for ICP B).</li>
+      <li>Confirm marketing site = unauthed PWA routes (decided; mark closed).</li>
+    </ul>
+  </div>
+</div>
+
+<div class="phase">
+  <p class="phase-meta">Phase 0 · ~2&ndash;4 weeks · personal-tool harden</p>
+  <h2>Phase 0 — stop the single-user assumptions from leaking</h2>
+
+  <div class="group">
+    <p class="group-label">Tenant isolation &amp; auth</p>
+    <ul class="checklist">
+      <li>Ship account deletion flow (ClickUp <code>86e0vjvmw</code>). Cascade through every userId-scoped table.</li>
+      <li>Add email change + verification flow.</li>
+      <li>Audit every <code>db.select / update / delete</code> for userId filter.</li>
+      <li>Add cross-user tenant-isolation tests; gate CI on them.</li>
+      <li>Add rate limiting on auth and key endpoints.</li>
+      <li>Decide API key scoping for v1 (full account vs read-only vs per-resource).</li>
+      <li>Rotate the production API key out of CLAUDE.md; move secrets to 1Password or equivalent.</li>
+    </ul>
+  </div>
+
+  <div class="group">
+    <p class="group-label">Observability (self-hosted)</p>
+    <ul class="checklist">
+      <li>Stand up an observability VPS (separate from app host).</li>
+      <li>Deploy GlitchTip; wire Sentry SDK on client + server.</li>
+      <li>Deploy Loki + structured JSON log shipping from the Node process.</li>
+      <li>Deploy Prometheus + node-exporter + <code>prom-client</code> for app metrics.</li>
+      <li>Deploy Grafana with dashboards for errors, logs, basic uptime.</li>
+      <li>Deploy Uptime Kuma; set alert channels (email/Slack).</li>
+      <li>Add log-redaction check to the structured logger.</li>
+    </ul>
+  </div>
+
+  <div class="group">
+    <p class="group-label">Transactional email (self-hosted)</p>
+    <ul class="checklist">
+      <li>Deploy Postal (or stand up Postfix + DKIM) for transactional SMTP/API.</li>
+      <li>Wire password-reset email through it.</li>
+      <li>Wire verification + signup-confirmation through it.</li>
+    </ul>
+  </div>
+
+  <div class="group">
+    <p class="group-label">Ops basics</p>
+    <ul class="checklist">
+      <li>Verify Postgres backup schedule + try a restore once.</li>
+      <li>Verify HTTPS / HSTS / CSP headers are set on the host.</li>
+      <li>Enable Dependabot or Renovate for dependency updates.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="phase">
+  <p class="phase-meta">Phase 1 · ~4&ndash;6 weeks · closed beta</p>
+  <h2>Phase 1 — survivable for 10&ndash;25 friendly strangers</h2>
+
+  <div class="group">
+    <p class="group-label">Marketing site (= unauthed PWA routes)</p>
+    <ul class="checklist">
+      <li>Split route groups: <code>(marketing)</code> vs <code>(app)</code>.</li>
+      <li>Ensure SSR works for unauthed routes (no authed-only client state imported).</li>
+      <li>Build skeleton landing page with email capture (problem block, approach block, CTA).</li>
+      <li>Set up Listmonk for newsletter / waitlist.</li>
+      <li>Send the first monthly progress update, even to 5 people.</li>
+    </ul>
+  </div>
+
+  <div class="group">
+    <p class="group-label">Onboarding &amp; empty states</p>
+    <ul class="checklist">
+      <li>Build sign-up + first-run wizard (give me one stock entry + one recipe so the dashboard isn't empty).</li>
+      <li>Add "Add starter pantry" seed-data button.</li>
+      <li>Add loading states across the app (ClickUp <code>86e0zjy0r</code>).</li>
+      <li>Write user-facing help docs (5 short pages: stock, products, recipes, meal plans, quickstart).</li>
+    </ul>
+  </div>
+
+  <div class="group">
+    <p class="group-label">Support &amp; bugs</p>
+    <ul class="checklist">
+      <li>Set up <code>support@&lt;domain&gt;</code> routing to your inbox.</li>
+      <li>Add in-app "report an issue" link (grab URL + screenshot).</li>
+      <li>Write customer support playbook (where tickets go, response-time commitment, canned responses).</li>
+    </ul>
+  </div>
+
+  <div class="group">
+    <p class="group-label">Legal floor</p>
+    <ul class="checklist">
+      <li>Generate Terms of Service (Termly or iubenda).</li>
+      <li>Generate Privacy Policy (PIPEDA-aware).</li>
+      <li>Generate Cookie consent + banner if any non-essential cookies.</li>
+      <li>Add a beta-period disclaimer ("service is in beta and may break").</li>
+    </ul>
+  </div>
+
+  <div class="group">
+    <p class="group-label">Feature flagging + closed beta</p>
+    <ul class="checklist">
+      <li>Add a boolean <code>betaAccess</code> column on <code>user</code> (or similar) for staged rollout.</li>
+      <li>Recruit 10&ndash;25 friendly strangers (not friends) for closed beta.</li>
+      <li>Run weekly check-in with beta cohort (async via Listmonk or a private channel).</li>
+    </ul>
+  </div>
+</div>
+
+<div class="phase">
+  <p class="phase-meta">Phase 2 · ~3&ndash;6 weeks · open beta, free</p>
+  <h2>Phase 2 — public signup, still free, no payments yet</h2>
+
+  <div class="group">
+    <p class="group-label">Friction reduction</p>
+    <ul class="checklist">
+      <li>Add Google OAuth sign-in.</li>
+      <li>Add pagination + lazy loading for product / recipe / stock-log lists.</li>
+      <li>Mobile parity pass: every flow works on a phone.</li>
+      <li>Add PWA install prompt.</li>
+    </ul>
+  </div>
+
+  <div class="group">
+    <p class="group-label">Critical-path features for ICP A (value-conscious)</p>
+    <ul class="checklist">
+      <li>Ship receipt scanning v1 (hosted OCR behind feature flag).</li>
+      <li>Surface waste-reduction signal on the dashboard ("you have $X of food expiring this week").</li>
+    </ul>
+  </div>
+
+  <div class="group">
+    <p class="group-label">Analytics &amp; cost controls</p>
+    <ul class="checklist">
+      <li>Deploy self-hosted Plausible (or Umami) for product analytics.</li>
+      <li>Instrument the signup &rarr; first-stock-entry &rarr; cook &rarr; 7-day-return funnel.</li>
+      <li>Set hosting cost monitoring + an alert threshold for unexpected spikes.</li>
+    </ul>
+  </div>
+
+  <div class="group">
+    <p class="group-label">Marketing surface + paid prep</p>
+    <ul class="checklist">
+      <li>Add newsletter signup on the marketing site.</li>
+      <li>Draft 3&ndash;5 paid ad creative concepts (static + short video).</li>
+      <li>Test ad creative against waitlist before paid spend goes live.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="phase">
+  <p class="phase-meta">Phase 3 · ~4&ndash;8 weeks · paid launch</p>
+  <h2>Phase 3 — pricing, payments, take real money</h2>
+
+  <div class="group">
+    <p class="group-label">Pricing &amp; entitlements</p>
+    <ul class="checklist">
+      <li>Decide on the pricing number (leading thesis: annual subscription, CAD $24&ndash;48/yr).</li>
+      <li>Integrate Stripe Checkout (CAD-primary, Stripe Tax on).</li>
+      <li>Add <code>plan</code> column on <code>user</code> for entitlements.</li>
+      <li>Wire Stripe webhooks &rarr; entitlement table (idempotent).</li>
+      <li>Decide beta-cohort grandfathering (recommended: free year for first 50&ndash;100).</li>
+      <li>Build pricing page on the marketing site.</li>
+      <li>Write refund policy (recommend 14-day no-questions) and place it on the marketing site.</li>
+    </ul>
+  </div>
+
+  <div class="group">
+    <p class="group-label">Ops readiness</p>
+    <ul class="checklist">
+      <li>Set calendar reminder for HST/GST registration at projected $25k revenue.</li>
+      <li>Set up monthly bookkeeping cadence (Wave reconciliation, expense check, HST threshold check).</li>
+      <li>Write incident response runbook (auth down / payments down / DB down / host down / you're sick).</li>
+      <li>Write risk register one-pager (top 8&ndash;10 risks + planned response).</li>
+    </ul>
+  </div>
+
+  <div class="group">
+    <p class="group-label">Launch mechanics</p>
+    <ul class="checklist">
+      <li>Soft-launch to waitlist 72 hours before public; founder-cohort offer attached.</li>
+      <li>Turn on paid Meta ads in test mode ($20&ndash;$50/day, 3&ndash;5 creatives).</li>
+      <li>Turn on paid TikTok Spark ads (same scope, paired with creator content).</li>
+      <li>Launch one community post on r/MealPrepSunday or r/EatCheapAndHealthy (value-led, not promo-shaped).</li>
+      <li>Post launch announcement on BlueSky + Indie Hackers.</li>
+      <li>Reply to every comment / DM in the first 48 hours.</li>
+      <li>Keep the support inbox open all day for the first week.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="phase">
+  <p class="phase-meta">Phase 4 · ongoing · steady state</p>
+  <h2>Phase 4 — run a small business</h2>
+
+  <div class="group">
+    <p class="group-label">Cadence</p>
+    <ul class="checklist">
+      <li>Weekly time block for support email triage (hard cap so it doesn't eat the build).</li>
+      <li>Monthly sustainability check-in (am I enjoying this / sleeping / partner okay / learning).</li>
+      <li>Quarterly metric review against the matters-vs-doesn't-matter list.</li>
+      <li>Annual security review checklist.</li>
+    </ul>
+  </div>
+
+  <div class="group">
+    <p class="group-label">Growth wave 2</p>
+    <ul class="checklist">
+      <li>Reach out to 5 of the 10 identified content creators with a flat-fee + free-year offer.</li>
+      <li>Pitch BlogTO / Toronto Star lifestyle desk on the "Toronto-built tool to reduce food waste" angle.</li>
+      <li>Start long-tail SEO content cadence (1 post/month minimum).</li>
+    </ul>
+  </div>
+
+  <div class="group">
+    <p class="group-label">Product evolution</p>
+    <ul class="checklist">
+      <li>Public changelog / "what's new" page.</li>
+      <li>Reassess pricing after first 100 paid users.</li>
+      <li>Decide whether to ship the self-host SKU for ICP B.</li>
+      <li>Decide on Quebec Law 25 compliance work if Quebec sign-ups appear.</li>
+    </ul>
+  </div>
+
+  <div class="group">
+    <p class="group-label">Business evolution</p>
+    <ul class="checklist">
+      <li>Reassess incorporation triggers quarterly (revenue ≥ $50k/yr, first hire, contract conflict, liability exposure).</li>
+      <li>Get E&amp;O / cyber liability insurance quote once incorporation lands.</li>
+      <li>Cachet status page deployment (only when outages start affecting paying customers).</li>
+    </ul>
+  </div>
+</div>
+
+<h2>Eventually but not urgent</h2>
+<ul class="checklist">
+  <li>Write product north star ("if this works wildly in 5 years, what does it look like?").</li>
+  <li>Start a decision log (single markdown file, append-only, why-did-I-do-X).</li>
+  <li>Press kit (boilerplate + logos + screenshots + founder quote).</li>
+  <li>Content calendar / email cadence schedule.</li>
+</ul>
+
+<h2>Explicitly not doing</h2>
+<ul>
+  <li>Hacker News launch (wrong audience for the lead ICP).</li>
+  <li>VC pitch deck.</li>
+  <li>Native mobile app (PWA first; revisit at 100+ paying users).</li>
+  <li>Detailed multi-year financial projections.</li>
+  <li>Physical office (until a partnership specifically demands one).</li>
+</ul>
+
+<hr />
+<p class="meta">Last updated 2026-05-31</p>
+
+</body>
+</html>
