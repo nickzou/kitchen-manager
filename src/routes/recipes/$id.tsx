@@ -79,7 +79,7 @@ import {
 	buildConversionGraph,
 	tryConvert,
 } from "#src/lib/recipe-utils/conversion-graph";
-import { pickBestEntry } from "#src/lib/stock-utils";
+import { planConsumption } from "#src/lib/stock-utils";
 
 export const Route = createFileRoute("/recipes/$id")({
 	component: RecipeDetail,
@@ -598,8 +598,7 @@ function RecipeDetail() {
 		const productEntries = (stockEntries ?? []).filter(
 			(e) => e.productId === ing.productId,
 		);
-		const best = pickBestEntry(productEntries);
-		if (!best) {
+		if (productEntries.length === 0) {
 			toast.error(`No stock entries available for ${product.name}`);
 			return;
 		}
@@ -634,23 +633,40 @@ function RecipeDetail() {
 			finalAmount = converted;
 		}
 
+		const plan = planConsumption(productEntries, finalAmount);
+		if (plan.steps.length === 0) {
+			toast.error(`No stock available for ${product.name}`);
+			return;
+		}
+
+		const consumed: { stockLogId: string; stockEntryId: string }[] = [];
 		try {
-			const result = await consumeStock.mutateAsync({
-				stockEntryId: best.id,
-				quantity: finalAmount.toString(),
-			});
+			for (const step of plan.steps) {
+				const result = await consumeStock.mutateAsync({
+					stockEntryId: step.entryId,
+					quantity: step.amount.toString(),
+				});
+				consumed.push({
+					stockLogId: result.stockLogId,
+					stockEntryId: step.entryId,
+				});
+			}
 			const unitLabel = getUnitLabel(ing.quantityUnitId);
-			toast.success(
-				`${scaledQuantity}${unitLabel ? ` ${unitLabel}` : ""} ${product.name} consumed`,
-				{
-					label: "Undo",
-					onClick: () =>
+			const unitSuffix = unitLabel ? ` ${unitLabel}` : "";
+			const message = plan.complete
+				? `${scaledQuantity}${unitSuffix} ${product.name} consumed`
+				: `${plan.totalPlanned}${unitSuffix} of ${scaledQuantity}${unitSuffix} ${product.name} consumed (stock short)`;
+			toast.success(message, {
+				label: "Undo",
+				onClick: () => {
+					for (const entry of consumed) {
 						reverseStockLog.mutate({
-							stockLogId: result.stockLogId,
-							stockEntryId: best.id,
-						}),
+							stockLogId: entry.stockLogId,
+							stockEntryId: entry.stockEntryId,
+						});
+					}
 				},
-			);
+			});
 		} catch {
 			toast.error(`Failed to consume ${product.name}`);
 		}
