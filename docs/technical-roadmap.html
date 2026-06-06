@@ -96,6 +96,22 @@
   <tr><th>Marketing site</th><td>Unauthenticated routes of the PWA (not separate WordPress / static site)</td></tr>
 </table>
 
+<h2>Decisions locked in (as of 2026-06-05)</h2>
+<div class="callout">
+  <p>What's been decided and acted on so far. Tracked here so the roadmap reflects reality, not just intent.</p>
+  <table style="margin-top: 0.5em;">
+    <tr><th style="width: 30%;">Item</th><th>Decision</th></tr>
+    <tr><td>Product name</td><td><strong>Just in Thyme</strong> (three words, normal spacing &mdash; <em>not</em> camelCase). Verified clean in App Store + CIPO Classes 9 / 42.</td></tr>
+    <tr><td>Domains</td><td><code>justinthyme.app</code> (canonical / primary) + <code>justinthyme.kitchen</code> (defensive, 301-redirects to .app for now).</td></tr>
+    <tr><td>Registrar &amp; DNS</td><td><strong>Cloudflare Registrar</strong> (at-cost pricing) + <strong>Cloudflare DNS</strong>. Single dashboard, no markup.</td></tr>
+    <tr><td>Email infrastructure</td><td><strong>Google Workspace Business Starter</strong> on <code>justinthyme.app</code>. Primary mailbox <code>ops@justinthyme.app</code> (role-based). Role aliases (<code>nick@</code>, <code>support@</code>, <code>hello@</code>, <code>billing@</code>, <code>legal@</code>, <code>info@</code>) all route to the same inbox. SPF / DKIM / DMARC live, mail-tester 10/10. Recovery account: free Gmail <code>justinthyme.ops@gmail.com</code> &mdash; separate from Nick's personal identity.</td></tr>
+    <tr><td>Marketing site</td><td>Unauthenticated routes of the PWA, not a separate WordPress site. Decided 2026-05-30.</td></tr>
+    <tr><td>Lead ICP</td><td>Value-conscious home cook (revised 2026-05-30 from hypernerd-first). Hypernerd is secondary, picked up organically.</td></tr>
+    <tr><td>Pricing</td><td><em>Decision deferred.</em> Leading thesis: annual subscription, CAD $24&ndash;48/yr. Plex lifetime-pass backlash is the cautionary tale.</td></tr>
+    <tr><td>Entity structure</td><td>Sole proprietorship through Phases 1&ndash;2. Incorporate when revenue, employee, or liability triggers fire (~$50k/yr).</td></tr>
+  </table>
+</div>
+
 <h2>Operating principles</h2>
 <p>
   These constrain every technical choice below. When in doubt, fall back to
@@ -105,7 +121,7 @@
   <li><strong>Sustainability over speed.</strong> No shipping-pressure rhythm. Slower, more deliberate beats fast and brittle.</li>
   <li><strong>Leverage > capital.</strong> Trade technical effort and stubbornness for money. AI fills knowledge gaps that would otherwise require hiring.</li>
   <li><strong>Small-team thesis.</strong> SaaS suffers from organizational cruft because people resort to technical processes to solve organizational problems. Keeping the team small + AI-augmented sidesteps that. Don't choose tooling that only makes sense once the team is 20+.</li>
-  <li><strong>Self-hosted by default.</strong> "I don't like Vercel selling me AWS compute back to me." OSS on owned infra unless there's no realistic equivalent (Stripe is the canonical exception). Justify managed-service picks explicitly.</li>
+  <li><strong>Self-hosted by default &mdash; <em>when it represents better value</em>.</strong> "I don't like Vercel selling me AWS compute back to me." OSS on owned infra unless the managed equivalent is materially better at the core job (not just more convenient). Examples of accepted managed services: <strong>Stripe</strong> (no realistic self-hosted payments equivalent) and <strong>Google Workspace</strong> (Gmail's inbound deliverability + accountant/vendor interop > self-hosted mail server with cold-IP reputation pain). Justify managed picks explicitly; the test is value, not ideology.</li>
   <li><strong>No physical office</strong> until a partnership specifically demands it.</li>
 </ul>
 
@@ -253,7 +269,9 @@
 <table>
   <tr><th>Concern</th><th>Pick</th><th>Notes</th></tr>
   <tr><td>Payments</td><td>Stripe Checkout</td><td>No realistic self-hosted equivalent for global card-present payments. Stripe Tax handles GST/HST collection. <em>Managed exception, justified.</em></td></tr>
-  <tr><td>Transactional email</td><td>Postal (or Postfix + DKIM)</td><td>Self-hosted SMTP/API on your VPS. Trade: dealing with deliverability reputation, IP warming. If that becomes too painful, Resend is the fallback &mdash; but try Postal first.</td></tr>
+  <tr><td>Domain registrar &amp; DNS <strong style="color: var(--accent);">[done]</strong></td><td>Cloudflare Registrar + Cloudflare DNS</td><td>At-cost registry pricing, free WHOIS privacy, single dashboard. Bought <code>justinthyme.app</code> + <code>justinthyme.kitchen</code> 2026-06-05.</td></tr>
+  <tr><td>Business inbox &amp; collaboration <strong style="color: var(--accent);">[done]</strong></td><td>Google Workspace Business Starter</td><td>Deliverability, mobile apps, and accountant/vendor interop are materially better than self-hosted. <em>Managed exception, justified.</em> Primary mailbox <code>ops@justinthyme.app</code>; SPF / DKIM / DMARC live (mail-tester 10/10).</td></tr>
+  <tr><td>Transactional email (app-generated)</td><td>Postal (or Postfix + DKIM)</td><td>Self-hosted SMTP/API on your VPS. <em>Separate from Workspace</em> &mdash; Workspace is for the business inbox, Postal is for what the app sends (password resets, notifications, newsletters via Listmonk). Keeps the business-inbox reputation isolated from transactional volume.</td></tr>
   <tr><td>Newsletter / mailing list</td><td>Listmonk</td><td>Single-binary, Postgres-backed, OSS. Trade: no fancy email-builder; you write HTML/MJML. Probably a plus.</td></tr>
   <tr><td>Error tracking</td><td>GlitchTip</td><td>Sentry-SDK compatible, Django + Postgres, much lighter than Sentry self-hosted. Trade: smaller community, fewer integrations. Trivial Docker deploy.</td></tr>
   <tr><td>Logs</td><td>Grafana Loki</td><td>Pipe structured JSON logs from the Node process. Cheap to run, queryable. Pairs with Grafana for viewing.</td></tr>
@@ -316,7 +334,7 @@
 </ul>
 
 <hr />
-<p class="meta">Last updated 2026-05-30</p>
+<p class="meta">Last updated 2026-06-05</p>
 
 </body>
 </html>
