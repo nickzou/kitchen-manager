@@ -464,20 +464,12 @@
   <li>Scaled quantity: 1.5x recipe with 1 cup butter renders "1.5 cups ≈ 340 g".</li>
 </ul>
 
-<h2>Decisions you need to make</h2>
+<h2>Decisions</h2>
 <ol>
-  <li>
-    <strong>Confirm Option 1</strong> (always-show secondary) over the alternatives, or want to explore one of the others more deeply?
-  </li>
-  <li>
-    <strong>Conversion target</strong>: product's default unit (recommended), always metric, or user-preference?
-  </li>
-  <li>
-    <strong>Rendering style</strong> in the row: <code>≈ 227 g</code> in muted lagoon-deep colour (as mocked), or different separator? Other ideas: <code>(227 g)</code>, <code>= 227 g</code>, <code>· 227 g</code>.
-  </li>
-  <li>
-    <strong>Cookpicker / meal-plan modal</strong>: should the same convention propagate to other places ingredients are rendered (Cook picker, meal-plan entry modal, shopping list)? My instinct: ship to the recipe page first, propagate in a follow-up only if you actually want it there.
-  </li>
+  <li><strong>UX</strong>: Option 1 (always-show secondary inline). Acknowledged it may not be flexible enough long-term &mdash; a future Option 2 pill toggle can layer on top without breaking this.</li>
+  <li><strong>Conversion target</strong>: product's default quantity unit.</li>
+  <li><strong>Rendering style</strong>: <code>≈ 227 g</code> in muted lagoon-deep colour (as shown in the Option 1 mockup).</li>
+  <li><strong>Propagation</strong>: recipe page + Cook picker. Not the shopping list (already in store units). The meal-plan entry detail modal doesn't render individual ingredients, so it's a no-op there.</li>
 </ol>
 
 <h2>Out of scope</h2>
