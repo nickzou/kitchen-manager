@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Spec: Inline unit conversions on the recipe page</title>
+<style>
+  :root {
+    --ink: #1a2e30;
+    --soft: #5a6c70;
+    --line: #d8dfe0;
+    --accent: #2b7a78;
+    --bg: #faf8f5;
+    --code-bg: #f0ece6;
+    --warn: #b85c1f;
+    --surface: #f3eee6;
+    --lagoon: #4fb8b2;
+    --lagoon-deep: #2b7a78;
+    --sea-ink: #1a2e30;
+    --sea-ink-soft: #5a6c70;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    max-width: 760px;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.55;
+  }
+  h1, h2, h3 { color: var(--ink); margin-top: 2em; }
+  h1 { border-bottom: 2px solid var(--accent); padding-bottom: 0.3em; }
+  h2 { border-bottom: 1px solid var(--line); padding-bottom: 0.2em; }
+  h3 { margin-top: 1.4em; }
+  code {
+    background: var(--code-bg);
+    padding: 0.1em 0.35em;
+    border-radius: 3px;
+    font-size: 0.92em;
+  }
+  table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+  th, td { text-align: left; padding: 0.45em 0.7em; border-bottom: 1px solid var(--line); font-size: 0.95em; vertical-align: top; }
+  th { background: var(--code-bg); }
+  .meta { color: var(--soft); font-size: 0.9em; margin-top: -0.5em; }
+  .callout {
+    border-left: 3px solid var(--accent);
+    background: rgba(43, 122, 120, 0.06);
+    padding: 0.7em 1em;
+    margin: 1em 0;
+    border-radius: 0 4px 4px 0;
+  }
+  .recommended {
+    border-left-color: var(--lagoon-deep);
+    background: rgba(79, 184, 178, 0.08);
+  }
+  .warn {
+    border-left-color: var(--warn);
+    background: rgba(184, 92, 31, 0.07);
+  }
+  ul, ol { padding-left: 1.4em; }
+  li { margin: 0.3em 0; }
+  hr { border: none; border-top: 1px solid var(--line); margin: 2em 0; }
+
+  /* Mockup styles — designed to mimic the real IngredientRow look */
+  .mockup {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 0.9em 1em;
+    margin: 0.8em 0 0.5em;
+    font-size: 0.85em;
+  }
+  .mockup-label {
+    font-size: 0.7rem;
+    color: var(--soft);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.5em;
+  }
+  .ing-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 0.5em 0.75em;
+    background: #fff;
+    margin: 0.35em 0;
+    font-size: 0.92em;
+  }
+  .ing-name { color: var(--sea-ink); font-weight: 500; }
+  .ing-qty {
+    color: var(--sea-ink-soft);
+    margin-left: 0.65em;
+    font-variant-numeric: tabular-nums;
+  }
+  .ing-qty.primary {
+    color: var(--sea-ink);
+    font-weight: 500;
+  }
+  .converted {
+    color: var(--lagoon-deep);
+    margin-left: 0.4em;
+    font-size: 0.88em;
+    font-variant-numeric: tabular-nums;
+  }
+  .check-icon {
+    color: #22c55e;
+    margin-right: 0.45em;
+  }
+  .unit-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.15em;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 0.05em 0.25em;
+    font-size: 0.78em;
+    color: var(--lagoon-deep);
+    margin-left: 0.5em;
+    cursor: default;
+  }
+  .recipe-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    margin: 0.4em 0 0.6em;
+    padding: 0.4em 0;
+  }
+  .pill-toggle {
+    display: inline-flex;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    overflow: hidden;
+    font-size: 0.78em;
+  }
+  .pill-toggle span {
+    padding: 0.25em 0.7em;
+    color: var(--soft);
+    border-right: 1px solid var(--line);
+  }
+  .pill-toggle span:last-child { border-right: none; }
+  .pill-toggle span.active {
+    background: var(--lagoon);
+    color: #fff;
+  }
+  .pill-toggle-label {
+    font-size: 0.78em;
+    color: var(--soft);
+  }
+  .popover-mini {
+    margin-top: 0.4em;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 0.5em 0.75em;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    font-size: 0.85em;
+    color: var(--sea-ink-soft);
+    max-width: 280px;
+  }
+  .popover-mini strong { color: var(--sea-ink); }
+  .ing-edit-btns {
+    display: inline-flex;
+    gap: 0.2em;
+    color: var(--soft);
+    font-size: 0.85em;
+  }
+</style>
+</head>
+<body>
+
+<h1>Spec: Inline unit conversions on the recipe page</h1>
+<p class="meta">Kitchen Manager / Just in Thyme · Draft</p>
+<table style="margin-top: 0.5em; width: auto;">
+  <tr><th>Drafted</th><td>2026-06-08</td></tr>
+  <tr><th>Shipped</th><td>—</td></tr>
+  <tr><th>ClickUp</th><td><code>86e1ahbpw</code></td></tr>
+</table>
+
+<h2>Problem</h2>
+<p>
+  Recipe ingredients display in whatever unit the recipe author chose &mdash;
+  cups, tablespoons, ounces, pounds, mL, grams, kg. The conversion graph
+  already exists in the app (per-product overrides plus global conversions),
+  but it's only consulted invisibly during the cook flow. From the user's
+  point of view, the recipe page is a static list.
+</p>
+<p>
+  Two concrete pains that motivate this:
+</p>
+<ul>
+  <li>
+    A recipe calls for "1 cup of butter" but the user buys butter in grams
+    (because that's how grocery stores sell it). They have to mentally
+    convert or look it up to know how much to portion out.
+  </li>
+  <li>
+    A recipe calls for "200 g of flour" but the user thinks in cups. Same
+    problem in the opposite direction.
+  </li>
+</ul>
+<p>
+  The lead ICP (value-conscious home cook) is especially likely to have one
+  preferred working unit per ingredient class &mdash; usually whatever their
+  groceries are labelled in &mdash; and is least likely to want to do mental
+  arithmetic.
+</p>
+
+<h2>Goal</h2>
+<ul>
+  <li>Let the user see ingredient quantities in a unit other than the one the recipe author wrote, without leaving the recipe page.</li>
+  <li>Reuse the existing conversion graph (product-specific + global) &mdash; no new data.</li>
+  <li>Fail gracefully when no conversion is possible.</li>
+  <li>Don't add UI clutter to ingredients that don't benefit (e.g. "2 eggs" doesn't convert to anything useful).</li>
+</ul>
+
+<h2>UX options considered</h2>
+
+<h3>Option 1 &mdash; Always-show the stock unit alongside the recipe unit <span style="color: var(--lagoon-deep); font-size: 0.7em; vertical-align: middle;">(recommended)</span></h3>
+<p>
+  Render every convertible ingredient as <code>recipe-unit (stock-unit)</code>,
+  inline. The stock unit is the product's <code>defaultQuantityUnitId</code>
+  &mdash; i.e. how the user actually buys/stores it. If recipe unit and stock
+  unit are already the same, nothing changes.
+</p>
+
+<div class="mockup">
+  <div class="mockup-label">Recipe ingredient list, Option 1</div>
+  <div class="ing-row">
+    <div>
+      <span class="check-icon">✓</span>
+      <span class="ing-name">Butter</span>
+      <span class="ing-qty primary">1 cup</span>
+      <span class="converted">≈ 227 g</span>
+    </div>
+    <span class="ing-edit-btns">✎ 🗑</span>
+  </div>
+  <div class="ing-row">
+    <div>
+      <span class="check-icon">✓</span>
+      <span class="ing-name">All-purpose flour</span>
+      <span class="ing-qty primary">2 cups</span>
+      <span class="converted">≈ 240 g</span>
+    </div>
+    <span class="ing-edit-btns">✎ 🗑</span>
+  </div>
+  <div class="ing-row">
+    <div>
+      <span class="check-icon">✓</span>
+      <span class="ing-name">Salt</span>
+      <span class="ing-qty primary">1 tsp</span>
+      <span class="converted">≈ 6 g</span>
+    </div>
+    <span class="ing-edit-btns">✎ 🗑</span>
+  </div>
+  <div class="ing-row">
+    <div>
+      <span class="check-icon">✓</span>
+      <span class="ing-name">Eggs</span>
+      <span class="ing-qty primary">3 large</span>
+      <!-- no conversion shown -->
+    </div>
+    <span class="ing-edit-btns">✎ 🗑</span>
+  </div>
+</div>
+
+<p style="font-size: 0.9em;">
+  <strong>Pros:</strong> zero interaction required, always visible, lowest
+  cognitive load. Matches the way recipes in magazines / cookbooks often
+  print both metric and imperial.<br>
+  <strong>Cons:</strong> slightly more visual weight on every line. Adds a
+  small dependency on the conversion graph being complete (gaps fall back
+  silently to "no secondary unit shown").
+</p>
+
+<h3>Option 2 &mdash; Recipe-level pill toggle ("Show in")</h3>
+<p>
+  A single toggle near the recipe header lets the user pick what to display
+  for everything at once. Three modes: <strong>recipe units</strong> (today's
+  behaviour), <strong>my stock units</strong> (convert all ingredients to
+  their product's default), and <strong>both</strong> (Option 1's display).
+  The choice persists per-user in localStorage.
+</p>
+
+<div class="mockup">
+  <div class="mockup-label">Recipe-level toolbar, Option 2</div>
+  <div class="recipe-toolbar">
+    <span class="pill-toggle-label">Show units in:</span>
+    <span class="pill-toggle">
+      <span>Recipe</span>
+      <span class="active">My stock</span>
+      <span>Both</span>
+    </span>
+  </div>
+  <div class="ing-row">
+    <div>
+      <span class="check-icon">✓</span>
+      <span class="ing-name">Butter</span>
+      <span class="ing-qty primary">227 g</span>
+    </div>
+    <span class="ing-edit-btns">✎ 🗑</span>
+  </div>
+  <div class="ing-row">
+    <div>
+      <span class="check-icon">✓</span>
+      <span class="ing-name">All-purpose flour</span>
+      <span class="ing-qty primary">240 g</span>
+    </div>
+    <span class="ing-edit-btns">✎ 🗑</span>
+  </div>
+  <div class="ing-row">
+    <div>
+      <span class="check-icon">✓</span>
+      <span class="ing-name">Salt</span>
+      <span class="ing-qty primary">6 g</span>
+    </div>
+    <span class="ing-edit-btns">✎ 🗑</span>
+  </div>
+</div>
+
+<p style="font-size: 0.9em;">
+  <strong>Pros:</strong> minimal per-row visual change; very clean when set
+  to "my stock". User explicitly chooses the convention they prefer.<br>
+  <strong>Cons:</strong> hides information unless the user finds and changes
+  the toggle. Most users will leave it at the default and never benefit.
+  Discoverability is the failure mode.
+</p>
+
+<h3>Option 3 &mdash; Click-to-cycle on the quantity</h3>
+<p>
+  The quantity itself is clickable. Each click cycles to the next available
+  unit for that ingredient. State is per-ingredient, not persisted.
+</p>
+
+<div class="mockup">
+  <div class="mockup-label">Click-to-cycle, Option 3</div>
+  <div class="ing-row">
+    <div>
+      <span class="check-icon">✓</span>
+      <span class="ing-name">Butter</span>
+      <span class="unit-toggle">1 cup ⇄</span>
+    </div>
+    <span class="ing-edit-btns">✎ 🗑</span>
+  </div>
+  <div class="ing-row">
+    <div>
+      <span class="check-icon">✓</span>
+      <span class="ing-name">All-purpose flour</span>
+      <span class="unit-toggle">240 g ⇄</span>
+      <span style="font-size: 0.78em; color: var(--soft); margin-left: 0.4em;">(was 2 cups)</span>
+    </div>
+    <span class="ing-edit-btns">✎ 🗑</span>
+  </div>
+  <p style="font-size: 0.82em; color: var(--soft); margin-top: 0.6em;">
+    <em>Click the quantity to cycle: cup → tbsp → mL → g → cup …</em>
+  </p>
+</div>
+
+<p style="font-size: 0.9em;">
+  <strong>Pros:</strong> discoverable through interaction, doesn't add
+  always-on visual weight, fun.<br>
+  <strong>Cons:</strong> click target on quantity competes with text-selection
+  intent. Hidden until interaction &mdash; users won't know they can do it.
+  Per-ingredient state is fiddly. Mobile (tap) is fine, but desktop users
+  trying to copy a number will accidentally cycle.
+</p>
+
+<h3>Option 4 &mdash; Hover/long-press popup</h3>
+<p>
+  Hover (desktop) or long-press (mobile) the quantity to see a small popup
+  with all available conversions. Static display, no state to persist.
+</p>
+
+<div class="mockup">
+  <div class="mockup-label">Hover popup, Option 4</div>
+  <div class="ing-row">
+    <div>
+      <span class="check-icon">✓</span>
+      <span class="ing-name">All-purpose flour</span>
+      <span class="ing-qty primary">2 cups</span>
+      <span style="color: var(--soft); font-size: 0.78em; margin-left: 0.4em;">▾</span>
+    </div>
+    <span class="ing-edit-btns">✎ 🗑</span>
+  </div>
+  <div class="popover-mini" style="margin-left: 6em;">
+    <div><strong>2 cups</strong> of flour</div>
+    <div>= 240 g</div>
+    <div>= 8.5 oz</div>
+    <div>= 32 tbsp</div>
+  </div>
+</div>
+
+<p style="font-size: 0.9em;">
+  <strong>Pros:</strong> shows all conversions, not just one. No visual
+  noise at rest.<br>
+  <strong>Cons:</strong> hover behaviour doesn't work on mobile (long-press
+  works but is unfamiliar). Information is hidden until interaction. Most
+  users will never trigger it.
+</p>
+
+<h2>Recommendation</h2>
+
+<div class="callout recommended">
+  <strong>Ship Option 1.</strong> Always-visible, low-cognitive-load,
+  matches the way recipes are typically printed in cookbooks and online.
+  Failure mode is graceful: if there's no conversion path, the secondary
+  unit just doesn't render &mdash; no error, no clutter, no warning. The
+  user gets value on day one without any setup or discovery.
+</div>
+
+<p>
+  Reasoning against the alternatives:
+</p>
+<ul>
+  <li><strong>Option 2</strong> requires the user to find a toggle, which most won't. Value-conscious cooks aren't looking for power-user features.</li>
+  <li><strong>Option 3</strong> introduces click ambiguity (cycle vs. text-select) and hides the feature behind interaction.</li>
+  <li><strong>Option 4</strong> doesn't work cleanly on mobile, where most cooking-time use happens.</li>
+</ul>
+
+<p>
+  <em>Future possibility:</em> Option 2's pill toggle could be added later
+  as a power-user preference on top of Option 1, with the default still
+  being "both" (Option 1's behaviour). But ship Option 1 first.
+</p>
+
+<h2>Conversion target choice</h2>
+<p>
+  Option 1 shows one secondary unit per ingredient. The question is: which?
+  Three reasonable defaults:
+</p>
+<ol>
+  <li><strong>Product's default quantity unit</strong> (<code>defaultQuantityUnitId</code>). This is how the user stores the product &mdash; if they buy flour in grams, the conversion shows grams. Most useful for the cook-from-pantry workflow.</li>
+  <li><strong>Always metric</strong> (g / mL / kg / L). Predictable, but ignores user context.</li>
+  <li><strong>User-chosen preference</strong> (per-user setting). More flexible, more setup.</li>
+</ol>
+<p>
+  Recommendation: option (1) &mdash; <strong>convert to the product's default unit</strong>. It's the unit the user has already declared they think in for that product, and it makes the conversion immediately useful for "do I have enough?" mental math.
+</p>
+
+<h2>Affected files</h2>
+<table>
+  <tr><th>File</th><th>Change</th></tr>
+  <tr><td><code>src/components/recipes/IngredientRow.tsx</code></td><td>Render the secondary converted quantity inline after the primary, when the conversion is available and the units differ</td></tr>
+  <tr><td><code>src/routes/recipes/$id.tsx</code></td><td>Compute the converted display value for each ingredient and pass through as a prop. Reuses <code>buildConversionGraph</code> and <code>tryConvert</code> already in scope.</td></tr>
+  <tr><td><code>src/lib/recipe-utils/format-conversion.ts</code></td><td><em>new (small)</em> &mdash; helper that returns <code>"≈ 227 g"</code>-style strings with appropriate rounding by unit (whole numbers for grams, 1 decimal for mL above 100, etc.)</td></tr>
+  <tr><td><code>src/components/recipes/IngredientRow.test.tsx</code></td><td>Three new test cases: converts when units differ, hides when units match, hides when no conversion path exists</td></tr>
+</table>
+
+<h2>Edge cases</h2>
+<ul>
+  <li><strong>Same units already.</strong> Recipe says <code>200 g</code>, product default is <code>g</code> &rarr; don't render the secondary.</li>
+  <li><strong>No conversion path.</strong> Recipe says "3 large eggs" with unit <code>large</code>, no conversion to <code>g</code> &rarr; secondary doesn't render. No error toast, no warning &mdash; silent fallback. (We already use the same "no conversion" signal for the stock-availability StatusIcon.)</li>
+  <li><strong>Ingredient has no <code>productId</code>.</strong> Skip. There's no default unit to convert to.</li>
+  <li><strong>Scale factor.</strong> Conversion happens after the recipe-level scaling is applied. <code>scaledQuantity</code> &rarr; convert &rarr; render.</li>
+  <li><strong>Rounding.</strong> Keep it simple: integer for grams, integer or 1 decimal for mL, 2 decimals for cups/tbsp/tsp. The <code>≈</code> prefix signals approximation so users don't expect 4-decimal precision.</li>
+</ul>
+
+<h2>Tests</h2>
+<ul>
+  <li>Unit test for <code>formatConversion</code> rounding rules (g / mL / oz / cup / tsp).</li>
+  <li>IngredientRow renders <code>≈ X g</code> when recipe unit differs from product default and conversion exists.</li>
+  <li>IngredientRow does NOT render the secondary when units match.</li>
+  <li>IngredientRow does NOT render the secondary when no conversion path exists.</li>
+  <li>Scaled quantity: 1.5x recipe with 1 cup butter renders "1.5 cups ≈ 340 g".</li>
+</ul>
+
+<h2>Decisions you need to make</h2>
+<ol>
+  <li>
+    <strong>Confirm Option 1</strong> (always-show secondary) over the alternatives, or want to explore one of the others more deeply?
+  </li>
+  <li>
+    <strong>Conversion target</strong>: product's default unit (recommended), always metric, or user-preference?
+  </li>
+  <li>
+    <strong>Rendering style</strong> in the row: <code>≈ 227 g</code> in muted lagoon-deep colour (as mocked), or different separator? Other ideas: <code>(227 g)</code>, <code>= 227 g</code>, <code>· 227 g</code>.
+  </li>
+  <li>
+    <strong>Cookpicker / meal-plan modal</strong>: should the same convention propagate to other places ingredients are rendered (Cook picker, meal-plan entry modal, shopping list)? My instinct: ship to the recipe page first, propagate in a follow-up only if you actually want it there.
+  </li>
+</ol>
+
+<h2>Out of scope</h2>
+<ul>
+  <li>Unit preferences per-user (Option 2's pill toggle). Possible future, not this PR.</li>
+  <li>Showing all available conversions in a popup (Option 4). Same &mdash; future polish.</li>
+  <li>Auto-suggesting better conversions when a user enters a new ingredient (e.g. "you typed 240 g; did you mean cups for this recipe?"). Different feature.</li>
+  <li>Conversion accuracy callouts (e.g. flour densities vary &mdash; "this conversion assumes AP flour at 120 g/cup"). For another time.</li>
+</ul>
+
+<hr />
+<p class="meta">Last updated 2026-06-08</p>
+
+</body>
+</html>
