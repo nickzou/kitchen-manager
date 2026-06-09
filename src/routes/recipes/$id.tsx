@@ -79,6 +79,7 @@ import {
 	buildConversionGraph,
 	tryConvert,
 } from "#src/lib/recipe-utils/conversion-graph";
+import { formatConversion } from "#src/lib/recipe-utils/format-conversion";
 import { planConsumption } from "#src/lib/stock-utils";
 
 export const Route = createFileRoute("/recipes/$id")({
@@ -860,6 +861,33 @@ function RecipeDetail() {
 		if (Number.isNaN(num)) return quantity;
 		const scaled = num * scaleFactor;
 		return Number.parseFloat(scaled.toFixed(2)).toString();
+	}
+
+	function getConvertedDisplay(ing: {
+		productId: string | null;
+		quantity: string;
+		quantityUnitId: string | null;
+	}): string | null {
+		if (!ing.productId || !ing.quantityUnitId) return null;
+		const product = products?.find((p) => p.id === ing.productId);
+		if (!product?.defaultQuantityUnitId) return null;
+		if (ing.quantityUnitId === product.defaultQuantityUnitId) return null;
+
+		const allConversions = [
+			...(allProductConversions ?? []).filter(
+				(c) => c.productId === product.id,
+			),
+			...(unitConversions ?? []),
+		];
+		const graph = buildConversionGraph(allConversions);
+		const scaledQuantity = Number(ing.quantity) * scaleFactor;
+		return formatConversion({
+			quantity: scaledQuantity,
+			fromUnitId: ing.quantityUnitId,
+			toUnitId: product.defaultQuantityUnitId,
+			toUnitLabel: getUnitLabel(product.defaultQuantityUnitId),
+			graph,
+		});
 	}
 
 	function formatLeadTime(minutes: number): string {
@@ -1715,6 +1743,7 @@ function RecipeDetail() {
 												productName: getProductName(ing.productId),
 												scaledQuantity: formatScaled(ing.quantity),
 												unitLabel: getUnitLabel(ing.quantityUnitId),
+												convertedDisplay: getConvertedDisplay(ing),
 											})),
 										]),
 									)
@@ -1744,6 +1773,7 @@ function RecipeDetail() {
 											productName={getProductName(ing.productId)}
 											unitLabel={getUnitLabel(ing.quantityUnitId)}
 											scaledQuantity={formatScaled(ing.quantity)}
+											convertedDisplay={getConvertedDisplay(ing)}
 											status={
 												ing.productId
 													? ingredientAvailability.get(ing.id)
@@ -1802,6 +1832,7 @@ function RecipeDetail() {
 													productName: getProductName(ing.productId),
 													unitLabel: getUnitLabel(ing.quantityUnitId),
 													scaledQuantity: formatScaled(ing.quantity),
+													convertedDisplay: getConvertedDisplay(ing),
 													status: ing.productId
 														? ingredientAvailability.get(ing.id)
 														: undefined,

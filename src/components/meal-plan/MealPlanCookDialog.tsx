@@ -1,12 +1,16 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { CookPicker } from "#src/components/recipes/CookPicker";
 import type { MealPlanEntry } from "#src/lib/hooks/use-meal-plan-entries";
+import { useProductUnitConversions } from "#src/lib/hooks/use-product-unit-conversions";
 import { useProducts } from "#src/lib/hooks/use-products";
 import { useQuantityUnits } from "#src/lib/hooks/use-quantity-units";
 import {
 	type RecipeIngredient,
 	useRecipeIngredients,
 } from "#src/lib/hooks/use-recipe-ingredients";
+import { useUnitConversions } from "#src/lib/hooks/use-unit-conversions";
+import { buildConversionGraph } from "#src/lib/recipe-utils/conversion-graph";
+import { formatConversion } from "#src/lib/recipe-utils/format-conversion";
 
 interface CookDialogProps {
 	entry: MealPlanEntry;
@@ -26,6 +30,20 @@ export function MealPlanCookDialog({
 	const { data: ingredients, isLoading } = useRecipeIngredients(entry.recipeId);
 	const { data: products } = useProducts();
 	const { data: units } = useQuantityUnits();
+	const { data: globalConversions } = useUnitConversions();
+	const ingredientProductIds = useMemo(
+		() =>
+			Array.from(
+				new Set(
+					(ingredients ?? [])
+						.map((i) => i.productId)
+						.filter((id): id is string => !!id),
+				),
+			),
+		[ingredients],
+	);
+	const { data: productConversions } =
+		useProductUnitConversions(ingredientProductIds);
 	const [selections, setSelections] = useState<Record<string, string>>({});
 	const [decided, setDecided] = useState(false);
 
@@ -52,6 +70,31 @@ export function MealPlanCookDialog({
 	const scaleFactor =
 		(entry.servings ?? entry.recipeServings ?? 1) / (entry.recipeServings ?? 1);
 
+	function getUnitLabel(unitId: string | null) {
+		if (!unitId) return null;
+		const u = units?.find((x) => x.id === unitId);
+		return u?.abbreviation ?? u?.name ?? null;
+	}
+
+	function getConvertedDisplay(ing: RecipeIngredient): string | null {
+		if (!ing.productId || !ing.quantityUnitId) return null;
+		const product = products?.find((p) => p.id === ing.productId);
+		if (!product?.defaultQuantityUnitId) return null;
+		if (ing.quantityUnitId === product.defaultQuantityUnitId) return null;
+		const allConversions = [
+			...(productConversions ?? []).filter((c) => c.productId === product.id),
+			...(globalConversions ?? []),
+		];
+		const graph = buildConversionGraph(allConversions);
+		return formatConversion({
+			quantity: Number(ing.quantity) * scaleFactor,
+			fromUnitId: ing.quantityUnitId,
+			toUnitId: product.defaultQuantityUnitId,
+			toUnitLabel: getUnitLabel(product.defaultQuantityUnitId),
+			graph,
+		});
+	}
+
 	const display = new Map(
 		[...groups].map(([name, ings]) => [
 			name,
@@ -62,11 +105,8 @@ export function MealPlanCookDialog({
 				scaledQuantity: (Number(ing.quantity) * scaleFactor)
 					.toFixed(2)
 					.replace(/\.?0+$/, ""),
-				unitLabel: ing.quantityUnitId
-					? (units?.find((u) => u.id === ing.quantityUnitId)?.abbreviation ??
-						units?.find((u) => u.id === ing.quantityUnitId)?.name ??
-						null)
-					: null,
+				unitLabel: getUnitLabel(ing.quantityUnitId),
+				convertedDisplay: getConvertedDisplay(ing),
 			})),
 		]),
 	);

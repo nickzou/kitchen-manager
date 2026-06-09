@@ -21,6 +21,12 @@ export interface IngredientRowProps {
 	productName: string;
 	unitLabel: string | null;
 	scaledQuantity: string;
+	/**
+	 * Optional secondary display showing the same quantity converted into
+	 * the product's default stock unit. Rendered inline in muted lagoon
+	 * after the primary quantity. Null = nothing to show.
+	 */
+	convertedDisplay?: string | null;
 	status?: "sufficient" | "deficit" | "unknown";
 	isEditing: boolean;
 	editState: EditState;
@@ -45,6 +51,7 @@ export function IngredientRow({
 	productName,
 	unitLabel,
 	scaledQuantity,
+	convertedDisplay,
 	status,
 	isEditing,
 	editState,
@@ -227,6 +234,11 @@ export function IngredientRow({
 						{scaledQuantity}
 						{unitLabel ? ` ${unitLabel}` : ""}
 					</span>
+					{convertedDisplay && (
+						<span className="ml-1.5 text-xs text-(--lagoon-deep)">
+							{convertedDisplay}
+						</span>
+					)}
 					{ingredient.notes && (
 						<span className="ml-2 text-xs text-(--sea-ink-soft)">
 							({ingredient.notes})
