@@ -8,6 +8,7 @@ interface IngredientDisplay {
 	productName: string;
 	scaledQuantity: string;
 	unitLabel: string | null;
+	convertedDisplay?: string | null;
 }
 
 export interface CookPickerProps {
@@ -44,7 +45,13 @@ export function CookPicker({
 					</p>
 					<div className="flex flex-col gap-1">
 						{groupIngs.map(
-							({ ingredient, productName, scaledQuantity, unitLabel }) => (
+							({
+								ingredient,
+								productName,
+								scaledQuantity,
+								unitLabel,
+								convertedDisplay,
+							}) => (
 								<label
 									key={ingredient.id}
 									className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-(--sea-ink) hover:bg-(--line)"
@@ -61,6 +68,11 @@ export function CookPicker({
 										{scaledQuantity}
 										{unitLabel ? ` ${unitLabel}` : ""}
 									</span>
+									{convertedDisplay && (
+										<span className="text-xs text-(--lagoon-deep)">
+											{convertedDisplay}
+										</span>
+									)}
 								</label>
 							),
 						)}

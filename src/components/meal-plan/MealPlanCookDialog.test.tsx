@@ -6,6 +6,8 @@ import type { RecipeIngredient } from "#src/lib/hooks/use-recipe-ingredients";
 const mockUseRecipeIngredients = vi.fn();
 const mockUseProducts = vi.fn();
 const mockUseQuantityUnits = vi.fn();
+const mockUseUnitConversions = vi.fn();
+const mockUseProductUnitConversions = vi.fn();
 
 vi.mock("#src/lib/hooks/use-recipe-ingredients", () => ({
 	useRecipeIngredients: (...args: unknown[]) =>
@@ -16,6 +18,13 @@ vi.mock("#src/lib/hooks/use-products", () => ({
 }));
 vi.mock("#src/lib/hooks/use-quantity-units", () => ({
 	useQuantityUnits: (...args: unknown[]) => mockUseQuantityUnits(...args),
+}));
+vi.mock("#src/lib/hooks/use-unit-conversions", () => ({
+	useUnitConversions: (...args: unknown[]) => mockUseUnitConversions(...args),
+}));
+vi.mock("#src/lib/hooks/use-product-unit-conversions", () => ({
+	useProductUnitConversions: (...args: unknown[]) =>
+		mockUseProductUnitConversions(...args),
 }));
 
 import { MealPlanCookDialog } from "./MealPlanCookDialog";
@@ -69,6 +78,8 @@ describe("MealPlanCookDialog", () => {
 		});
 		mockUseProducts.mockReturnValue({ data: [] });
 		mockUseQuantityUnits.mockReturnValue({ data: [] });
+		mockUseUnitConversions.mockReturnValue({ data: [] });
+		mockUseProductUnitConversions.mockReturnValue({ data: [] });
 		const onCook = vi.fn();
 		render(
 			<MealPlanCookDialog
@@ -102,6 +113,8 @@ describe("MealPlanCookDialog", () => {
 			],
 		});
 		mockUseQuantityUnits.mockReturnValue({ data: [] });
+		mockUseUnitConversions.mockReturnValue({ data: [] });
+		mockUseProductUnitConversions.mockReturnValue({ data: [] });
 		const onCook = vi.fn();
 		render(
 			<MealPlanCookDialog
@@ -127,6 +140,8 @@ describe("MealPlanCookDialog", () => {
 		});
 		mockUseProducts.mockReturnValue({ data: [] });
 		mockUseQuantityUnits.mockReturnValue({ data: [] });
+		mockUseUnitConversions.mockReturnValue({ data: [] });
+		mockUseProductUnitConversions.mockReturnValue({ data: [] });
 		const onCook = vi.fn();
 		const { container } = render(
 			<MealPlanCookDialog
