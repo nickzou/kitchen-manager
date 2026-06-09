@@ -73,6 +73,17 @@
     color: var(--soft);
     font-size: 0.95em;
   }
+  .checklist li.done { color: var(--soft); }
+  .checklist li.done::before {
+    content: "✓";
+    color: var(--lagoon-deep);
+    font-weight: 700;
+  }
+  .done-note {
+    color: var(--lagoon-deep);
+    font-size: 0.85em;
+    margin-left: 0.4em;
+  }
   .group {
     margin-top: 0.8em;
   }
@@ -111,13 +122,27 @@
   <div class="group">
     <p class="group-label">Brand &amp; entity</p>
     <ul class="checklist">
-      <li>Pick a product name (short, spellable, not enterprise-sounding).</li>
-      <li>Buy the domain.</li>
-      <li>Register the business name with ServiceOntario (~$60).</li>
+      <li class="done">Pick a product name <span class="done-note">&mdash; <strong>Just in Thyme</strong>, 2026-06-04</span></li>
+      <li class="done">Buy the domain <span class="done-note">&mdash; <code>justinthyme.app</code> + <code>justinthyme.kitchen</code>, Cloudflare Registrar, 2026-06-05</span></li>
+      <li class="done">Register the business name with ServiceOntario <span class="done-note">&mdash; Just in Thyme, sole prop, 2026-06-08</span></li>
       <li>Open a separate business bank account.</li>
       <li>Set up Wave Accounting (free) and route all project expenses through it.</li>
       <li>Book a one-hour consultation with a small-business CPA who works with indie devs (~$300).</li>
       <li>Re-read your day-job employment contract for IP / moonlighting clauses.</li>
+    </ul>
+  </div>
+
+  <div class="group">
+    <p class="group-label">Email infrastructure</p>
+    <ul class="checklist">
+      <li class="done">Create a dedicated free Gmail (<code>justinthymeapp@gmail.com</code>) for Workspace contact + recovery <span class="done-note">&mdash; 2026-06-08</span></li>
+      <li class="done">Sign up for Google Workspace Business Starter on <code>justinthyme.app</code> <span class="done-note">&mdash; 2026-06-05</span></li>
+      <li class="done">Verify domain ownership (TXT record at Cloudflare) <span class="done-note">&mdash; 2026-06-05</span></li>
+      <li class="done">Set MX records, activate Gmail <span class="done-note">&mdash; 2026-06-05</span></li>
+      <li class="done">Publish SPF / DKIM / DMARC records <span class="done-note">&mdash; mail-tester 10/10, 2026-06-05</span></li>
+      <li>Add role aliases (<code>nick@</code>, <code>support@</code>, <code>hello@</code>, <code>billing@</code>, <code>legal@</code>, <code>info@</code>) routing to <code>ops@justinthyme.app</code>.</li>
+      <li>Add <code>justinthyme.kitchen</code> as a Workspace alias domain.</li>
+      <li>Enable 2FA on the Workspace account + save backup codes offline.</li>
     </ul>
   </div>
 
@@ -154,7 +179,7 @@
     <p class="group-label">Architectural decisions</p>
     <ul class="checklist">
       <li>Decide self-host SKU stance (defer if needed &mdash; can be Phase 4 for ICP B).</li>
-      <li>Confirm marketing site = unauthed PWA routes (decided; mark closed).</li>
+      <li class="done">Confirm marketing site = unauthed PWA routes <span class="done-note">&mdash; decided 2026-05-30</span></li>
     </ul>
   </div>
 </div>
@@ -405,7 +430,7 @@
 </ul>
 
 <hr />
-<p class="meta">Last updated 2026-05-31</p>
+<p class="meta">Last updated 2026-06-05</p>
 
 </body>
 </html>
