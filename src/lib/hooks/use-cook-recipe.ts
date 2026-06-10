@@ -1,9 +1,16 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
+export interface IngredientOverride {
+	quantity: string;
+	quantityUnitId: string | null;
+}
+
 interface CookRecipeInput {
 	recipeId: string;
 	servings?: number;
 	groupSelections?: Record<string, string>;
+	ingredientOverrides?: Record<string, IngredientOverride>;
+	skippedIngredients?: string[];
 }
 
 interface CookRecipeResult {

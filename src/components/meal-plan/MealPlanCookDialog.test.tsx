@@ -71,12 +71,14 @@ function ing(
 }
 
 describe("MealPlanCookDialog", () => {
-	it("cooks immediately and renders nothing when the recipe has no groups", () => {
+	it("shows the adjust modal even when the recipe has no groups", () => {
 		mockUseRecipeIngredients.mockReturnValue({
 			data: [ing({ id: "i-1" })],
 			isLoading: false,
 		});
-		mockUseProducts.mockReturnValue({ data: [] });
+		mockUseProducts.mockReturnValue({
+			data: [{ id: "p-1", name: "Rice" }],
+		});
 		mockUseQuantityUnits.mockReturnValue({ data: [] });
 		mockUseUnitConversions.mockReturnValue({ data: [] });
 		mockUseProductUnitConversions.mockReturnValue({ data: [] });
@@ -89,12 +91,11 @@ describe("MealPlanCookDialog", () => {
 				onCancel={vi.fn()}
 			/>,
 		);
-		expect(onCook).toHaveBeenCalledOnce();
-		expect(onCook).toHaveBeenCalledWith();
-		expect(screen.queryByText("Choose ingredients")).toBeNull();
+		expect(screen.getByText("Cook Test Recipe")).toBeDefined();
+		expect(onCook).not.toHaveBeenCalled();
 	});
 
-	it("shows a picker for grouped ingredients and submits selections", () => {
+	it("submits group selection plus empty overrides via Cook", () => {
 		mockUseRecipeIngredients.mockReturnValue({
 			data: [
 				ing({
@@ -124,13 +125,41 @@ describe("MealPlanCookDialog", () => {
 				onCancel={vi.fn()}
 			/>,
 		);
-		expect(screen.getByText("Choose ingredients")).toBeDefined();
-		expect(onCook).not.toHaveBeenCalled();
-		// First alternative is pre-selected; switch to lime.
-		fireEvent.click(screen.getByText("Lime"));
+		// First alternative is pre-selected; switch to lime by clicking its radio.
+		const limeRadio = screen.getAllByRole("radio")[1];
+		fireEvent.click(limeRadio);
 		fireEvent.click(screen.getByText("Cook"));
 		expect(onCook).toHaveBeenCalledOnce();
-		expect(onCook).toHaveBeenCalledWith({ Toppings: "i-lime" });
+		expect(onCook).toHaveBeenCalledWith({
+			ingredientOverrides: {},
+			skippedIngredients: [],
+			groupSelections: { Toppings: "i-lime" },
+		});
+	});
+
+	it("Cook as-is sends only group selections, no overrides", () => {
+		mockUseRecipeIngredients.mockReturnValue({
+			data: [ing({ id: "i-1", productId: "p-1" })],
+			isLoading: false,
+		});
+		mockUseProducts.mockReturnValue({
+			data: [{ id: "p-1", name: "Rice" }],
+		});
+		mockUseQuantityUnits.mockReturnValue({ data: [] });
+		mockUseUnitConversions.mockReturnValue({ data: [] });
+		mockUseProductUnitConversions.mockReturnValue({ data: [] });
+		const onCook = vi.fn();
+		render(
+			<MealPlanCookDialog
+				entry={entry}
+				isCooking={false}
+				onCook={onCook}
+				onCancel={vi.fn()}
+			/>,
+		);
+		fireEvent.click(screen.getByText("Cook as-is"));
+		expect(onCook).toHaveBeenCalledOnce();
+		expect(onCook).toHaveBeenCalledWith({ groupSelections: {} });
 	});
 
 	it("renders nothing while ingredients are loading", () => {

@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Spec: Adjust ingredient amounts on the fly when cooking</title>
+<style>
+  :root {
+    --ink: #1a2e30;
+    --soft: #5a6c70;
+    --line: #d8dfe0;
+    --accent: #2b7a78;
+    --bg: #faf8f5;
+    --code-bg: #f0ece6;
+    --warn: #b85c1f;
+    --surface: #f3eee6;
+    --lagoon: #4fb8b2;
+    --lagoon-deep: #2b7a78;
+    --sea-ink: #1a2e30;
+    --sea-ink-soft: #5a6c70;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    max-width: 760px;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.55;
+  }
+  h1, h2, h3 { color: var(--ink); margin-top: 2em; }
+  h1 { border-bottom: 2px solid var(--accent); padding-bottom: 0.3em; }
+  h2 { border-bottom: 1px solid var(--line); padding-bottom: 0.2em; }
+  h3 { margin-top: 1.4em; }
+  code {
+    background: var(--code-bg);
+    padding: 0.1em 0.35em;
+    border-radius: 3px;
+    font-size: 0.92em;
+  }
+  pre {
+    background: var(--code-bg);
+    padding: 0.8em 1em;
+    border-radius: 6px;
+    overflow-x: auto;
+    font-size: 0.88em;
+    line-height: 1.5;
+  }
+  table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+  th, td { text-align: left; padding: 0.45em 0.7em; border-bottom: 1px solid var(--line); font-size: 0.95em; vertical-align: top; }
+  th { background: var(--code-bg); }
+  .meta { color: var(--soft); font-size: 0.9em; margin-top: -0.5em; }
+  .callout {
+    border-left: 3px solid var(--accent);
+    background: rgba(43, 122, 120, 0.06);
+    padding: 0.7em 1em;
+    margin: 1em 0;
+    border-radius: 0 4px 4px 0;
+  }
+  .recommended {
+    border-left-color: var(--lagoon-deep);
+    background: rgba(79, 184, 178, 0.08);
+  }
+  .warn {
+    border-left-color: var(--warn);
+    background: rgba(184, 92, 31, 0.07);
+  }
+  ul, ol { padding-left: 1.4em; }
+  li { margin: 0.3em 0; }
+  hr { border: none; border-top: 1px solid var(--line); margin: 2em 0; }
+
+  /* Mockups */
+  .mockup {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 0.9em 1em;
+    margin: 0.8em 0 0.5em;
+    font-size: 0.88em;
+  }
+  .mockup-label {
+    font-size: 0.7rem;
+    color: var(--soft);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.5em;
+  }
+  .modal-mock {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 1em 1.1em;
+    max-width: 460px;
+  }
+  .modal-title {
+    font-weight: 700;
+    color: var(--sea-ink);
+    margin-bottom: 0.6em;
+    font-size: 0.95em;
+  }
+  .ing-line {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    padding: 0.4em 0;
+    border-bottom: 1px solid var(--line);
+    font-size: 0.9em;
+  }
+  .ing-line:last-of-type { border-bottom: none; }
+  .ing-line .name { flex: 1; color: var(--sea-ink); font-weight: 500; }
+  .qty-field {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25em;
+    border: 1px solid var(--line);
+    background: #fff;
+    border-radius: 6px;
+    padding: 0.1em 0.35em;
+    font-size: 0.85em;
+    font-variant-numeric: tabular-nums;
+  }
+  .qty-field input {
+    border: none;
+    width: 3.5em;
+    background: transparent;
+    font: inherit;
+    color: var(--sea-ink);
+    text-align: right;
+    outline: none;
+    padding: 0;
+  }
+  .qty-field.adjusted { border-color: var(--lagoon); background: rgba(79,184,178,0.06); }
+  .unit-label { color: var(--sea-ink-soft); padding-left: 0.15em; }
+  .converted { font-size: 0.78em; color: var(--lagoon-deep); margin-left: 0.4em; }
+  .stock-hint { font-size: 0.74em; color: var(--soft); margin-left: 0.5em; }
+  .actions {
+    display: flex;
+    gap: 0.5em;
+    margin-top: 0.7em;
+    justify-content: flex-end;
+  }
+  .btn-primary {
+    background: var(--lagoon);
+    color: #fff;
+    border: none;
+    border-radius: 999px;
+    padding: 0.3em 0.95em;
+    font-size: 0.85em;
+    font-weight: 600;
+  }
+  .btn-secondary {
+    background: transparent;
+    color: var(--soft);
+    border: none;
+    border-radius: 999px;
+    padding: 0.3em 0.7em;
+    font-size: 0.85em;
+  }
+  .pencil-icon {
+    color: var(--soft);
+    font-size: 0.85em;
+    margin-left: 0.25em;
+  }
+  .ing-card-inline {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 0.5em 0.75em;
+    background: #fff;
+    margin: 0.3em 0;
+  }
+  .pill-flag {
+    display: inline-block;
+    border: 1px solid var(--lagoon);
+    background: rgba(79,184,178,0.08);
+    color: var(--lagoon-deep);
+    border-radius: 999px;
+    font-size: 0.7em;
+    padding: 0.05em 0.5em;
+    margin-left: 0.5em;
+    vertical-align: middle;
+  }
+  .reset-link {
+    color: var(--lagoon-deep);
+    font-size: 0.78em;
+    background: none;
+    border: none;
+    cursor: default;
+    padding: 0 0.3em;
+  }
+</style>
+</head>
+<body>
+
+<h1>Spec: Adjust ingredient amounts on the fly when cooking</h1>
+<p class="meta">Kitchen Manager / Just in Thyme · Draft</p>
+<table style="margin-top: 0.5em; width: auto;">
+  <tr><th>Drafted</th><td>2026-06-09</td></tr>
+  <tr><th>Shipped</th><td>—</td></tr>
+  <tr><th>ClickUp</th><td><em>not on the board yet — will add when decisions are locked</em></td></tr>
+</table>
+
+<h2>Problem</h2>
+<p>
+  Recipes are written with target amounts ("100 g rice") but the actual
+  cook rarely matches them exactly. You scoop 120 g of rice. You eyeball
+  the salt. You're out of cilantro so you use parsley. None of those
+  decisions are wrong &mdash; they're the reality of cooking. But the app's
+  Cook flow consumes the <em>recipe's</em> amounts, not the actual amounts,
+  so the stock ledger drifts from reality with every meal.
+</p>
+<p>
+  For the value-conscious ICP especially, this drift compounds. If the
+  recipe says 100 g but you always use 120 g, your projected grocery costs
+  are 20% low and your "do I have enough" availability check tells you
+  there's stock when there isn't. The app is technically correct and
+  practically wrong.
+</p>
+
+<h2>Goal</h2>
+<ul>
+  <li>Let the user adjust per-ingredient amounts <em>at cook time</em> without changing the saved recipe.</li>
+  <li>Adjustments deduct the actual amount from stock, not the recipe's amount.</li>
+  <li>Recipe stays unchanged for future cooks &mdash; this is a per-cook tweak, not a permanent edit.</li>
+  <li>Discoverable in the natural Cook flow (not buried under a settings page).</li>
+  <li>Skippable &mdash; the existing one-click Cook path should still work for users who don't need to tweak.</li>
+</ul>
+
+<h2>UX options</h2>
+
+<h3>Option 1 &mdash; Pre-cook adjustment modal <span style="color: var(--lagoon-deep); font-size: 0.7em; vertical-align: middle;">(recommended)</span></h3>
+<p>
+  Cook button opens a modal listing every ingredient with editable
+  quantity fields pre-filled with the recipe-scaled amount. The user can
+  tweak any of them, see the converted stock-unit display update in
+  real time, and see availability flags. Click "Cook" in the modal to
+  consume the adjusted amounts.
+</p>
+
+<div class="mockup">
+  <div class="mockup-label">Option 1 &mdash; Pre-cook modal</div>
+  <div class="modal-mock">
+    <div class="modal-title">Cook this recipe</div>
+    <div class="ing-line">
+      <span class="name">Rice</span>
+      <span class="qty-field adjusted">
+        <input value="120" />
+        <span class="unit-label">g</span>
+      </span>
+      <button class="reset-link">↺ 100g</button>
+    </div>
+    <div class="ing-line">
+      <span class="name">Butter</span>
+      <span class="qty-field">
+        <input value="1" />
+        <span class="unit-label">cup</span>
+      </span>
+      <span class="converted">≈ 227 g</span>
+    </div>
+    <div class="ing-line">
+      <span class="name">Salt</span>
+      <span class="qty-field">
+        <input value="1" />
+        <span class="unit-label">tsp</span>
+      </span>
+      <span class="converted">≈ 6 g</span>
+    </div>
+    <div class="ing-line">
+      <span class="name">Cilantro</span>
+      <span class="qty-field">
+        <input value="0.25" />
+        <span class="unit-label">cup</span>
+      </span>
+      <span class="stock-hint">⚠ out of stock</span>
+    </div>
+    <div class="actions">
+      <button class="btn-secondary">Cancel</button>
+      <button class="btn-primary">Cook</button>
+    </div>
+  </div>
+</div>
+
+<p style="font-size: 0.9em;">
+  <strong>Pros:</strong> single review-and-confirm step matches kitchen
+  workflow (you're at the counter, about to cook, about to measure). All
+  adjustments visible at once. Reuses CookPicker's group-selection
+  pattern for recipes with ingredient groups (just embedded in the same
+  modal). The "↺ 100g" reset button per row makes undoing a tweak
+  one click.<br>
+  <strong>Cons:</strong> always shows a modal, even for users who never
+  adjust. The one-click "Cook and forget" flow becomes two clicks.
+</p>
+
+<h3>Option 2 &mdash; Inline "adjust" toggle on the recipe page</h3>
+<p>
+  Add a small pencil icon next to each ingredient that flips it into
+  edit mode for the next cook. Adjustments are visible on the recipe page
+  itself (not in a modal) and persist until you click Cook. After cook,
+  they reset. A small "adjusted" indicator shows which ingredients have
+  been tweaked.
+</p>
+
+<div class="mockup">
+  <div class="mockup-label">Option 2 &mdash; Inline pencil-edit</div>
+  <div class="ing-card-inline">
+    <div>
+      <span style="color: var(--sea-ink); font-weight: 500;">Rice</span>
+      <span style="color: var(--sea-ink-soft); margin-left: 0.5em;">
+        <span class="qty-field adjusted" style="padding: 0.05em 0.3em;">
+          <input value="120" style="width: 2.6em;" />
+          <span class="unit-label">g</span>
+        </span>
+      </span>
+      <span class="pill-flag">adjusted</span>
+    </div>
+    <span class="pencil-icon">✎</span>
+  </div>
+  <div class="ing-card-inline">
+    <div>
+      <span style="color: var(--sea-ink); font-weight: 500;">Butter</span>
+      <span style="color: var(--sea-ink-soft); margin-left: 0.5em;">1 cup</span>
+      <span class="converted">≈ 227 g</span>
+    </div>
+    <span class="pencil-icon">✎</span>
+  </div>
+  <div class="ing-card-inline">
+    <div>
+      <span style="color: var(--sea-ink); font-weight: 500;">Salt</span>
+      <span style="color: var(--sea-ink-soft); margin-left: 0.5em;">1 tsp</span>
+      <span class="converted">≈ 6 g</span>
+    </div>
+    <span class="pencil-icon">✎</span>
+  </div>
+</div>
+
+<p style="font-size: 0.9em;">
+  <strong>Pros:</strong> no extra modal step. Adjustments visible on the
+  same screen as the recipe.<br>
+  <strong>Cons:</strong> shares visual space with the existing edit-the-recipe
+  pencil icon, which is a real risk of conflation ("did I just edit the recipe
+  permanently or just for this cook?"). Recipes with ingredient groups still
+  need a separate picker UI, so this only partially replaces CookPicker.
+</p>
+
+<h3>Option 3 &mdash; Post-cook "what did you actually use?" review</h3>
+<p>
+  Cook with the recipe amounts as today. Immediately after the cook
+  succeeds, show a "review what you actually used" panel where the user can
+  adjust the deducted amounts. Stock log entries are amended in place.
+</p>
+
+<div class="mockup">
+  <div class="mockup-label">Option 3 &mdash; Post-cook review</div>
+  <div class="modal-mock">
+    <div class="modal-title">Cooked — adjust what you actually used?</div>
+    <p style="font-size: 0.78em; color: var(--soft); margin: 0 0 0.6em;">
+      We deducted these amounts. Tap any to correct.
+    </p>
+    <div class="ing-line">
+      <span class="name">Rice</span>
+      <span class="qty-field"><input value="100" /><span class="unit-label">g</span></span>
+    </div>
+    <div class="ing-line">
+      <span class="name">Butter</span>
+      <span class="qty-field"><input value="1" /><span class="unit-label">cup</span></span>
+    </div>
+    <div class="actions">
+      <button class="btn-secondary">Looks good</button>
+      <button class="btn-primary">Save corrections</button>
+    </div>
+  </div>
+</div>
+
+<p style="font-size: 0.9em;">
+  <strong>Pros:</strong> closer to "logging what happened" rather than
+  "planning what will happen." Doesn't add friction to the up-front Cook
+  click.<br>
+  <strong>Cons:</strong> requires reverse stock-log edits, which gets messy
+  if any consumed entries have already been depleted to zero (was the entry
+  deleted? do we recreate it?). Users skip post-action prompts at a higher
+  rate than pre-action confirmations.
+</p>
+
+<h2>Recommendation</h2>
+
+<div class="callout recommended">
+  <strong>Ship Option 1.</strong> Pre-cook adjustment modal. It matches
+  the workflow (you make the decision before you cook, not after), it
+  reuses the existing CookPicker's modal shell, and the per-row
+  reset link gives a one-click undo for any tweak. The "always shows a
+  modal" cost is real but small &mdash; one extra click is the price of
+  honest ledger-keeping.
+</div>
+
+<p>
+  Reasoning against the alternatives:
+</p>
+<ul>
+  <li><strong>Option 2</strong> blurs "edit recipe" vs. "adjust for this cook." That distinction is load-bearing &mdash; users who think they're tweaking once shouldn't accidentally rewrite the recipe.</li>
+  <li><strong>Option 3</strong> has hard edge cases (consumed entries that hit zero, or that were deleted post-cook). And users skip post-action confirmations.</li>
+</ul>
+
+<h2>Behaviour details</h2>
+
+<h3>What's editable</h3>
+<ul>
+  <li>Quantity field per ingredient, pre-filled with the recipe-scaled amount</li>
+  <li>Unit stays whatever the recipe specified (don't let the user change units mid-modal; that's a recipe edit)</li>
+  <li>The "↺ original" reset link per row, shown only when the field has been touched</li>
+</ul>
+
+<h3>What's not editable in this modal</h3>
+<ul>
+  <li>Ingredient unit (recipe edit territory)</li>
+  <li>Whether the ingredient is "optional" or "skipStockDeduction" (recipe property)</li>
+  <li>Adding new ingredients (recipe edit)</li>
+</ul>
+
+<h3>Ingredient groups</h3>
+<p>
+  When the recipe has groups, the modal merges the group-selection UI from
+  the existing CookPicker with the per-ingredient quantity adjustment.
+  Selected group alternative shows its quantity field; unselected ones are
+  greyed.
+</p>
+
+<h3>Optional ingredients</h3>
+<p>
+  Show with a "Use this time?" checkbox in addition to the quantity field.
+  Unchecked means the ingredient is skipped entirely for this cook, same
+  as if it weren't in the recipe.
+</p>
+
+<h3>skipStockDeduction ingredients</h3>
+<p>
+  Show as read-only ("Don't track" badge), not editable, since by
+  definition we're not deducting them.
+</p>
+
+<h3>Stock availability indicator</h3>
+<p>
+  Same green check / amber out-of-stock indicator that already shows on
+  the recipe page, recomputed based on the <em>adjusted</em> amount, not
+  the recipe amount. So if I bump rice from 100 g to 120 g and that
+  pushes me past my available stock, the indicator flips to amber/red in
+  real time.
+</p>
+
+<h2>API shape</h2>
+
+<p>
+  The cook mutation takes an optional <code>ingredientOverrides</code> map
+  keyed by ingredient id. The server uses the override amount instead of
+  the recipe's stored amount when computing deductions. Unspecified
+  ingredients use their stored amounts unchanged. Skipped ingredients
+  (optional, unchecked) pass <code>amount: 0</code> or are omitted &mdash;
+  TBD &mdash; see decisions.
+</p>
+
+<pre>POST /api/recipes/cook
+{
+  recipeId: string,
+  servings?: number,
+  groupSelections?: { [groupName]: ingredientId },
+  ingredientOverrides?: {
+    [ingredientId]: number  // absolute amount in the ingredient's unit
+  }
+}</pre>
+
+<p>
+  Same shape extends to the meal-plan cook endpoint.
+</p>
+
+<h2>Affected files</h2>
+<table>
+  <tr><th>File</th><th>Change</th></tr>
+  <tr><td><code>src/components/recipes/CookPicker.tsx</code></td><td>Rename to <code>CookConfirmModal.tsx</code> (or keep name; either works). Extend to show all ingredients (not just groups), with an editable quantity per row and the "↺ original" reset link.</td></tr>
+  <tr><td><code>src/lib/hooks/use-cook-recipe.ts</code></td><td>Add <code>ingredientOverrides</code> to <code>CookRecipeInput</code>.</td></tr>
+  <tr><td><code>src/lib/hooks/use-meal-plan-entries.ts</code></td><td>Same for <code>useCookMealPlanEntry</code>.</td></tr>
+  <tr><td><code>src/routes/api/recipes/cook.ts</code></td><td>Accept <code>ingredientOverrides</code> in the request body. Use override amounts where present; recipe amounts where not. Same FIFO / planConsumption chain we already have.</td></tr>
+  <tr><td><code>src/routes/api/meal-plan-entries/cook.ts</code></td><td>Same.</td></tr>
+  <tr><td><code>src/routes/recipes/$id.tsx</code></td><td>Wire the modal &mdash; always show it, even when there are no groups. Pre-fill the form with scaled recipe amounts. Pass any tweaks into the cook mutation.</td></tr>
+  <tr><td><code>src/components/meal-plan/MealPlanCookDialog.tsx</code></td><td>Same on the meal-plan side.</td></tr>
+  <tr><td><code>API.md</code></td><td>Document the new <code>ingredientOverrides</code> field on both cook endpoints.</td></tr>
+</table>
+
+<h2>Tests</h2>
+<ul>
+  <li>Unit test: cook API consumes override amount when supplied, recipe amount when not.</li>
+  <li>Unit test: optional ingredients with <code>0</code> override skip consumption entirely.</li>
+  <li>Component test: modal pre-fills with scaled recipe amounts; user edits update local state; submit passes overrides to mutation.</li>
+  <li>Component test: reset link restores the original recipe amount.</li>
+  <li>Component test: group selection + quantity adjustment work together.</li>
+  <li>Integration: real-world flow &mdash; cook a recipe with adjusted rice, stock log records the adjusted amount, recipe stored amount unchanged.</li>
+</ul>
+
+<h2>Decisions</h2>
+<ol>
+  <li><strong>UX:</strong> Option 1 (pre-cook adjustment modal).</li>
+  <li><strong>"Cook as-is":</strong> include it as a secondary action inside the modal &mdash; clicking it bypasses any tweaks and cooks with the recipe's stored amounts. Users who never adjust can hit "Cook as-is" with one extra click; the modal still serves as a "what's about to happen" confirmation.</li>
+  <li><strong>Optional-ingredient skip:</strong> send a separate <code>skippedIngredients: string[]</code> array. Cleaner semantics than sentinel <code>amount: 0</code> values; lets the override + skip concerns stay independent.</li>
+  <li><strong>"Save these as the new recipe amounts":</strong> deferred. Not assuming this is needed for v1.</li>
+  <li><strong>Unit change:</strong> allowed. The quantity field is paired with a unit dropdown showing units that have a conversion path to the ingredient's product default. Changing the unit auto-converts the displayed value; the server receives <code>{ amount, unitId }</code> per overridden ingredient.</li>
+</ol>
+
+<div class="callout">
+  <strong>Additional scope:</strong> the meal-plan cook button gets the
+  same modal &mdash; Nick uses that path frequently. Both surfaces share
+  the same modal component and the same override-passing pattern; both
+  cook endpoints (<code>/api/recipes/cook</code> and
+  <code>/api/meal-plan-entries/cook</code>) accept the new
+  <code>ingredientOverrides</code> + <code>skippedIngredients</code>
+  fields.
+</div>
+
+<h2>Out of scope</h2>
+<ul>
+  <li>"Cook history" feature where you can see what amounts you actually used last 5 times. Useful but separate.</li>
+  <li>Auto-suggesting overrides based on past usage ("you usually use 120 g of rice, not 100 g; tweak the recipe?"). Follow-up.</li>
+  <li>Cross-ingredient validation ("if you cut rice, should we cut everything proportionally?"). Different feature.</li>
+  <li>Mid-cook adjustments &mdash; the modal is pre-cook only. If you mess up while cooking, you fix it via the stock-log activity view as today.</li>
+</ul>
+
+<hr />
+<p class="meta">Last updated 2026-06-09</p>
+
+</body>
+</html>

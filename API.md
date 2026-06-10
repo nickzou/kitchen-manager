@@ -40,7 +40,7 @@ All resources are scoped to the authenticated user — the API never crosses ten
 | `PUT` | `/api/recipes/$id` | Update any subset of recipe fields. |
 | `DELETE` | `/api/recipes/$id` | Delete a recipe. |
 | `GET` | `/api/recipes/availability` | Per-recipe stock availability. Returns `{ [recipeId]: "sufficient" \| "deficit" \| "no-ingredients" }`. Honors group "any sufficient" and skips optional ingredients. |
-| `POST` | `/api/recipes/cook` | Cook a recipe outside of meal-plan context. Body: `{ recipeId, servings?, groupSelections? }`. `groupSelections` is `{ [groupName]: ingredientId }` for groups that need a choice. Deducts stock FIFO, writes `stock_log` rows, and (if the recipe has `producesProductId`) adds the produced quantity to stock. |
+| `POST` | `/api/recipes/cook` | Cook a recipe outside of meal-plan context. Body: `{ recipeId, servings?, groupSelections?, ingredientOverrides?, skippedIngredients? }`. `groupSelections` is `{ [groupName]: ingredientId }` for groups that need a choice. `ingredientOverrides` is `{ [ingredientId]: { quantity, quantityUnitId } }` and replaces the recipe's stored amount for that ingredient (no scaling applied — the value is taken as-is). `skippedIngredients` is `string[]` of ingredient IDs to skip entirely (used by the cook modal when a user unchecks an optional ingredient). Deducts stock FIFO, writes `stock_log` rows, and (if the recipe has `producesProductId`) adds the produced quantity to stock. |
 
 ### Recipe ingredients
 
@@ -128,7 +128,7 @@ Conversions defined here override the global ones for the given product.
 | `GET` | `/api/meal-plan-entries/$id` | Fetch one. |
 | `PUT` | `/api/meal-plan-entries/$id` | Update fields. |
 | `DELETE` | `/api/meal-plan-entries/$id` | Delete an entry. |
-| `POST` | `/api/meal-plan-entries/cook` | Mark an entry cooked. Body: `{ mealPlanEntryId, groupSelections? }`. Stamps `cookedAt`, deducts stock FIFO, writes consume logs, optionally produces stock. |
+| `POST` | `/api/meal-plan-entries/cook` | Mark an entry cooked. Body: `{ mealPlanEntryId, groupSelections?, ingredientOverrides?, skippedIngredients? }`. `ingredientOverrides` and `skippedIngredients` follow the same shape as `/api/recipes/cook`. Stamps `cookedAt`, deducts stock FIFO, writes consume logs, optionally produces stock. |
 | `DELETE` | `/api/meal-plan-entries/cook` | Uncook (reverse) an entry. Body: `{ mealPlanEntryId }`. Restores stock from the entry's consume logs. |
 | `GET` | `/api/meal-plan-entries/ingredient-summary` | Shopping-list summary for a date range. Query: `startDate`, `endDate`. Returns `{ ingredients, unlinkedIngredients, restock, producible }`. Applies group rule with running-stock simulation across all entries in the range. Each row carries a `recipes[]` of contributing meal-plan entries. Ingredients whose product is the output of a recipe (see `/api/products/$id/source-recipes`) are routed into `producible[]` (with `sourceRecipeId`/`sourceRecipeName`) instead of `ingredients[]` or `restock[]`, so they're surfaced for cooking rather than buying. |
 | `GET` | `/api/meal-plan-entries/nutrition-summary` | Aggregate nutrition for the date range. Query: `startDate`, `endDate`. When an ingredient's product has no own nutrition but is produced by a recipe, the macros are derived from that source recipe's ingredients (scaled by produced quantity). |

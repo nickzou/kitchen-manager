@@ -28,7 +28,7 @@ import { MarkdownEditor } from "#src/components/MarkdownEditor";
 import { MultiCombobox } from "#src/components/MultiCombobox";
 import { NumberInput } from "#src/components/NumberInput";
 import { Page } from "#src/components/Page";
-import { CookPicker } from "#src/components/recipes/CookPicker";
+import { CookAdjustModal } from "#src/components/recipes/CookAdjustModal";
 import { IngredientGroup } from "#src/components/recipes/IngredientGroup";
 import { IngredientRow } from "#src/components/recipes/IngredientRow";
 import { PrepStepRow } from "#src/components/recipes/PrepStepRow";
@@ -186,10 +186,7 @@ function RecipeDetail() {
 	});
 	const [addToGroup, setAddToGroup] = useState<string | null>(null);
 	const addFormRef = useRef<HTMLDivElement>(null);
-	const [showCookPicker, setShowCookPicker] = useState(false);
-	const [groupSelections, setGroupSelections] = useState<
-		Record<string, string>
-	>({});
+	const [showCookModal, setShowCookModal] = useState(false);
 	const [newPrepStep, setNewPrepStep] = useState({
 		description: "",
 		leadTimeMinutes: "",
@@ -316,19 +313,6 @@ function RecipeDetail() {
 		return { ungrouped, groups };
 	}, [ingredients]);
 
-	const cookPickerGroups = useMemo(() => {
-		const groups = new Map<string, NonNullable<typeof ingredients>>();
-		for (const ing of ingredients ?? []) {
-			if (ing.groupName) {
-				if (!groups.has(ing.groupName)) {
-					groups.set(ing.groupName, []);
-				}
-				groups.get(ing.groupName)?.push(ing);
-			}
-		}
-		return groups;
-	}, [ingredients]);
-
 	const editConversionHint = getEditConversionHint();
 	if (isLoading) {
 		return (
@@ -415,38 +399,28 @@ function RecipeDetail() {
 
 	function handleCookClick() {
 		if (!recipe || !ingredients) return;
-		const groups = new Map<string, typeof ingredients>();
-		for (const ing of ingredients) {
-			if (ing.groupName) {
-				if (!groups.has(ing.groupName)) {
-					groups.set(ing.groupName, []);
-				}
-				groups.get(ing.groupName)?.push(ing);
-			}
-		}
-		if (groups.size > 0) {
-			// Pre-select first ingredient in each group
-			const defaults: Record<string, string> = {};
-			for (const [name, ings] of groups) {
-				defaults[name] = ings[0].id;
-			}
-			setGroupSelections(defaults);
-			setShowCookPicker(true);
-		} else {
-			handleCook();
-		}
+		setShowCookModal(true);
 	}
 
-	async function handleCook(selections?: Record<string, string>) {
+	async function handleCook(input: {
+		ingredientOverrides?: Record<
+			string,
+			{ quantity: string; quantityUnitId: string | null }
+		>;
+		skippedIngredients?: string[];
+		groupSelections?: Record<string, string>;
+	}) {
 		if (!recipe) return;
 		try {
 			const result = await cookRecipe.mutateAsync({
 				recipeId: recipe.id,
 				servings: currentServings ?? undefined,
-				groupSelections: selections,
+				groupSelections: input.groupSelections,
+				ingredientOverrides: input.ingredientOverrides,
+				skippedIngredients: input.skippedIngredients,
 			});
 			setCookResult(result);
-			setShowCookPicker(false);
+			setShowCookModal(false);
 			setTimeout(
 				() => cookResultRef.current?.scrollIntoView({ behavior: "smooth" }),
 				100,
@@ -1732,32 +1706,21 @@ function RecipeDetail() {
 								Ingredients
 							</h2>
 
-							<CookPicker
-								open={showCookPicker}
-								groups={
-									new Map(
-										[...cookPickerGroups].map(([groupName, groupIngs]) => [
-											groupName,
-											groupIngs.map((ing) => ({
-												ingredient: ing,
-												productName: getProductName(ing.productId),
-												scaledQuantity: formatScaled(ing.quantity),
-												unitLabel: getUnitLabel(ing.quantityUnitId),
-												convertedDisplay: getConvertedDisplay(ing),
-											})),
-										]),
-									)
-								}
-								selections={groupSelections}
-								onSelectionChange={(groupName, ingredientId) =>
-									setGroupSelections({
-										...groupSelections,
-										[groupName]: ingredientId,
-									})
-								}
-								onCook={() => handleCook(groupSelections)}
-								onCancel={() => setShowCookPicker(false)}
+							<CookAdjustModal
+								open={showCookModal}
+								recipeName={recipe.name}
+								ingredients={ingredients ?? []}
+								products={products ?? []}
+								quantityUnits={quantityUnits ?? []}
+								unitConversions={unitConversions ?? []}
+								productConversions={allProductConversions ?? []}
+								scaleFactor={scaleFactor}
 								isCooking={cookRecipe.isPending}
+								onCancel={() => setShowCookModal(false)}
+								onCook={(input) => handleCook(input)}
+								onCookAsIs={(input) =>
+									handleCook({ groupSelections: input.groupSelections })
+								}
 							/>
 
 							{!ingredients?.length && !editing ? (
