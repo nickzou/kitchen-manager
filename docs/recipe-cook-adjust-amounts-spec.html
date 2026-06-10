@@ -495,24 +495,24 @@
   <li>Integration: real-world flow &mdash; cook a recipe with adjusted rice, stock log records the adjusted amount, recipe stored amount unchanged.</li>
 </ul>
 
-<h2>Decisions you need to make</h2>
+<h2>Decisions</h2>
 <ol>
-  <li>
-    <strong>Confirm Option 1</strong> (always-show pre-cook modal) over Option 2 (inline pencil) or Option 3 (post-cook review)?
-  </li>
-  <li>
-    <strong>Modal always or modal-on-demand?</strong> Should the Cook button <em>always</em> open the modal, or should there be a "Cook as-is" quick button that skips it (for users who never adjust)? Tradeoff: convenience vs. consistency.
-  </li>
-  <li>
-    <strong>Optional-ingredient skip representation:</strong> when a user unchecks an optional ingredient, do we send <code>amount: 0</code>, omit the ingredient entirely from the overrides, or pass a separate <code>skippedIngredients: string[]</code> array? Cleanest semantics matters here.
-  </li>
-  <li>
-    <strong>"Save these adjustments to the recipe?"</strong> Should the modal offer a final "and update the recipe to use these amounts going forward" checkbox? Could be powerful (learns from real cooking) or dangerous (one bad cook permanently corrupts the recipe). My instinct: defer to a follow-up; ship the per-cook tweak first.
-  </li>
-  <li>
-    <strong>Unit conversion within the field?</strong> Allow user to type "120 g" when the field's unit is "cup" and we'd auto-convert? Convenient but adds parsing complexity. My instinct: no &mdash; keep the field locked to the recipe's unit, push unit-changes to recipe edit.
-  </li>
+  <li><strong>UX:</strong> Option 1 (pre-cook adjustment modal).</li>
+  <li><strong>"Cook as-is":</strong> include it as a secondary action inside the modal &mdash; clicking it bypasses any tweaks and cooks with the recipe's stored amounts. Users who never adjust can hit "Cook as-is" with one extra click; the modal still serves as a "what's about to happen" confirmation.</li>
+  <li><strong>Optional-ingredient skip:</strong> send a separate <code>skippedIngredients: string[]</code> array. Cleaner semantics than sentinel <code>amount: 0</code> values; lets the override + skip concerns stay independent.</li>
+  <li><strong>"Save these as the new recipe amounts":</strong> deferred. Not assuming this is needed for v1.</li>
+  <li><strong>Unit change:</strong> allowed. The quantity field is paired with a unit dropdown showing units that have a conversion path to the ingredient's product default. Changing the unit auto-converts the displayed value; the server receives <code>{ amount, unitId }</code> per overridden ingredient.</li>
 </ol>
+
+<div class="callout">
+  <strong>Additional scope:</strong> the meal-plan cook button gets the
+  same modal &mdash; Nick uses that path frequently. Both surfaces share
+  the same modal component and the same override-passing pattern; both
+  cook endpoints (<code>/api/recipes/cook</code> and
+  <code>/api/meal-plan-entries/cook</code>) accept the new
+  <code>ingredientOverrides</code> + <code>skippedIngredients</code>
+  fields.
+</div>
 
 <h2>Out of scope</h2>
 <ul>
