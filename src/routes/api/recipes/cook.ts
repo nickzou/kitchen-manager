@@ -28,7 +28,22 @@ export const Route = createFileRoute("/api/recipes/cook")({
 				}
 
 				const body = await request.json();
-				const { recipeId, servings, groupSelections } = body;
+				const {
+					recipeId,
+					servings,
+					groupSelections,
+					ingredientOverrides,
+					skippedIngredients,
+				}: {
+					recipeId?: string;
+					servings?: number;
+					groupSelections?: Record<string, string>;
+					ingredientOverrides?: Record<
+						string,
+						{ quantity: string; quantityUnitId: string | null }
+					>;
+					skippedIngredients?: string[];
+				} = body;
 
 				if (!recipeId) {
 					return json({ error: "recipeId is required" }, { status: 400 });
@@ -101,6 +116,11 @@ export const Route = createFileRoute("/api/recipes/cook")({
 						}
 					}
 
+					// Per-cook user-driven skips (e.g. omitted optional ingredients)
+					for (const skipId of skippedIngredients ?? []) {
+						skipIds.add(skipId);
+					}
+
 					const warnings: string[] = [];
 					const deductions: {
 						productId: string;
@@ -117,7 +137,13 @@ export const Route = createFileRoute("/api/recipes/cook")({
 						// linked to a product but we don't deplete stock for them.
 						if (ingredient.skipStockDeduction) continue;
 
-						const needed = roundQty(Number(ingredient.quantity) * scaleFactor);
+						// Per-cook override (user adjusted amount in the cook modal)
+						// takes the user-entered quantity as-is; we don't apply
+						// scaleFactor because the modal already showed scaled values.
+						const override = ingredientOverrides?.[ingredient.id];
+						const needed = override
+							? roundQty(Number(override.quantity))
+							: roundQty(Number(ingredient.quantity) * scaleFactor);
 
 						const stocks = await tx
 							.select()

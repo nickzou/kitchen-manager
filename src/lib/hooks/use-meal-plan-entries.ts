@@ -114,6 +114,11 @@ export function useCookMealPlanEntry() {
 		mutationFn: async (input: {
 			mealPlanEntryId: string;
 			groupSelections?: Record<string, string>;
+			ingredientOverrides?: Record<
+				string,
+				{ quantity: string; quantityUnitId: string | null }
+			>;
+			skippedIngredients?: string[];
 		}) => {
 			const res = await fetch("/api/meal-plan-entries/cook", {
 				method: "POST",

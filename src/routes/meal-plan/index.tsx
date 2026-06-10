@@ -210,13 +210,15 @@ function MealPlanPage() {
 				<MealPlanCookDialog
 					entry={pendingEntry}
 					isCooking={cookEntry.isPending}
-					onCook={async (groupSelections) => {
+					onCook={async (input) => {
 						const id = pendingEntry.id;
 						const name = pendingEntry.recipeName ?? "recipe";
 						try {
 							const result = (await cookEntry.mutateAsync({
 								mealPlanEntryId: id,
-								groupSelections,
+								groupSelections: input.groupSelections,
+								ingredientOverrides: input.ingredientOverrides,
+								skippedIngredients: input.skippedIngredients,
 							})) as { warnings?: string[] };
 							const warningCount = result.warnings?.length ?? 0;
 							toast.success(

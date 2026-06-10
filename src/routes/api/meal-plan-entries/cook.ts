@@ -219,7 +219,20 @@ export const Route = createFileRoute("/api/meal-plan-entries/cook")({
 				}
 
 				const body = await request.json();
-				const { mealPlanEntryId, groupSelections } = body;
+				const {
+					mealPlanEntryId,
+					groupSelections,
+					ingredientOverrides,
+					skippedIngredients,
+				}: {
+					mealPlanEntryId?: string;
+					groupSelections?: Record<string, string>;
+					ingredientOverrides?: Record<
+						string,
+						{ quantity: string; quantityUnitId: string | null }
+					>;
+					skippedIngredients?: string[];
+				} = body;
 
 				if (!mealPlanEntryId) {
 					return json(
@@ -294,6 +307,10 @@ export const Route = createFileRoute("/api/meal-plan-entries/cook")({
 						}
 					}
 
+					for (const skipId of skippedIngredients ?? []) {
+						skipIds.add(skipId);
+					}
+
 					const warnings: string[] = [];
 					const deductions: {
 						productId: string;
@@ -309,7 +326,13 @@ export const Route = createFileRoute("/api/meal-plan-entries/cook")({
 						// linked to a product but we don't deplete stock for them.
 						if (ingredient.skipStockDeduction) continue;
 
-						const needed = roundQty(Number(ingredient.quantity) * scaleFactor);
+						// Per-cook override (user adjusted amount in the cook modal)
+						// is taken as the user-entered quantity directly; the modal
+						// already presented scaled values, so no scaleFactor here.
+						const override = ingredientOverrides?.[ingredient.id];
+						const needed = override
+							? roundQty(Number(override.quantity))
+							: roundQty(Number(ingredient.quantity) * scaleFactor);
 
 						// Get stock entries ordered by expiration (FIFO - oldest first)
 						const stocks = await tx
