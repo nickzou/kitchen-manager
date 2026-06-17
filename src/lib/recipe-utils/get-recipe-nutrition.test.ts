@@ -517,4 +517,72 @@ describe("getRecipeNutrition", () => {
 
 		expect(result?.complete).toBe(false);
 	});
+
+	it("isolates per-product unit conversions so two products' tsp->g don't collide", () => {
+		// Honey: 1 tsp -> 7 g, 304 cal per 100 g, ingredient = 1 tsp -> 21.28 cal
+		// Butter: 1 tsp -> 4.7 g, 717 cal per 100 g, ingredient = 1 tsp -> 33.7 cal
+		// Both products declare tsp -> g with different factors. Before the
+		// per-product graph cache, the second one to land in the merged graph
+		// overrode the first, producing wrong calorie numbers for one of them.
+		const honey = makeProduct({
+			id: "p-honey",
+			name: "Honey",
+			defaultQuantityUnitId: "unit-g",
+			nutritionBaseAmount: "100",
+			nutritionBaseUnitId: "unit-g",
+			calories: "304",
+		});
+		const butter = makeProduct({
+			id: "p-butter",
+			name: "Butter",
+			defaultQuantityUnitId: "unit-g",
+			nutritionBaseAmount: "100",
+			nutritionBaseUnitId: "unit-g",
+			calories: "717",
+		});
+		const result = getRecipeNutrition({
+			ingredients: [
+				makeIngredient({
+					id: "i-honey",
+					productId: "p-honey",
+					quantity: "1",
+					quantityUnitId: "unit-tsp",
+				}),
+				makeIngredient({
+					id: "i-butter",
+					productId: "p-butter",
+					quantity: "1",
+					quantityUnitId: "unit-tsp",
+				}),
+			],
+			products: [honey, butter],
+			unitConversions: [],
+			productConversions: [
+				{
+					id: "pc-honey",
+					productId: "p-honey",
+					fromUnitId: "unit-tsp",
+					toUnitId: "unit-g",
+					factor: "7",
+					userId: "u1",
+					createdAt: "",
+					updatedAt: "",
+				},
+				{
+					id: "pc-butter",
+					productId: "p-butter",
+					fromUnitId: "unit-tsp",
+					toUnitId: "unit-g",
+					factor: "4.7",
+					userId: "u1",
+					createdAt: "",
+					updatedAt: "",
+				},
+			],
+			scaleFactor: 1,
+		});
+		// Honey: 1 tsp * 7 g/tsp * 304 cal / 100 g = 21.28
+		// Butter: 1 tsp * 4.7 g/tsp * 717 cal / 100 g = 33.699
+		expect(result?.calories).toBeCloseTo(21.28 + 33.699, 2);
+	});
 });

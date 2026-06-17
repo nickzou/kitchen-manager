@@ -258,7 +258,8 @@ function RecipeDetail() {
 			ingredients,
 			products,
 			stockEntries,
-			unitConversions: [...(allProductConversions ?? []), ...unitConversions],
+			unitConversions,
+			productConversions: allProductConversions ?? [],
 			scaleFactor,
 			derivedByProduct: derivedCost,
 		});
@@ -277,7 +278,8 @@ function RecipeDetail() {
 		return getRecipeNutrition({
 			ingredients,
 			products,
-			unitConversions: [...(allProductConversions ?? []), ...unitConversions],
+			unitConversions,
+			productConversions: allProductConversions ?? [],
 			scaleFactor,
 			derivedByProduct: derivedNutrition,
 		});
