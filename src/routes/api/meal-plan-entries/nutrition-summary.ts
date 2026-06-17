@@ -85,6 +85,34 @@ export const Route = createFileRoute(
 					.from(unitConversion)
 					.where(eq(unitConversion.userId, session.user.id));
 
+				// Per-product unit conversions are needed for ingredients whose
+				// recipe-unit (e.g. "pc") only resolves to the nutrition base
+				// unit (e.g. "g") via a product-specific factor — without them,
+				// the conversion silently fails and the ingredient is dropped
+				// from the day total. Cost-summary already does this; mirror.
+				const ingredientProductIds = [
+					...new Set(
+						rows
+							.map((r) => r.productId)
+							.filter((id): id is string => Boolean(id)),
+					),
+				];
+				const rowProductConversions =
+					ingredientProductIds.length > 0
+						? await db
+								.select()
+								.from(productUnitConversion)
+								.where(
+									and(
+										eq(productUnitConversion.userId, session.user.id),
+										inArray(
+											productUnitConversion.productId,
+											ingredientProductIds,
+										),
+									),
+								)
+						: [];
+
 				// For ingredients whose product has no own nutrition, derive it
 				// from the source recipe (the one that produces the product).
 				// Pull source recipes, their ingredients, and the nutrition data
@@ -251,7 +279,20 @@ export const Route = createFileRoute(
 					}
 				}
 
-				const graph = buildConversionGraph(conversions);
+				const graphCache = new Map<
+					string,
+					ReturnType<typeof buildConversionGraph>
+				>();
+				function graphFor(productId: string) {
+					const cached = graphCache.get(productId);
+					if (cached) return cached;
+					const specific = rowProductConversions.filter(
+						(c) => c.productId === productId,
+					);
+					const g = buildConversionGraph([...conversions, ...specific]);
+					graphCache.set(productId, g);
+					return g;
+				}
 
 				type Nutrition = {
 					calories: number;
@@ -315,8 +356,9 @@ export const Route = createFileRoute(
 						(row.entryServings ?? row.recipeServings ?? 1) /
 						(row.recipeServings ?? 1);
 
+					if (!row.productId) continue;
 					const convertedQty = tryConvert(
-						graph,
+						graphFor(row.productId),
 						Number(row.ingredientQuantity),
 						row.ingredientUnitId,
 						baseUnitId,
