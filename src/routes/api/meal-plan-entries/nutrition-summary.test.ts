@@ -18,11 +18,12 @@ vi.mock("#src/db/schema", () => ({
 // Handler runs these select() calls in order:
 // 0. joined rows (meal plan × recipe × ingredient × product)
 // 1. global unit conversions
+// 2. product unit conversions for all ingredient products on the day
 // (only when some row's product has no nutrition:)
-// 2. source recipes for producible products
-// 3. source recipe ingredients
-// 4. source recipe ingredient products (nutrition)
-// 5. product unit conversions for source recipe ingredient products
+// 3. source recipes for producible products
+// 4. source recipe ingredients
+// 5. source recipe ingredient products (nutrition)
+// 6. product unit conversions for source recipe ingredient products
 let selectCall = 0;
 const mockResults: unknown[] = [];
 
@@ -145,6 +146,39 @@ describe("GET /api/meal-plan-entries/nutrition-summary", () => {
 		expect(data["2025-01-01"].calories).toBeCloseTo(170);
 	});
 
+	it("uses per-product conversions to bridge recipe-unit and nutrition base-unit", async () => {
+		// Bagel: 210 cal per 75 g. Recipe ingredient is "1 pc". The pc↔g factor
+		// is product-specific (1 pc = 75 g) — only resolvable via a per-product
+		// conversion. Before this fix, the row was silently dropped because the
+		// graph only had global conversions; now it must contribute 210 cal.
+		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
+		mockResults[0] = [
+			row({
+				productId: "p-bagel",
+				productCalories: "210",
+				productDefaultUnitId: "unit-pc",
+				productNutritionBaseAmount: "75",
+				productNutritionBaseUnitId: "unit-g",
+				ingredientUnitId: "unit-pc",
+				ingredientQuantity: "1",
+			}),
+		];
+		mockResults[1] = []; // no global conversions
+		mockResults[2] = [
+			{
+				productId: "p-bagel",
+				fromUnitId: "unit-pc",
+				toUnitId: "unit-g",
+				factor: "75",
+			},
+		];
+
+		const response = await GET({ request: summaryRequest() } as never);
+
+		const data = await response.json();
+		expect(data["2025-01-01"].calories).toBeCloseTo(210);
+	});
+
 	it("honors the product nutrition base (per-N-unit)", async () => {
 		// Product: 350 cal per 100 g. Ingredient: 50 g.
 		// Expected: (50 / 100) * 350 = 175.
@@ -257,7 +291,8 @@ describe("GET /api/meal-plan-entries/nutrition-summary", () => {
 			}),
 		];
 		mockResults[1] = []; // no global conversions
-		mockResults[2] = [
+		mockResults[2] = []; // no per-product conversions on the day's ingredients
+		mockResults[3] = [
 			{
 				id: "recipe-stock",
 				producedProductId: "p-broth",
@@ -265,7 +300,7 @@ describe("GET /api/meal-plan-entries/nutrition-summary", () => {
 				producedQuantityUnitId: "unit-ml",
 			},
 		];
-		mockResults[3] = [
+		mockResults[4] = [
 			{
 				recipeId: "recipe-stock",
 				productId: "p-water",
@@ -279,7 +314,7 @@ describe("GET /api/meal-plan-entries/nutrition-summary", () => {
 				quantityUnitId: "unit-g",
 			},
 		];
-		mockResults[4] = [
+		mockResults[5] = [
 			{
 				id: "p-water",
 				defaultQuantityUnitId: "unit-ml",
@@ -301,7 +336,7 @@ describe("GET /api/meal-plan-entries/nutrition-summary", () => {
 				carbs: "0",
 			},
 		];
-		mockResults[5] = []; // no product-specific conversions
+		mockResults[6] = []; // no product-specific conversions for source recipe
 
 		const response = await GET({ request: summaryRequest() } as never);
 

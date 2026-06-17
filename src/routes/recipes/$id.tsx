@@ -258,7 +258,7 @@ function RecipeDetail() {
 			ingredients,
 			products,
 			stockEntries,
-			unitConversions,
+			unitConversions: [...(allProductConversions ?? []), ...unitConversions],
 			scaleFactor,
 			derivedByProduct: derivedCost,
 		});
@@ -267,6 +267,7 @@ function RecipeDetail() {
 		products,
 		stockEntries,
 		unitConversions,
+		allProductConversions,
 		scaleFactor,
 		derivedCost,
 	]);
@@ -276,11 +277,18 @@ function RecipeDetail() {
 		return getRecipeNutrition({
 			ingredients,
 			products,
-			unitConversions,
+			unitConversions: [...(allProductConversions ?? []), ...unitConversions],
 			scaleFactor,
 			derivedByProduct: derivedNutrition,
 		});
-	}, [ingredients, products, unitConversions, scaleFactor, derivedNutrition]);
+	}, [
+		ingredients,
+		products,
+		unitConversions,
+		allProductConversions,
+		scaleFactor,
+		derivedNutrition,
+	]);
 
 	const sortedPrepSteps = useMemo(
 		() =>
