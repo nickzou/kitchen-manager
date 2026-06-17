@@ -1,3 +1,4 @@
+import type { ProductUnitConversion } from "#src/lib/hooks/use-product-unit-conversions";
 import type { Product } from "#src/lib/hooks/use-products";
 import type { RecipeIngredient } from "#src/lib/hooks/use-recipe-ingredients";
 import type { UnitConversion } from "#src/lib/hooks/use-unit-conversions";
@@ -64,6 +65,11 @@ export function getRecipeNutrition(opts: {
 	ingredients: RecipeIngredient[];
 	products: Product[];
 	unitConversions: UnitConversion[];
+	// Per-product unit conversions for the recipe's products. These are
+	// applied as a per-product graph so two products that both define
+	// e.g. `tsp -> g` with different factors don't collide in a single
+	// shared graph (which would drop one product's factor at random).
+	productConversions?: ProductUnitConversion[];
 	scaleFactor: number;
 	// Optional per-product derived nutrition map for producible products
 	// (calories live on the source recipe). Falls back to product macros
@@ -74,11 +80,22 @@ export function getRecipeNutrition(opts: {
 		ingredients,
 		products,
 		unitConversions,
+		productConversions,
 		scaleFactor,
 		derivedByProduct,
 	} = opts;
 
-	const graph = buildConversionGraph(unitConversions);
+	const graphCache = new Map<string, ReturnType<typeof buildConversionGraph>>();
+	function graphFor(productId: string) {
+		const cached = graphCache.get(productId);
+		if (cached) return cached;
+		const specific = (productConversions ?? []).filter(
+			(c) => c.productId === productId,
+		);
+		const g = buildConversionGraph([...unitConversions, ...specific]);
+		graphCache.set(productId, g);
+		return g;
+	}
 
 	const ungrouped: Contribution[] = [];
 	const grouped = new Map<string, Contribution[]>();
@@ -102,7 +119,7 @@ export function getRecipeNutrition(opts: {
 		if (!facts) continue;
 
 		const convertedQty = tryConvert(
-			graph,
+			graphFor(ing.productId),
 			Number(ing.quantity),
 			ing.quantityUnitId,
 			facts.baseUnitId,

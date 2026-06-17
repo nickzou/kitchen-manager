@@ -74,10 +74,8 @@ export function MealPlanEntryDetailModal({
 		return getRecipeNutrition({
 			ingredients,
 			products,
-			unitConversions: [
-				...(allProductConversions ?? []),
-				...(unitConversions ?? []),
-			],
+			unitConversions: unitConversions ?? [],
+			productConversions: allProductConversions ?? [],
 			scaleFactor,
 			derivedByProduct: derivedNutrition,
 		});
@@ -96,10 +94,8 @@ export function MealPlanEntryDetailModal({
 			ingredients,
 			products,
 			stockEntries,
-			unitConversions: [
-				...(allProductConversions ?? []),
-				...(unitConversions ?? []),
-			],
+			unitConversions: unitConversions ?? [],
+			productConversions: allProductConversions ?? [],
 			scaleFactor,
 			derivedByProduct: derivedCost,
 		});

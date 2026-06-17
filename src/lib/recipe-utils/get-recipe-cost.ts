@@ -1,3 +1,4 @@
+import type { ProductUnitConversion } from "#src/lib/hooks/use-product-unit-conversions";
 import type { Product } from "#src/lib/hooks/use-products";
 import type { RecipeIngredient } from "#src/lib/hooks/use-recipe-ingredients";
 import type { StockEntry } from "#src/lib/hooks/use-stock-entries";
@@ -11,6 +12,10 @@ export function getRecipeCost(opts: {
 	products: Product[];
 	stockEntries: StockEntry[];
 	unitConversions: UnitConversion[];
+	// Per-product unit conversions. Used to build a per-product graph
+	// so e.g. Honey's `tsp -> g` and Butter's `tsp -> g` can coexist
+	// without overwriting each other in a shared graph.
+	productConversions?: ProductUnitConversion[];
 	scaleFactor: number;
 	// Optional per-product derived cost map for producible products (cost
 	// derived from the source recipe's ingredients). Falls back to derived
@@ -27,11 +32,22 @@ export function getRecipeCost(opts: {
 		products,
 		stockEntries,
 		unitConversions,
+		productConversions,
 		scaleFactor,
 		derivedByProduct,
 	} = opts;
 
-	const graph = buildConversionGraph(unitConversions);
+	const graphCache = new Map<string, ReturnType<typeof buildConversionGraph>>();
+	function graphFor(productId: string) {
+		const cached = graphCache.get(productId);
+		if (cached) return cached;
+		const specific = (productConversions ?? []).filter(
+			(c) => c.productId === productId,
+		);
+		const g = buildConversionGraph([...unitConversions, ...specific]);
+		graphCache.set(productId, g);
+		return g;
+	}
 
 	// Group stock entries by product
 	const entriesByProduct = new Map<string, StockEntry[]>();
@@ -69,7 +85,7 @@ export function getRecipeCost(opts: {
 		if (avgCost !== null) {
 			// avgCost is per product's default unit; convert ingredient qty to that unit
 			const convertedQty = tryConvert(
-				graph,
+				graphFor(ing.productId),
 				Number(ing.quantity),
 				ing.quantityUnitId,
 				product.defaultQuantityUnitId,
@@ -82,7 +98,7 @@ export function getRecipeCost(opts: {
 		} else if (derived && derived.baseAmount > 0) {
 			// No own stock to price from — use the source-recipe's per-batch cost.
 			const convertedQty = tryConvert(
-				graph,
+				graphFor(ing.productId),
 				Number(ing.quantity),
 				ing.quantityUnitId,
 				derived.baseUnitId,
