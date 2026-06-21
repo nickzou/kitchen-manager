@@ -130,11 +130,11 @@ describe("POST /api/stock-entries/spoil", () => {
 		});
 	});
 
-	it("deletes entry when spoiled to zero", async () => {
+	it("keeps the entry at quantity = 0 when fully spoiled (preserves price history)", async () => {
 		vi.mocked(getAuthSession).mockResolvedValue(makeSession() as never);
-		const entry = makeStockEntry({ quantity: "5" });
-		mockTxSelectWhere.mockResolvedValue([entry]);
-		mockTxDeleteReturning.mockResolvedValue([entry]);
+		mockTxSelectWhere.mockResolvedValue([makeStockEntry({ quantity: "5" })]);
+		const updated = makeStockEntry({ quantity: "0" });
+		mockTxUpdateReturning.mockResolvedValue([updated]);
 		const request = makePostRequest("/api/stock-entries/spoil", {
 			stockEntryId: "stock-entry-1",
 			quantity: "5",

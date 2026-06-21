@@ -48,13 +48,19 @@ export type SpoilStockInput = {
 	quantity: string;
 };
 
-export function useStockEntries(productId?: string) {
+export function useStockEntries(
+	productId?: string,
+	opts?: { includeConsumed?: boolean },
+) {
+	const includeConsumed = opts?.includeConsumed ?? false;
 	return useQuery<StockEntry[]>({
-		queryKey: productId ? ["stock-entries", { productId }] : ["stock-entries"],
+		queryKey: ["stock-entries", { productId, includeConsumed }],
 		queryFn: async () => {
-			const url = productId
-				? `/api/stock-entries?productId=${productId}`
-				: "/api/stock-entries";
+			const params = new URLSearchParams();
+			if (productId) params.set("productId", productId);
+			if (includeConsumed) params.set("includeConsumed", "true");
+			const qs = params.toString();
+			const url = qs ? `/api/stock-entries?${qs}` : "/api/stock-entries";
 			const res = await fetch(url);
 			if (!res.ok) throw new Error("Failed to fetch stock entries");
 			return res.json();

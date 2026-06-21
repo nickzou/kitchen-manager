@@ -73,18 +73,10 @@ export const Route = createFileRoute("/api/stock-entries/consume")({
 						})
 						.returning();
 
-					if (newQuantity === "0") {
-						const [deleted] = await tx
-							.delete(stockEntry)
-							.where(eq(stockEntry.id, stockEntryId))
-							.returning();
-						return {
-							entry: { ...deleted, quantity: "0" },
-							stockLogId: log.id,
-							status: 200,
-						};
-					}
-
+					// Keep the row even at quantity = 0 so unitCost / purchaseDate
+					// stay available for the product pricing-history chart. The
+					// list endpoint hides quantity = 0 rows by default; the chart
+					// opts in with includeConsumed=true.
 					const [updated] = await tx
 						.update(stockEntry)
 						.set({ quantity: newQuantity })

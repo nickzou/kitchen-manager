@@ -73,18 +73,8 @@ export const Route = createFileRoute("/api/stock-entries/spoil")({
 						})
 						.returning();
 
-					if (newQuantity === "0") {
-						const [deleted] = await tx
-							.delete(stockEntry)
-							.where(eq(stockEntry.id, stockEntryId))
-							.returning();
-						return {
-							entry: { ...deleted, quantity: "0" },
-							stockLogId: log.id,
-							status: 200,
-						};
-					}
-
+					// Keep the row at quantity = 0 so historical price data
+					// survives for the product pricing-history chart.
 					const [updated] = await tx
 						.update(stockEntry)
 						.set({ quantity: newQuantity })
