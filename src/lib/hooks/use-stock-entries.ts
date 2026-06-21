@@ -147,29 +147,27 @@ export function useConsumeStock() {
 		},
 		onMutate: async (input) => {
 			await queryClient.cancelQueries({ queryKey: ["stock-entries"] });
-			const previous = queryClient.getQueryData<StockEntry[]>([
-				"stock-entries",
-			]);
-			queryClient.setQueryData<StockEntry[]>(["stock-entries"], (old) =>
-				(old ?? [])
-					.map((entry) =>
-						entry.id === input.stockEntryId
-							? {
-									...entry,
-									quantity: roundQty(
-										Number.parseFloat(entry.quantity) -
-											Number.parseFloat(input.quantity),
-									).toString(),
-								}
-							: entry,
-					)
-					.filter((entry) => Number.parseFloat(entry.quantity) > 0),
-			);
-			return { previous };
+			// Apply optimistic update across every cached stock-entries query
+			// (the keys now include productId + includeConsumed). Queries that
+			// excluded consumed entries get the row filtered out; queries that
+			// included them keep the row at quantity = 0.
+			const snapshots = queryClient.getQueriesData<StockEntry[]>({
+				queryKey: ["stock-entries"],
+			});
+			for (const [key] of snapshots) {
+				const includeConsumed =
+					(key[1] as { includeConsumed?: boolean } | undefined)
+						?.includeConsumed ?? false;
+				queryClient.setQueryData<StockEntry[]>(key, (old) =>
+					applyConsumeOptimistic(old, input, includeConsumed),
+				);
+			}
+			return { snapshots };
 		},
 		onError: (_err, _input, context) => {
-			if (context?.previous) {
-				queryClient.setQueryData(["stock-entries"], context.previous);
+			if (!context?.snapshots) return;
+			for (const [key, value] of context.snapshots) {
+				queryClient.setQueryData(key, value);
 			}
 		},
 		onSettled: () => {
@@ -179,6 +177,27 @@ export function useConsumeStock() {
 			queryClient.invalidateQueries({ queryKey: ["recipe-availability"] });
 		},
 	});
+}
+
+function applyConsumeOptimistic(
+	old: StockEntry[] | undefined,
+	input: ConsumeStockInput | SpoilStockInput,
+	includeConsumed: boolean,
+): StockEntry[] {
+	const next = (old ?? []).map((entry) =>
+		entry.id === input.stockEntryId
+			? {
+					...entry,
+					quantity: roundQty(
+						Number.parseFloat(entry.quantity) -
+							Number.parseFloat(input.quantity),
+					).toString(),
+				}
+			: entry,
+	);
+	return includeConsumed
+		? next
+		: next.filter((entry) => Number.parseFloat(entry.quantity) > 0);
 }
 
 export function useSpoilStock() {
@@ -197,29 +216,23 @@ export function useSpoilStock() {
 		},
 		onMutate: async (input) => {
 			await queryClient.cancelQueries({ queryKey: ["stock-entries"] });
-			const previous = queryClient.getQueryData<StockEntry[]>([
-				"stock-entries",
-			]);
-			queryClient.setQueryData<StockEntry[]>(["stock-entries"], (old) =>
-				(old ?? [])
-					.map((entry) =>
-						entry.id === input.stockEntryId
-							? {
-									...entry,
-									quantity: roundQty(
-										Number.parseFloat(entry.quantity) -
-											Number.parseFloat(input.quantity),
-									).toString(),
-								}
-							: entry,
-					)
-					.filter((entry) => Number.parseFloat(entry.quantity) > 0),
-			);
-			return { previous };
+			const snapshots = queryClient.getQueriesData<StockEntry[]>({
+				queryKey: ["stock-entries"],
+			});
+			for (const [key] of snapshots) {
+				const includeConsumed =
+					(key[1] as { includeConsumed?: boolean } | undefined)
+						?.includeConsumed ?? false;
+				queryClient.setQueryData<StockEntry[]>(key, (old) =>
+					applyConsumeOptimistic(old, input, includeConsumed),
+				);
+			}
+			return { snapshots };
 		},
 		onError: (_err, _input, context) => {
-			if (context?.previous) {
-				queryClient.setQueryData(["stock-entries"], context.previous);
+			if (!context?.snapshots) return;
+			for (const [key, value] of context.snapshots) {
+				queryClient.setQueryData(key, value);
 			}
 		},
 		onSettled: () => {
