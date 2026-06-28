@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { and, eq, gt, gte, inArray, lte, sql } from "drizzle-orm";
+import { and, eq, gt, gte, inArray, lte, ne, sql } from "drizzle-orm";
 import { db } from "#src/db";
 import {
 	mealPlanEntry,
@@ -192,6 +192,9 @@ export const Route = createFileRoute(
 						),
 					);
 
+				// Excludes quantity = 0 rows (preserved for price history after
+				// full consume/spoil) so the shopping-list totals reflect only
+				// stock that's actually on hand.
 				const stock = await db
 					.select({
 						productId: stockEntry.productId,
@@ -202,6 +205,7 @@ export const Route = createFileRoute(
 						and(
 							eq(stockEntry.userId, session.user.id),
 							inArray(stockEntry.productId, productIds),
+							ne(stockEntry.quantity, "0"),
 						),
 					)
 					.groupBy(stockEntry.productId);

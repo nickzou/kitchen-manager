@@ -93,15 +93,17 @@ export const Route = createFileRoute("/api/stock-logs/reverse")({
 							.where(eq(stockEntry.id, entryId));
 
 						if (existing) {
-							const newQty = roundQty(Number(existing.quantity) - logQty);
-							if (newQty <= 0) {
-								await tx.delete(stockEntry).where(eq(stockEntry.id, entryId));
-							} else {
-								await tx
-									.update(stockEntry)
-									.set({ quantity: newQty.toString() })
-									.where(eq(stockEntry.id, entryId));
-							}
+							// Even if reversal drives qty to 0 (or negative through
+							// a clamp), keep the row so its unitCost / purchaseDate
+							// stay available to the pricing-history chart.
+							const newQty = Math.max(
+								0,
+								roundQty(Number(existing.quantity) - logQty),
+							);
+							await tx
+								.update(stockEntry)
+								.set({ quantity: newQty.toString() })
+								.where(eq(stockEntry.id, entryId));
 						}
 					} else if (log.transactionType === "remove") {
 						if (!entryId) {

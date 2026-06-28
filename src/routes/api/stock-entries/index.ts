@@ -24,11 +24,16 @@ export const Route = createFileRoute("/api/stock-entries/")({
 
 				const url = new URL(request.url);
 				const productId = url.searchParams.get("productId");
+				// includeConsumed=true returns quantity = 0 rows too. They're
+				// preserved on full consume/spoil to keep unitCost + purchaseDate
+				// available to the product pricing-history chart.
+				const includeConsumed =
+					url.searchParams.get("includeConsumed") === "true";
 
-				const conditions = [
-					eq(stockEntry.userId, session.user.id),
-					ne(stockEntry.quantity, "0"),
-				];
+				const conditions = [eq(stockEntry.userId, session.user.id)];
+				if (!includeConsumed) {
+					conditions.push(ne(stockEntry.quantity, "0"));
+				}
 				if (productId) {
 					conditions.push(eq(stockEntry.productId, productId));
 				}

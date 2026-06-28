@@ -99,13 +99,13 @@ Conversions defined here override the global ones for the given product.
 
 | Method | Path | Description |
 | --- | --- | --- |
-| `GET` | `/api/stock-entries` | List stock entries. |
+| `GET` | `/api/stock-entries` | List stock entries. Query: `productId?` filters to one product. `includeConsumed=true` includes rows with `quantity = 0` (preserved on full consume/spoil so the product pricing-history chart can read historical `unitCost`/`purchaseDate`); omit (default) to get current stock only. |
 | `POST` | `/api/stock-entries` | Create a stock entry. Body: `{ productId, quantity, expirationDate?, purchaseDate?, price?, storeId?, brandId?, tareWeight? }`. Writes a `stock_log` row with `transactionType: "add"`. |
 | `GET` | `/api/stock-entries/$id` | Fetch one. |
 | `PUT` | `/api/stock-entries/$id` | Update fields. |
 | `DELETE` | `/api/stock-entries/$id` | Remove the entry. Writes `transactionType: "remove"` log. |
-| `POST` | `/api/stock-entries/consume` | Subtract quantity. Body: `{ stockEntryId, quantity }`. Deletes the entry when it reaches 0; writes `consume` log. Returns `{ ...entry, stockLogId }`. |
-| `POST` | `/api/stock-entries/spoil` | Same shape as consume; writes `spoiled` log. |
+| `POST` | `/api/stock-entries/consume` | Subtract quantity. Body: `{ stockEntryId, quantity }`. Updates the row; on full consume the row remains at `quantity = 0` instead of being deleted, so `unitCost`/`purchaseDate` stay available for the pricing-history chart. Writes a `consume` log. Returns `{ ...entry, stockLogId }`. |
+| `POST` | `/api/stock-entries/spoil` | Same shape as consume; writes `spoiled` log. Full spoil leaves the row at `quantity = 0` for the same reason. |
 
 ### Stock logs
 

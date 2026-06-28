@@ -47,7 +47,9 @@ function ProductDetail() {
 	const { data: product, isLoading, error } = useProduct(id);
 	const { data: categories } = useProductCategories();
 	const { data: quantityUnits } = useQuantityUnits();
-	const { data: stockEntries } = useStockEntries(id);
+	// includeConsumed so the pricing-history chart can see purchases that
+	// have been fully eaten/spoiled (they persist as quantity = 0 rows).
+	const { data: stockEntries } = useStockEntries(id, { includeConsumed: true });
 	const { data: settings } = useUserSettings();
 	const { data: stores } = useStores();
 	const { data: brands } = useBrands();

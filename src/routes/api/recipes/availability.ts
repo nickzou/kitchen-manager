@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, eq, inArray, ne, sql } from "drizzle-orm";
 import { db } from "#src/db";
 import {
 	product,
@@ -89,7 +89,10 @@ export const Route = createFileRoute("/api/recipes/availability")({
 						and(eq(product.userId, userId), inArray(product.id, productIds)),
 					);
 
-				// Get stock totals per product
+				// Get stock totals per product. Excludes quantity = 0 rows, which
+				// now persist as price history after a full consume/spoil and
+				// would otherwise produce zero-total rows for products with no
+				// current stock.
 				const stock = await db
 					.select({
 						productId: stockEntry.productId,
@@ -100,6 +103,7 @@ export const Route = createFileRoute("/api/recipes/availability")({
 						and(
 							eq(stockEntry.userId, userId),
 							inArray(stockEntry.productId, productIds),
+							ne(stockEntry.quantity, "0"),
 						),
 					)
 					.groupBy(stockEntry.productId);
